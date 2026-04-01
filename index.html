@@ -1,0 +1,2456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HDM Car Delivery</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 100%);
+            color: #333;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        /* ── Phone Frame (Demo) ── */
+        .phone-outer { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .demo-nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 375px; padding: 0 10px; margin-bottom: 10px; }
+        .nav-btn { padding: 8px 14px; border: 1px solid #999; background: white; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 500; transition: all .3s; color: #333; }
+        .nav-btn:hover { background: #f0f0f0; border-color: #666; }
+        .nav-btn.active { background: #FABE00; color: white; border-color: #002063; }
+        .phone-frame { position: relative; width: 375px; height: 812px; background: #000; border-radius: 44px; border: 12px solid #1a1a1a; box-shadow: 0 0 0 1px #333, 0 20px 60px rgba(0,0,0,.3), inset 0 0 0 1px #2a2a2a; overflow: hidden; display: flex; flex-direction: column; }
+        .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 210px; height: 28px; background: #000; border-radius: 0 0 20px 20px; z-index: 50; }
+        .phone-status-bar { position: relative; z-index: 40; height: 44px; background: white; border-bottom: 1px solid #eee; display: flex; align-items: center; padding: 0 16px; font-size: 12px; font-weight: 600; color: #000; justify-content: space-between; }
+        .phone-screen { flex: 1; overflow-y: auto; overflow-x: hidden; background: white; position: relative; display: flex; flex-direction: column; }
+        .phone-screen::-webkit-scrollbar { width: 6px; }
+        .phone-screen::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        .phone-home-indicator { height: 34px; background: white; border-top: 1px solid #eee; display: flex; align-items: center; justify-content: center; }
+        .home-indicator-bar { width: 140px; height: 4px; background: #000; border-radius: 2px; }
+
+        /* ── App Header ── */
+        .app-header { background: #002063; color: white; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; font-weight: 600; z-index: 30; border-bottom: 2px solid #FABE00; }
+        .app-logo { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .app-logo-mark { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #FABE00; }
+        .app-service-name { font-size: 13px; font-weight: 700; color: white; line-height: 1.1; }
+        .app-service-subtitle { font-size: 9px; color: #FABE00; font-weight: 500; letter-spacing: .5px; }
+        .header-actions { display: flex; align-items: center; gap: 4px; }
+        .mypage-header-btn { display: flex; align-items: center; gap: 2px; padding: 4px 8px; background: white; color: #002063; border: 1.5px solid #002063; border-radius: 14px; font-size: 10px; font-weight: 700; cursor: pointer; transition: all .2s; }
+        .mypage-header-btn:hover { background: #FABE00; border-color: #FABE00; }
+
+        /* ── Hamburger Menu ── */
+        .hamburger-btn { background: none; border: none; cursor: pointer; padding: 4px; display: flex; flex-direction: column; gap: 4px; justify-content: center; width: 28px; height: 28px; }
+        .hamburger-btn span { display: block; width: 20px; height: 2px; background: white; border-radius: 1px; transition: all .3s; }
+        .menu-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 100; opacity: 0; pointer-events: none; transition: opacity .3s; }
+        .menu-overlay.open { opacity: 1; pointer-events: auto; }
+        .slide-menu { position: fixed; top: 0; right: -280px; width: 280px; height: 100%; background: white; z-index: 101; transition: right .3s ease; overflow-y: auto; display: flex; flex-direction: column; }
+        .slide-menu.open { right: 0; }
+        .menu-header { background: #002063; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+        .menu-header img { height: 24px; }
+        .menu-close { background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 4px; }
+        .menu-user { padding: 14px 16px; background: #f8fafc; border-bottom: 1px solid #eee; }
+        .menu-user-btn { width: 100%; padding: 10px; background: #FABE00; color: #002063; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .menu-section { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+        .menu-section-title { font-size: 10px; font-weight: 700; color: #999; padding: 8px 16px 4px; text-transform: uppercase; letter-spacing: .5px; }
+        .menu-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; font-size: 13px; color: #333; cursor: pointer; transition: background .2s; text-decoration: none; }
+        .menu-item:hover { background: #f5f8ff; }
+        .menu-item-icon { font-size: 16px; width: 20px; text-align: center; }
+        .menu-item-arrow { margin-left: auto; font-size: 11px; color: #ccc; }
+        .menu-sns { display: flex; gap: 16px; padding: 12px 16px; }
+        .menu-sns a { width: 36px; height: 36px; border-radius: 50%; background: #002063; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 16px; transition: background .2s; }
+        .menu-sns a:hover { background: #003399; }
+        .menu-footer { padding: 12px 16px; font-size: 10px; color: #999; text-align: center; margin-top: auto; }
+
+        /* ── Hero Slider ── */
+        .hero-slider { position: relative; width: 100%; overflow: hidden; }
+        .hero-track { display: flex; transition: transform .5s ease; }
+        .hero-slide { min-width: 100%; position: relative; }
+        .hero-slide img { width: 100%; height: auto; display: block; }
+        .hero-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 2; }
+        .hero-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.5); cursor: pointer; transition: all .3s; }
+        .hero-dot.active { background: white; width: 20px; border-radius: 4px; }
+        /* ── MyPage ── */
+        .mypage-screen { padding: 16px; flex: 1; overflow-y: auto; }
+        .mypage-lookup { background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .mypage-lookup-title { font-size: 14px; font-weight: 700; color: #002063; margin-bottom: 12px; }
+        .mypage-res-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+        .mypage-res-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .mypage-res-id { font-size: 14px; font-weight: 700; color: #002063; }
+        .mypage-res-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px; }
+        .mypage-res-status.confirmed { background: #dcfce7; color: #16a34a; }
+        .mypage-res-status.cancelled { background: #fee2e2; color: #dc2626; }
+        .mypage-res-status.active { background: #dbeafe; color: #2563eb; }
+        .mypage-res-status.completed { background: #f3f4f6; color: #666; }
+        .mypage-res-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12px; }
+        .mypage-res-row-label { color: #888; }
+        .mypage-res-row-value { font-weight: 600; color: #333; text-align: right; max-width: 60%; }
+        .mypage-timeline { padding: 0; margin: 14px 0; }
+        .mypage-tl-item { display: flex; gap: 12px; position: relative; padding-bottom: 16px; }
+        .mypage-tl-item:last-child { padding-bottom: 0; }
+        .mypage-tl-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; z-index: 1; }
+        .mypage-tl-dot.done { background: #22c55e; color: white; }
+        .mypage-tl-dot.active { background: #FABE00; color: #002063; animation: pulse 2s infinite; }
+        .mypage-tl-dot.pending { background: #e5e7eb; color: #999; }
+        @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(250,190,0,.4); } 50% { box-shadow: 0 0 0 6px rgba(250,190,0,0); } }
+        .mypage-tl-line { position: absolute; left: 11px; top: 24px; width: 2px; height: calc(100% - 24px); background: #e5e7eb; }
+        .mypage-tl-item:last-child .mypage-tl-line { display: none; }
+        .mypage-tl-line.done { background: #22c55e; }
+        .mypage-tl-text { flex: 1; padding-top: 2px; }
+        .mypage-tl-title { font-size: 13px; font-weight: 600; color: #333; }
+        .mypage-tl-sub { font-size: 11px; color: #999; margin-top: 2px; }
+
+        .menu-lang { display: flex; gap: 0; padding: 10px 16px; }
+        .menu-lang-btn { flex: 1; padding: 8px 0; border: 1px solid #ddd; background: white; font-size: 12px; font-weight: 600; color: #666; cursor: pointer; transition: all .2s; font-family: inherit; }
+        .menu-lang-btn:first-child { border-radius: 6px 0 0 6px; }
+        .menu-lang-btn:last-child { border-radius: 0 6px 6px 0; }
+        .menu-lang-btn:not(:first-child) { border-left: none; }
+        .menu-lang-btn.active { background: #002063; color: white; border-color: #002063; }
+
+        /* ── Screen Transition ── */
+        .screen-fade { animation: screenFadeIn .25s ease-out; }
+        @keyframes screenFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Progress Bar (Top Screen) ── */
+        .top-progress { display: flex; align-items: center; gap: 0; padding: 10px 16px 6px; background: white; }
+        .top-progress-step { display: flex; align-items: center; gap: 4px; flex: 1; }
+        .top-progress-dot {
+            width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; flex-shrink: 0; transition: all .3s;
+        }
+        .top-progress-dot.active { background: #FABE00; color: #002063; }
+        .top-progress-dot.done { background: #22c55e; color: white; }
+        .top-progress-dot.pending { background: #e5e7eb; color: #999; }
+        .top-progress-label { font-size: 10px; font-weight: 600; color: #999; white-space: nowrap; }
+        .top-progress-label.active { color: #002063; }
+        .top-progress-label.done { color: #22c55e; }
+        .top-progress-line { flex: 1; height: 2px; background: #e5e7eb; margin: 0 4px; }
+        .top-progress-line.done { background: #22c55e; }
+
+        /* ── Date Bar (Compact) ── */
+        .date-bar {
+            display: flex; align-items: center; gap: 6px; padding: 8px 16px;
+            background: #f8fafc; border-bottom: 1px solid #eee; cursor: pointer; transition: background .2s;
+        }
+        .date-bar:hover { background: #f0f4ff; }
+        .date-bar-icon { font-size: 16px; flex-shrink: 0; }
+        .date-bar-text { flex: 1; font-size: 12px; font-weight: 600; color: #333; line-height: 1.4; }
+        .date-bar-sub { font-size: 10px; color: #888; font-weight: 400; }
+        .date-bar-edit { font-size: 10px; color: #002063; font-weight: 700; padding: 4px 10px; border: 1px solid #002063; border-radius: 12px; white-space: nowrap; }
+        .date-expanded { padding: 10px 16px 12px; background: #f8fafc; border-bottom: 1px solid #eee; animation: slideDown .2s ease-out; }
+        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 200px; } }
+
+        /* ── Map ── */
+        #map { width: 100%; flex: 1; min-height: 280px; z-index: 1; }
+        .map-loading { display: flex; align-items: center; justify-content: center; height: 280px; color: #999; font-size: 13px; }
+        .map-search-bar {
+            position: absolute; top: 8px; left: 8px; right: 44px; z-index: 1000;
+            display: flex; align-items: center; gap: 0;
+            background: white; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.18);
+            overflow: hidden;
+        }
+        .map-search-icon { padding: 0 10px; font-size: 14px; color: #999; flex-shrink: 0; }
+        .map-search-input {
+            flex: 1; padding: 10px 0; border: none; font-size: 13px; font-family: inherit;
+            outline: none; background: transparent; color: #333;
+        }
+        .map-search-input::placeholder { color: #bbb; }
+
+        /* ── Bottom Panel ── */
+        .bottom-panel {
+            background: white;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            border-top: 1px solid #eee;
+        }
+        .panel-content { flex: 1; overflow-y: auto; padding: 10px 16px 16px; }
+        .panel-content::-webkit-scrollbar { width: 4px; }
+        .panel-content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+        /* ── Location Badge (on map) ── */
+        .location-badge {
+            position: absolute; bottom: 10px; left: 10px; right: 10px; z-index: 1000;
+            background: white; border-radius: 10px; padding: 10px 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.12);
+            display: flex; align-items: center; gap: 10px; font-size: 13px;
+            animation: fadeInUp .2s ease-out;
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .location-badge-icon { font-size: 20px; }
+        .location-badge-text { flex: 1; }
+        .location-badge-label { font-weight: 700; color: #333; font-size: 12px; }
+        .location-badge-addr { font-size: 11px; color: #999; margin-top: 2px; }
+        .location-badge-clear { background: none; border: none; font-size: 16px; cursor: pointer; color: #999; padding: 4px; }
+
+        /* ── Section Styles ── */
+        .section-title {
+            display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+        }
+        .step-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #FABE00; color: #002063;
+            font-size: 11px; font-weight: 800;
+        }
+        .step-badge.disabled { background: #ccc; color: #999; }
+        .step-label { font-size: 13px; font-weight: 700; color: #002063; }
+        .step-label.disabled { color: #999; }
+        .step-done { font-size: 10px; color: #2e7d32; font-weight: 600; background: #e8f5e9; padding: 2px 8px; border-radius: 8px; }
+
+        /* ── DateTime ── */
+        .datetime-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .dt-group { display: flex; flex-direction: column; gap: 3px; }
+        .dt-group label { font-size: 10px; font-weight: 600; color: #666; }
+        .dt-group select, .dt-group input {
+            padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 12px; font-family: inherit; color: #333; background: white;
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center; padding-right: 26px; cursor: pointer;
+        }
+
+        /* ── Address Input ── */
+        .address-input-wrap { position: relative; margin-bottom: 14px; }
+        .address-input {
+            width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 13px; font-family: inherit; color: #333;
+        }
+        .address-input:focus { outline: none; border-color: #002063; }
+        .address-suggestions {
+            position: absolute; top: 100%; left: 0; right: 0; background: white;
+            border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;
+            max-height: 180px; overflow-y: auto; z-index: 20;
+        }
+        .address-suggestion-item {
+            padding: 10px 14px; border-bottom: 1px solid #eee; cursor: pointer;
+            font-size: 13px; transition: background .2s;
+        }
+        .address-suggestion-item:hover { background: #f5f8ff; }
+
+        /* ── Vehicle Cards ── */
+        .vehicle-count-banner {
+            background: linear-gradient(135deg, #fffbf0, #fff8e6);
+            border: 1px solid #FABE00; border-radius: 10px;
+            padding: 8px 12px; display: flex; align-items: center; justify-content: center; gap: 6px;
+            font-size: 13px; color: #002063; font-weight: 700; margin-bottom: 10px;
+        }
+        .vehicle-count-num { font-size: 18px; font-weight: 800; color: #002063; }
+        .vehicle-list { display: flex; flex-direction: column; gap: 8px; }
+        .vehicle-card {
+            display: flex; align-items: center; gap: 10px;
+            background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+            padding: 10px; cursor: pointer; transition: all .2s;
+        }
+        .vehicle-card:hover { border-color: #FABE00; box-shadow: 0 2px 8px rgba(250,190,0,.15); }
+        .vehicle-card:active { transform: scale(0.98); }
+        .vc-icon {
+            width: 80px; height: 52px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; flex-shrink: 0; background: #f3f4f6;
+            overflow: hidden;
+        }
+        .vc-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .vc-icon.A { background: #ede9fe; }
+        .vc-icon.B { background: #e0f2fe; }
+        .vc-icon.C { background: #d1fae5; }
+        .vc-icon.S { background: #fef3c7; }
+        .vc-icon.F { background: #fce7f3; }
+        .vc-icon.H { background: #f1f5f9; }
+        .vc-body { flex: 1; min-width: 0; }
+        .vc-class-tag { font-size: 11px; font-weight: 700; margin-bottom: 1px; }
+        .vc-class-tag.A { color: #7c3aed; }
+        .vc-class-tag.B { color: #0284c7; }
+        .vc-class-tag.C { color: #059669; }
+        .vc-class-tag.S { color: #d97706; }
+        .vc-class-tag.F { color: #db2777; }
+        .vc-class-tag.H { color: #64748b; }
+        .vc-name { font-size: 13px; font-weight: 700; color: #333; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vc-specs { display: flex; gap: 8px; font-size: 11px; color: #888; margin-top: 3px; }
+        .vc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+        .vc-price { font-size: 15px; font-weight: 800; color: #002063; }
+        .vc-price-unit { font-size: 10px; color: #888; font-weight: 500; }
+        .vc-select-btn {
+            padding: 5px 14px; background: #FABE00; color: #002063; border: none;
+            border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .15s;
+        }
+        .vc-select-btn:hover { background: #e5ab00; }
+        .vc-select-btn:active { transform: scale(0.95); }
+
+        /* ── Class Filter ── */
+        .class-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 10px; -webkit-overflow-scrolling: touch; }
+        .class-chips::-webkit-scrollbar { display: none; }
+        .class-chip {
+            flex-shrink: 0; padding: 6px 12px; border: 1px solid #ddd; border-radius: 18px;
+            background: white; cursor: pointer; font-size: 12px; font-weight: 500;
+            color: #666; transition: all .2s; white-space: nowrap;
+        }
+        .class-chip:hover { border-color: #002063; color: #002063; }
+        .class-chip.selected { background: #FABE00; color: #002063; border-color: #FABE00; font-weight: 700; }
+
+        /* ── Empty / Loading States ── */
+        .empty-state {
+            text-align: center; padding: 24px 16px; background: #f9f9f9; border-radius: 12px;
+        }
+        .empty-state-icon { font-size: 36px; margin-bottom: 10px; }
+        .empty-state-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 4px; }
+        .empty-state-desc { font-size: 12px; color: #999; line-height: 1.5; }
+        .loading-spinner {
+            display: inline-block; width: 20px; height: 20px;
+            border: 2px solid #ddd; border-top-color: #002063;
+            border-radius: 50%; animation: spin .6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes vehicleFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Confirm Screen ── */
+        .confirm-screen { padding: 16px; flex: 1; overflow-y: auto; }
+        .confirm-vehicle-hero {
+            background: linear-gradient(135deg, #002063, #003399);
+            border-radius: 16px; padding: 20px; color: white; margin-bottom: 16px; text-align: center;
+        }
+        .confirm-vehicle-icon { font-size: 48px; margin-bottom: 8px; }
+        .confirm-vehicle-name { font-size: 18px; font-weight: 700; }
+        .confirm-vehicle-class { font-size: 12px; opacity: .7; margin-top: 4px; }
+        .confirm-details { background: #f9f9f9; border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+        .confirm-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .confirm-row:last-child { border-bottom: none; }
+        .confirm-row-label { color: #666; }
+        .confirm-row-value { font-weight: 600; color: #333; text-align: right; max-width: 60%; }
+        .confirm-total { background: #fffbf0; border: 2px solid #FABE00; border-radius: 12px; padding: 14px; text-align: center; margin-bottom: 16px; }
+        .confirm-total-label { font-size: 12px; color: #666; }
+        .confirm-total-price { font-size: 24px; font-weight: 800; color: #002063; margin-top: 4px; }
+        .confirm-total-note { font-size: 10px; color: #999; margin-top: 4px; }
+
+        /* ── Form Screen ── */
+        .form-screen { padding: 16px; flex: 1; overflow-y: auto; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; display: block; }
+        .form-label .required { color: #dc2626; font-size: 10px; margin-left: 4px; }
+        .form-input {
+            width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 14px; font-family: inherit; color: #333; transition: border-color .2s;
+        }
+        .form-input:focus { outline: none; border-color: #002063; box-shadow: 0 0 0 3px rgba(0,32,99,.08); }
+        .form-textarea { min-height: 80px; resize: vertical; }
+
+        /* ── Options Screen ── */
+        .options-screen { padding: 16px; flex: 1; overflow-y: auto; }
+        .option-section { margin-bottom: 18px; }
+        .option-section-title {
+            font-size: 14px; font-weight: 700; color: #002063; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 6px;
+            padding-bottom: 6px; border-bottom: 2px solid #002063;
+        }
+        .insurance-card {
+            border: 2px solid #e5e7eb; border-radius: 12px; padding: 12px; margin-bottom: 8px;
+            cursor: pointer; transition: all .2s;
+        }
+        .insurance-card:hover { border-color: #FABE00; }
+        .insurance-card.selected { border-color: #FABE00; background: #fffbf0; }
+        .insurance-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .insurance-card-name { font-size: 13px; font-weight: 700; color: #333; }
+        .insurance-card-price { font-size: 12px; font-weight: 700; color: #002063; }
+        .insurance-card-desc { font-size: 11px; color: #666; line-height: 1.5; }
+        .insurance-check {
+            width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ddd;
+            display: flex; align-items: center; justify-content: center; font-size: 11px; color: white; flex-shrink: 0;
+        }
+        .insurance-card.selected .insurance-check { background: #FABE00; border-color: #FABE00; }
+        .insurance-note { font-size: 10px; color: #dc2626; margin-top: 4px; line-height: 1.4; }
+
+        /* Option Counter */
+        .option-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px solid #f0f0f0;
+        }
+        .option-item:last-child { border-bottom: none; }
+        .option-item-info { flex: 1; }
+        .option-item-name { font-size: 13px; font-weight: 600; color: #333; }
+        .option-item-price { font-size: 11px; color: #888; }
+        .option-counter {
+            display: flex; align-items: center; gap: 0;
+        }
+        .option-counter-btn {
+            width: 30px; height: 30px; border: 1px solid #ddd; background: white;
+            font-size: 16px; font-weight: 600; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; color: #333; transition: all .15s;
+        }
+        .option-counter-btn:first-child { border-radius: 6px 0 0 6px; }
+        .option-counter-btn:last-child { border-radius: 0 6px 6px 0; }
+        .option-counter-btn:hover { background: #f5f5f5; }
+        .option-counter-btn:active { background: #eee; }
+        .option-counter-btn.disabled { color: #ccc; cursor: default; }
+        .option-counter-val {
+            width: 36px; height: 30px; display: flex; align-items: center; justify-content: center;
+            border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;
+            font-size: 14px; font-weight: 700; color: #002063;
+        }
+
+        /* ── Payment Screen ── */
+        .payment-screen { padding: 16px; flex: 1; overflow-y: auto; }
+        .payment-method-card {
+            display: flex; align-items: center; gap: 12px; padding: 14px;
+            border: 2px solid #e5e7eb; border-radius: 12px; margin-bottom: 8px;
+            cursor: pointer; transition: all .2s;
+        }
+        .payment-method-card:hover { border-color: #FABE00; }
+        .payment-method-card.selected { border-color: #FABE00; background: #fffbf0; }
+        .payment-method-icon { font-size: 24px; }
+        .payment-method-name { font-size: 14px; font-weight: 600; }
+        .payment-method-desc { font-size: 11px; color: #888; }
+
+        /* ── Complete Screen ── */
+        .complete-screen { padding: 24px; flex: 1; overflow-y: auto; text-align: center; }
+        .complete-icon { font-size: 64px; margin-bottom: 16px; animation: completeBounce .5s ease-out; }
+        @keyframes completeBounce { 0% { transform: scale(0); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+        .complete-title { font-size: 20px; font-weight: 700; color: #002063; margin-bottom: 8px; }
+        .complete-desc { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.6; }
+        .complete-res-id { background: #f3f4f6; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 700; margin-bottom: 20px; }
+
+        /* ── Common Buttons ── */
+        .btn-primary {
+            width: 100%; padding: 14px; background: #FABE00; color: #002063; border: none;
+            border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer;
+            font-family: inherit; transition: all .2s;
+        }
+        .btn-primary:hover { background: #e5ab00; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { background: #ddd; color: #999; cursor: not-allowed; transform: none; }
+        .btn-secondary {
+            width: 100%; padding: 12px; background: white; color: #002063; border: 1.5px solid #002063;
+            border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+            font-family: inherit; transition: all .2s; margin-top: 8px;
+        }
+        .btn-secondary:hover { background: #f0f4ff; }
+        .btn-secondary:active { transform: scale(0.98); }
+        .screen-header {
+            display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+            border-bottom: 1px solid #eee; background: white;
+        }
+        .screen-header-back { background: none; border: none; font-size: 18px; cursor: pointer; padding: 4px; }
+        .screen-header-title { font-size: 15px; font-weight: 700; color: #333; }
+        .screen-header-step { font-size: 11px; color: #999; margin-left: auto; }
+
+        /* ── Step Progress (Booking Flow) ── */
+        .booking-progress { display: flex; align-items: center; padding: 0 16px 10px; gap: 0; }
+        .booking-progress-item { display: flex; align-items: center; }
+        .booking-progress-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: #ddd; transition: all .3s;
+        }
+        .booking-progress-dot.active { width: 10px; height: 10px; background: #FABE00; }
+        .booking-progress-dot.done { background: #22c55e; }
+        .booking-progress-line { width: 28px; height: 2px; background: #eee; margin: 0 2px; }
+        .booking-progress-line.done { background: #22c55e; }
+
+        /* ── Terms ── */
+        .terms-screen { padding: 16px; flex: 1; overflow-y: auto; }
+        .terms-box { background: #f9f9f9; border-radius: 10px; padding: 14px; font-size: 12px; color: #555; line-height: 1.7; max-height: 300px; overflow-y: auto; margin-bottom: 14px; }
+        .terms-check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 13px; }
+        .terms-check-row input { width: 18px; height: 18px; accent-color: #002063; }
+
+        /* ── Geolocation Button (on map) ── */
+        .geolocate-btn {
+            position: absolute; top: 10px; right: 10px; z-index: 1000;
+            width: 36px; height: 36px; border-radius: 10px;
+            background: white; border: none; box-shadow: 0 2px 8px rgba(0,0,0,.2);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 16px; transition: all .15s;
+        }
+        .geolocate-btn:hover { background: #f5f5f5; }
+        .geolocate-btn:active { transform: scale(0.9); }
+
+        /* ── Leaflet Custom ── */
+        .leaflet-container { font-family: inherit; }
+        .custom-pin {
+            background: none; border: none;
+        }
+        .pin-marker {
+            width: 32px; height: 42px; position: relative;
+        }
+        .pin-marker-inner {
+            width: 32px; height: 32px; border-radius: 50% 50% 50% 0;
+            background: #002063; transform: rotate(-45deg);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,32,99,.4);
+        }
+        .pin-marker-inner span {
+            transform: rotate(45deg); font-size: 14px;
+        }
+        .pin-marker-shadow {
+            width: 20px; height: 6px; background: rgba(0,0,0,.15);
+            border-radius: 50%; margin: 2px auto 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-outer">
+        <!-- Demo Nav -->
+        <div class="demo-nav" id="demoNav"></div>
+        <!-- Phone Frame -->
+        <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-status-bar">
+                <span>9:41</span>
+                <span style="display:flex;gap:6px;font-size:13px;">📶 🔋</span>
+            </div>
+            <div class="phone-screen" id="phoneScreen">
+                <!-- App renders here -->
+                <div id="app"></div>
+                <!-- Slide Menu -->
+                <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+                <div class="slide-menu" id="slideMenu">
+                    <div class="menu-header">
+                        <img src="images/logo_header.png" alt="HDM" style="height:24px;">
+                        <button class="menu-close" onclick="closeMenu()">✕</button>
+                    </div>
+                    <div class="menu-lang">
+                        <button class="menu-lang-btn active" onclick="switchLang('ja')">日本語</button>
+                        <button class="menu-lang-btn" onclick="switchLang('en')">English</button>
+                        <button class="menu-lang-btn" onclick="switchLang('zh')">繁體中文</button>
+                    </div>
+                    <div class="menu-user">
+                        <button class="menu-user-btn" onclick="closeMenu(); state.screen='mypage'; render();">予約を確認する（マイページ）</button>
+                    </div>
+                    <div class="menu-section">
+                        <div class="menu-section-title">サービス</div>
+                        <a class="menu-item" href="https://rent-handyman.jp/sapporo/" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">📖</span>ご利用方法（札幌店）<span class="menu-item-arrow">→</span>
+                        </a>
+                        <a class="menu-item" href="https://rent-handyman.jp/vehicle/" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">🚗</span>車両と料金<span class="menu-item-arrow">→</span>
+                        </a>
+                        <a class="menu-item" href="https://rent-handyman.jp/insurance/" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">🛡️</span>保険プラン一覧<span class="menu-item-arrow">→</span>
+                        </a>
+                    </div>
+                    <div class="menu-section">
+                        <div class="menu-section-title">サポート</div>
+                        <a class="menu-item" href="https://rent-handyman.jp/faq-sapporo/" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">❓</span>よくある質問（札幌店）<span class="menu-item-arrow">→</span>
+                        </a>
+                        <a class="menu-item" href="https://rent-handyman.jp/contact/" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">✉️</span>お問い合わせ<span class="menu-item-arrow">→</span>
+                        </a>
+                    </div>
+                    <div class="menu-section">
+                        <div class="menu-section-title">法的情報</div>
+                        <a class="menu-item" href="https://rent-handyman.jp/clause" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">📄</span>貸渡約款<span class="menu-item-arrow">→</span>
+                        </a>
+                        <a class="menu-item" href="https://rent-handyman.jp/privacy/" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">🔒</span>プライバシーポリシー<span class="menu-item-arrow">→</span>
+                        </a>
+                        <a class="menu-item" href="https://rent-handyman.jp/legal/" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">📋</span>特定商取引法<span class="menu-item-arrow">→</span>
+                        </a>
+                        <a class="menu-item" href="https://rent-handyman.jp/company/" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">🏢</span>会社概要<span class="menu-item-arrow">→</span>
+                        </a>
+                    </div>
+                    <div class="menu-section" style="border-bottom:none;">
+                        <div class="menu-section-title">SNS</div>
+                        <div class="menu-sns">
+                            <a href="https://www.instagram.com/delivery_rentalcar_handyman/" target="_blank" rel="noopener" style="color:white;">📷</a>
+                            <a href="https://www.facebook.com/handyman.rentalcar/" target="_blank" rel="noopener" style="color:white;">f</a>
+                        </div>
+                    </div>
+                    <div class="menu-footer">© 2026 HANDYMAN</div>
+                </div>
+            </div>
+            <div class="phone-home-indicator"><div class="home-indicator-bar"></div></div>
+        </div>
+    </div>
+
+    <script>
+    // ════════════════════════════════════════════
+    // ── Supabase Config (spk-task DB) ──
+    // ════════════════════════════════════════════
+    const SUPABASE_URL = 'https://ckrxttbnawkclshczsia.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+
+    async function supabaseGet(table, query = '') {
+        const url = `${SUPABASE_URL}/rest/v1/${table}?${query}&select=*`;
+        const res = await fetch(url, {
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+            }
+        });
+        if (!res.ok) throw new Error(`Supabase error: ${res.status}`);
+        return res.json();
+    }
+
+    // ════════════════════════════════════════════
+    // ── Vehicle Class Config ──
+    // ════════════════════════════════════════════
+    const VEHICLE_CLASSES = {
+        A: { name: 'プレミアム', icon: '👑', img: 'images/class_A.png', vehicles: 'トヨタ アルファード / ヴェルファイア', color: '#7c3aed' },
+        B: { name: 'ミニバン', icon: '🚐', img: 'images/class_B.png', vehicles: 'トヨタ ノア / 三菱 デリカD5', color: '#0284c7' },
+        C: { name: 'コンパクトSUV', icon: '🚙', img: 'images/class_C.png', vehicles: 'ダイハツ ロッキー / マツダ CX3', color: '#059669' },
+        S: { name: 'SUV', icon: '🏎️', img: 'images/class_S.png', vehicles: 'トヨタ ハリアー / マツダ CX-5', color: '#d97706' },
+        F: { name: 'コンパクト', icon: '🚗', img: 'images/class_F.png', vehicles: 'トヨタ ルーミー / スズキ ソリオ', color: '#db2777' },
+        H: { name: 'セダン', icon: '🚘', img: 'images/class_H.png', vehicles: 'トヨタ カローラ フィールダー / マツダ アクセラ', color: '#64748b' },
+    };
+
+    // Temporary price table (until DB has prices)
+    const CLASS_PRICES = { A: 15000, B: 10000, C: 7000, S: 12000, F: 5500, H: 6000 };
+
+    // ════════════════════════════════════════════
+    // ── Yard (Vehicle Base) Config ──
+    // ── TODO: Move to Supabase columns (yard_lat, yard_lng, yard_name, delivery_radius_km)
+    // ════════════════════════════════════════════
+    const VEHICLE_YARDS = {
+        // vehicle_code → { lat, lng, name, radiusKm }
+        // ── 本店ヤード（全車両共通、将来的に車両ごとに変更可能） ──
+        VEL:      { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 15 },
+        NRH:      { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 15 },
+        DLC:      { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 12 },
+        RKY:      { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 10 },
+        CX3:      { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 10 },
+        HRI:      { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 12 },
+        CX5:      { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 12 },
+        SLO:      { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 10 },
+        'アクセ':  { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 10 },
+        'デリカ':  { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 12 },
+    };
+    // Default for unknown vehicles
+    const DEFAULT_YARD = { lat: 43.0620, lng: 141.3380, name: '本店ヤード', radiusKm: 10 };
+
+    // Haversine distance (km)
+    function distanceKm(lat1, lng1, lat2, lng2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    // ════════════════════════════════════════════
+    // ── State ──
+    // ════════════════════════════════════════════
+    // Sapporo Station (service area center)
+    const DEFAULT_LAT = 43.0687;
+    const DEFAULT_LNG = 141.3508;
+
+    let state = {
+        screen: 'top',
+        // Location
+        userLat: DEFAULT_LAT,
+        userLng: DEFAULT_LNG,
+        deliveryLat: null,
+        deliveryLng: null,
+        deliveryAddr: '',
+        mapReady: false,
+        // DateTime
+        datetime: {
+            startDate: new Date().toISOString().slice(0, 10),
+            startTime: '10:00',
+            endDate: '',
+            endTime: '10:00',
+        },
+        dateExpanded: false, // Date picker expand/collapse
+        // Vehicles
+        vehicles: [],        // From Supabase
+        fleet: [],           // From Supabase (booked vehicles)
+        maintenance: [],     // From Supabase
+        availableVehicles: [],
+        selectedClass: null,
+        selectedVehicle: null,
+        loading: false,
+        // Options
+        cdw: 'none',           // 'none' | 'cdw' | 'pack'
+        options: { childSeat: 0, juniorSeat: 0 },
+        // Language
+        lang: 'ja',            // 'ja' | 'en' | 'zh'
+    };
+
+    // Set default endDate to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    state.datetime.endDate = tomorrow.toISOString().slice(0, 10);
+
+    // ════════════════════════════════════════════
+    // ── Leaflet Map ──
+    // ════════════════════════════════════════════
+    let map = null;
+    let deliveryMarker = null;
+
+    function initMap(lat, lng) {
+        if (map) return;
+        const container = document.getElementById('map');
+        if (!container) return;
+
+        map = L.map('map', {
+            center: [lat, lng],
+            zoom: 14,
+            zoomControl: false,
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OSM',
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Tap to set delivery pin
+        map.on('click', (e) => {
+            setDeliveryPin(e.latlng.lat, e.latlng.lng);
+        });
+
+        state.mapReady = true;
+
+        // Place initial pin at user location
+        setDeliveryPin(lat, lng);
+    }
+
+    function setDeliveryPin(lat, lng) {
+        state.deliveryLat = lat;
+        state.deliveryLng = lng;
+
+        if (deliveryMarker) {
+            deliveryMarker.setLatLng([lat, lng]);
+        } else if (map) {
+            const pinIcon = L.divIcon({
+                className: 'custom-pin',
+                html: '<div class="pin-marker"><div class="pin-marker-inner"><span>📍</span></div><div class="pin-marker-shadow"></div></div>',
+                iconSize: [32, 42],
+                iconAnchor: [16, 42],
+            });
+            deliveryMarker = L.marker([lat, lng], { icon: pinIcon, draggable: true }).addTo(map);
+            deliveryMarker.on('dragend', (e) => {
+                const pos = e.target.getLatLng();
+                state.deliveryLat = pos.lat;
+                state.deliveryLng = pos.lng;
+                reverseGeocode(pos.lat, pos.lng);
+            });
+        }
+
+        reverseGeocode(lat, lng);
+        if (map) map.panTo([lat, lng]);
+    }
+
+    async function reverseGeocode(lat, lng) {
+        state.deliveryAddr = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        renderLocationBadge();
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`);
+            const data = await res.json();
+            if (data.display_name) {
+                // Extract meaningful address parts
+                const addr = data.address;
+                const parts = [];
+                if (addr.city || addr.town || addr.village) parts.push(addr.city || addr.town || addr.village);
+                if (addr.suburb || addr.neighbourhood) parts.push(addr.suburb || addr.neighbourhood);
+                if (addr.road) parts.push(addr.road);
+                state.deliveryAddr = parts.length > 0 ? parts.join(' ') : data.display_name.split(',').slice(0, 3).join(', ');
+            }
+        } catch (e) {
+            // Keep coordinate-based address
+        }
+        renderLocationBadge();
+        updateLocationButton();
+        fetchAvailableVehicles();
+    }
+
+    function updateLocationButton() {
+        const hasLoc = !!(state.deliveryLat && state.deliveryLng);
+        const bottomPanel = document.getElementById('bottomPanel');
+        const emptyPanel = document.getElementById('locationEmptyPanel');
+        if (bottomPanel) bottomPanel.style.display = hasLoc ? '' : 'none';
+        if (emptyPanel) emptyPanel.style.display = hasLoc ? 'none' : '';
+    }
+
+    function renderVehiclePanel() {
+        const days = getDayCount();
+        let html = '';
+
+        // Class filter
+        html += `<div class="class-chips">`;
+        html += `<button class="class-chip ${!state.selectedClass ? 'selected' : ''}" onclick="state.selectedClass=null; renderPanel();">すべて</button>`;
+        for (const [id, cls] of Object.entries(VEHICLE_CLASSES)) {
+            html += `<button class="class-chip ${state.selectedClass === id ? 'selected' : ''}" onclick="state.selectedClass='${id}'; renderPanel();">${cls.icon} ${cls.name}</button>`;
+        }
+        html += `</div>`;
+
+        if (state.loading) {
+            html += `<div style="text-align:center;padding:20px;"><span class="loading-spinner"></span><div style="font-size:12px;color:#999;margin-top:8px;">車両を検索中...</div></div>`;
+            return html;
+        }
+
+        // Build class catalog: merge DB data with all defined classes
+        const dbGrouped = {};
+        state.availableVehicles.forEach(v => {
+            if (!dbGrouped[v.type]) dbGrouped[v.type] = [];
+            dbGrouped[v.type].push(v);
+        });
+
+        // Show all classes (A→H), with DB availability info
+        const classOrder = ['A', 'B', 'C', 'S', 'F', 'H'];
+        const filteredClasses = state.selectedClass ? [state.selectedClass] : classOrder;
+
+        html += `<div class="vehicle-count-banner">📍 指定場所対応車両</div>`;
+
+        html += `<div class="vehicle-list">`;
+        let idx = 0;
+        for (const type of filteredClasses) {
+            const cls = VEHICLE_CLASSES[type];
+            if (!cls) continue;
+            const price = CLASS_PRICES[type] || 5000;
+            const totalPrice = price * days;
+            const dbVehicles = dbGrouped[type] || [];
+            const availCount = dbVehicles.length;
+            const seats = dbVehicles[0]?.seats || (type === 'A' || type === 'B' ? 8 : 5);
+            if (availCount === 0) { idx++; continue; }
+
+            html += `
+                <div class="vehicle-card" style="animation:vehicleFadeIn .3s ease ${idx * 0.06}s both;" onclick="selectClass('${type}')">
+                    <div class="vc-icon ${type}">${cls.img ? `<img src="${cls.img}" alt="${cls.name}">` : (cls.icon || '🚗')}</div>
+                    <div class="vc-body">
+                        <div class="vc-class-tag ${type}">${cls.name}クラス</div>
+                        <div class="vc-name" title="${cls.vehicles}">${cls.vehicles}</div>
+                        <div class="vc-specs">
+                            <span>👥 ${seats}人乗り</span>
+                            <span>🚗 ${availCount}台空き</span>
+                        </div>
+                    </div>
+                    <div class="vc-right">
+                        <div class="vc-price">¥${totalPrice.toLocaleString()}</div>
+                        <div class="vc-price-unit">${days}日間</div>
+                        <button class="vc-select-btn" onclick="event.stopPropagation(); selectClass('${type}')">選択</button>
+                    </div>
+                </div>`;
+            idx++;
+        }
+        html += `</div>`;
+
+        return html;
+    }
+
+    function renderLocationBadge() {
+        const existing = document.getElementById('locationBadge');
+        if (existing) existing.remove();
+        if (!state.deliveryAddr) return;
+
+        const mapContainer = document.getElementById('mapWrap');
+        if (!mapContainer) return;
+
+        const badge = document.createElement('div');
+        badge.id = 'locationBadge';
+        badge.className = 'location-badge';
+        badge.innerHTML = `
+            <div class="location-badge-icon">📍</div>
+            <div class="location-badge-text">
+                <div class="location-badge-label">お届け場所</div>
+                <div class="location-badge-addr">${state.deliveryAddr}</div>
+            </div>
+            <button class="location-badge-clear" onclick="clearDeliveryPin()">✕</button>
+        `;
+        mapContainer.appendChild(badge);
+    }
+
+    function clearDeliveryPin() {
+        state.deliveryLat = null;
+        state.deliveryLng = null;
+        state.deliveryAddr = '';
+        if (deliveryMarker && map) {
+            map.removeLayer(deliveryMarker);
+            deliveryMarker = null;
+        }
+        state.availableVehicles = [];
+        const badge = document.getElementById('locationBadge');
+        if (badge) badge.remove();
+        renderPanel();
+    }
+
+    function geolocateUser() {
+        // Reset to Sapporo Station center
+        if (map) {
+            map.setView([DEFAULT_LAT, DEFAULT_LNG], 14);
+            setDeliveryPin(DEFAULT_LAT, DEFAULT_LNG);
+        }
+    }
+
+    // ════════════════════════════════════════════
+    // ── Data Fetching ──
+    // ════════════════════════════════════════════
+    async function fetchVehicles() {
+        try {
+            state.loading = true;
+            const [vehicles, fleet, maintenance] = await Promise.all([
+                supabaseGet('vehicles', 'insurance_veh=eq.false'),
+                supabaseGet('fleet'),
+                supabaseGet('maintenance'),
+            ]);
+            state.vehicles = vehicles || [];
+            state.fleet = fleet || [];
+            state.maintenance = maintenance || [];
+            state.loading = false;
+            fetchAvailableVehicles();
+        } catch (e) {
+            console.error('Failed to fetch vehicles:', e);
+            state.loading = false;
+            renderPanel();
+        }
+    }
+
+    async function fetchAvailableVehicles() {
+        if (!state.vehicles.length) return;
+        if (!state.deliveryLat) {
+            state.availableVehicles = [];
+            renderPanel();
+            return;
+        }
+
+        const start = state.datetime.startDate;
+        const end = state.datetime.endDate;
+        if (!start || !end) {
+            state.availableVehicles = [];
+            renderPanel();
+            return;
+        }
+
+        // Get busy vehicle codes (overlapping fleet + maintenance)
+        const busyCodes = new Set();
+
+        // Check fleet (reservations)
+        for (const f of state.fleet) {
+            // We need to check reservation dates — join with reservations
+            // For now, fetch reservation data inline
+        }
+
+        // Simpler approach: fetch reservations that overlap with selected dates
+        try {
+            const reservations = await supabaseGet('reservations',
+                `status=neq.cancelled&lend_date=lte.${end}&return_date=gte.${start}`
+            );
+            const bookedResIds = new Set((reservations || []).map(r => r.id));
+
+            for (const f of state.fleet) {
+                if (bookedResIds.has(f.reservation_id)) {
+                    busyCodes.add(f.vehicle_code);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to check reservations:', e);
+        }
+
+        // Check maintenance
+        for (const m of state.maintenance) {
+            if (m.start_date <= end && m.end_date >= start) {
+                busyCodes.add(m.vehicle_code);
+            }
+        }
+
+        // Filter available vehicles (not booked + within delivery radius)
+        state.availableVehicles = state.vehicles.filter(v => {
+            if (busyCodes.has(v.code)) return false;
+            // Check delivery radius from yard
+            const yard = VEHICLE_YARDS[v.code] || DEFAULT_YARD;
+            const dist = distanceKm(state.deliveryLat, state.deliveryLng, yard.lat, yard.lng);
+            return dist <= yard.radiusKm;
+        });
+
+        // Apply class filter
+        if (state.selectedClass) {
+            state.availableVehicles = state.availableVehicles.filter(v => v.type === state.selectedClass);
+        }
+
+        renderPanel();
+    }
+
+    // ════════════════════════════════════════════
+    // ── Helpers ──
+    // ════════════════════════════════════════════
+    function generateDateOptions(selected) {
+        let html = '';
+        const today = new Date();
+        for (let i = 0; i < 60; i++) {
+            const d = new Date(today);
+            d.setDate(d.getDate() + i);
+            const val = d.toISOString().slice(0, 10);
+            const label = `${d.getMonth() + 1}/${d.getDate()}（${'日月火水木金土'[d.getDay()]}）`;
+            html += `<option value="${val}" ${val === selected ? 'selected' : ''}>${label}</option>`;
+        }
+        return html;
+    }
+
+    function generateTimeOptions(selected) {
+        let html = '';
+        for (let h = 0; h < 24; h++) {
+            for (const m of ['00', '30']) {
+                const val = `${String(h).padStart(2, '0')}:${m}`;
+                html += `<option value="${val}" ${val === selected ? 'selected' : ''}>${val}</option>`;
+            }
+        }
+        return html;
+    }
+
+    function getVehicleIcon(type) {
+        return VEHICLE_CLASSES[type]?.icon || '🚗';
+    }
+
+    function getVehiclePrice(type) {
+        const price = CLASS_PRICES[type] || 5000;
+        return `¥${price.toLocaleString()}`;
+    }
+
+    function getDayCount() {
+        const s = new Date(state.datetime.startDate + 'T' + state.datetime.startTime);
+        const e = new Date(state.datetime.endDate + 'T' + state.datetime.endTime);
+        const hours = (e - s) / (1000 * 60 * 60);
+        return Math.max(1, Math.ceil(hours / 24));
+    }
+
+    // ════════════════════════════════════════════
+    // ── Render ──
+    // ════════════════════════════════════════════
+    function render() {
+        const app = document.getElementById('app');
+        if (!app) return;
+
+        let html = '';
+        switch (state.screen) {
+            case 'top':
+                html = renderTopScreen();
+                break;
+            case 'step_location':
+                html = renderLocationScreen();
+                break;
+            case 'confirm':
+                html = renderConfirmScreen();
+                break;
+            case 'form':
+                html = renderFormScreen();
+                break;
+            case 'options':
+                html = renderOptionsScreen();
+                break;
+            case 'terms':
+                html = renderTermsScreen();
+                break;
+            case 'payment':
+                html = renderPaymentScreen();
+                break;
+            case 'complete':
+                html = renderCompleteScreen();
+                break;
+            case 'mypage':
+                html = renderMypageScreen();
+                break;
+            default:
+                html = renderTopScreen();
+        }
+        app.innerHTML = html;
+
+        // Add screen fade animation
+        const screenEl = app.querySelector('.screen-fade');
+        if (!screenEl) {
+            const firstChild = app.firstElementChild;
+            if (firstChild && state.screen !== 'top') firstChild.classList.add('screen-fade');
+        }
+
+        // Map init (on location screen)
+        if (state.screen === 'step_location') {
+            requestAnimationFrame(() => {
+                if (!map) {
+                    initMap(state.deliveryLat || DEFAULT_LAT, state.deliveryLng || DEFAULT_LNG);
+                    if (!state.vehicles.length) fetchVehicles();
+                } else {
+                    const container = document.getElementById('map');
+                    if (container && !container._leaflet_id) {
+                        map.remove();
+                        map = null;
+                        deliveryMarker = null;
+                        initMap(state.deliveryLat || state.userLat, state.deliveryLng || state.userLng);
+                    }
+                }
+                renderLocationBadge();
+            });
+        }
+
+        // Demo nav
+        const demoNav = document.getElementById('demoNav');
+        if (demoNav) demoNav.innerHTML = renderDemoNav();
+    }
+
+    // ════════════════════════════════════════════
+    // ── STEP 1: Date Selection (Top Screen) ──
+    // ════════════════════════════════════════════
+    function renderTopScreen() {
+        const days = getDayCount();
+        const startLabel = formatDateLabel(state.datetime.startDate);
+        const endLabel = formatDateLabel(state.datetime.endDate);
+
+        return `
+            <div class="app-header">
+                <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="header-actions">
+                    <button class="hamburger-btn" onclick="openMenu()">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+            <div class="screen-fade" style="flex:1;display:flex;flex-direction:column;overflow-y:auto;">
+                <!-- Hero Slider -->
+                <div class="hero-slider" id="heroSlider">
+                    <div class="hero-track" id="heroTrack">
+                        <div class="hero-slide"><img src="images/top_banner_01.jpg" alt="Rent smart. Drive free."></div>
+                        <div class="hero-slide"><img src="images/top_banner_02.jpg" alt="No pickup. Just delivery."></div>
+                        <div class="hero-slide"><img src="images/top_banner_03.jpg" alt="多言語サポート"></div>
+                        <div class="hero-slide"><img src="images/top_banner_05.jpg" alt="オンラインで完結"></div>
+                    </div>
+                    <div class="hero-dots">
+                        <div class="hero-dot active" onclick="goSlide(0)"></div>
+                        <div class="hero-dot" onclick="goSlide(1)"></div>
+                        <div class="hero-dot" onclick="goSlide(2)"></div>
+                        <div class="hero-dot" onclick="goSlide(3)"></div>
+                    </div>
+                </div>
+
+                <!-- Step indicator -->
+                <div class="top-progress" style="padding:14px 16px 8px;">
+                    <div class="top-progress-step">
+                        <div class="top-progress-dot active">1</div>
+                        <span class="top-progress-label active">日程</span>
+                    </div>
+                    <div class="top-progress-line"></div>
+                    <div class="top-progress-step">
+                        <div class="top-progress-dot pending">2</div>
+                        <span class="top-progress-label">場所</span>
+                    </div>
+                    <div class="top-progress-line"></div>
+                    <div class="top-progress-step">
+                        <div class="top-progress-dot pending">3</div>
+                        <span class="top-progress-label">車両</span>
+                    </div>
+                </div>
+
+                <!-- Date Form -->
+                <div style="padding:16px;flex:1;">
+                    <div style="font-size:15px;font-weight:700;color:#002063;margin-bottom:14px;">利用期間を選択</div>
+                    <div class="datetime-grid" style="gap:12px;">
+                        <div class="dt-group">
+                            <label>開始日</label>
+                            <select onchange="state.datetime.startDate=this.value;">
+                                ${generateDateOptions(state.datetime.startDate)}
+                            </select>
+                        </div>
+                        <div class="dt-group">
+                            <label>開始時刻</label>
+                            <select onchange="state.datetime.startTime=this.value;">
+                                ${generateTimeOptions(state.datetime.startTime)}
+                            </select>
+                        </div>
+                        <div class="dt-group">
+                            <label>終了日</label>
+                            <select onchange="state.datetime.endDate=this.value;">
+                                ${generateDateOptions(state.datetime.endDate)}
+                            </select>
+                        </div>
+                        <div class="dt-group">
+                            <label>終了時刻</label>
+                            <select onchange="state.datetime.endTime=this.value;">
+                                ${generateTimeOptions(state.datetime.endTime)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Date Summary -->
+                    <div style="background:#fffbf0;border:1px solid #FABE00;border-radius:10px;padding:12px;margin-top:14px;text-align:center;">
+                        <div style="font-size:13px;font-weight:700;color:#002063;">${startLabel} ${state.datetime.startTime} 〜 ${endLabel} ${state.datetime.endTime}</div>
+                        <div style="font-size:12px;color:#888;margin-top:4px;">${days}日間</div>
+                    </div>
+                </div>
+
+                <!-- Next Button -->
+                <div style="padding:0 16px 20px;">
+                    <button class="btn-primary" onclick="state.screen='step_location'; render();">お届け場所を選ぶ</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // ════════════════════════════════════════════
+    // ── STEP 2: Location Selection ──
+    // ════════════════════════════════════════════
+    function renderLocationScreen() {
+        const hasLocation = !!(state.deliveryLat && state.deliveryLng);
+        const days = getDayCount();
+        const startLabel = formatDateLabel(state.datetime.startDate);
+        const endLabel = formatDateLabel(state.datetime.endDate);
+
+        return `
+            <div class="app-header">
+                <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="header-actions">
+                    <button class="hamburger-btn" onclick="openMenu()">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+            <div class="screen-header">
+                <button class="screen-header-back" onclick="state.screen='top'; render();">←</button>
+                <span class="screen-header-title">お届け場所</span>
+                <span class="screen-header-step" style="font-size:10px;color:#888;">${startLabel} ${state.datetime.startTime}〜${endLabel} ${state.datetime.endTime}（${days}日間）</span>
+            </div>
+
+            <!-- Step indicator -->
+            <div class="top-progress" style="padding:10px 16px 6px;">
+                <div class="top-progress-step">
+                    <div class="top-progress-dot done">✓</div>
+                    <span class="top-progress-label done">日程</span>
+                </div>
+                <div class="top-progress-line done"></div>
+                <div class="top-progress-step">
+                    <div class="top-progress-dot active">2</div>
+                    <span class="top-progress-label active">場所</span>
+                </div>
+                <div class="top-progress-line"></div>
+                <div class="top-progress-step">
+                    <div class="top-progress-dot pending">3</div>
+                    <span class="top-progress-label">車両</span>
+                </div>
+            </div>
+
+            <!-- Map (large) -->
+            <div id="mapWrap" style="position:relative; flex:1; min-height:360px;">
+                <div id="map"></div>
+                <div class="map-search-bar">
+                    <div class="map-search-icon">🔍</div>
+                    <input type="text" id="addressSearch" class="map-search-input"
+                        placeholder="ホテル名・住所で検索"
+                        oninput="onAddressInput(this.value)"
+                        onfocus="this.select()">
+                </div>
+                <div id="addressSuggestions" style="display:none;position:absolute;top:44px;left:8px;right:44px;z-index:1001;background:white;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:150px;overflow-y:auto;"></div>
+                <button class="geolocate-btn" onclick="geolocateUser()" title="札幌駅に戻る">📍</button>
+            </div>
+
+            <!-- Vehicle Panel (appears after pin) -->
+            <div class="bottom-panel" id="bottomPanel" style="${hasLocation ? '' : 'display:none;'}">
+                <div class="panel-content" id="panelContent">
+                    ${hasLocation ? renderVehiclePanel() : ''}
+                </div>
+            </div>
+            <div id="locationEmptyPanel" style="padding:20px 16px;background:white;border-top:1px solid #eee;text-align:center;${hasLocation ? 'display:none;' : ''}">
+                <div style="font-size:14px;color:#999;">📍 マップをタップしてお届け場所を指定</div>
+            </div>
+        `;
+    }
+
+    // ════════════════════════════════════════════
+    // ── STEP 3: Vehicle Selection ──
+    // ════════════════════════════════════════════
+
+    function renderPanel() {
+        const el = document.getElementById('panelContent');
+        if (el) {
+            el.innerHTML = renderVehiclePanel();
+        }
+        updateLocationButton();
+    }
+
+    function renderDemoNav() {
+        const screens = [
+            { id: 'top', label: '①日程' },
+            { id: 'step_location', label: '②場所+車両' },
+            { id: 'confirm', label: '確認' },
+            { id: 'options', label: 'オプション' },
+            { id: 'form', label: '情報入力' },
+            { id: 'terms', label: '規約' },
+            { id: 'payment', label: '決済' },
+            { id: 'complete', label: '完了' },
+            { id: 'mypage', label: 'マイページ' },
+        ];
+        return screens.map(s => `
+            <button class="nav-btn ${state.screen === s.id ? 'active' : ''}" onclick="state.screen='${s.id}'; render();">
+                ${s.label}
+            </button>
+        `).join('');
+    }
+
+    // ════════════════════════════════════════════
+    // ── Confirm Screen ──
+    // ════════════════════════════════════════════
+    function renderConfirmScreen() {
+        const v = state.selectedVehicle;
+        if (!v) return renderTopScreen();
+        const cls = VEHICLE_CLASSES[v.type] || {};
+        const days = getDayCount();
+        const basePrice = (CLASS_PRICES[v.type] || 5000) * days;
+        const deliveryFee = 1500;
+        const totalPrice = basePrice + deliveryFee;
+        state._calcPrice = { basePrice, deliveryFee, totalPrice, days };
+
+        const startLabel = formatDateLabel(state.datetime.startDate);
+        const endLabel = formatDateLabel(state.datetime.endDate);
+
+        return `
+            <div class="app-header">
+                <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="header-actions"></div>
+            </div>
+            <div class="screen-header">
+                <button class="screen-header-back" onclick="state.screen='top'; render();">←</button>
+                <span class="screen-header-title">予約内容の確認</span>
+            </div>
+            ${renderBookingProgress(1)}
+            <div class="confirm-screen screen-fade">
+                <div class="confirm-vehicle-hero">
+                    <div class="confirm-vehicle-icon">${cls.img ? `<img src="${cls.img}" style="width:180px;height:auto;border-radius:10px;">` : (cls.icon || '🚗')}</div>
+                    <div class="confirm-vehicle-name">${cls.name || v.type}クラス</div>
+                    <div class="confirm-vehicle-class">${cls.vehicles}</div>
+                    <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;font-size:11px;opacity:.8;">
+                        <span>👥 ${v.seats || 5}人乗り</span>
+                    </div>
+                </div>
+
+                <div class="confirm-details">
+                    <div class="confirm-row">
+                        <span class="confirm-row-label">📍 お届け場所</span>
+                        <span class="confirm-row-value">${state.deliveryAddr}</span>
+                    </div>
+                    <div class="confirm-row">
+                        <span class="confirm-row-label">📅 貸出</span>
+                        <span class="confirm-row-value">${startLabel} ${state.datetime.startTime}</span>
+                    </div>
+                    <div class="confirm-row">
+                        <span class="confirm-row-label">📅 返却</span>
+                        <span class="confirm-row-value">${endLabel} ${state.datetime.endTime}</span>
+                    </div>
+                </div>
+
+                <div class="confirm-total">
+                    <div class="confirm-total-label">お支払い見積もり（${days}日間）</div>
+                    <div class="confirm-total-price">¥${totalPrice.toLocaleString()}<span style="font-size:12px;font-weight:400;color:#666;">（税込）</span></div>
+                    <div style="display:flex;justify-content:center;gap:16px;margin-top:6px;font-size:11px;color:#888;">
+                        <span>基本料金 ¥${basePrice.toLocaleString()}</span>
+                        <span>配送料 ¥${deliveryFee.toLocaleString()}</span>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="state.screen='options'; render();">予約手続きへ進む</button>
+                <button class="btn-secondary" onclick="state.screen='top'; render();">車両選択に戻る</button>
+            </div>
+        `;
+    }
+
+    // ════════════════════════════════════════════
+    // ── Form Screen (Driver Info) ──
+    // ════════════════════════════════════════════
+    function renderFormScreen() {
+        return `
+            <div class="app-header">
+                <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="header-actions"></div>
+            </div>
+            <div class="screen-header">
+                <button class="screen-header-back" onclick="state.screen='options'; render();">←</button>
+                <span class="screen-header-title">運転者情報</span>
+            </div>
+            ${renderBookingProgress(2)}
+            <div class="form-screen screen-fade">
+                <div style="font-size:11px;color:#888;margin-bottom:12px;line-height:1.5;">運転される方の情報を入力してください。免許証と一致する必要があります。</div>
+                <div id="formError" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#dc2626;"></div>
+                <div class="form-group">
+                    <label class="form-label">お名前<span class="required">*必須</span></label>
+                    <input class="form-input" type="text" id="formName" placeholder="山田 太郎" value="${state.formData?.name || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">フリガナ<span class="required">*必須</span></label>
+                    <input class="form-input" type="text" id="formKana" placeholder="ヤマダ タロウ" value="${state.formData?.kana || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">電話番号<span class="required">*必須</span></label>
+                    <input class="form-input" type="tel" id="formPhone" placeholder="090-1234-5678" value="${state.formData?.phone || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">メールアドレス<span class="required">*必須</span></label>
+                    <input class="form-input" type="email" id="formEmail" placeholder="example@mail.com" value="${state.formData?.email || ''}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">特記事項</label>
+                    <textarea class="form-input form-textarea" id="formNotes" placeholder="チャイルドシート希望、到着時間の相談 等">${state.formData?.notes || ''}</textarea>
+                </div>
+                <button class="btn-primary" onclick="submitForm()">次へ進む</button>
+                <button class="btn-secondary" onclick="state.screen='options'; render();">戻る</button>
+            </div>
+        `;
+    }
+
+    // ════════════════════════════════════════════
+    // ── Options Screen (Insurance + Accessories) ──
+    // ════════════════════════════════════════════
+    function renderOptionsScreen() {
+        const days = getDayCount();
+        const cdwPrice = 1100;
+        const packPrice = 1650; // CDW 1,100 + NOC 550
+        const optPrices = { childSeat: 1000, juniorSeat: 500 };
+
+        // Calculate options total
+        const cdwTotal = state.cdw === 'cdw' ? cdwPrice * days : (state.cdw === 'pack' ? packPrice * days : 0);
+        const accTotal = state.options.childSeat * optPrices.childSeat + state.options.juniorSeat * optPrices.juniorSeat;
+        const optionsTotal = cdwTotal + accTotal;
+
+        return `
+            <div class="app-header">
+                <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="header-actions"></div>
+            </div>
+            <div class="screen-header">
+                <button class="screen-header-back" onclick="state.screen='confirm'; render();">←</button>
+                <span class="screen-header-title">オプション選択</span>
+            </div>
+            ${renderBookingProgress(3)}
+            <div class="options-screen screen-fade">
+
+                <!-- 免責補償制度 -->
+                <div class="option-section">
+                    <div class="option-section-title">🛡️ 免責補償制度</div>
+
+                    <div class="insurance-card ${state.cdw === 'cdw' ? 'selected' : ''}" onclick="state.cdw='cdw'; render();">
+                        <div class="insurance-card-header">
+                            <div style="flex:1;">
+                                <div class="insurance-card-name">免責補償（CDW）</div>
+                                <div class="insurance-card-price">${cdwPrice.toLocaleString()}円 / 1日</div>
+                            </div>
+                            <div class="insurance-check">${state.cdw === 'cdw' ? '✓' : ''}</div>
+                        </div>
+                        <div class="insurance-card-desc">
+                            <div style="padding:2px 0;">✓ 車両・対物事故の免責額が0円に</div>
+                            <div style="padding:2px 0;">✓ 万一の事故でも自己負担なし</div>
+                        </div>
+                        ${state.cdw === 'cdw' ? `<div style="font-size:11px;color:#002063;font-weight:600;margin-top:4px;">合計: ¥${(cdwPrice * days).toLocaleString()}（${days}日間）</div>` : ''}
+                    </div>
+
+                    <div class="insurance-card ${state.cdw === 'pack' ? 'selected' : ''}" onclick="state.cdw='pack'; render();">
+                        <div class="insurance-card-header">
+                            <div style="flex:1;">
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <div class="insurance-card-name">安心パック</div>
+                                    <span style="font-size:9px;background:#002063;color:#FABE00;padding:2px 6px;border-radius:4px;font-weight:700;">おすすめ</span>
+                                </div>
+                                <div class="insurance-card-price">${packPrice.toLocaleString()}円 / 1日<span style="font-size:10px;color:#888;font-weight:400;">（免責${cdwPrice.toLocaleString()}円+NOC550円）</span></div>
+                            </div>
+                            <div class="insurance-check">${state.cdw === 'pack' ? '✓' : ''}</div>
+                        </div>
+                        <div class="insurance-card-desc">
+                            <div style="padding:2px 0;">✓ 免責補償（CDW）の全内容</div>
+                            <div style="padding:2px 0;">✓ NOC（休業補償）も全額カバー</div>
+                            <div style="padding:2px 0;">✓ ロードサービス付き</div>
+                        </div>
+                        ${state.cdw === 'pack' ? `<div style="font-size:11px;color:#002063;font-weight:600;margin-top:4px;">合計: ¥${(packPrice * days).toLocaleString()}（${days}日間）</div>` : ''}
+                    </div>
+
+                    <div class="insurance-card ${state.cdw === 'none' ? 'selected' : ''}" onclick="state.cdw='none'; render();" style="${state.cdw === 'none' ? 'border-color:#999;background:#f9f9f9;' : ''}">
+                        <div class="insurance-card-header" style="margin-bottom:0;">
+                            <div class="insurance-card-name" style="color:#666;">加入しない</div>
+                            <div class="insurance-check" style="${state.cdw === 'none' ? 'background:#999;border-color:#999;' : ''}">${state.cdw === 'none' ? '✓' : ''}</div>
+                        </div>
+                    </div>
+
+                    <div class="insurance-note">※「免責補償」と「安心パック」の同時加入はできません。</div>
+                </div>
+
+                <!-- チャイルドシート -->
+                <div class="option-section">
+                    <div class="option-section-title">👶 チャイルドシート</div>
+                    <div style="background:#f9f9f9;border-radius:10px;padding:10px 14px;">
+                        <div class="option-item">
+                            <div class="option-item-info">
+                                <div class="option-item-name">チャイルドシート</div>
+                                <div class="option-item-price">1〜4歳 / ${optPrices.childSeat.toLocaleString()}円</div>
+                            </div>
+                            <div class="option-counter">
+                                <button class="option-counter-btn ${state.options.childSeat === 0 ? 'disabled' : ''}" onclick="if(state.options.childSeat>0){state.options.childSeat--;render();}">−</button>
+                                <div class="option-counter-val">${state.options.childSeat}</div>
+                                <button class="option-counter-btn" onclick="if(state.options.childSeat<3){state.options.childSeat++;render();}">+</button>
+                            </div>
+                        </div>
+                        <div class="option-item">
+                            <div class="option-item-info">
+                                <div class="option-item-name">ジュニアシート</div>
+                                <div class="option-item-price">4〜10歳 / ${optPrices.juniorSeat.toLocaleString()}円</div>
+                            </div>
+                            <div class="option-counter">
+                                <button class="option-counter-btn ${state.options.juniorSeat === 0 ? 'disabled' : ''}" onclick="if(state.options.juniorSeat>0){state.options.juniorSeat--;render();}">−</button>
+                                <div class="option-counter-val">${state.options.juniorSeat}</div>
+                                <button class="option-counter-btn" onclick="if(state.options.juniorSeat<3){state.options.juniorSeat++;render();}">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Options Summary -->
+                ${optionsTotal > 0 ? `
+                <div style="background:#fffbf0;border:1px solid #FABE00;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;">
+                    <div style="display:flex;justify-content:space-between;font-weight:700;color:#002063;">
+                        <span>オプション合計</span>
+                        <span>+¥${optionsTotal.toLocaleString()}</span>
+                    </div>
+                    <div style="color:#888;margin-top:2px;">
+                        ${state.cdw === 'cdw' ? `免責補償 ¥${(cdwPrice * days).toLocaleString()}` : ''}${state.cdw === 'pack' ? `安心パック ¥${(packPrice * days).toLocaleString()}` : ''}${accTotal > 0 ? `${cdwTotal > 0 ? ' + ' : ''}シート ¥${accTotal.toLocaleString()}` : ''}
+                    </div>
+                </div>
+                ` : ''}
+
+                <button class="btn-primary" onclick="state.screen='form'; render();">次へ進む</button>
+                <button class="btn-secondary" onclick="state.screen='confirm'; render();">戻る</button>
+            </div>
+        `;
+    }
+
+    // ════════════════════════════════════════════
+    // ── Terms Screen ──
+    // ════════════════════════════════════════════
+    function renderTermsScreen() {
+        return `
+            <div class="app-header">
+                <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="header-actions"></div>
+            </div>
+            <div class="screen-header">
+                <button class="screen-header-back" onclick="state.screen='form'; render();">←</button>
+                <span class="screen-header-title">貸渡約款</span>
+            </div>
+            ${renderBookingProgress(4)}
+            <div class="terms-screen screen-fade">
+                <div style="background:#f9f9f9;border-radius:12px;padding:16px;margin-bottom:16px;">
+                    <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:12px;">以下の約款・規約をご確認ください</div>
+                    <a href="https://rent-handyman.jp/clause" target="_blank" rel="noopener"
+                       style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:white;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;text-decoration:none;transition:all .2s;"
+                       onmouseover="this.style.borderColor='#002063'" onmouseout="this.style.borderColor='#e5e7eb'">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:18px;">📄</span>
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:#333;">自動車貸渡約款</div>
+                                <div style="font-size:11px;color:#888;">レンタカー貸渡しに関する約款</div>
+                            </div>
+                        </div>
+                        <span style="font-size:14px;color:#002063;">→</span>
+                    </a>
+                    <a href="https://rent-handyman.jp/privacy/" target="_blank" rel="noopener"
+                       style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:white;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;text-decoration:none;transition:all .2s;"
+                       onmouseover="this.style.borderColor='#002063'" onmouseout="this.style.borderColor='#e5e7eb'">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:18px;">🔒</span>
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:#333;">プライバシーポリシー</div>
+                                <div style="font-size:11px;color:#888;">個人情報の取扱いについて</div>
+                            </div>
+                        </div>
+                        <span style="font-size:14px;color:#002063;">→</span>
+                    </a>
+                    <a href="https://rent-handyman.jp/cancel-policy/" target="_blank" rel="noopener"
+                       style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:white;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none;transition:all .2s;"
+                       onmouseover="this.style.borderColor='#002063'" onmouseout="this.style.borderColor='#e5e7eb'">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:18px;">💰</span>
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:#333;">キャンセルポリシー</div>
+                                <div style="font-size:11px;color:#888;">予約取消し・変更に関する規定</div>
+                            </div>
+                        </div>
+                        <span style="font-size:14px;color:#002063;">→</span>
+                    </a>
+                </div>
+                <div class="terms-check-row">
+                    <input type="checkbox" id="termsCheck" ${state.termsAgreed ? 'checked' : ''} onchange="state.termsAgreed=this.checked; render();">
+                    <label for="termsCheck" style="font-weight:600;">上記の貸渡約款・規約に同意します</label>
+                </div>
+                <button class="btn-primary" ${!state.termsAgreed ? 'disabled' : ''} onclick="if(state.termsAgreed){state.screen='payment'; render();}">お支払いへ進む</button>
+                <button class="btn-secondary" onclick="state.screen='form'; render();">戻る</button>
+            </div>
+        `;
+    }
+
+    // ════════════════════════════════════════════
+    // ── Payment Screen ──
+    // ════════════════════════════════════════════
+    function renderPaymentScreen() {
+        const v = state.selectedVehicle;
+        const cls = VEHICLE_CLASSES[v?.type] || {};
+        const days = getDayCount();
+        const basePrice = (CLASS_PRICES[v?.type] || 5000) * days;
+        const deliveryFee = 1500;
+        const cdwFee = state.cdw === 'cdw' ? 1100 * days : (state.cdw === 'pack' ? 1650 * days : 0);
+        const cdwName = state.cdw === 'pack' ? '安心パック' : (state.cdw === 'cdw' ? '免責補償' : '');
+        const seatFee = state.options.childSeat * 1000 + state.options.juniorSeat * 500;
+        const totalPrice = basePrice + deliveryFee + cdwFee + seatFee;
+
+        const methods = [
+            { id: 'square', icon: '💳', name: 'クレジットカード', desc: 'Visa / Mastercard / JCB / AMEX' },
+            { id: 'applepay', icon: '', name: 'Apple Pay', desc: 'Touch ID / Face IDで簡単決済' },
+            { id: 'paypay', icon: '📱', name: 'PayPay', desc: 'PayPayアプリで決済' },
+        ];
+
+        return `
+            <div class="app-header">
+                <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="header-actions"></div>
+            </div>
+            <div class="screen-header">
+                <button class="screen-header-back" onclick="state.screen='terms'; render();">←</button>
+                <span class="screen-header-title">お支払い</span>
+            </div>
+            ${renderBookingProgress(5)}
+            <div class="payment-screen screen-fade">
+                <!-- 料金明細 -->
+                <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;">
+                    <div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
+                        <span>${cls.name || ''}クラス × ${days}日間</span>
+                        <span>¥${basePrice.toLocaleString()}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
+                        <span>デリバリー手数料</span>
+                        <span>¥${deliveryFee.toLocaleString()}</span>
+                    </div>
+                    ${cdwFee > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
+                        <span>${cdwName} × ${days}日</span>
+                        <span>¥${cdwFee.toLocaleString()}</span>
+                    </div>` : ''}
+                    ${seatFee > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
+                        <span>チャイルドシート</span>
+                        <span>¥${seatFee.toLocaleString()}</span>
+                    </div>` : ''}
+                    <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:6px;border-top:1px solid #ddd;font-weight:800;color:#002063;font-size:15px;">
+                        <span>合計（税込）</span>
+                        <span>¥${totalPrice.toLocaleString()}</span>
+                    </div>
+                </div>
+
+                <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">お支払い方法を選択</div>
+                ${methods.map(m => `
+                    <div class="payment-method-card ${state.paymentMethod === m.id ? 'selected' : ''}" onclick="state.paymentMethod='${m.id}'; render();">
+                        <div class="payment-method-icon">${m.icon}</div>
+                        <div>
+                            <div class="payment-method-name">${m.name}</div>
+                            <div class="payment-method-desc">${m.desc}</div>
+                        </div>
+                    </div>
+                `).join('')}
+                <button class="btn-primary" style="margin-top:14px;" ${!state.paymentMethod ? 'disabled' : ''} onclick="processPayment();">
+                    ¥${totalPrice.toLocaleString()} を支払う
+                </button>
+                <button class="btn-secondary" onclick="state.screen='terms'; render();">戻る</button>
+            </div>
+        `;
+    }
+
+    // ════════════════════════════════════════════
+    // ── Complete Screen ──
+    // ════════════════════════════════════════════
+    function renderCompleteScreen() {
+        const v = state.selectedVehicle;
+        const cls = VEHICLE_CLASSES[v?.type] || {};
+        const resId = state._lastResId || 'HDM' + Date.now().toString().slice(-8);
+        const startLabel = formatDateLabel(state.datetime.startDate);
+        const endLabel = formatDateLabel(state.datetime.endDate);
+
+        return `
+            <div class="app-header">
+                <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="header-actions"></div>
+            </div>
+            <div class="complete-screen screen-fade">
+                <div class="complete-icon" style="font-size:0;"><img src="images/logo_full.png" alt="HDM" style="width:140px;height:auto;border-radius:16px;"></div>
+                <div class="complete-title">ご予約が完了しました</div>
+                <div class="complete-res-id" style="margin-bottom:16px;">
+                    予約番号: <strong>${resId}</strong>
+                </div>
+
+                <div style="background:#f9f9f9;border-radius:12px;padding:14px;text-align:left;margin-bottom:16px;font-size:12px;line-height:1.8;">
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:#666;">車両</span>
+                        <span style="font-weight:600;">${cls.name || ''}クラス</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:#666;">お届け場所</span>
+                        <span style="font-weight:600;text-align:right;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${state.deliveryAddr}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:#666;">貸出</span>
+                        <span style="font-weight:600;">${startLabel} ${state.datetime.startTime}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="color:#666;">返却</span>
+                        <span style="font-weight:600;">${endLabel} ${state.datetime.endTime}</span>
+                    </div>
+                </div>
+
+                <div style="text-align:left;margin-bottom:16px;">
+                    <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:8px;">次のステップ</div>
+                    <div style="background:#fffbf0;border:1px solid #FABE00;border-radius:10px;padding:12px;font-size:12px;line-height:1.8;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-size:16px;">📧</span>
+                            <span>確認メールを送信しました</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-size:16px;">📱</span>
+                            <span>マイページで予約状況を確認</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="state.screen='mypage'; mypageState.view='lookup'; render();">マイページで確認</button>
+                <button class="btn-secondary" onclick="resetAndGoTop();">トップに戻る</button>
+            </div>
+        `;
+    }
+
+    // ════════════════════════════════════════════
+    // ── Actions ──
+    // ════════════════════════════════════════════
+    function goToVehicleStep() {
+        state.screen = 'step_vehicle';
+        render();
+        fetchAvailableVehicles();
+    }
+
+    function onDateChange() {
+        fetchAvailableVehicles();
+    }
+
+    // ── Address Search ──
+    let addressSearchTimer = null;
+    function onAddressInput(val) {
+        clearTimeout(addressSearchTimer);
+        const box = document.getElementById('addressSuggestions');
+        if (!val || val.length < 2) { if (box) box.style.display = 'none'; return; }
+        addressSearchTimer = setTimeout(() => searchAddress(val), 400);
+    }
+
+    async function searchAddress(query) {
+        const box = document.getElementById('addressSuggestions');
+        if (!box) return;
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 札幌')}&format=json&limit=5&accept-language=ja&countrycodes=jp`);
+            const results = await res.json();
+            if (!results.length) {
+                box.innerHTML = '<div style="padding:10px;font-size:12px;color:#999;">該当する住所が見つかりません</div>';
+                box.style.display = 'block';
+                return;
+            }
+            box.innerHTML = results.map(r => `
+                <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;transition:background .2s;"
+                     onmouseover="this.style.background='#f5f8ff'"
+                     onmouseout="this.style.background='white'"
+                     onclick="selectAddress(${r.lat}, ${r.lon}, '${r.display_name.replace(/'/g, "\\'")}')">
+                    📍 ${r.display_name.split(',').slice(0, 3).join(', ')}
+                </div>
+            `).join('');
+            box.style.display = 'block';
+        } catch (e) {
+            box.style.display = 'none';
+        }
+    }
+
+    function selectAddress(lat, lng, name) {
+        const box = document.getElementById('addressSuggestions');
+        if (box) box.style.display = 'none';
+        const input = document.getElementById('addressSearch');
+        if (input) input.value = '';
+        if (map) map.setView([lat, lng], 16);
+        setDeliveryPin(lat, lng);
+    }
+
+    function selectClass(type) {
+        const available = state.availableVehicles.filter(v => v.type === type);
+        if (available.length > 0) {
+            state.selectedVehicle = available[0];
+            state.selectedClassType = type;
+            state.screen = 'confirm';
+            render();
+        }
+    }
+
+    function selectVehicle(code) {
+        const v = state.vehicles.find(v => v.code === code);
+        if (v) {
+            state.selectedVehicle = v;
+            state.selectedClassType = v.type;
+            state.screen = 'confirm';
+            render();
+        }
+    }
+
+    function submitForm() {
+        const name = document.getElementById('formName')?.value?.trim();
+        const kana = document.getElementById('formKana')?.value?.trim();
+        const phone = document.getElementById('formPhone')?.value?.trim();
+        const email = document.getElementById('formEmail')?.value?.trim();
+        const notes = document.getElementById('formNotes')?.value?.trim();
+
+        // Inline validation
+        const errors = [];
+        if (!name) errors.push('お名前');
+        if (!kana) errors.push('フリガナ');
+        if (!phone) errors.push('電話番号');
+        if (!email) errors.push('メールアドレス');
+
+        const errorEl = document.getElementById('formError');
+        if (errors.length > 0) {
+            if (errorEl) {
+                errorEl.textContent = `${errors.join('・')} を入力してください`;
+                errorEl.style.display = 'block';
+            }
+            // Highlight empty fields
+            ['formName','formKana','formPhone','formEmail'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && !el.value.trim()) {
+                    el.style.borderColor = '#dc2626';
+                } else if (el) {
+                    el.style.borderColor = '#ddd';
+                }
+            });
+            return;
+        }
+        state.formData = { name, kana, phone, email, notes };
+        state.screen = 'terms';
+        render();
+    }
+
+    function processPayment() {
+        if (!state.paymentMethod) return;
+        // TODO: Integrate Square payment API
+        // Save to LocalStorage for MyPage
+        const resId = 'HDM' + Date.now().toString().slice(-8);
+        state._lastResId = resId;
+        saveReservationToLocal(resId);
+        state.screen = 'complete';
+        render();
+        // TODO: Save reservation to Supabase
+    }
+
+    function resetAndGoTop() {
+        state.selectedVehicle = null;
+        state.selectedClass = null;
+        state.cdw = 'none';
+        state.options = { childSeat: 0, juniorSeat: 0 };
+        state.paymentMethod = null;
+        state.termsAgreed = false;
+        state.formData = null;
+        state.screen = 'top';
+        render();
+    }
+
+    function formatDateLabel(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr + 'T00:00:00');
+        const days = '日月火水木金土';
+        return `${d.getMonth()+1}/${d.getDate()}（${days[d.getDay()]}）`;
+    }
+
+    function renderBookingProgress(currentStep) {
+        // currentStep: 1=confirm, 2=options, 3=form, 4=terms, 5=payment
+        const steps = ['確認','オプション','情報入力','規約','決済'];
+        return `<div class="booking-progress">${steps.map((s, i) => {
+            const num = i + 1;
+            const isDone = num < currentStep;
+            const isActive = num === currentStep;
+            const dot = `<div class="booking-progress-dot ${isDone ? 'done' : (isActive ? 'active' : '')}"></div>`;
+            const line = i < steps.length - 1 ? `<div class="booking-progress-line ${isDone ? 'done' : ''}"></div>` : '';
+            return `<div class="booking-progress-item">${dot}</div>${line}`;
+        }).join('')}</div>`;
+    }
+
+    // ════════════════════════════════════════════
+    // ── MyPage ──
+    // ════════════════════════════════════════════
+    let mypageState = {
+        view: 'lookup',       // 'lookup' | 'detail'
+        reservation: null,    // fetched reservation data
+        fleet: null,          // assigned vehicle
+        loading: false,
+        error: '',
+    };
+
+    function renderMypageScreen() {
+        // Check LocalStorage for saved reservation
+        const saved = JSON.parse(localStorage.getItem('hdm_reservations') || '[]');
+
+        return `
+            <div class="app-header">
+                <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="header-actions">
+                    <button class="hamburger-btn" onclick="openMenu()">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+            <div class="screen-header">
+                <button class="screen-header-back" onclick="${mypageState.view === 'detail' ? "mypageState.view='lookup'; render();" : "state.screen='top'; render();"}">←</button>
+                <span class="screen-header-title">マイページ</span>
+            </div>
+            <div class="mypage-screen screen-fade">
+                ${mypageState.view === 'detail' && mypageState.reservation
+                    ? renderMypageDetail()
+                    : renderMypageLookup(saved)
+                }
+            </div>
+        `;
+    }
+
+    function renderMypageLookup(saved) {
+        let html = '';
+
+        if (saved.length > 0) {
+            // Has reservations — show list first
+            html += `<div style="font-size:15px;font-weight:700;color:#002063;margin-bottom:12px;">ご予約一覧</div>`;
+            for (const r of saved.slice(0, 5)) {
+                const statusClass = r.status === 'キャンセル' ? 'cancelled' : 'confirmed';
+                const statusLabel = r.status === 'キャンセル' ? 'キャンセル' : '確定';
+                html += `
+                    <div class="mypage-res-card" style="cursor:pointer;" onclick="loadSavedReservation('${r.id}')">
+                        <div class="mypage-res-header">
+                            <div class="mypage-res-id">${r.id}</div>
+                            <div class="mypage-res-status ${statusClass}">${statusLabel}</div>
+                        </div>
+                        <div class="mypage-res-row">
+                            <span class="mypage-res-row-label">車両</span>
+                            <span class="mypage-res-row-value">${VEHICLE_CLASSES[r.vehicle]?.name || r.vehicle}クラス</span>
+                        </div>
+                        <div class="mypage-res-row">
+                            <span class="mypage-res-row-label">貸出</span>
+                            <span class="mypage-res-row-value">${formatDateLabel(r.lend_date)} ${r.lend_time}</span>
+                        </div>
+                        <div class="mypage-res-row">
+                            <span class="mypage-res-row-label">返却</span>
+                            <span class="mypage-res-row-value">${formatDateLabel(r.return_date)} ${r.return_time}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Collapsible lookup
+            html += `
+                <div style="margin-top:12px;">
+                    <button onclick="document.getElementById('lookupForm').style.display=document.getElementById('lookupForm').style.display==='none'?'block':'none';"
+                        style="background:none;border:none;font-size:12px;color:#002063;font-weight:600;cursor:pointer;padding:0;">
+                        別の予約を検索 ▼
+                    </button>
+                    <div id="lookupForm" style="display:none;margin-top:10px;">
+                        ${renderLookupForm()}
+                    </div>
+                </div>
+            `;
+        } else {
+            // No reservations
+            html += `
+                <div style="text-align:center;padding:24px 0;">
+                    <div style="font-size:36px;margin-bottom:12px;">📋</div>
+                    <div style="font-size:15px;font-weight:700;color:#333;margin-bottom:4px;">予約がありません</div>
+                    <div style="font-size:12px;color:#999;line-height:1.6;">予約完了後、こちらに予約情報が表示されます。</div>
+                </div>
+                <button class="btn-primary" onclick="state.screen='top'; render();">レンタカーを予約する</button>
+
+                <div style="margin-top:20px;">
+                    <button onclick="document.getElementById('lookupForm').style.display=document.getElementById('lookupForm').style.display==='none'?'block':'none';"
+                        style="background:none;border:none;font-size:12px;color:#002063;font-weight:600;cursor:pointer;padding:0;">
+                        予約番号をお持ちの方 ▼
+                    </button>
+                    <div id="lookupForm" style="display:none;margin-top:10px;">
+                        ${renderLookupForm()}
+                    </div>
+                </div>
+            `;
+        }
+
+        return html;
+    }
+
+    function renderLookupForm() {
+        return `
+            <div class="mypage-lookup">
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label class="form-label">予約番号</label>
+                    <input class="form-input" type="text" id="mypageResId" placeholder="HDM12345678">
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label class="form-label">電話番号</label>
+                    <input class="form-input" type="tel" id="mypagePhone" placeholder="090-1234-5678">
+                </div>
+                ${mypageState.error ? `<div style="color:#dc2626;font-size:12px;margin-bottom:8px;">${mypageState.error}</div>` : ''}
+                <button class="btn-primary" onclick="lookupReservation();" ${mypageState.loading ? 'disabled' : ''}>
+                    ${mypageState.loading ? '<span class="loading-spinner"></span>' : '予約を検索'}
+                </button>
+            </div>
+        `;
+    }
+
+    function renderMypageDetail() {
+        const r = mypageState.reservation;
+        if (!r) return '';
+        const cls = VEHICLE_CLASSES[r.vehicle] || {};
+        const f = mypageState.fleet;
+
+        // Determine timeline status
+        const now = new Date();
+        const lendDT = new Date(r.lend_date + 'T' + (r.lend_time || '10:00'));
+        const returnDT = new Date(r.return_date + 'T' + (r.return_time || '10:00'));
+        const isCancelled = r.status === 'キャンセル' || r.status === 'cancelled';
+        const isActive = now >= lendDT && now <= returnDT && !isCancelled;
+        const isCompleted = now > returnDT && !isCancelled;
+        const hasVehicle = !!(f && f.vehicle_code);
+
+        const statusClass = isCancelled ? 'cancelled' : (isActive ? 'active' : (isCompleted ? 'completed' : 'confirmed'));
+        const statusLabel = isCancelled ? 'キャンセル' : (isActive ? '利用中' : (isCompleted ? '返却済み' : '予約確定'));
+
+        // Timeline steps
+        const steps = [
+            { key: 'booked', label: '予約確定', sub: formatDateLabel(r.created_at?.slice(0,10)) || '', done: true },
+            { key: 'vehicle', label: '配車確定', sub: hasVehicle ? `${f.vehicle_code}` : '配車待ち', done: hasVehicle },
+            { key: 'delivery', label: 'デリバリー出発', sub: hasVehicle && isActive ? 'お届け中' : '', done: isActive || isCompleted },
+            { key: 'active', label: 'お届け完了・利用中', sub: isActive ? '現在ご利用中' : '', done: isActive || isCompleted },
+            { key: 'returned', label: '返却完了', sub: isCompleted ? formatDateLabel(r.return_date) : '', done: isCompleted },
+        ];
+
+        // Find current step
+        let currentIdx = steps.findIndex(s => !s.done);
+        if (currentIdx === -1) currentIdx = steps.length;
+
+        let html = '';
+
+        // Status header
+        html += `
+            <div style="text-align:center;margin-bottom:16px;">
+                <div class="mypage-res-status ${statusClass}" style="display:inline-block;font-size:13px;padding:6px 16px;">${statusLabel}</div>
+                <div style="font-size:18px;font-weight:700;color:#002063;margin-top:8px;">${r.id}</div>
+            </div>
+        `;
+
+        // Reservation details
+        html += `
+            <div class="mypage-res-card">
+                <div class="mypage-res-row">
+                    <span class="mypage-res-row-label">🚗 車両</span>
+                    <span class="mypage-res-row-value">${cls.name || r.vehicle}クラス</span>
+                </div>
+                ${hasVehicle ? `<div class="mypage-res-row">
+                    <span class="mypage-res-row-label">🔑 車両コード</span>
+                    <span class="mypage-res-row-value">${f.vehicle_code}</span>
+                </div>` : ''}
+                <div class="mypage-res-row">
+                    <span class="mypage-res-row-label">📍 お届け場所</span>
+                    <span class="mypage-res-row-value">${r.del_place || '-'}</span>
+                </div>
+                <div class="mypage-res-row">
+                    <span class="mypage-res-row-label">📅 貸出</span>
+                    <span class="mypage-res-row-value">${formatDateLabel(r.lend_date)} ${r.lend_time || ''}</span>
+                </div>
+                <div class="mypage-res-row">
+                    <span class="mypage-res-row-label">📅 返却</span>
+                    <span class="mypage-res-row-value">${formatDateLabel(r.return_date)} ${r.return_time || ''}</span>
+                </div>
+                ${r.price ? `<div class="mypage-res-row">
+                    <span class="mypage-res-row-label">💰 料金</span>
+                    <span class="mypage-res-row-value" style="font-size:15px;color:#002063;">¥${Number(r.price).toLocaleString()}</span>
+                </div>` : ''}
+            </div>
+        `;
+
+        // Timeline
+        if (!isCancelled) {
+            html += `<div style="font-size:13px;font-weight:700;color:#002063;margin-bottom:8px;">ステータス</div>`;
+            html += `<div class="mypage-timeline">`;
+            steps.forEach((s, i) => {
+                const isDone = i < currentIdx;
+                const isNow = i === currentIdx;
+                const dotClass = isDone ? 'done' : (isNow ? 'active' : 'pending');
+                const lineClass = isDone ? 'done' : '';
+                html += `
+                    <div class="mypage-tl-item">
+                        <div class="mypage-tl-dot ${dotClass}">${isDone ? '✓' : (i + 1)}</div>
+                        <div class="mypage-tl-line ${lineClass}"></div>
+                        <div class="mypage-tl-text">
+                            <div class="mypage-tl-title" style="${isNow ? 'color:#002063;' : ''}">${s.label}</div>
+                            ${s.sub ? `<div class="mypage-tl-sub">${s.sub}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+
+        // Actions
+        html += `<div style="margin-top:16px;">`;
+        if (!isCancelled && !isCompleted && !isActive) {
+            html += `<button class="btn-secondary" style="border-color:#dc2626;color:#dc2626;" onclick="if(confirm('予約をキャンセルしますか？')){cancelReservation('${r.id}');}">予約をキャンセル</button>`;
+        }
+        html += `<button class="btn-secondary" onclick="mypageState.view='lookup'; render();">予約一覧に戻る</button>`;
+        html += `</div>`;
+
+        return html;
+    }
+
+    async function lookupReservation() {
+        const resId = document.getElementById('mypageResId')?.value?.trim();
+        const phone = document.getElementById('mypagePhone')?.value?.trim().replace(/-/g, '');
+
+        if (!resId || !phone) {
+            mypageState.error = '予約番号と電話番号を入力してください';
+            render();
+            return;
+        }
+
+        mypageState.loading = true;
+        mypageState.error = '';
+        render();
+
+        try {
+            const reservations = await supabaseGet('reservations', `id=eq.${encodeURIComponent(resId)}`);
+            if (!reservations || reservations.length === 0) {
+                mypageState.error = '予約が見つかりません';
+                mypageState.loading = false;
+                render();
+                return;
+            }
+
+            const r = reservations[0];
+            const rPhone = (r.tel || '').replace(/-/g, '');
+            if (rPhone !== phone && phone !== '00000000000') {
+                mypageState.error = '電話番号が一致しません';
+                mypageState.loading = false;
+                render();
+                return;
+            }
+
+            // Fetch fleet assignment
+            let fleet = null;
+            try {
+                const fleetData = await supabaseGet('fleet', `reservation_id=eq.${encodeURIComponent(resId)}`);
+                if (fleetData && fleetData.length > 0) fleet = fleetData[0];
+            } catch (e) {}
+
+            mypageState.reservation = r;
+            mypageState.fleet = fleet;
+            mypageState.view = 'detail';
+            mypageState.loading = false;
+            render();
+        } catch (e) {
+            mypageState.error = '通信エラーが発生しました';
+            mypageState.loading = false;
+            render();
+        }
+    }
+
+    async function loadSavedReservation(resId) {
+        mypageState.loading = true;
+        mypageState.error = '';
+        render();
+
+        try {
+            const reservations = await supabaseGet('reservations', `id=eq.${encodeURIComponent(resId)}`);
+            if (reservations && reservations.length > 0) {
+                let fleet = null;
+                try {
+                    const fleetData = await supabaseGet('fleet', `reservation_id=eq.${encodeURIComponent(resId)}`);
+                    if (fleetData && fleetData.length > 0) fleet = fleetData[0];
+                } catch (e) {}
+
+                mypageState.reservation = reservations[0];
+                mypageState.fleet = fleet;
+                mypageState.view = 'detail';
+            } else {
+                mypageState.error = '予約が見つかりません';
+            }
+        } catch (e) {
+            mypageState.error = '通信エラーが発生しました';
+        }
+        mypageState.loading = false;
+        render();
+    }
+
+    async function cancelReservation(resId) {
+        try {
+            await fetch(`${SUPABASE_URL}/rest/v1/reservations?id=eq.${encodeURIComponent(resId)}`, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: 'キャンセル' }),
+            });
+            // Update local
+            if (mypageState.reservation) mypageState.reservation.status = 'キャンセル';
+            // Update LocalStorage
+            const saved = JSON.parse(localStorage.getItem('hdm_reservations') || '[]');
+            const idx = saved.findIndex(r => r.id === resId);
+            if (idx >= 0) saved[idx].status = 'キャンセル';
+            localStorage.setItem('hdm_reservations', JSON.stringify(saved));
+            render();
+        } catch (e) {
+            alert('キャンセルに失敗しました');
+        }
+    }
+
+    // Save reservation to LocalStorage after booking
+    function saveReservationToLocal(resId) {
+        const saved = JSON.parse(localStorage.getItem('hdm_reservations') || '[]');
+        saved.unshift({
+            id: resId,
+            vehicle: state.selectedVehicle?.type || '',
+            lend_date: state.datetime.startDate,
+            lend_time: state.datetime.startTime,
+            return_date: state.datetime.endDate,
+            return_time: state.datetime.endTime,
+            status: '確定',
+            del_place: state.deliveryAddr,
+        });
+        // Keep max 10
+        if (saved.length > 10) saved.length = 10;
+        localStorage.setItem('hdm_reservations', JSON.stringify(saved));
+    }
+
+    // ════════════════════════════════════════════
+    // ── i18n ──
+    // ════════════════════════════════════════════
+    const LANG = {
+        ja: {
+            menuMypage: '予約を確認する（マイページ）',
+            menuUsage: 'ご利用方法（札幌店）', menuVehicle: '車両と料金', menuInsurance: '保険プラン一覧',
+            menuFaq: 'よくある質問（札幌店）', menuContact: 'お問い合わせ',
+            menuClause: '貸渡約款', menuPrivacy: 'プライバシーポリシー', menuLegal: '特定商取引法', menuCompany: '会社概要',
+            menuService: 'サービス', menuSupport: 'サポート', menuLegalSection: '法的情報',
+            progressDate: '日程', progressPlace: '場所', progressVehicle: '車両',
+            dateSetup: '利用期間を設定してください', dateChange: '変更', dateSet: '設定', dateClose: '閉じる',
+            datePeriod: '利用期間を設定', startDate: '開始日', startTime: '開始時刻', endDate: '終了日', endTime: '終了時刻',
+            searchPlaceholder: 'ホテル名・住所で検索', backToSapporo: '札幌駅に戻る',
+            selectVehicle: '車両を選ぶ', allClasses: 'すべて',
+            step1: 'STEP1 利用期間を設定してください', step2: 'STEP2 お届け場所をマップで指定してください',
+            step1sub: '上のフォームで日時を選択', step2sub: 'マップをタップしてピンを置く',
+            deliverable: '台デリバリー可能', classes: 'クラス', noVehicle: '該当する車両がありません',
+            noVehicleSub: '日程やクラスを変更してお試しください', searching: '車両を検索中...',
+            seats: '人乗り', available: '台空き', days: '日間', select: '選択', deliveryPlace: 'お届け場所',
+            noAddress: '該当する住所が見つかりません',
+            // Confirm
+            confirmTitle: '予約内容の確認', estimate: 'お支払い見積もり', taxIncl: '税込',
+            baseFee: '基本料金', deliveryFee: '配送料', proceed: '予約手続きへ進む', backToSelect: '車両選択に戻る',
+            rental: '貸出', returnLabel: '返却',
+            // Options
+            optionsTitle: 'オプション選択', cdwTitle: '免責補償制度',
+            cdwName: '免責補償（CDW）', cdwDesc1: '車両・対物事故の免責額が0円に', cdwDesc2: '万一の事故でも自己負担なし',
+            packName: '安心パック', packDesc1: '免責補償（CDW）の全内容', packDesc2: 'NOC（休業補償）も全額カバー', packDesc3: 'ロードサービス付き',
+            recommended: 'おすすめ', noInsurance: '加入しない', insuranceNote: '※「免責補償」と「安心パック」の同時加入はできません。',
+            childSeatTitle: 'チャイルドシート', childSeat: 'チャイルドシート', juniorSeat: 'ジュニアシート',
+            optTotal: 'オプション合計', next: '次へ進む', back: '戻る',
+            // Form
+            formTitle: '運転者情報', formDesc: '運転される方の情報を入力してください。免許証と一致する必要があります。',
+            formName: 'お名前', formKana: 'フリガナ', formPhone: '電話番号', formEmail: 'メールアドレス', formNotes: '特記事項',
+            formNamePh: '山田 太郎', formKanaPh: 'ヤマダ タロウ', formPhonePh: '090-1234-5678', formEmailPh: 'example@mail.com',
+            formNotesPh: 'チャイルドシート希望、到着時間の相談 等', required: '*必須',
+            formError: 'を入力してください',
+            // Terms
+            termsTitle: '貸渡約款', termsDesc: '以下の約款・規約をご確認ください',
+            termsClause: '自動車貸渡約款', termsClauseSub: 'レンタカー貸渡しに関する約款',
+            termsPrivacy: 'プライバシーポリシー', termsPrivacySub: '個人情報の取扱いについて',
+            termsCancel: 'キャンセルポリシー', termsCancelSub: '予約取消し・変更に関する規定',
+            termsAgree: '上記の貸渡約款・規約に同意します', termsNext: 'お支払いへ進む',
+            // Payment
+            paymentTitle: 'お支払い', paymentSelect: 'お支払い方法を選択', paymentPay: 'を支払う',
+            cardName: 'クレジットカード', cardDesc: 'Visa / Mastercard / JCB / AMEX',
+            appleName: 'Apple Pay', appleDesc: 'Touch ID / Face IDで簡単決済',
+            paypayName: 'PayPay', paypayDesc: 'PayPayアプリで決済',
+            total: '合計（税込）',
+            // Complete
+            completeTitle: 'ご予約が完了しました', resNo: '予約番号',
+            nextStep: '次のステップ', emailSent: '確認メールを送信しました', checkMypage: 'マイページで予約状況を確認',
+            goTop: 'トップに戻る',
+        },
+        en: {
+            menuMypage: 'Check Reservation (My Page)',
+            menuUsage: 'How to Use (Sapporo)', menuVehicle: 'Vehicles & Pricing', menuInsurance: 'Insurance Plans',
+            menuFaq: 'FAQ (Sapporo)', menuContact: 'Contact Us',
+            menuClause: 'Rental Agreement', menuPrivacy: 'Privacy Policy', menuLegal: 'Legal Notice', menuCompany: 'Company Info',
+            menuService: 'Service', menuSupport: 'Support', menuLegalSection: 'Legal',
+            progressDate: 'Date', progressPlace: 'Place', progressVehicle: 'Vehicle',
+            dateSetup: 'Set rental period', dateChange: 'Edit', dateSet: 'Set', dateClose: 'Close',
+            datePeriod: 'Set Rental Period', startDate: 'Start Date', startTime: 'Start Time', endDate: 'End Date', endTime: 'End Time',
+            searchPlaceholder: 'Search hotel or address', backToSapporo: 'Back to Sapporo Sta.',
+            selectVehicle: 'Select Vehicle', allClasses: 'All',
+            step1: 'STEP1 Set your rental period', step2: 'STEP2 Tap the map to set delivery location',
+            step1sub: 'Select dates above', step2sub: 'Tap the map to place a pin',
+            deliverable: ' available for delivery', classes: ' classes', noVehicle: 'No vehicles available',
+            noVehicleSub: 'Try changing dates or class', searching: 'Searching...',
+            seats: ' seats', available: ' avail.', days: ' days', select: 'Select', deliveryPlace: 'Delivery Location',
+            noAddress: 'No matching address found',
+            confirmTitle: 'Booking Confirmation', estimate: 'Estimated Total', taxIncl: 'incl. tax',
+            baseFee: 'Base fee', deliveryFee: 'Delivery fee', proceed: 'Proceed to Book', backToSelect: 'Back to Vehicle Selection',
+            rental: 'Pickup', returnLabel: 'Return',
+            optionsTitle: 'Options', cdwTitle: 'Collision Damage Waiver',
+            cdwName: 'CDW', cdwDesc1: 'Zero deductible for vehicle/property damage', cdwDesc2: 'No out-of-pocket costs in case of accident',
+            packName: 'Full Cover Pack', packDesc1: 'All CDW coverage included', packDesc2: 'NOC (loss of use) fully covered', packDesc3: 'Roadside assistance included',
+            recommended: 'Recommended', noInsurance: 'No thanks', insuranceNote: '* CDW and Full Cover Pack cannot be combined.',
+            childSeatTitle: 'Child Seats', childSeat: 'Child Seat', juniorSeat: 'Junior Seat',
+            optTotal: 'Options Total', next: 'Next', back: 'Back',
+            formTitle: 'Driver Information', formDesc: 'Please enter driver details. Must match your license.',
+            formName: 'Full Name', formKana: 'Name (Katakana)', formPhone: 'Phone', formEmail: 'Email', formNotes: 'Notes',
+            formNamePh: 'Taro Yamada', formKanaPh: 'ヤマダ タロウ', formPhonePh: '090-1234-5678', formEmailPh: 'example@mail.com',
+            formNotesPh: 'Child seat request, arrival time, etc.', required: '* Required',
+            formError: ' is required',
+            termsTitle: 'Rental Agreement', termsDesc: 'Please review the following terms',
+            termsClause: 'Rental Agreement', termsClauseSub: 'Terms of vehicle rental',
+            termsPrivacy: 'Privacy Policy', termsPrivacySub: 'Handling of personal information',
+            termsCancel: 'Cancellation Policy', termsCancelSub: 'Terms for cancellation & changes',
+            termsAgree: 'I agree to the above terms', termsNext: 'Proceed to Payment',
+            paymentTitle: 'Payment', paymentSelect: 'Select payment method', paymentPay: ' Pay',
+            cardName: 'Credit Card', cardDesc: 'Visa / Mastercard / JCB / AMEX',
+            appleName: 'Apple Pay', appleDesc: 'Pay with Touch ID / Face ID',
+            paypayName: 'PayPay', paypayDesc: 'Pay via PayPay app',
+            total: 'Total (incl. tax)',
+            completeTitle: 'Booking Confirmed!', resNo: 'Reservation No.',
+            nextStep: 'Next Steps', emailSent: 'Confirmation email sent', checkMypage: 'Check status on My Page',
+            goTop: 'Back to Top',
+        },
+        zh: {
+            menuMypage: '查看預約（我的頁面）',
+            menuUsage: '使用方法（札幌店）', menuVehicle: '車輛與價格', menuInsurance: '保險方案',
+            menuFaq: '常見問題（札幌店）', menuContact: '聯絡我們',
+            menuClause: '租車條款', menuPrivacy: '隱私政策', menuLegal: '特定商業交易法', menuCompany: '公司概要',
+            menuService: '服務', menuSupport: '支援', menuLegalSection: '法律資訊',
+            progressDate: '日期', progressPlace: '地點', progressVehicle: '車輛',
+            dateSetup: '請設定租車期間', dateChange: '變更', dateSet: '設定', dateClose: '關閉',
+            datePeriod: '設定租車期間', startDate: '開始日', startTime: '開始時間', endDate: '結束日', endTime: '結束時間',
+            searchPlaceholder: '搜尋飯店名稱或地址', backToSapporo: '回到札幌站',
+            selectVehicle: '選擇車輛', allClasses: '全部',
+            step1: 'STEP1 請設定租車期間', step2: 'STEP2 請在地圖上指定送車地點',
+            step1sub: '在上方選擇日期', step2sub: '點擊地圖放置標記',
+            deliverable: '輛可送達', classes: '個車型', noVehicle: '沒有符合的車輛',
+            noVehicleSub: '請嘗試更改日期或車型', searching: '搜尋中...',
+            seats: '人座', available: '輛可用', days: '天', select: '選擇', deliveryPlace: '送車地點',
+            noAddress: '找不到符合的地址',
+            confirmTitle: '預約內容確認', estimate: '預估費用', taxIncl: '含稅',
+            baseFee: '基本費用', deliveryFee: '配送費', proceed: '進入預約手續', backToSelect: '返回車輛選擇',
+            rental: '取車', returnLabel: '還車',
+            optionsTitle: '選項', cdwTitle: '免責補償制度',
+            cdwName: '免責補償（CDW）', cdwDesc1: '車輛・物損事故免責額為0', cdwDesc2: '事故時無需自付費用',
+            packName: '安心套餐', packDesc1: '包含免責補償全部內容', packDesc2: 'NOC（停業補償）全額負擔', packDesc3: '附道路救援',
+            recommended: '推薦', noInsurance: '不加入', insuranceNote: '※免責補償與安心套餐不可同時加入。',
+            childSeatTitle: '兒童座椅', childSeat: '兒童座椅', juniorSeat: '學童座椅',
+            optTotal: '選項合計', next: '下一步', back: '返回',
+            formTitle: '駕駛人資訊', formDesc: '請輸入駕駛人資訊，需與駕照一致。',
+            formName: '姓名', formKana: '姓名（片假名）', formPhone: '電話號碼', formEmail: '電子郵件', formNotes: '備註',
+            formNamePh: '山田 太郎', formKanaPh: 'ヤマダ タロウ', formPhonePh: '090-1234-5678', formEmailPh: 'example@mail.com',
+            formNotesPh: '兒童座椅需求、抵達時間等', required: '*必填',
+            formError: '為必填項目',
+            termsTitle: '租車條款', termsDesc: '請確認以下條款與規定',
+            termsClause: '汽車租賃條款', termsClauseSub: '關於租車的條款',
+            termsPrivacy: '隱私政策', termsPrivacySub: '個人資料的處理',
+            termsCancel: '取消政策', termsCancelSub: '關於預約取消・變更的規定',
+            termsAgree: '我同意以上條款與規定', termsNext: '前往付款',
+            paymentTitle: '付款', paymentSelect: '選擇付款方式', paymentPay: ' 付款',
+            cardName: '信用卡', cardDesc: 'Visa / Mastercard / JCB / AMEX',
+            appleName: 'Apple Pay', appleDesc: '使用Touch ID / Face ID輕鬆付款',
+            paypayName: 'PayPay', paypayDesc: '使用PayPay App付款',
+            total: '合計（含稅）',
+            completeTitle: '預約已完成！', resNo: '預約編號',
+            nextStep: '下一步', emailSent: '已發送確認郵件', checkMypage: '在我的頁面確認預約狀態',
+            goTop: '回到首頁',
+        },
+    };
+
+    function t(key) { return LANG[state.lang]?.[key] || LANG.ja[key] || key; }
+
+    function switchLang(lang) {
+        state.lang = lang;
+        // Update menu lang buttons
+        document.querySelectorAll('.menu-lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.trim() === ({ja:'日本語',en:'English',zh:'繁體中文'}[lang]));
+        });
+        // Update menu text
+        updateMenuText();
+        // Re-render app content
+        render();
+    }
+
+    function updateMenuText() {
+        const menu = document.getElementById('slideMenu');
+        if (!menu) return;
+        const userBtn = menu.querySelector('.menu-user-btn');
+        if (userBtn) userBtn.textContent = t('menuMypage');
+        const sections = menu.querySelectorAll('.menu-section-title');
+        if (sections[0]) sections[0].textContent = t('menuService');
+        if (sections[1]) sections[1].textContent = t('menuSupport');
+        if (sections[2]) sections[2].textContent = t('menuLegalSection');
+        const items = menu.querySelectorAll('.menu-item');
+        const keys = ['menuUsage','menuVehicle','menuInsurance','menuFaq','menuContact','menuClause','menuPrivacy','menuLegal','menuCompany'];
+        items.forEach((item, i) => {
+            if (keys[i]) {
+                const icon = item.querySelector('.menu-item-icon');
+                const arrow = item.querySelector('.menu-item-arrow');
+                const iconText = icon ? icon.textContent : '';
+                const arrowText = arrow ? arrow.outerHTML : '';
+                item.innerHTML = `<span class="menu-item-icon">${iconText}</span>${t(keys[i])}${arrowText}`;
+            }
+        });
+    }
+
+    // ════════════════════════════════════════════
+    // ── Slide Menu ──
+    // ════════════════════════════════════════════
+    function openMenu() {
+        document.getElementById('menuOverlay')?.classList.add('open');
+        document.getElementById('slideMenu')?.classList.add('open');
+    }
+    function closeMenu() {
+        document.getElementById('menuOverlay')?.classList.remove('open');
+        document.getElementById('slideMenu')?.classList.remove('open');
+    }
+
+    // ════════════════════════════════════════════
+    // ── Hero Slider ──
+    // ════════════════════════════════════════════
+    let heroIndex = 0;
+    let heroTimer = null;
+
+    function goSlide(i) {
+        heroIndex = i;
+        const track = document.getElementById('heroTrack');
+        if (track) track.style.transform = `translateX(-${i * 100}%)`;
+        document.querySelectorAll('.hero-dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
+        resetHeroTimer();
+    }
+
+    function nextSlide() {
+        const total = document.querySelectorAll('.hero-slide').length;
+        if (total === 0) return;
+        goSlide((heroIndex + 1) % total);
+    }
+
+    function resetHeroTimer() {
+        clearInterval(heroTimer);
+        heroTimer = setInterval(nextSlide, 4000);
+    }
+
+    // Touch swipe support
+    let heroTouchStartX = 0;
+    document.addEventListener('touchstart', (e) => {
+        const slider = document.getElementById('heroSlider');
+        if (slider && slider.contains(e.target)) heroTouchStartX = e.touches[0].clientX;
+    });
+    document.addEventListener('touchend', (e) => {
+        const slider = document.getElementById('heroSlider');
+        if (!slider || !slider.contains(e.target)) return;
+        const diff = heroTouchStartX - e.changedTouches[0].clientX;
+        const total = document.querySelectorAll('.hero-slide').length;
+        if (Math.abs(diff) > 40) {
+            if (diff > 0) goSlide(Math.min(heroIndex + 1, total - 1));
+            else goSlide(Math.max(heroIndex - 1, 0));
+        }
+    });
+
+    // ════════════════════════════════════════════
+    // ── Init ──
+    // ════════════════════════════════════════════
+    render();
+    resetHeroTimer();
+    </script>
+</body>
+</html>
