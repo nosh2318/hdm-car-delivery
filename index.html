@@ -24,36 +24,70 @@
         .demo-nav { display: none; }
 
         /* Mobile */
+        .location-layout { display: flex; flex-direction: column; flex: 1; }
+        .location-map-col { min-height: 350px; position: relative; }
+        .location-panel-col { flex: 1; }
         @media (max-width: 767px) {
             .app-header { position: sticky; top: 0; z-index: 30; }
+            .location-panel-col { width: 100% !important; border-left: none !important; }
         }
 
-        /* Desktop / Tablet: constrain all content */
+        /* ── Desktop Navigation ── */
+        .pc-nav { display: none; }
+        .pc-nav a { color: white; text-decoration: none; font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: background .2s; }
+        .pc-nav a:hover { background: rgba(255,255,255,.15); }
+        .pc-footer { display: none; }
+
+        /* Desktop / Tablet */
         @media (min-width: 768px) {
-            .app-header { padding: 10px 24px; }
+            body { background: #f5f6f8; }
+            /* Header: show nav links */
+            .app-header { padding: 12px 32px; }
             .app-header img { height: 34px !important; }
-            .app-header > .app-logo, .app-header > .header-actions { max-width: 1100px; }
+            .hamburger-btn { display: none; }
+            .pc-nav { display: flex; align-items: center; gap: 4px; }
+            /* Hero */
             .hero-slider { max-height: 400px; overflow: hidden; }
             .hero-slide img { max-height: 400px; object-fit: cover; width: 100%; }
-            /* Center content wrapper */
-            .top-progress, .screen-header, .booking-progress { max-width: 600px; margin-left: auto; margin-right: auto; width: 100%; }
-            .confirm-screen, .form-screen, .options-screen, .terms-screen, .payment-screen, .complete-screen, .mypage-screen {
-                max-width: 600px; margin: 0 auto; width: 100%;
+            /* Content card style */
+            .pc-content-card {
+                max-width: 640px; margin: 24px auto; background: white;
+                border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+                padding: 28px 32px;
             }
-            .datetime-grid { max-width: 500px; }
+            .screen-header { max-width: 900px; margin: 0 auto; width: 100%; padding: 16px 32px; }
+            .top-progress, .booking-progress { max-width: 640px; margin-left: auto; margin-right: auto; width: 100%; }
+            .confirm-screen, .form-screen, .options-screen, .terms-screen, .payment-screen, .complete-screen, .mypage-screen {
+                max-width: 640px; margin: 0 auto; width: 100%;
+                background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+                padding: 28px 32px !important; margin-top: 20px; margin-bottom: 20px;
+            }
             .form-input, .dt-group select { font-size: 14px; padding: 12px 14px; }
             .btn-primary { padding: 16px; font-size: 16px; }
             .btn-secondary { padding: 14px; font-size: 15px; }
             .vehicle-card { padding: 14px; }
             .vehicle-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(250,190,0,.2); }
-            .bottom-panel .panel-content { max-width: 800px; margin: 0 auto; }
-            .vehicle-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+            /* Location screen: Uber-style 2 columns */
+            .location-layout { display: flex; flex: 1; min-height: calc(100vh - 60px); }
+            .location-map-col { flex: 1; position: relative; }
+            .location-panel-col { width: 400px; background: white; border-left: 1px solid #eee; overflow-y: auto; display: flex; flex-direction: column; }
+            .location-panel-col .panel-content { padding: 16px; }
+            .location-panel-col .bottom-panel { border-top: none; flex: 1; }
+            /* Vehicle grid */
+            .bottom-panel .panel-content { max-width: 100%; }
+            /* Footer */
+            .pc-footer {
+                display: block; background: #002063; color: white; padding: 32px; text-align: center;
+                font-size: 12px; margin-top: auto;
+            }
+            .pc-footer a { color: #FABE00; text-decoration: none; margin: 0 10px; }
+            .pc-footer a:hover { text-decoration: underline; }
         }
 
-        /* Large Desktop */
-        @media (min-width: 1200px) {
-            .vehicle-list { grid-template-columns: 1fr 1fr 1fr; }
-            .bottom-panel .panel-content { max-width: 1000px; }
+        @media (min-width: 1024px) {
+            .app-header { padding: 12px 48px; }
+            .location-panel-col { width: 440px; }
+            .pc-content-card { max-width: 700px; padding: 32px 40px; }
         }
 
         /* Safe area for notch devices */
@@ -588,6 +622,19 @@
                     </div>
                     <div class="menu-footer">© 2026 HANDYMAN</div>
                 </div>
+        <!-- PC Footer -->
+        <div class="pc-footer">
+            <div style="margin-bottom:12px;">
+                <a href="https://rent-handyman.jp/vehicle/">車両と料金</a>
+                <a href="https://rent-handyman.jp/insurance/">保険プラン</a>
+                <a href="https://rent-handyman.jp/faq-sapporo/">FAQ</a>
+                <a href="https://rent-handyman.jp/contact/">お問い合わせ</a>
+                <a href="https://rent-handyman.jp/clause">貸渡約款</a>
+                <a href="https://rent-handyman.jp/privacy/">プライバシー</a>
+                <a href="https://rent-handyman.jp/legal/">特定商取引法</a>
+            </div>
+            <div style="color:rgba(255,255,255,.5);">© 2026 HANDYMAN / Global Lines Inc.</div>
+        </div>
     </div>
 
     <script>
@@ -1109,6 +1156,13 @@
             <div class="app-header">
                 <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
                 <div class="header-actions">
+                    <nav class="pc-nav">
+                        <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
+                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
+                        <a href="https://rent-handyman.jp/vehicle/" target="_blank">車両・料金</a>
+                        <a href="https://rent-handyman.jp/faq-sapporo/" target="_blank">FAQ</a>
+                        <a href="https://rent-handyman.jp/contact/" target="_blank">お問い合わせ</a>
+                    </nav>
                     <button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
@@ -1207,57 +1261,60 @@
             <div class="app-header">
                 <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
                 <div class="header-actions">
+                    <nav class="pc-nav">
+                        <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
+                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
+                        <a href="https://rent-handyman.jp/vehicle/" target="_blank">車両・料金</a>
+                        <a href="https://rent-handyman.jp/faq-sapporo/" target="_blank">FAQ</a>
+                        <a href="https://rent-handyman.jp/contact/" target="_blank">お問い合わせ</a>
+                    </nav>
                     <button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
             </div>
-            <div class="screen-header">
-                <button class="screen-header-back" onclick="state.screen='top'; render();">←</button>
-                <span class="screen-header-title">お届け場所</span>
-                <span class="screen-header-step" style="font-size:10px;color:#888;">${startLabel} ${state.datetime.startTime}〜${endLabel} ${state.datetime.endTime}（${days}日間）</span>
-            </div>
+            <!-- Uber-style: 2 column on PC, stacked on mobile -->
+            <div class="location-layout">
+                <!-- Left: Map -->
+                <div class="location-map-col">
+                    <div id="mapWrap" style="position:relative; height:100%; min-height:400px;">
+                        <div id="map" style="height:100%;"></div>
+                        <div class="map-search-bar">
+                            <div class="map-search-icon">🔍</div>
+                            <input type="text" id="addressSearch" class="map-search-input"
+                                placeholder="ホテル名・住所で検索"
+                                oninput="onAddressInput(this.value)"
+                                onfocus="this.select()">
+                        </div>
+                        <div id="addressSuggestions" style="display:none;position:absolute;top:44px;left:8px;right:44px;z-index:1001;background:white;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:150px;overflow-y:auto;"></div>
+                        <button class="geolocate-btn" onclick="geolocateUser()" title="札幌駅に戻る">📍</button>
+                    </div>
+                </div>
 
-            <!-- Step indicator -->
-            <div class="top-progress" style="padding:10px 16px 6px;">
-                <div class="top-progress-step">
-                    <div class="top-progress-dot done">✓</div>
-                    <span class="top-progress-label done">日程</span>
-                </div>
-                <div class="top-progress-line done"></div>
-                <div class="top-progress-step">
-                    <div class="top-progress-dot active">2</div>
-                    <span class="top-progress-label active">場所</span>
-                </div>
-                <div class="top-progress-line"></div>
-                <div class="top-progress-step">
-                    <div class="top-progress-dot pending">3</div>
-                    <span class="top-progress-label">車両</span>
-                </div>
-            </div>
+                <!-- Right: Panel -->
+                <div class="location-panel-col">
+                    <!-- Info bar -->
+                    <div style="padding:14px 16px;border-bottom:1px solid #eee;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                            <button style="background:none;border:none;font-size:18px;cursor:pointer;" onclick="state.screen='top'; render();">←</button>
+                            <span style="font-size:14px;font-weight:700;color:#002063;">お届け場所と車両を選ぶ</span>
+                        </div>
+                        <div style="font-size:11px;color:#888;">📅 ${startLabel} ${state.datetime.startTime} 〜 ${endLabel} ${state.datetime.endTime}（${days}日間）</div>
+                    </div>
 
-            <!-- Map (large) -->
-            <div id="mapWrap" style="position:relative; flex:1; min-height:360px;">
-                <div id="map"></div>
-                <div class="map-search-bar">
-                    <div class="map-search-icon">🔍</div>
-                    <input type="text" id="addressSearch" class="map-search-input"
-                        placeholder="ホテル名・住所で検索"
-                        oninput="onAddressInput(this.value)"
-                        onfocus="this.select()">
+                    <!-- Vehicle Panel or Empty -->
+                    <div class="bottom-panel" id="bottomPanel" style="flex:1;border-top:none;${hasLocation ? '' : 'display:none;'}">
+                        <div class="panel-content" id="panelContent">
+                            ${hasLocation ? renderVehiclePanel() : ''}
+                        </div>
+                    </div>
+                    <div id="locationEmptyPanel" style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;${hasLocation ? 'display:none;' : ''}">
+                        <div>
+                            <div style="font-size:36px;margin-bottom:8px;">📍</div>
+                            <div style="font-size:14px;color:#999;">マップをタップして<br>お届け場所を指定</div>
+                        </div>
+                    </div>
                 </div>
-                <div id="addressSuggestions" style="display:none;position:absolute;top:44px;left:8px;right:44px;z-index:1001;background:white;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:150px;overflow-y:auto;"></div>
-                <button class="geolocate-btn" onclick="geolocateUser()" title="札幌駅に戻る">📍</button>
-            </div>
-
-            <!-- Vehicle Panel (appears after pin) -->
-            <div class="bottom-panel" id="bottomPanel" style="${hasLocation ? '' : 'display:none;'}">
-                <div class="panel-content" id="panelContent">
-                    ${hasLocation ? renderVehiclePanel() : ''}
-                </div>
-            </div>
-            <div id="locationEmptyPanel" style="padding:20px 16px;background:white;border-top:1px solid #eee;text-align:center;${hasLocation ? 'display:none;' : ''}">
-                <div style="font-size:14px;color:#999;">📍 マップをタップしてお届け場所を指定</div>
             </div>
         `;
     }
@@ -1886,6 +1943,13 @@
             <div class="app-header">
                 <div class="app-logo"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
                 <div class="header-actions">
+                    <nav class="pc-nav">
+                        <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
+                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
+                        <a href="https://rent-handyman.jp/vehicle/" target="_blank">車両・料金</a>
+                        <a href="https://rent-handyman.jp/faq-sapporo/" target="_blank">FAQ</a>
+                        <a href="https://rent-handyman.jp/contact/" target="_blank">お問い合わせ</a>
+                    </nav>
                     <button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
