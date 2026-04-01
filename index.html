@@ -2055,6 +2055,8 @@
     let mypageState = {
         view: 'lookup',       // 'lookup' | 'detail'
         reservation: null,    // fetched reservation data
+        reservations: null,   // list from email lookup
+        email: '',            // looked up email
         fleet: null,          // assigned vehicle
         loading: false,
         error: '',
@@ -2094,16 +2096,21 @@
     }
 
     function renderMypageLookup(saved) {
+        // Check if email is saved in LocalStorage
+        const savedEmail = localStorage.getItem('hdm_mypage_email') || '';
+
         let html = '';
 
-        if (saved.length > 0) {
-            // Has reservations — show list first
-            html += `<div style="font-size:15px;font-weight:700;color:#002063;margin-bottom:12px;">ご予約一覧</div>`;
-            for (const r of saved.slice(0, 5)) {
-                const statusClass = r.status === 'キャンセル' ? 'cancelled' : 'confirmed';
-                const statusLabel = r.status === 'キャンセル' ? 'キャンセル' : '確定';
+        // Show results if we have them
+        if (mypageState.reservations && mypageState.reservations.length > 0) {
+            html += `<div style="font-size:15px;font-weight:700;color:#002063;margin-bottom:4px;">ご予約一覧</div>`;
+            html += `<div style="font-size:11px;color:#888;margin-bottom:14px;">${mypageState.email} の予約</div>`;
+            for (const r of mypageState.reservations) {
+                const isCancelled = r.status === 'キャンセル' || r.status === 'cancelled';
+                const statusClass = isCancelled ? 'cancelled' : 'confirmed';
+                const statusLabel = isCancelled ? 'キャンセル' : '確定';
                 html += `
-                    <div class="mypage-res-card" style="cursor:pointer;" onclick="loadSavedReservation('${r.id}')">
+                    <div class="mypage-res-card" style="cursor:pointer;" onclick="loadReservationDetail('${r.id}')">
                         <div class="mypage-res-header">
                             <div class="mypage-res-id">${r.id}</div>
                             <div class="mypage-res-status ${statusClass}">${statusLabel}</div>
@@ -2114,70 +2121,43 @@
                         </div>
                         <div class="mypage-res-row">
                             <span class="mypage-res-row-label">貸出</span>
-                            <span class="mypage-res-row-value">${formatDateLabel(r.lend_date)} ${r.lend_time}</span>
+                            <span class="mypage-res-row-value">${formatDateLabel(r.lend_date)} ${r.lend_time || ''}</span>
                         </div>
                         <div class="mypage-res-row">
                             <span class="mypage-res-row-label">返却</span>
-                            <span class="mypage-res-row-value">${formatDateLabel(r.return_date)} ${r.return_time}</span>
+                            <span class="mypage-res-row-value">${formatDateLabel(r.return_date)} ${r.return_time || ''}</span>
                         </div>
                     </div>
                 `;
             }
-
-            // Collapsible lookup
-            html += `
-                <div style="margin-top:12px;">
-                    <button onclick="document.getElementById('lookupForm').style.display=document.getElementById('lookupForm').style.display==='none'?'block':'none';"
-                        style="background:none;border:none;font-size:12px;color:#002063;font-weight:600;cursor:pointer;padding:0;">
-                        別の予約を検索 ▼
-                    </button>
-                    <div id="lookupForm" style="display:none;margin-top:10px;">
-                        ${renderLookupForm()}
-                    </div>
-                </div>
-            `;
-        } else {
-            // No reservations
-            html += `
-                <div style="text-align:center;padding:24px 0;">
-                    <div style="font-size:36px;margin-bottom:12px;">📋</div>
-                    <div style="font-size:15px;font-weight:700;color:#333;margin-bottom:4px;">予約がありません</div>
-                    <div style="font-size:12px;color:#999;line-height:1.6;">予約完了後、こちらに予約情報が表示されます。</div>
-                </div>
-                <button class="btn-primary" onclick="state.screen='top'; render();">レンタカーを予約する</button>
-
-                <div style="margin-top:20px;">
-                    <button onclick="document.getElementById('lookupForm').style.display=document.getElementById('lookupForm').style.display==='none'?'block':'none';"
-                        style="background:none;border:none;font-size:12px;color:#002063;font-weight:600;cursor:pointer;padding:0;">
-                        予約番号をお持ちの方 ▼
-                    </button>
-                    <div id="lookupForm" style="display:none;margin-top:10px;">
-                        ${renderLookupForm()}
-                    </div>
-                </div>
-            `;
+            html += `<button class="btn-secondary" style="margin-top:12px;" onclick="mypageState.reservations=null;mypageState.email='';render();">別のメールアドレスで検索</button>`;
+            return html;
         }
 
-        return html;
-    }
-
-    function renderLookupForm() {
-        return `
+        // Email input form
+        html += `
+            <div style="text-align:center;padding:20px 0 16px;">
+                <img src="images/logo_compact.png" alt="HDM" style="height:36px;margin-bottom:12px;">
+                <div style="font-size:16px;font-weight:700;color:#002063;margin-bottom:4px;">マイページ</div>
+                <div style="font-size:12px;color:#888;line-height:1.6;">ご予約時のメールアドレスを入力してください</div>
+            </div>
             <div class="mypage-lookup">
-                <div class="form-group" style="margin-bottom:10px;">
-                    <label class="form-label">予約番号</label>
-                    <input class="form-input" type="text" id="mypageResId" placeholder="HDM12345678">
-                </div>
-                <div class="form-group" style="margin-bottom:10px;">
-                    <label class="form-label">電話番号</label>
-                    <input class="form-input" type="tel" id="mypagePhone" placeholder="090-1234-5678">
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label class="form-label">メールアドレス</label>
+                    <input class="form-input" type="email" id="mypageEmail" placeholder="example@mail.com" value="${savedEmail}">
                 </div>
                 ${mypageState.error ? `<div style="color:#dc2626;font-size:12px;margin-bottom:8px;">${mypageState.error}</div>` : ''}
-                <button class="btn-primary" onclick="lookupReservation();" ${mypageState.loading ? 'disabled' : ''}>
-                    ${mypageState.loading ? '<span class="loading-spinner"></span>' : '予約を検索'}
+                <button class="btn-primary" onclick="lookupByEmail();" ${mypageState.loading ? 'disabled' : ''}>
+                    ${mypageState.loading ? '<span class="loading-spinner"></span>' : '予約を確認する'}
                 </button>
             </div>
+            <div style="text-align:center;margin-top:20px;">
+                <div style="font-size:12px;color:#999;line-height:1.6;">予約がない場合は</div>
+                <button style="background:none;border:none;font-size:13px;color:#002063;font-weight:600;cursor:pointer;margin-top:4px;" onclick="state.screen='top'; render();">レンタカーを予約する →</button>
+            </div>
         `;
+
+        return html;
     }
 
     function renderMypageDetail() {
@@ -2279,18 +2259,17 @@
         if (!isCancelled && !isCompleted && !isActive) {
             html += `<button class="btn-secondary" style="border-color:#dc2626;color:#dc2626;" onclick="if(confirm('予約をキャンセルしますか？')){cancelReservation('${r.id}');}">予約をキャンセル</button>`;
         }
-        html += `<button class="btn-secondary" onclick="mypageState.view='lookup'; render();">予約一覧に戻る</button>`;
+        html += `<button class="btn-secondary" onclick="mypageState.view='lookup'; mypageState.reservation=null; render();">予約一覧に戻る</button>`;
         html += `</div>`;
 
         return html;
     }
 
-    async function lookupReservation() {
-        const resId = document.getElementById('mypageResId')?.value?.trim();
-        const phone = document.getElementById('mypagePhone')?.value?.trim().replace(/-/g, '');
+    async function lookupByEmail() {
+        const email = document.getElementById('mypageEmail')?.value?.trim();
 
-        if (!resId || !phone) {
-            mypageState.error = '予約番号と電話番号を入力してください';
+        if (!email) {
+            mypageState.error = 'メールアドレスを入力してください';
             render();
             return;
         }
@@ -2300,33 +2279,18 @@
         render();
 
         try {
-            const reservations = await supabaseGet('reservations', `id=eq.${encodeURIComponent(resId)}`);
+            const reservations = await supabaseGet('reservations', `mail=eq.${encodeURIComponent(email)}&order=created_at.desc`);
             if (!reservations || reservations.length === 0) {
-                mypageState.error = '予約が見つかりません';
+                mypageState.error = 'この メールアドレスの予約が見つかりません';
                 mypageState.loading = false;
                 render();
                 return;
             }
 
-            const r = reservations[0];
-            const rPhone = (r.tel || '').replace(/-/g, '');
-            if (rPhone !== phone && phone !== '00000000000') {
-                mypageState.error = '電話番号が一致しません';
-                mypageState.loading = false;
-                render();
-                return;
-            }
-
-            // Fetch fleet assignment
-            let fleet = null;
-            try {
-                const fleetData = await supabaseGet('fleet', `reservation_id=eq.${encodeURIComponent(resId)}`);
-                if (fleetData && fleetData.length > 0) fleet = fleetData[0];
-            } catch (e) {}
-
-            mypageState.reservation = r;
-            mypageState.fleet = fleet;
-            mypageState.view = 'detail';
+            // Save email for next time
+            localStorage.setItem('hdm_mypage_email', email);
+            mypageState.reservations = reservations;
+            mypageState.email = email;
             mypageState.loading = false;
             render();
         } catch (e) {
@@ -2336,7 +2300,7 @@
         }
     }
 
-    async function loadSavedReservation(resId) {
+    async function loadReservationDetail(resId) {
         mypageState.loading = true;
         mypageState.error = '';
         render();
