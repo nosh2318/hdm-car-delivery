@@ -2272,10 +2272,16 @@
         // Actions
         html += `<div style="margin-top:16px;">`;
         if (!isCancelled && !isCompleted && !isActive) {
-            html += `<button class="btn-secondary" style="border-color:#dc2626;color:#dc2626;" onclick="if(confirm('予約をキャンセルしますか？')){cancelReservation('${r.id}');}">予約をキャンセル</button>`;
+            html += `<button class="btn-secondary" style="border-color:#dc2626;color:#dc2626;" onclick="showCancelConfirm('${r.id}', '${r.lend_date}', ${r.price || 0})">予約をキャンセル</button>`;
         }
         html += `<button class="btn-secondary" onclick="mypageState.view='lookup'; mypageState.reservation=null; render();">予約一覧に戻る</button>`;
         html += `</div>`;
+
+        // Cancel confirm modal
+        html += `
+        <div id="cancelModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;">
+            <div style="background:white;border-radius:16px;max-width:380px;width:90%;padding:24px;margin:20px;" id="cancelModalContent"></div>
+        </div>`;
 
         return html;
     }
@@ -2367,6 +2373,62 @@
         }
         mypageState.loading = false;
         render();
+    }
+
+    function getCancelFee(lendDate, basePrice) {
+        const now = new Date();
+        const lend = new Date(lendDate + 'T00:00:00');
+        const diffDays = Math.ceil((lend - now) / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= 7) return { rate: 0, fee: 0, label: '無料（7日前以上）' };
+        if (diffDays >= 3) return { rate: 20, fee: Math.ceil(basePrice * 0.2), label: '基本料金の20%（6〜3日前）' };
+        if (diffDays >= 1) return { rate: 30, fee: Math.ceil(basePrice * 0.3), label: '基本料金の30%（2〜1日前）' };
+        return { rate: 50, fee: Math.ceil(basePrice * 0.5), label: '基本料金の50%（当日以降）' };
+    }
+
+    function showCancelConfirm(resId, lendDate, basePrice) {
+        const cancel = getCancelFee(lendDate, basePrice);
+        const modal = document.getElementById('cancelModal');
+        const content = document.getElementById('cancelModalContent');
+        if (!modal || !content) return;
+
+        content.innerHTML = `
+            <div style="text-align:center;margin-bottom:16px;">
+                <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
+                <div style="font-size:16px;font-weight:700;color:#333;">予約をキャンセルしますか？</div>
+            </div>
+
+            <div style="background:#f9f9f9;border-radius:10px;padding:14px;margin-bottom:16px;">
+                <div style="font-size:13px;font-weight:700;color:#002063;margin-bottom:10px;">キャンセルポリシー</div>
+                <div style="font-size:12px;line-height:1.8;color:#555;">
+                    <div style="display:flex;justify-content:space-between;"><span>7日前まで</span><span style="font-weight:600;">無料</span></div>
+                    <div style="display:flex;justify-content:space-between;${cancel.rate === 20 ? 'color:#002063;font-weight:700;' : ''}"><span>6〜3日前</span><span>基本料金の20%</span></div>
+                    <div style="display:flex;justify-content:space-between;${cancel.rate === 30 ? 'color:#002063;font-weight:700;' : ''}"><span>2〜1日前</span><span>基本料金の30%</span></div>
+                    <div style="display:flex;justify-content:space-between;${cancel.rate === 50 ? 'color:#002063;font-weight:700;' : ''}"><span>当日以降</span><span>基本料金の50%</span></div>
+                </div>
+                <div style="font-size:11px;color:#888;margin-top:8px;line-height:1.5;">※航空便が欠航した場合、欠航証明書のご提示でキャンセル料は無料となります。</div>
+            </div>
+
+            <div style="background:${cancel.fee > 0 ? '#fef2f2' : '#f0fdf4'};border:1px solid ${cancel.fee > 0 ? '#fca5a5' : '#86efac'};border-radius:10px;padding:14px;margin-bottom:16px;text-align:center;">
+                <div style="font-size:12px;color:#666;">今キャンセルした場合</div>
+                <div style="font-size:20px;font-weight:800;color:${cancel.fee > 0 ? '#dc2626' : '#16a34a'};margin-top:4px;">
+                    ${cancel.fee > 0 ? '¥' + cancel.fee.toLocaleString() : '無料'}
+                </div>
+                <div style="font-size:11px;color:#888;margin-top:2px;">${cancel.label}</div>
+            </div>
+
+            <div style="display:flex;gap:8px;">
+                <button style="flex:1;padding:12px;background:white;color:#333;border:1.5px solid #ddd;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;" onclick="closeCancelModal()">戻る</button>
+                <button style="flex:1;padding:12px;background:#dc2626;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;" onclick="closeCancelModal(); cancelReservation('${resId}');">キャンセルする</button>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+    }
+
+    function closeCancelModal() {
+        const modal = document.getElementById('cancelModal');
+        if (modal) modal.style.display = 'none';
     }
 
     async function cancelReservation(resId) {
