@@ -773,6 +773,10 @@
 
         state.mapReady = true;
 
+        // Fix map size for dynamic containers (PC layout)
+        setTimeout(() => { if (map) map.invalidateSize(); }, 200);
+        setTimeout(() => { if (map) map.invalidateSize(); }, 500);
+
         // Place initial pin at user location
         setDeliveryPin(lat, lng);
     }
@@ -1136,6 +1140,8 @@
                         map = null;
                         deliveryMarker = null;
                         initMap(state.deliveryLat || state.userLat, state.deliveryLng || state.userLng);
+                    } else {
+                        map.invalidateSize();
                     }
                 }
                 renderLocationBadge();
@@ -1934,8 +1940,13 @@
         if (box) box.style.display = 'none';
         const input = document.getElementById('addressSearch');
         if (input) input.value = '';
-        if (map) map.setView([lat, lng], 16);
-        setDeliveryPin(lat, lng);
+        if (map) {
+            map.invalidateSize();
+            setTimeout(() => {
+                map.setView([lat, lng], 16);
+                setDeliveryPin(lat, lng);
+            }, 100);
+        }
     }
 
     function selectClass(type) {
