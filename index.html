@@ -2280,6 +2280,14 @@
         return html;
     }
 
+    // Mock data for testing (remove in production)
+    const MOCK_EMAIL = 'test@hdm-demo.com';
+    const MOCK_RESERVATIONS = [
+        { id: 'HDM00000001', mail: MOCK_EMAIL, name: 'テスト 太郎', vehicle: 'C', lend_date: '2026-04-05', lend_time: '10:00', return_date: '2026-04-06', return_time: '10:00', status: '確定', del_place: '札幌市 中央区 南1条西5丁目', price: 7000, created_at: '2026-04-02T07:00:00Z' },
+        { id: 'HDM00000002', mail: MOCK_EMAIL, name: 'テスト 太郎', vehicle: 'A', lend_date: '2026-03-20', lend_time: '09:00', return_date: '2026-03-22', return_time: '18:00', status: '確定', del_place: '札幌市 北区 北8条通', price: 45000, created_at: '2026-03-18T10:00:00Z' },
+        { id: 'HDM00000003', mail: MOCK_EMAIL, name: 'テスト 太郎', vehicle: 'S', lend_date: '2026-02-10', lend_time: '10:00', return_date: '2026-02-12', return_time: '10:00', status: 'キャンセル', del_place: '札幌市 東区 花畔札幌線', price: 24000, created_at: '2026-02-08T12:00:00Z' },
+    ];
+
     async function lookupByEmail() {
         const email = document.getElementById('mypageEmail')?.value?.trim();
 
@@ -2294,7 +2302,13 @@
         render();
 
         try {
-            const reservations = await supabaseGet('reservations', `mail=eq.${encodeURIComponent(email)}&order=created_at.desc`);
+            // Check mock data first (for demo/testing)
+            let reservations;
+            if (email === MOCK_EMAIL) {
+                reservations = MOCK_RESERVATIONS;
+            } else {
+                reservations = await supabaseGet('reservations', `mail=eq.${encodeURIComponent(email)}&order=created_at.desc`);
+            }
 
             // Save email for next time
             localStorage.setItem('hdm_mypage_email', email);
@@ -2323,6 +2337,17 @@
         render();
 
         try {
+            // Check mock first
+            const mockRes = MOCK_RESERVATIONS.find(r => r.id === resId);
+            if (mockRes) {
+                mypageState.reservation = mockRes;
+                mypageState.fleet = resId === 'HDM00000001' ? { vehicle_code: 'RKY', reservation_id: resId } : null;
+                mypageState.view = 'detail';
+                mypageState.loading = false;
+                render();
+                return;
+            }
+
             const reservations = await supabaseGet('reservations', `id=eq.${encodeURIComponent(resId)}`);
             if (reservations && reservations.length > 0) {
                 let fleet = null;
