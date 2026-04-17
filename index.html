@@ -144,33 +144,112 @@
         .hero-dot.active { background: white; width: 20px; border-radius: 4px; }
         /* ── MyPage ── */
         .mypage-screen { padding: 16px; flex: 1; overflow-y: auto; }
-        .mypage-lookup { background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-        .mypage-lookup-title { font-size: 14px; font-weight: 700; color: #002063; margin-bottom: 12px; }
-        .mypage-res-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
-        .mypage-res-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .mypage-res-id { font-size: 14px; font-weight: 700; color: #002063; }
-        .mypage-res-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 10px; }
-        .mypage-res-status.confirmed { background: #dcfce7; color: #16a34a; }
-        .mypage-res-status.cancelled { background: #fee2e2; color: #dc2626; }
-        .mypage-res-status.active { background: #dbeafe; color: #2563eb; }
-        .mypage-res-status.completed { background: #f3f4f6; color: #666; }
-        .mypage-res-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12px; }
-        .mypage-res-row-label { color: #888; }
-        .mypage-res-row-value { font-weight: 600; color: #333; text-align: right; max-width: 60%; }
-        .mypage-timeline { padding: 0; margin: 14px 0; }
-        .mypage-tl-item { display: flex; gap: 12px; position: relative; padding-bottom: 16px; }
-        .mypage-tl-item:last-child { padding-bottom: 0; }
-        .mypage-tl-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; z-index: 1; }
-        .mypage-tl-dot.done { background: #22c55e; color: white; }
-        .mypage-tl-dot.active { background: #FABE00; color: #002063; animation: pulse 2s infinite; }
-        .mypage-tl-dot.pending { background: #e5e7eb; color: #999; }
+        .mypage-lookup { background: #f8fafc; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+
+        /* Status Hero Card */
+        .mp-status-hero { border-radius: 16px; padding: 24px 20px; text-align: center; margin-bottom: 16px; position: relative; overflow: hidden; }
+        .mp-status-hero.st-confirmed { background: linear-gradient(135deg, #002063 0%, #003399 100%); color: white; }
+        .mp-status-hero.st-assigned { background: linear-gradient(135deg, #002063 0%, #1e40af 100%); color: white; }
+        .mp-status-hero.st-preparing { background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%); color: white; }
+        .mp-status-hero.st-delivering { background: linear-gradient(135deg, #FABE00 0%, #f59e0b 100%); color: #002063; }
+        .mp-status-hero.st-active { background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); color: white; }
+        .mp-status-hero.st-returning { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); color: white; }
+        .mp-status-hero.st-completed { background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%); color: white; }
+        .mp-status-hero.st-cancelled { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white; }
+        .mp-status-icon { font-size: 48px; margin-bottom: 8px; line-height: 1; }
+        .mp-status-label { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+        .mp-status-sub { font-size: 12px; opacity: .85; }
+        .mp-status-hero .mp-car-animation { position: absolute; bottom: 8px; right: -60px; font-size: 28px; animation: carDrive 3s ease-in-out infinite; }
+        @keyframes carDrive { 0% { transform: translateX(0); } 50% { transform: translateX(-30px); } 100% { transform: translateX(0); } }
+        @keyframes carBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+        /* Delivery Progress Bar */
+        .mp-progress { display: flex; align-items: center; padding: 0 4px; margin-bottom: 20px; }
+        .mp-prog-step { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; position: relative; z-index: 1; }
+        .mp-prog-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; background: #e5e7eb; color: #999; transition: all .3s; }
+        .mp-prog-icon.done { background: #22c55e; color: white; }
+        .mp-prog-icon.now { background: #FABE00; color: #002063; animation: pulse 2s infinite; box-shadow: 0 0 0 4px rgba(250,190,0,.2); }
+        .mp-prog-txt { font-size: 9px; color: #999; margin-top: 4px; text-align: center; white-space: nowrap; font-weight: 600; }
+        .mp-prog-txt.done { color: #22c55e; }
+        .mp-prog-txt.now { color: #002063; font-weight: 800; }
+        .mp-prog-line { flex: 1; height: 3px; background: #e5e7eb; margin: 0 -2px; margin-bottom: 18px; }
+        .mp-prog-line.done { background: #22c55e; }
+
+        /* Reservation Card (list) */
+        .mp-card { background: white; border: 1.5px solid #e5e7eb; border-radius: 14px; padding: 0; margin-bottom: 12px; overflow: hidden; cursor: pointer; transition: all .2s; }
+        .mp-card:hover { border-color: #FABE00; box-shadow: 0 4px 16px rgba(250,190,0,.12); }
+        .mp-card-status { padding: 8px 14px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+        .mp-card-status.confirmed { background: #eff6ff; color: #002063; }
+        .mp-card-status.assigned { background: #eff6ff; color: #1e40af; }
+        .mp-card-status.preparing { background: #e0f2fe; color: #0369a1; }
+        .mp-card-status.delivering { background: #fef9c3; color: #92400e; }
+        .mp-card-status.active { background: #dcfce7; color: #16a34a; }
+        .mp-card-status.returning { background: #ede9fe; color: #7c3aed; }
+        .mp-card-status.completed { background: #f3f4f6; color: #666; }
+        .mp-card-status.cancelled { background: #fee2e2; color: #dc2626; }
+        .mp-card-body { padding: 12px 14px; }
+        .mp-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .mp-card-vehicle { font-size: 15px; font-weight: 700; color: #002063; }
+        .mp-card-price { font-size: 14px; font-weight: 700; color: #333; }
+        .mp-card-info { display: flex; flex-direction: column; gap: 4px; }
+        .mp-card-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
+        .mp-card-row-icon { font-size: 13px; flex-shrink: 0; }
+        .mp-card-arrow { font-size: 16px; color: #ccc; margin-left: auto; flex-shrink: 0; }
+
+        /* Detail sections */
+        .mp-detail-section { background: white; border: 1px solid #e5e7eb; border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+        .mp-detail-header { padding: 12px 14px; font-size: 13px; font-weight: 700; color: #002063; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
+        .mp-detail-body { padding: 14px; }
+        .mp-detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+        .mp-detail-row-label { color: #888; }
+        .mp-detail-row-value { font-weight: 600; color: #333; text-align: right; max-width: 60%; }
+
+        /* Driver card */
+        .mp-driver-card { display: flex; align-items: center; gap: 14px; padding: 14px; }
+        .mp-driver-avatar { width: 48px; height: 48px; border-radius: 50%; background: #002063; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; }
+        .mp-driver-info { flex: 1; }
+        .mp-driver-name { font-size: 14px; font-weight: 700; color: #333; }
+        .mp-driver-sub { font-size: 11px; color: #888; margin-top: 2px; }
+        .mp-driver-call { width: 40px; height: 40px; border-radius: 50%; background: #22c55e; color: white; border: none; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+        .mp-driver-call:hover { background: #16a34a; }
+
+        /* ETA banner */
+        .mp-eta { background: #002063; color: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
+        .mp-eta-time { font-size: 28px; font-weight: 800; color: #FABE00; }
+        .mp-eta-label { font-size: 12px; opacity: .8; }
+        .mp-eta-dest { font-size: 13px; font-weight: 600; margin-top: 2px; }
+
+        /* Action buttons */
+        .mp-actions { display: flex; gap: 8px; margin-top: 16px; margin-bottom: 8px; }
+        .mp-action-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; text-align: center; transition: all .2s; }
+        .mp-action-btn.primary { background: #002063; color: white; }
+        .mp-action-btn.primary:hover { background: #003399; }
+        .mp-action-btn.danger { background: white; color: #dc2626; border: 1.5px solid #dc2626; }
+        .mp-action-btn.danger:hover { background: #fef2f2; }
+        .mp-action-btn.secondary { background: white; color: #333; border: 1.5px solid #ddd; }
+
+        /* Timeline (detail) */
+        .mp-timeline { padding: 0; margin: 0; }
+        .mp-tl-item { display: flex; gap: 12px; position: relative; padding-bottom: 20px; }
+        .mp-tl-item:last-child { padding-bottom: 0; }
+        .mp-tl-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; z-index: 1; }
+        .mp-tl-dot.done { background: #22c55e; color: white; }
+        .mp-tl-dot.now { background: #FABE00; color: #002063; animation: pulse 2s infinite; }
+        .mp-tl-dot.wait { background: #f1f5f9; color: #cbd5e1; border: 2px solid #e2e8f0; }
+        .mp-tl-line { position: absolute; left: 13px; top: 28px; width: 2px; height: calc(100% - 28px); background: #e5e7eb; }
+        .mp-tl-item:last-child .mp-tl-line { display: none; }
+        .mp-tl-line.done { background: #22c55e; }
+        .mp-tl-content { flex: 1; padding-top: 3px; }
+        .mp-tl-title { font-size: 13px; font-weight: 600; color: #333; }
+        .mp-tl-title.now { color: #002063; font-weight: 800; }
+        .mp-tl-sub { font-size: 11px; color: #999; margin-top: 2px; }
+        .mp-tl-sub.highlight { color: #002063; font-weight: 600; }
+
+        /* Delivery map placeholder */
+        .mp-map-placeholder { width: 100%; height: 160px; border-radius: 12px; overflow: hidden; position: relative; margin-bottom: 12px; }
+        .mp-map-placeholder img, .mp-map-placeholder .leaflet-container { width: 100%; height: 100%; object-fit: cover; }
+
         @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(250,190,0,.4); } 50% { box-shadow: 0 0 0 6px rgba(250,190,0,0); } }
-        .mypage-tl-line { position: absolute; left: 11px; top: 24px; width: 2px; height: calc(100% - 24px); background: #e5e7eb; }
-        .mypage-tl-item:last-child .mypage-tl-line { display: none; }
-        .mypage-tl-line.done { background: #22c55e; }
-        .mypage-tl-text { flex: 1; padding-top: 2px; }
-        .mypage-tl-title { font-size: 13px; font-weight: 600; color: #333; }
-        .mypage-tl-sub { font-size: 11px; color: #999; margin-top: 2px; }
 
         .menu-lang { display: flex; gap: 0; padding: 10px 16px; }
         .menu-lang-btn { flex: 1; padding: 8px 0; border: 1px solid #ddd; background: white; font-size: 12px; font-weight: 600; color: #666; cursor: pointer; transition: all .2s; font-family: inherit; }
@@ -2062,8 +2141,51 @@
         error: '',
     };
 
+    // Delivery status definitions
+    const DELIVERY_STATUSES = {
+        confirmed:  { icon: '📋', label: '予約確定', sub: 'ご予約を受け付けました', heroClass: 'st-confirmed', cardClass: 'confirmed' },
+        assigned:   { icon: '🔑', label: '配車確定', sub: 'お車が決まりました', heroClass: 'st-assigned', cardClass: 'assigned' },
+        preparing:  { icon: '🔧', label: '出発準備中', sub: 'スタッフが車両を準備しています', heroClass: 'st-preparing', cardClass: 'preparing' },
+        delivering: { icon: '🚗', label: 'お届け中', sub: 'お届け先に向かっています', heroClass: 'st-delivering', cardClass: 'delivering' },
+        active:     { icon: '✅', label: 'ご利用中', sub: 'ドライブをお楽しみください', heroClass: 'st-active', cardClass: 'active' },
+        returning:  { icon: '🔄', label: '返却手続き中', sub: '返却を確認しています', heroClass: 'st-returning', cardClass: 'returning' },
+        completed:  { icon: '🏁', label: '返却完了', sub: 'ご利用ありがとうございました', heroClass: 'st-completed', cardClass: 'completed' },
+        cancelled:  { icon: '✕', label: 'キャンセル', sub: 'この予約はキャンセルされました', heroClass: 'st-cancelled', cardClass: 'cancelled' },
+    };
+
+    // Determine delivery status from reservation data
+    function getDeliveryStatus(r, fleet) {
+        if (r.status === 'キャンセル' || r.status === 'cancelled') return 'cancelled';
+        const now = new Date();
+        const lendDT = new Date(r.lend_date + 'T' + (r.lend_time || '10:00'));
+        const returnDT = new Date(r.return_date + 'T' + (r.return_time || '10:00'));
+        const hasVehicle = !!(fleet && fleet.vehicle_code);
+
+        // For demo: use demo_status if set (allows showing all statuses)
+        if (r.demo_status) return r.demo_status;
+
+        if (now > returnDT) return 'completed';
+        if (now >= lendDT && now <= returnDT) return 'active';
+        if (!hasVehicle) return 'confirmed';
+        return 'assigned';
+    }
+
+    // Progress steps for delivery flow
+    const PROGRESS_STEPS = [
+        { key: 'confirmed', icon: '📋', label: '予約' },
+        { key: 'assigned', icon: '🔑', label: '配車' },
+        { key: 'preparing', icon: '🔧', label: '準備' },
+        { key: 'delivering', icon: '🚗', label: 'お届け' },
+        { key: 'active', icon: '✅', label: '利用中' },
+        { key: 'completed', icon: '🏁', label: '完了' },
+    ];
+
+    function getProgressIndex(status) {
+        const idx = PROGRESS_STEPS.findIndex(s => s.key === status);
+        return idx >= 0 ? idx : 0;
+    }
+
     function renderMypageScreen() {
-        // Check LocalStorage for saved reservation
         const saved = JSON.parse(localStorage.getItem('hdm_reservations') || '[]');
 
         return `
@@ -2096,78 +2218,106 @@
     }
 
     function renderMypageLookup(saved) {
-        // Check if email is saved in LocalStorage
         const savedEmail = localStorage.getItem('hdm_mypage_email') || '';
-
         let html = '';
 
-        // Show results if we have them
+        // No reservations found
         if (mypageState.reservations && mypageState.reservations.length === 0) {
-            // No reservations found
             html += `
-                <div style="text-align:center;padding:30px 0;">
-                    <div style="font-size:48px;margin-bottom:16px;">📭</div>
-                    <div style="font-size:16px;font-weight:700;color:#333;margin-bottom:6px;">予約が見つかりません</div>
+                <div style="text-align:center;padding:40px 0 20px;">
+                    <div style="font-size:56px;margin-bottom:16px;">📭</div>
+                    <div style="font-size:18px;font-weight:800;color:#333;margin-bottom:8px;">予約が見つかりません</div>
                     <div style="font-size:13px;color:#888;margin-bottom:4px;">${mypageState.email}</div>
-                    <div style="font-size:12px;color:#999;line-height:1.6;margin-top:8px;">このメールアドレスに紐づく予約はありません。<br>予約時に入力したメールアドレスをご確認ください。</div>
+                    <div style="font-size:12px;color:#999;line-height:1.6;margin-top:12px;">このメールアドレスに紐づく予約はありません。<br>予約時に入力したメールアドレスをご確認ください。</div>
                 </div>
                 <button class="btn-primary" onclick="state.screen='top'; render();">レンタカーを予約する</button>
-                <button class="btn-secondary" onclick="mypageState.reservations=null;mypageState.email='';render();">別のメールアドレスで検索</button>
+                <button class="btn-secondary" style="margin-top:8px;" onclick="mypageState.reservations=null;mypageState.email='';render();">別のメールアドレスで検索</button>
             `;
             return html;
         }
 
+        // Reservation list
         if (mypageState.reservations && mypageState.reservations.length > 0) {
-            html += `<div style="font-size:15px;font-weight:700;color:#002063;margin-bottom:4px;">ご予約一覧</div>`;
-            html += `<div style="font-size:11px;color:#888;margin-bottom:14px;">${mypageState.email} の予約</div>`;
+            html += `
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <div>
+                        <div style="font-size:16px;font-weight:800;color:#002063;">ご予約一覧</div>
+                        <div style="font-size:11px;color:#888;margin-top:2px;">${mypageState.email}</div>
+                    </div>
+                    <div style="font-size:12px;color:#002063;font-weight:700;">${mypageState.reservations.length}件</div>
+                </div>
+            `;
+
             for (const r of mypageState.reservations) {
-                const isCancelled = r.status === 'キャンセル' || r.status === 'cancelled';
-                const statusClass = isCancelled ? 'cancelled' : 'confirmed';
-                const statusLabel = isCancelled ? 'キャンセル' : '確定';
+                const fleet = r.demo_fleet || null;
+                const status = getDeliveryStatus(r, fleet);
+                const ds = DELIVERY_STATUSES[status];
+                const cls = VEHICLE_CLASSES[r.vehicle] || {};
+                const vehicleName = cls.name || r.vehicle;
+
                 html += `
-                    <div class="mypage-res-card" style="cursor:pointer;" onclick="loadReservationDetail('${r.id}')">
-                        <div class="mypage-res-header">
-                            <div class="mypage-res-id">${r.id}</div>
-                            <div class="mypage-res-status ${statusClass}">${statusLabel}</div>
+                    <div class="mp-card" onclick="loadReservationDetail('${r.id}')">
+                        <div class="mp-card-status ${ds.cardClass}">
+                            <span>${ds.icon}</span>
+                            <span>${ds.label}</span>
+                            ${status === 'delivering' ? '<span style="margin-left:auto;font-size:10px;opacity:.7;">到着まで約15分</span>' : ''}
                         </div>
-                        <div class="mypage-res-row">
-                            <span class="mypage-res-row-label">車両</span>
-                            <span class="mypage-res-row-value">${VEHICLE_CLASSES[r.vehicle]?.name || r.vehicle}クラス</span>
-                        </div>
-                        <div class="mypage-res-row">
-                            <span class="mypage-res-row-label">貸出</span>
-                            <span class="mypage-res-row-value">${formatDateLabel(r.lend_date)} ${r.lend_time || ''}</span>
-                        </div>
-                        <div class="mypage-res-row">
-                            <span class="mypage-res-row-label">返却</span>
-                            <span class="mypage-res-row-value">${formatDateLabel(r.return_date)} ${r.return_time || ''}</span>
+                        <div class="mp-card-body">
+                            <div class="mp-card-top">
+                                <div class="mp-card-vehicle">${vehicleName}クラス</div>
+                                ${r.price ? `<div class="mp-card-price">¥${Number(r.price).toLocaleString()}</div>` : ''}
+                            </div>
+                            <div class="mp-card-info">
+                                <div class="mp-card-row">
+                                    <span class="mp-card-row-icon">📍</span>
+                                    <span>${r.del_place || '-'}</span>
+                                </div>
+                                <div class="mp-card-row">
+                                    <span class="mp-card-row-icon">📅</span>
+                                    <span>${formatDateLabel(r.lend_date)} ${r.lend_time || ''} 〜 ${formatDateLabel(r.return_date)} ${r.return_time || ''}</span>
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:6px;">
+                                <span style="font-size:11px;color:#002063;font-weight:600;">詳細を見る</span>
+                                <span class="mp-card-arrow">›</span>
+                            </div>
                         </div>
                     </div>
                 `;
             }
+
             html += `<button class="btn-secondary" style="margin-top:12px;" onclick="mypageState.reservations=null;mypageState.email='';render();">別のメールアドレスで検索</button>`;
             return html;
         }
 
-        // Email input form
+        // Email lookup form
         html += `
-            <div style="text-align:center;padding:20px 0 16px;">
-                <img src="images/logo_compact.png" alt="HDM" style="height:36px;margin-bottom:12px;">
-                <div style="font-size:16px;font-weight:700;color:#002063;margin-bottom:4px;">マイページ</div>
-                <div style="font-size:12px;color:#888;line-height:1.6;">ご予約時のメールアドレスを入力してください</div>
+            <div style="text-align:center;padding:24px 0 20px;">
+                <img src="images/logo_compact.png" alt="HDM" style="height:40px;margin-bottom:14px;">
+                <div style="font-size:18px;font-weight:800;color:#002063;margin-bottom:6px;">マイページ</div>
+                <div style="font-size:13px;color:#888;line-height:1.6;">予約状況やデリバリー状況を<br>リアルタイムで確認できます</div>
             </div>
             <div class="mypage-lookup">
                 <div class="form-group" style="margin-bottom:14px;">
-                    <label class="form-label">メールアドレス</label>
-                    <input class="form-input" type="email" id="mypageEmail" placeholder="example@mail.com" value="${savedEmail}">
+                    <label class="form-label">ご予約時のメールアドレス</label>
+                    <input class="form-input" type="email" id="mypageEmail" placeholder="example@mail.com" value="${savedEmail}" style="font-size:16px;">
                 </div>
                 ${mypageState.error ? `<div style="color:#dc2626;font-size:12px;margin-bottom:8px;">${mypageState.error}</div>` : ''}
                 <button class="btn-primary" onclick="lookupByEmail();" ${mypageState.loading ? 'disabled' : ''}>
                     ${mypageState.loading ? '<span class="loading-spinner"></span>' : '予約を確認する'}
                 </button>
             </div>
+
+            <div style="background:#f0f7ff;border-radius:12px;padding:16px;margin-top:16px;">
+                <div style="font-size:13px;font-weight:700;color:#002063;margin-bottom:10px;">デモ用テストアカウント</div>
+                <div style="font-size:12px;color:#666;margin-bottom:8px;line-height:1.6;">全ステータスのデモを確認できます</div>
+                <button style="width:100%;padding:10px;background:white;border:1.5px solid #002063;border-radius:8px;font-size:13px;font-weight:700;color:#002063;cursor:pointer;font-family:inherit;" onclick="document.getElementById('mypageEmail').value='test@hdm-demo.com';lookupByEmail();">
+                    test@hdm-demo.com でログイン
+                </button>
+            </div>
+
             <div style="text-align:center;margin-top:20px;">
-                <div style="font-size:12px;color:#999;line-height:1.6;">予約がない場合は</div>
+                <div style="font-size:12px;color:#999;">予約がない場合は</div>
                 <button style="background:none;border:none;font-size:13px;color:#002063;font-weight:600;cursor:pointer;margin-top:4px;" onclick="state.screen='top'; render();">レンタカーを予約する →</button>
             </div>
         `;
@@ -2180,118 +2330,267 @@
         if (!r) return '';
         const cls = VEHICLE_CLASSES[r.vehicle] || {};
         const f = mypageState.fleet;
-
-        // Determine timeline status
-        const now = new Date();
-        const lendDT = new Date(r.lend_date + 'T' + (r.lend_time || '10:00'));
-        const returnDT = new Date(r.return_date + 'T' + (r.return_time || '10:00'));
-        const isCancelled = r.status === 'キャンセル' || r.status === 'cancelled';
-        const isActive = now >= lendDT && now <= returnDT && !isCancelled;
-        const isCompleted = now > returnDT && !isCancelled;
+        const status = getDeliveryStatus(r, f);
+        const ds = DELIVERY_STATUSES[status];
+        const progressIdx = getProgressIndex(status);
+        const isCancelled = status === 'cancelled';
+        const isCompleted = status === 'completed';
+        const isDelivering = status === 'delivering';
+        const isActive = status === 'active';
+        const isPreparing = status === 'preparing';
         const hasVehicle = !!(f && f.vehicle_code);
-
-        const statusClass = isCancelled ? 'cancelled' : (isActive ? 'active' : (isCompleted ? 'completed' : 'confirmed'));
-        const statusLabel = isCancelled ? 'キャンセル' : (isActive ? '利用中' : (isCompleted ? '返却済み' : '予約確定'));
-
-        // Timeline steps
-        const steps = [
-            { key: 'booked', label: '予約確定', sub: formatDateLabel(r.created_at?.slice(0,10)) || '', done: true },
-            { key: 'vehicle', label: '配車確定', sub: hasVehicle ? `${f.vehicle_code}` : '配車待ち', done: hasVehicle },
-            { key: 'delivery', label: 'デリバリー出発', sub: hasVehicle && isActive ? 'お届け中' : '', done: isActive || isCompleted },
-            { key: 'active', label: 'お届け完了・利用中', sub: isActive ? '現在ご利用中' : '', done: isActive || isCompleted },
-            { key: 'returned', label: '返却完了', sub: isCompleted ? formatDateLabel(r.return_date) : '', done: isCompleted },
-        ];
-
-        // Find current step
-        let currentIdx = steps.findIndex(s => !s.done);
-        if (currentIdx === -1) currentIdx = steps.length;
 
         let html = '';
 
-        // Status header
+        // ── Status Hero Card ──
         html += `
-            <div style="text-align:center;margin-bottom:16px;">
-                <div class="mypage-res-status ${statusClass}" style="display:inline-block;font-size:13px;padding:6px 16px;">${statusLabel}</div>
-                <div style="font-size:18px;font-weight:700;color:#002063;margin-top:8px;">${r.id}</div>
+            <div class="mp-status-hero ${ds.heroClass}">
+                <div class="mp-status-icon">${ds.icon}</div>
+                <div class="mp-status-label">${ds.label}</div>
+                <div class="mp-status-sub">${ds.sub}</div>
+                ${isDelivering ? '<div class="mp-car-animation">🚗💨</div>' : ''}
             </div>
         `;
 
-        // Reservation details
-        html += `
-            <div class="mypage-res-card">
-                <div class="mypage-res-row">
-                    <span class="mypage-res-row-label">🚗 車両</span>
-                    <span class="mypage-res-row-value">${cls.name || r.vehicle}クラス</span>
+        // ── ETA Banner (delivering) ──
+        if (isDelivering) {
+            html += `
+                <div class="mp-eta">
+                    <div class="mp-eta-time">15<span style="font-size:14px;font-weight:600;">分</span></div>
+                    <div style="flex:1;">
+                        <div class="mp-eta-label">到着予定</div>
+                        <div class="mp-eta-dest">📍 ${r.del_place || 'お届け先'}</div>
+                    </div>
                 </div>
-                ${hasVehicle ? `<div class="mypage-res-row">
-                    <span class="mypage-res-row-label">🔑 車両コード</span>
-                    <span class="mypage-res-row-value">${f.vehicle_code}</span>
-                </div>` : ''}
-                <div class="mypage-res-row">
-                    <span class="mypage-res-row-label">📍 お届け場所</span>
-                    <span class="mypage-res-row-value">${r.del_place || '-'}</span>
-                </div>
-                <div class="mypage-res-row">
-                    <span class="mypage-res-row-label">📅 貸出</span>
-                    <span class="mypage-res-row-value">${formatDateLabel(r.lend_date)} ${r.lend_time || ''}</span>
-                </div>
-                <div class="mypage-res-row">
-                    <span class="mypage-res-row-label">📅 返却</span>
-                    <span class="mypage-res-row-value">${formatDateLabel(r.return_date)} ${r.return_time || ''}</span>
-                </div>
-                ${r.price ? `<div class="mypage-res-row">
-                    <span class="mypage-res-row-label">💰 料金</span>
-                    <span class="mypage-res-row-value" style="font-size:15px;color:#002063;">¥${Number(r.price).toLocaleString()}</span>
-                </div>` : ''}
-            </div>
-        `;
+            `;
+        }
 
-        // Timeline
+        // ── Map (delivering / active) ──
+        if (isDelivering || isPreparing) {
+            const lat = r.demo_lat || 43.0621;
+            const lng = r.demo_lng || 141.3544;
+            html += `
+                <div class="mp-map-placeholder" id="mypageMap" data-lat="${lat}" data-lng="${lng}"></div>
+            `;
+        }
+
+        // ── Progress Bar (not cancelled) ──
         if (!isCancelled) {
-            html += `<div style="font-size:13px;font-weight:700;color:#002063;margin-bottom:8px;">ステータス</div>`;
-            html += `<div class="mypage-timeline">`;
-            steps.forEach((s, i) => {
-                const isDone = i < currentIdx;
-                const isNow = i === currentIdx;
-                const dotClass = isDone ? 'done' : (isNow ? 'active' : 'pending');
-                const lineClass = isDone ? 'done' : '';
+            html += `<div class="mp-progress">`;
+            PROGRESS_STEPS.forEach((step, i) => {
+                const isDone = i < progressIdx;
+                const isNow = i === progressIdx;
+                const dotClass = isDone ? 'done' : (isNow ? 'now' : '');
+                const txtClass = isDone ? 'done' : (isNow ? 'now' : '');
+
                 html += `
-                    <div class="mypage-tl-item">
-                        <div class="mypage-tl-dot ${dotClass}">${isDone ? '✓' : (i + 1)}</div>
-                        <div class="mypage-tl-line ${lineClass}"></div>
-                        <div class="mypage-tl-text">
-                            <div class="mypage-tl-title" style="${isNow ? 'color:#002063;' : ''}">${s.label}</div>
-                            ${s.sub ? `<div class="mypage-tl-sub">${s.sub}</div>` : ''}
-                        </div>
+                    <div class="mp-prog-step">
+                        <div class="mp-prog-icon ${dotClass}">${isDone ? '✓' : step.icon}</div>
+                        <div class="mp-prog-txt ${txtClass}">${step.label}</div>
                     </div>
                 `;
+                if (i < PROGRESS_STEPS.length - 1) {
+                    html += `<div class="mp-prog-line ${isDone ? 'done' : ''}"></div>`;
+                }
             });
             html += `</div>`;
         }
 
-        // Actions
-        html += `<div style="margin-top:16px;">`;
-        if (!isCancelled && !isCompleted && !isActive) {
-            html += `<button class="btn-secondary" style="border-color:#dc2626;color:#dc2626;" onclick="showCancelConfirm('${r.id}', '${r.lend_date}', ${r.price || 0})">予約をキャンセル</button>`;
+        // ── Driver Card (assigned / preparing / delivering) ──
+        if (hasVehicle && !isCancelled && !isCompleted && (status === 'assigned' || isPreparing || isDelivering || isActive)) {
+            const driverName = r.demo_driver || 'スタッフ';
+            html += `
+                <div class="mp-detail-section" style="margin-bottom:12px;">
+                    <div class="mp-driver-card">
+                        <div class="mp-driver-avatar">${driverName.charAt(0)}</div>
+                        <div class="mp-driver-info">
+                            <div class="mp-driver-name">${driverName}</div>
+                            <div class="mp-driver-sub">${f.vehicle_code} ・ ${cls.name || r.vehicle}クラス</div>
+                        </div>
+                        <button class="mp-driver-call" onclick="alert('ドライバーへの通話機能は準備中です')">📞</button>
+                    </div>
+                </div>
+            `;
         }
-        html += `<button class="btn-secondary" onclick="mypageState.view='lookup'; mypageState.reservation=null; render();">予約一覧に戻る</button>`;
+
+        // ── Reservation ID ──
+        html += `<div style="text-align:center;margin-bottom:12px;">
+            <span style="font-size:11px;color:#999;">予約番号</span>
+            <span style="font-size:13px;font-weight:700;color:#002063;margin-left:6px;">${r.id}</span>
+        </div>`;
+
+        // ── Reservation Details ──
+        html += `
+            <div class="mp-detail-section">
+                <div class="mp-detail-header">📋 予約情報</div>
+                <div class="mp-detail-body">
+                    <div class="mp-detail-row">
+                        <span class="mp-detail-row-label">車両クラス</span>
+                        <span class="mp-detail-row-value">${cls.name || r.vehicle}クラス</span>
+                    </div>
+                    ${hasVehicle ? `<div class="mp-detail-row">
+                        <span class="mp-detail-row-label">車両コード</span>
+                        <span class="mp-detail-row-value" style="font-weight:700;color:#002063;">${f.vehicle_code}</span>
+                    </div>` : ''}
+                    <div class="mp-detail-row">
+                        <span class="mp-detail-row-label">お届け場所</span>
+                        <span class="mp-detail-row-value">${r.del_place || '-'}</span>
+                    </div>
+                    <div class="mp-detail-row">
+                        <span class="mp-detail-row-label">お届け日時</span>
+                        <span class="mp-detail-row-value">${formatDateLabel(r.lend_date)} ${r.lend_time || ''}</span>
+                    </div>
+                    <div class="mp-detail-row">
+                        <span class="mp-detail-row-label">返却日時</span>
+                        <span class="mp-detail-row-value">${formatDateLabel(r.return_date)} ${r.return_time || ''}</span>
+                    </div>
+                    ${r.price ? `
+                    <div style="border-top:1px solid #f0f0f0;margin-top:8px;padding-top:8px;">
+                        <div class="mp-detail-row">
+                            <span class="mp-detail-row-label" style="font-weight:700;">お支払い金額</span>
+                            <span class="mp-detail-row-value" style="font-size:18px;font-weight:800;color:#002063;">¥${Number(r.price).toLocaleString()}</span>
+                        </div>
+                    </div>` : ''}
+                </div>
+            </div>
+        `;
+
+        // ── Delivery Timeline ──
+        if (!isCancelled) {
+            const timelineSteps = [
+                { key: 'confirmed', icon: '📋', label: '予約受付', sub: r.created_at ? formatDateLabel(r.created_at.slice(0,10)) + ' ' + (r.created_at.slice(11,16) || '') : '', done: true },
+                { key: 'assigned', icon: '🔑', label: '配車確定', sub: hasVehicle ? `車両: ${f.vehicle_code}` : '', done: progressIdx >= 1 },
+                { key: 'preparing', icon: '🔧', label: '出発準備', sub: progressIdx >= 2 ? '車両点検・清掃完了' : '', done: progressIdx >= 2 },
+                { key: 'delivering', icon: '🚗', label: 'デリバリー出発', sub: progressIdx >= 3 ? `${r.del_place} へ向かっています` : '', done: progressIdx >= 3 },
+                { key: 'active', icon: '✅', label: 'お届け完了', sub: progressIdx >= 4 ? 'ご利用中' : '', done: progressIdx >= 4 },
+                { key: 'completed', icon: '🏁', label: '返却完了', sub: progressIdx >= 5 ? formatDateLabel(r.return_date) : '', done: progressIdx >= 5 },
+            ];
+
+            html += `
+                <div class="mp-detail-section">
+                    <div class="mp-detail-header">🕐 デリバリー状況</div>
+                    <div class="mp-detail-body">
+                        <div class="mp-timeline">
+            `;
+            timelineSteps.forEach((s, i) => {
+                const isDone = s.done;
+                const isNow = !isDone && (i === 0 || timelineSteps[i-1].done);
+                const dotClass = isDone ? 'done' : (isNow ? 'now' : 'wait');
+                const lineClass = isDone ? 'done' : '';
+
+                html += `
+                    <div class="mp-tl-item">
+                        <div class="mp-tl-dot ${dotClass}">${isDone ? '✓' : s.icon}</div>
+                        <div class="mp-tl-line ${lineClass}"></div>
+                        <div class="mp-tl-content">
+                            <div class="mp-tl-title ${isNow ? 'now' : ''}">${s.label}</div>
+                            ${s.sub ? `<div class="mp-tl-sub ${isNow ? 'highlight' : ''}">${s.sub}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div></div></div>`;
+        }
+
+        // ── Cancelled info ──
+        if (isCancelled) {
+            html += `
+                <div class="mp-detail-section">
+                    <div class="mp-detail-header" style="color:#dc2626;">✕ キャンセル情報</div>
+                    <div class="mp-detail-body" style="text-align:center;padding:20px;">
+                        <div style="font-size:14px;color:#666;">この予約はキャンセルされました</div>
+                        <div style="font-size:12px;color:#999;margin-top:4px;">キャンセル料の詳細はメールをご確認ください</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ── Actions ──
+        html += `<div class="mp-actions">`;
+        if (isDelivering || isActive) {
+            html += `<button class="mp-action-btn primary" onclick="alert('ドライバーへの通話機能は準備中です')">📞 ドライバーに連絡</button>`;
+        }
+        if (!isCancelled && !isCompleted && !isActive && !isDelivering) {
+            html += `<button class="mp-action-btn danger" onclick="showCancelConfirm('${r.id}', '${r.lend_date}', ${r.price || 0})">キャンセル</button>`;
+        }
         html += `</div>`;
 
-        // Cancel confirm modal
+        html += `<button class="btn-secondary" style="margin-top:4px;" onclick="mypageState.view='lookup'; mypageState.reservation=null; render();">← 予約一覧に戻る</button>`;
+
+        // Help link
         html += `
-        <div id="cancelModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;">
+            <div style="text-align:center;margin-top:16px;padding-bottom:16px;">
+                <a href="https://rent-handyman.jp/contact/" target="_blank" style="font-size:12px;color:#888;text-decoration:none;">お困りですか？ <span style="color:#002063;font-weight:600;">お問い合わせ →</span></a>
+            </div>
+        `;
+
+        // Cancel modal
+        html += `
+        <div id="cancelModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;">
             <div style="background:white;border-radius:16px;max-width:380px;width:90%;padding:24px;margin:20px;" id="cancelModalContent"></div>
         </div>`;
 
         return html;
     }
 
-    // Mock data for testing (remove in production)
+    // Mock data — covers all delivery statuses for demo
     const MOCK_EMAIL = 'test@hdm-demo.com';
     const MOCK_RESERVATIONS = [
-        { id: 'HDM00000001', mail: MOCK_EMAIL, name: 'テスト 太郎', vehicle: 'C', lend_date: '2026-04-05', lend_time: '10:00', return_date: '2026-04-06', return_time: '10:00', status: '確定', del_place: '札幌市 中央区 南1条西5丁目', price: 7000, created_at: '2026-04-02T07:00:00Z' },
-        { id: 'HDM00000002', mail: MOCK_EMAIL, name: 'テスト 太郎', vehicle: 'A', lend_date: '2026-03-20', lend_time: '09:00', return_date: '2026-03-22', return_time: '18:00', status: '確定', del_place: '札幌市 北区 北8条通', price: 45000, created_at: '2026-03-18T10:00:00Z' },
-        { id: 'HDM00000003', mail: MOCK_EMAIL, name: 'テスト 太郎', vehicle: 'S', lend_date: '2026-02-10', lend_time: '10:00', return_date: '2026-02-12', return_time: '10:00', status: 'キャンセル', del_place: '札幌市 東区 花畔札幌線', price: 24000, created_at: '2026-02-08T12:00:00Z' },
+        {
+            id: 'HDM-2604-0001', mail: MOCK_EMAIL, name: 'テスト 太郎',
+            vehicle: 'C', lend_date: '2026-04-05', lend_time: '14:00',
+            return_date: '2026-04-06', return_time: '14:00',
+            status: '確定', del_place: '札幌グランドホテル',
+            price: 7700, created_at: '2026-04-02T09:30:00Z',
+            demo_status: 'delivering',
+            demo_fleet: { vehicle_code: 'FIT-01' },
+            demo_driver: '田中',
+            demo_lat: 43.0621, demo_lng: 141.3544,
+        },
+        {
+            id: 'HDM-2604-0002', mail: MOCK_EMAIL, name: 'テスト 太郎',
+            vehicle: 'A', lend_date: '2026-04-03', lend_time: '10:00',
+            return_date: '2026-04-05', return_time: '10:00',
+            status: '確定', del_place: 'JRタワーホテル日航札幌',
+            price: 45000, created_at: '2026-04-01T12:00:00Z',
+            demo_status: 'active',
+            demo_fleet: { vehicle_code: 'ALF-03' },
+            demo_driver: '佐藤',
+        },
+        {
+            id: 'HDM-2604-0003', mail: MOCK_EMAIL, name: 'テスト 太郎',
+            vehicle: 'S', lend_date: '2026-04-08', lend_time: '11:00',
+            return_date: '2026-04-10', return_time: '11:00',
+            status: '確定', del_place: '札幌パークホテル',
+            price: 15400, created_at: '2026-04-02T08:00:00Z',
+            demo_status: 'assigned',
+            demo_fleet: { vehicle_code: 'VZL-07' },
+            demo_driver: '鈴木',
+        },
+        {
+            id: 'HDM-2604-0004', mail: MOCK_EMAIL, name: 'テスト 太郎',
+            vehicle: 'B', lend_date: '2026-04-12', lend_time: '09:00',
+            return_date: '2026-04-14', return_time: '18:00',
+            status: '確定', del_place: 'ホテルモントレ札幌',
+            price: 33000, created_at: '2026-04-02T10:00:00Z',
+            demo_status: 'confirmed',
+        },
+        {
+            id: 'HDM-2603-0015', mail: MOCK_EMAIL, name: 'テスト 太郎',
+            vehicle: 'C', lend_date: '2026-03-20', lend_time: '10:00',
+            return_date: '2026-03-22', return_time: '10:00',
+            status: '確定', del_place: '札幌市 中央区 南1条西5丁目',
+            price: 15400, created_at: '2026-03-18T10:00:00Z',
+            demo_status: 'completed',
+            demo_fleet: { vehicle_code: 'FIT-02' },
+        },
+        {
+            id: 'HDM-2603-0008', mail: MOCK_EMAIL, name: 'テスト 太郎',
+            vehicle: 'S', lend_date: '2026-02-10', lend_time: '10:00',
+            return_date: '2026-02-12', return_time: '10:00',
+            status: 'キャンセル', del_place: '札幌市 東区 花畔札幌線',
+            price: 24000, created_at: '2026-02-08T12:00:00Z',
+        },
     ];
 
     async function lookupByEmail() {
@@ -2308,7 +2607,6 @@
         render();
 
         try {
-            // Check mock data first (for demo/testing)
             let reservations;
             if (email === MOCK_EMAIL) {
                 reservations = MOCK_RESERVATIONS;
@@ -2316,7 +2614,6 @@
                 reservations = await supabaseGet('reservations', `mail=eq.${encodeURIComponent(email)}&order=created_at.desc`);
             }
 
-            // Save email for next time
             localStorage.setItem('hdm_mypage_email', email);
             mypageState.email = email;
 
@@ -2347,10 +2644,12 @@
             const mockRes = MOCK_RESERVATIONS.find(r => r.id === resId);
             if (mockRes) {
                 mypageState.reservation = mockRes;
-                mypageState.fleet = resId === 'HDM00000001' ? { vehicle_code: 'RKY', reservation_id: resId } : null;
+                mypageState.fleet = mockRes.demo_fleet || null;
                 mypageState.view = 'detail';
                 mypageState.loading = false;
                 render();
+                // Init map if needed
+                setTimeout(() => initMypageMap(), 100);
                 return;
             }
 
@@ -2373,6 +2672,39 @@
         }
         mypageState.loading = false;
         render();
+    }
+
+    // Initialize delivery tracking map
+    function initMypageMap() {
+        const mapEl = document.getElementById('mypageMap');
+        if (!mapEl || mapEl.querySelector('.leaflet-container')) return;
+        const lat = parseFloat(mapEl.dataset.lat) || 43.0621;
+        const lng = parseFloat(mapEl.dataset.lng) || 141.3544;
+
+        const map = L.map(mapEl, { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false }).setView([lat, lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Destination marker
+        L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: '',
+                html: '<div style="background:#002063;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">📍</div>',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14],
+            })
+        }).addTo(map);
+
+        // Car marker (slightly offset to simulate approaching)
+        L.marker([lat + 0.008, lng - 0.012], {
+            icon: L.divIcon({
+                className: '',
+                html: '<div style="background:#FABE00;color:#002063;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">🚗</div>',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+            })
+        }).addTo(map);
+
+        setTimeout(() => map.invalidateSize(), 200);
     }
 
     function getCancelFee(lendDate, basePrice) {
@@ -2442,8 +2774,19 @@
                 },
                 body: JSON.stringify({ status: 'キャンセル' }),
             });
-            // Update local
-            if (mypageState.reservation) mypageState.reservation.status = 'キャンセル';
+            // Update local state
+            if (mypageState.reservation) {
+                mypageState.reservation.status = 'キャンセル';
+                mypageState.reservation.demo_status = null; // clear demo override
+            }
+            // Update mock list too
+            const mockIdx = MOCK_RESERVATIONS.findIndex(r => r.id === resId);
+            if (mockIdx >= 0) MOCK_RESERVATIONS[mockIdx].status = 'キャンセル';
+            // Also update reservations list
+            if (mypageState.reservations) {
+                const listIdx = mypageState.reservations.findIndex(r => r.id === resId);
+                if (listIdx >= 0) mypageState.reservations[listIdx].status = 'キャンセル';
+            }
             // Update LocalStorage
             const saved = JSON.parse(localStorage.getItem('hdm_reservations') || '[]');
             const idx = saved.findIndex(r => r.id === resId);
