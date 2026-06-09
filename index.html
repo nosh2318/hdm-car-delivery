@@ -103,10 +103,16 @@
 
         /* ── App Header ── */
         .app-header { background: #ffffff; color: #1a1a1a; padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; font-weight: 600; z-index: 30; border-bottom: 2px solid #FABE00; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
-        .app-logo { display: flex; flex-direction: row; align-items: center; gap: 9px; cursor: pointer; }
-        .app-logo img { height: 30px !important; width: auto; }
-        .app-logo .kd-tagline { font-style: italic; text-transform: uppercase; font-weight: 900; font-size: 9.5px; color: #1a1a1a; letter-spacing: .05em; line-height: 1.12; border-left: 2px solid #FABE00; padding-left: 8px; white-space: normal; max-width: 116px; }
-        @media (min-width: 768px) { .app-logo img { height: 36px !important; } .app-logo .kd-tagline { font-size: 12.5px; max-width: none; white-space: nowrap; padding-left: 12px; } }
+        /* モバイル：ロゴ大きく＋タグラインはロゴ下（横は大ロゴ＋☰と両立しない）。PCは横 */
+        .app-logo { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; cursor: pointer; }
+        .app-logo img { height: 42px !important; width: auto; flex: none; }
+        .app-logo .kd-tagline { display: inline-block; font-style: italic; text-transform: uppercase; font-weight: 900; font-size: 9px; color: #1a1a1a; letter-spacing: .08em; line-height: 1; white-space: nowrap; }
+        .app-header .header-actions { flex: none; }
+        @media (min-width: 768px) {
+            .app-logo { flex-direction: row; align-items: center; gap: 11px; }
+            .app-logo img { height: 50px !important; }
+            .app-logo .kd-tagline { font-size: 13px; letter-spacing: .04em; border-left: 2px solid #FABE00; padding-left: 12px; }
+        }
         .app-logo-mark { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #FABE00; }
         .app-service-name { font-size: 13px; font-weight: 700; color: white; line-height: 1.1; }
         .app-service-subtitle { font-size: 9px; color: #FABE00; font-weight: 500; letter-spacing: .5px; }
@@ -687,7 +693,7 @@
                 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
                 <div class="slide-menu" id="slideMenu">
                     <div class="menu-header">
-                        <img src="images/logo_header.png" alt="KEYDROP" style="height:44px;">
+                        <img src="images/logo_header.png?v=2" alt="KEYDROP" style="height:44px;">
                         <button class="menu-close" onclick="closeMenu()">✕</button>
                     </div>
                     <div class="menu-lang">
@@ -1457,7 +1463,7 @@
         // モバイルTOP＝地図主役。日程は1行に折り畳み、地図でお届け→回収を指定（差別化＝地図から呼ぶ）
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1557,7 +1563,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1666,7 +1672,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1768,7 +1774,7 @@
         const colShow = state.collectionAddr || state.deliveryAddr || '—';
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1850,7 +1856,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1903,7 +1909,7 @@
     function renderFormScreen() {
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1956,7 +1962,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -2068,7 +2074,7 @@
     function renderTermsScreen() {
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -2146,7 +2152,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -2205,7 +2211,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="complete-screen screen-fade">
@@ -2530,7 +2536,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
