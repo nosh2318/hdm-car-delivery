@@ -1086,18 +1086,28 @@
             </div>`;
         }
 
-        // Class filter
+        // 検索中
+        if (state.loading) {
+            return `<div style="text-align:center;padding:30px;"><span class="loading-spinner"></span><div style="font-size:12px;color:#999;margin-top:8px;">車両を検索中...</div></div>`;
+        }
+
+        // 空車0：チップ/見出しは出さず謝罪＋日付変更のみ（スッキリ）
+        const apologyHtml = `<div style="padding:30px 18px 24px;text-align:center;color:#888;">
+                <img src="images/mascot_head.png" alt="" style="height:72px;width:auto;margin-bottom:10px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.16));">
+                <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:10px;line-height:1.6;">大変申し訳ございませんが<br>該当日に空車がございません</div>
+                <div style="font-size:12.5px;line-height:1.8;margin-bottom:18px;">下のボタンから<b>お届け／回収の日付</b>を変えると<br>空車が見つかる場合があります。</div>
+                <button onclick="state.vehDateOpen=true; render(); var e=document.querySelector('.app-header'); if(e)e.scrollIntoView({behavior:'smooth',block:'start'});" style="background:#FABE00;color:#1a1a1a;border:none;border-radius:11px;padding:14px 26px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(250,190,0,.45);">📅 日付を変更して探す</button>
+                <div style="font-size:11px;line-height:1.8;margin-top:18px;color:#aaa;">別のお届け場所でも空車が出る場合があります。<br>お急ぎは <a href="https://rent-handyman.jp/contact/" target="_blank" style="color:#1a1a1a;font-weight:700;text-decoration:underline;">お問い合わせ</a> ください。</div>
+            </div>`;
+        if (!state.availableVehicles.length) return apologyHtml;
+
+        // Class filter（空車があるときだけ表示）
         html += `<div class="class-chips">`;
         html += `<button class="class-chip ${!state.selectedClass ? 'selected' : ''}" onclick="state.selectedClass=null; renderPanel();">すべて</button>`;
         for (const [id, cls] of Object.entries(VEHICLE_CLASSES)) {
             html += `<button class="class-chip ${state.selectedClass === id ? 'selected' : ''}" onclick="state.selectedClass='${id}'; renderPanel();">${cls.icon} ${cls.name}</button>`;
         }
         html += `</div>`;
-
-        if (state.loading) {
-            html += `<div style="text-align:center;padding:20px;"><span class="loading-spinner"></span><div style="font-size:12px;color:#999;margin-top:8px;">車両を検索中...</div></div>`;
-            return html;
-        }
 
         // Build class catalog: merge DB data with all defined classes
         const dbGrouped = {};
@@ -1144,12 +1154,11 @@
             idx++; shown++;
         }
         if (shown === 0) {
-            html += `<div style="padding:24px 18px;text-align:center;color:#888;">
-                <img src="images/mascot_head.png" alt="" style="height:64px;width:auto;margin-bottom:8px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.15));">
-                <div style="font-size:15px;font-weight:800;color:#1a1a1a;margin-bottom:8px;line-height:1.6;">大変申し訳ございませんが<br>該当日に空車がございません</div>
-                <div style="font-size:12px;line-height:1.7;margin-bottom:14px;">下のボタンから<b>お届け／回収の日付</b>を変えると<br>空車が見つかる場合があります。</div>
-                <button onclick="state.vehDateOpen=true; render(); var e=document.getElementById('mapWrap'); if(e)e.scrollIntoView({behavior:'smooth',block:'start'});" style="background:#FABE00;color:#1a1a1a;border:none;border-radius:10px;padding:13px 22px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 2px 8px rgba(250,190,0,.4);">📅 日付を変更して探す</button>
-                <div style="font-size:11px;line-height:1.7;margin-top:14px;color:#aaa;">別のお届け場所でも空車が出る場合があります。<br>お急ぎは <a href="https://rent-handyman.jp/contact/" target="_blank" style="color:#1a1a1a;font-weight:700;text-decoration:underline;">お問い合わせ</a> ください。</div>
+            // 他クラスには空きがある状態（クラス絞り込みで0件）→ 軽い案内
+            html += `<div style="padding:22px 18px;text-align:center;color:#888;">
+                <div style="font-size:30px;margin-bottom:8px;">🚗💨</div>
+                <div style="font-size:14px;font-weight:700;color:#444;margin-bottom:6px;">このクラスは現在空きがありません</div>
+                <div style="font-size:12px;line-height:1.7;">上の<b>「すべて」や他のクラス</b>をお試しください。</div>
             </div>`;
         }
         html += `</div>`;
