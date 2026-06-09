@@ -55,6 +55,19 @@ async function sbPost(table: string, data: unknown): Promise<any[] | null> {
   if (!r.ok) { console.error(`POST ${table}: ${await r.text()}`); return null; }
   return await r.json();
 }
+async function sbRpc(fn: string, args: unknown): Promise<any> {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: {
+      apikey: SB_KEY,
+      Authorization: `Bearer ${SB_KEY}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(args),
+  });
+  if (!r.ok) { console.error(`RPC ${fn}: ${await r.text()}`); return null; }
+  return await r.json();
+}
 
 // --- 車種名マッチング（HP車種指定配車用・GAS isModelMatch_ 移植） ---
 function isModelMatch(vehicleName: string, preferred: string): boolean {
@@ -169,61 +182,40 @@ Deno.serve(async (req) => {
   if (isNaN(people) || people < 1) people = 1;
   if (people > 8) people = 8; // 最大8人クランプ（絶対ルール）
 
-  // --- 在庫再確認＋車両割当 ---
-  const model = String(p.vehicleModel || "").trim();
-  const vehicle = await assignVehicle(cls, model, lend, ret);
-  // vehicle=null は「未配車で受理」。希望どおり取れない場合は満車として弾く設計も可:
-  if (!vehicle && p.requireStock === true) {
-    return json({ error: "ご希望の期間・クラスは満車です", soldOut: true }, 409);
-  }
-
-  // --- 採番＋reservations INSERT ---
-  const id = await nextId(lend);
+  // --- 価格確定 ---
   const base = Number(p.base_price || 0);
   const opt = Number(p.option_price || 0);
   const disc = Number(p.discount || 0);
   const price = (base > 0 || opt > 0) ? (base + opt - disc) : Number(p.price || 0);
 
-  const row: Record<string, unknown> = {
-    id,
-    ota: "KEYDROP", // 新ブランド識別子。SPKは同一在庫・同一配車表で運用し、ota列でブランド/チャネルを分離（HANDYMAN/各OTA/KEYDROP）
-    vehicle: cls,
+  // --- アトミック予約（005 keydrop_book：在庫確認→採番→reservations/fleet INSERT を
+  //     1トランザクション＋グローバルadvisory lockで直列化＝ダブルブッキング/採番衝突を構造的に防止）---
+  const rpcParam = {
+    vehicleClass: cls,
+    vehicleModel: String(p.vehicleModel || ""),
     lend_date: lend,
     return_date: ret,
-    name,
-    mail,
-    tel,
-    people,
-    base_price: base,
-    option_price: opt,
-    discount: disc,
-    price,
-    status: "pending_payment",
+    name, mail, tel, people,
+    base_price: base, option_price: opt, discount: disc, price,
     insurance: String(p.insurance || "なし"),
     del_place: String(p.del_place || ""),
     col_place: String(p.col_place || ""),
     visit_type: p.visit_type ? String(p.visit_type) : "DEL",
     return_type: p.return_type ? String(p.return_type) : "COL",
+    requireStock: p.requireStock === true,
   };
+  const rpc = await sbRpc("keydrop_book", { p: rpcParam });
+  if (!rpc) return json({ error: "予約登録に失敗しました" }, 500);
+  if (rpc.error) return json({ error: rpc.error, soldOut: rpc.soldOut === true }, rpc.soldOut ? 409 : 400);
 
-  const ins = await sbPost("reservations", row);
-  if (!ins) return json({ error: "予約登録に失敗しました" }, 500);
-
-  // --- fleet 割当（取れた場合のみ）---
-  let assignedTo = "未配車";
-  if (vehicle) {
-    const f = await sbPost("fleet", { reservation_id: id, vehicle_code: vehicle.code });
-    if (f) assignedTo = `${vehicle.name}(${vehicle.code})`;
-  }
-
-  console.log(`[create-booking] ${id} ${cls} ${lend}~${ret} → ${assignedTo}`);
+  console.log(`[create-booking] ${rpc.reservationId} ${cls} ${lend}~${ret} → ${rpc.assigned}`);
 
   // Phase B: ここで Square Payment Link を発行し payUrl を返す
   return json({
     ok: true,
-    reservationId: id,
-    assigned: assignedTo,
-    status: "pending_payment",
+    reservationId: rpc.reservationId,
+    assigned: rpc.assigned,
+    status: rpc.status || "pending_payment",
     // payUrl: <Phase Bで追加>
   });
 });
