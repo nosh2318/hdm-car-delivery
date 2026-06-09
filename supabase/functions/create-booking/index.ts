@@ -5,8 +5,8 @@
 // 役割（コア連動 customer→admin）:
 //   1. 入力検証（期間/クラス/人数≤8/連絡先）
 //   2. サーバ側で在庫再確認（GAS autoAssignVehicle_ を完全移植）
-//   3. 採番 WEB-YYMM-xxxx
-//   4. reservations へ INSERT（ota='WEB' / status='pending_payment'）
+//   3. 採番 KD-YYMM-xxxx
+//   4. reservations へ INSERT（ota='KEYDROP' / status='pending_payment'）
 //   5. fleet へ車両自動割当（取れなければ未配車で受理→admin調整）
 //   → この瞬間、札幌の配車表/OPシート/タスク/会計に出る（tasksはAPPが動的生成）
 //
@@ -128,11 +128,11 @@ async function assignVehicle(vehicleClass: string, model: string, lend: string, 
   return null;
 }
 
-// --- 採番 WEB-YYMM-xxxx（当月WEB予約の最大連番+1）---
+// --- 採番 KD-YYMM-xxxx（当月KEYDROP予約の最大連番+1）---
 async function nextId(lend: string): Promise<string> {
   const d = new Date(lend + "T00:00:00Z");
   const yymm = `${String(d.getUTCFullYear()).slice(2)}${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-  const prefix = `WEB-${yymm}-`;
+  const prefix = `KD-${yymm}-`;
   const rows = await sbGet("reservations", `id=like.${encodeURIComponent(prefix + "*")}&select=id`);
   let max = 0;
   for (const r of rows) {
@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
 
   const row: Record<string, unknown> = {
     id,
-    ota: "KAMUI", // 新ブランド識別子。SPKは同一在庫・同一配車表で運用し、ota列でブランド/チャネルを分離（HANDYMAN/各OTA/KAMUI）
+    ota: "KEYDROP", // 新ブランド識別子。SPKは同一在庫・同一配車表で運用し、ota列でブランド/チャネルを分離（HANDYMAN/各OTA/KEYDROP）
     vehicle: cls,
     lend_date: lend,
     return_date: ret,
