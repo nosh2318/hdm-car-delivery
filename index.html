@@ -734,6 +734,10 @@
         .kd-pin-mascot { animation: kdPinDrop .6s cubic-bezier(.2,.8,.3,1.1) both; }
         .kd-pin-mascot img { height: 56px; width:auto; filter: drop-shadow(0 4px 5px rgba(0,0,0,.3));
             transform-origin: 50% 92%; animation: kdPinFloat 2.6s ease-in-out .6s infinite; }
+        /* KEYDROP 出発拠点フラグ（固定・常時表示） */
+        .kd-base-pin { position: relative; }
+        .kd-base-flag { position: absolute; left: 0; bottom: 10px; white-space: nowrap; background: #1a1a1a; color: #FABE00; font-size: 11px; font-weight: 900; padding: 4px 9px; border-radius: 14px 14px 14px 2px; box-shadow: 0 2px 8px rgba(0,0,0,.35); border: 1.5px solid #FABE00; }
+        .kd-base-dot { position: absolute; left: 6px; bottom: 0; width: 12px; height: 12px; background: #FABE00; border: 2px solid #1a1a1a; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
     </style>
 </head>
 <body>
@@ -955,6 +959,7 @@
     let map = null;
     let deliveryMarker = null;
     let collectionMarker = null;
+    let baseMarker = null; // KEYDROP出発拠点（固定）
 
     function initMap(lat, lng) {
         if (map) return;
@@ -979,6 +984,19 @@
         });
 
         state.mapReady = true;
+
+        // KEYDROP 出発拠点を固定表示（ドラッグ不可・常時）。座標は配達設定の中心（既定=札幌駅）
+        try {
+            const baseLat = (state.deliveryConfig && state.deliveryConfig.centerLat) || DEFAULT_LAT;
+            const baseLng = (state.deliveryConfig && state.deliveryConfig.centerLng) || DEFAULT_LNG;
+            const baseIcon = L.divIcon({
+                className: 'custom-pin',
+                html: '<div class="kd-base-pin"><div class="kd-base-flag">🚩 KEYDROP拠点</div><div class="kd-base-dot"></div></div>',
+                iconSize: [110, 40], iconAnchor: [12, 38],
+            });
+            baseMarker = L.marker([baseLat, baseLng], { icon: baseIcon, interactive: true, zIndexOffset: -200, keyboard: false }).addTo(map);
+            baseMarker.bindTooltip('ここから車をお届けします', { direction: 'top', offset: [0, -34] });
+        } catch (e) {}
 
         // Fix map size for dynamic containers (PC/flexレイアウトで高さ確定が遅れる対策)
         setTimeout(() => { if (map) map.invalidateSize(); }, 120);
@@ -1471,6 +1489,7 @@
                         map = null;
                         deliveryMarker = null;
                         collectionMarker = null;
+                        baseMarker = null;
                         initMap(state.deliveryLat || state.userLat, state.deliveryLng || state.userLng);
                         restorePins();
                     } else {
