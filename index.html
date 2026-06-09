@@ -1529,8 +1529,8 @@
 
     // ── KEYDROP マスコット 案内帯（ヘッダー直下に1体・喋る） ──
     function guideText() {
-        if (state.locStep === 'collection') return { msg: '<b>STEP2</b>：回収の<b>日時</b>と<b>場所</b>を決めてね🏁', dark: true };
-        return { msg: '<b>STEP1</b>：お届けの<b>日時</b>と<b>場所</b>を決めよう！🔑', dark: false };
+        if (state.locStep === 'collection') return { msg: '<b>STEP2</b>：CARデリバリーの<b>回収日時</b>と<b>場所</b>を決めてね🏁', dark: true };
+        return { msg: '<b>STEP1</b>：CARデリバリーの<b>お届け日時</b>と<b>場所</b>を決めよう！🔑', dark: false };
     }
     function mountHeaderMascot() {
         // 旧: ロゴ横の装飾マスコットは撤去（うるさいので案内帯に統合）
