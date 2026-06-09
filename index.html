@@ -43,7 +43,7 @@
             body { background: #f5f6f8; }
             /* Header: show nav links */
             .app-header { padding: 12px 32px; }
-            .app-header img { height: 48px !important; }
+            .app-header img { height: 58px !important; }
             .hamburger-btn { display: none; }
             .pc-nav { display: flex; align-items: center; gap: 4px; }
             /* Hero */
@@ -99,7 +99,7 @@
         }
 
         /* ── App Header ── */
-        .app-header { background: #ffffff; color: #1a1a1a; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; font-weight: 600; z-index: 30; border-bottom: 2px solid #FABE00; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+        .app-header { background: #ffffff; color: #1a1a1a; padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; font-weight: 600; z-index: 30; border-bottom: 2px solid #FABE00; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
         .app-logo { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; cursor: pointer; }
         .app-logo-mark { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #FABE00; }
         .app-service-name { font-size: 13px; font-weight: 700; color: white; line-height: 1.1; }
@@ -647,7 +647,7 @@
                 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
                 <div class="slide-menu" id="slideMenu">
                     <div class="menu-header">
-                        <img src="images/logo_header.png" alt="KEYDROP" style="height:36px;">
+                        <img src="images/logo_header.png" alt="KEYDROP" style="height:44px;">
                         <button class="menu-close" onclick="closeMenu()">✕</button>
                     </div>
                     <div class="menu-lang">
@@ -1290,7 +1290,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1345,25 +1345,25 @@
                     <div class="datetime-grid" style="gap:12px;">
                         <div class="dt-group">
                             <label>お届け日</label>
-                            <select onchange="state.datetime.startDate=this.value;">
+                            <select onchange="state.datetime.startDate=this.value; render();">
                                 ${generateDateOptions(state.datetime.startDate)}
                             </select>
                         </div>
                         <div class="dt-group">
                             <label>お届け時間</label>
-                            <select onchange="state.datetime.startTime=this.value;">
+                            <select onchange="state.datetime.startTime=this.value; render();">
                                 ${generateTimeOptions(state.datetime.startTime)}
                             </select>
                         </div>
                         <div class="dt-group">
                             <label>回収日</label>
-                            <select onchange="state.datetime.endDate=this.value;">
+                            <select onchange="state.datetime.endDate=this.value; render();">
                                 ${generateDateOptions(state.datetime.endDate)}
                             </select>
                         </div>
                         <div class="dt-group">
                             <label>回収時間</label>
-                            <select onchange="state.datetime.endTime=this.value;">
+                            <select onchange="state.datetime.endTime=this.value; render();">
                                 ${generateTimeOptions(state.datetime.endTime)}
                             </select>
                         </div>
@@ -1395,7 +1395,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1504,7 +1504,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1616,7 +1616,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1669,7 +1669,7 @@
     function renderFormScreen() {
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1722,7 +1722,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1834,7 +1834,7 @@
     function renderTermsScreen() {
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1912,7 +1912,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1971,7 +1971,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="complete-screen screen-fade">
@@ -2287,7 +2287,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:52px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
