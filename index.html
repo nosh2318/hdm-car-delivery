@@ -754,6 +754,8 @@
     // ── Yard (Vehicle Base) Config ──
     // ── TODO: Move to Supabase columns (yard_lat, yard_lng, yard_name, delivery_radius_km)
     // ════════════════════════════════════════════
+    // ⚠️ 廃止(2026-06-09): 配達可能範囲は DB(public_delivery_config_v)＝adminオーナー設定が正。
+    //   下記は未使用（将来「車両別ヤード」拡張時の雛形として残置）。
     const VEHICLE_YARDS = {
         // vehicle_code → { lat, lng, name, radiusKm }
         // ── 本店ヤード（全車両共通、将来的に車両ごとに変更可能） ──
@@ -795,6 +797,9 @@
         deliveryLat: null,
         deliveryLng: null,
         deliveryAddr: '',
+        // 配達可能範囲（DB public_delivery_config_v＝adminオーナー設定で上書き。既定=札幌駅中心20km/札幌市内）
+        deliveryConfig: { centerLat: 43.0687, centerLng: 141.3508, centerName: '札幌駅', radiusKm: 20, cityFilter: '札幌市' },
+        outOfArea: false,
         mapReady: false,
         // DateTime
         datetime: {
@@ -1034,13 +1039,21 @@
         try {
             state.loading = true;
             // 公開ビュー参照（札幌adminと同一DB・基テーブルは閉じたまま）
-            const [vehicles, maintenance] = await Promise.all([
+            const [vehicles, maintenance, cfg] = await Promise.all([
                 supabaseGet('public_vehicles_v', 'select=code,type,name,seats'),
                 supabaseGet('public_maint_v', 'select=vehicle_code,start_date,end_date'),
+                supabaseGet('public_delivery_config_v', ''),
             ]);
             state.vehicles = vehicles || [];
             state.fleet = [];
             state.maintenance = maintenance || [];
+            // 配達可能範囲設定（オーナーがadmin/DBで設定・無ければ既定値を維持）
+            if (cfg && cfg[0] && cfg[0].value) {
+                try {
+                    const c = typeof cfg[0].value === 'string' ? JSON.parse(cfg[0].value) : cfg[0].value;
+                    state.deliveryConfig = Object.assign({}, state.deliveryConfig, c);
+                } catch (e) { console.warn('delivery config parse failed', e); }
+            }
             state.loading = false;
             fetchAvailableVehicles();
         } catch (e) {
@@ -1086,14 +1099,23 @@
             }
         }
 
-        // Filter available vehicles (not booked + within delivery radius)
-        state.availableVehicles = state.vehicles.filter(v => {
-            if (busyCodes.has(v.code)) return false;
-            // Check delivery radius from yard
-            const yard = VEHICLE_YARDS[v.code] || DEFAULT_YARD;
-            const dist = distanceKm(state.deliveryLat, state.deliveryLng, yard.lat, yard.lng);
-            return dist <= yard.radiusKm;
-        });
+        // 配達可能範囲判定（オーナー設定: 中心(札幌駅)から半径◯km かつ 指定市内）
+        const cfg = state.deliveryConfig;
+        const distFromCenter = distanceKm(state.deliveryLat, state.deliveryLng, cfg.centerLat, cfg.centerLng);
+        const inCity = !cfg.cityFilter || (state.deliveryAddr || '').includes(cfg.cityFilter);
+        const inArea = (distFromCenter <= cfg.radiusKm) && inCity;
+
+        if (!inArea) {
+            // 配達エリア外: 車両を出さない
+            state.outOfArea = true;
+            state.availableVehicles = [];
+            renderPanel();
+            return;
+        }
+        state.outOfArea = false;
+
+        // エリア内: 予約・整備で埋まっていない車両を全て表示
+        state.availableVehicles = state.vehicles.filter(v => !busyCodes.has(v.code));
 
         // Apply class filter
         if (state.selectedClass) {
