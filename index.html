@@ -742,6 +742,10 @@
         .kd-pin-mascot { animation: kdPinDrop .6s cubic-bezier(.2,.8,.3,1.1) both; }
         .kd-pin-mascot img { height: 56px; width:auto; filter: drop-shadow(0 4px 5px rgba(0,0,0,.3));
             transform-origin: 50% 92%; animation: kdPinFloat 2.6s ease-in-out .6s infinite; }
+        /* お届け/回収ピンのラベル（スタート/ゴールを地図上で可視化） */
+        .kd-mk-label { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.3); margin-bottom: 3px; line-height: 1; }
+        .kd-mk-del { background: #FABE00; color: #1a1a1a; border: 1.5px solid #1a1a1a; }
+        .kd-mk-col { background: #1a1a1a; color: #FABE00; border: 1.5px solid #FABE00; }
         /* KEYDROP 出発拠点フラグ（固定・常時表示） */
         .kd-base-pin { position: relative; }
         .kd-base-flag { position: absolute; left: 0; bottom: 10px; white-space: nowrap; background: #1a1a1a; color: #FABE00; font-size: 11px; font-weight: 900; padding: 4px 9px; border-radius: 14px 14px 14px 2px; box-shadow: 0 2px 8px rgba(0,0,0,.35); border: 1.5px solid #FABE00; }
@@ -993,19 +997,6 @@
 
         state.mapReady = true;
 
-        // KEYDROP 出発拠点を固定表示（ドラッグ不可・常時）。座標は配達設定の中心（既定=札幌駅）
-        try {
-            const baseLat = (state.deliveryConfig && state.deliveryConfig.centerLat) || DEFAULT_LAT;
-            const baseLng = (state.deliveryConfig && state.deliveryConfig.centerLng) || DEFAULT_LNG;
-            const baseIcon = L.divIcon({
-                className: 'custom-pin',
-                html: '<div class="kd-base-pin"><div class="kd-base-flag">🚩 KEYDROP拠点</div><div class="kd-base-dot"></div></div>',
-                iconSize: [110, 40], iconAnchor: [12, 38],
-            });
-            baseMarker = L.marker([baseLat, baseLng], { icon: baseIcon, interactive: true, zIndexOffset: -200, keyboard: false }).addTo(map);
-            baseMarker.bindTooltip('ここから車をお届けします', { direction: 'top', offset: [0, -34] });
-        } catch (e) {}
-
         // Fix map size for dynamic containers (PC/flexレイアウトで高さ確定が遅れる対策)
         setTimeout(() => { if (map) map.invalidateSize(); }, 120);
         setTimeout(() => { if (map) map.invalidateSize(); }, 350);
@@ -1031,7 +1022,7 @@
         } else if (map) {
             const pinIcon = L.divIcon({
                 className: 'custom-pin',
-                html: '<div class="kd-pin-mascot"><img src="images/mascot_pin.png" alt="お届け"><div class="pin-marker-shadow" style="margin-top:-2px;"></div></div>',
+                html: '<div class="kd-pin-mascot"><div class="kd-mk-label kd-mk-del">📍 お届け場所</div><img src="images/mascot_pin.png" alt="お届け"><div class="pin-marker-shadow" style="margin-top:-2px;"></div></div>',
                 iconSize: [40, 62],
                 iconAnchor: [20, 60],
             });
@@ -1060,7 +1051,7 @@
         } else if (map) {
             const cIcon = L.divIcon({
                 className: 'custom-pin',
-                html: '<div class="pin-marker pin-collect"><div class="pin-marker-inner" style="background:#1a1a1a;"><span>🏁</span></div><div class="pin-marker-shadow"></div></div>',
+                html: '<div class="pin-marker pin-collect"><div class="kd-mk-label kd-mk-col">🏁 回収場所</div><div class="pin-marker-inner" style="background:#1a1a1a;"><span>🏁</span></div><div class="pin-marker-shadow"></div></div>',
                 iconSize: [32, 42], iconAnchor: [16, 42],
             });
             collectionMarker = L.marker([lat, lng], { icon: cIcon, draggable: true }).addTo(map);
@@ -1081,6 +1072,17 @@
         if (state.deliveryLat && !deliveryMarker) setDeliveryPin(state.deliveryLat, state.deliveryLng, state.deliveryAddr || '');
         if (state.collectionLat && !collectionMarker) setCollectionPin(state.collectionLat, state.collectionLng, state.collectionAddr || '');
         updateMarkerDragging();
+    }
+    // お届け(スタート)と回収(ゴール)を地図に一括表示（両方あれば収まるようfit）
+    function fitToPins() {
+        if (!map) return;
+        const pts = [];
+        if (state.deliveryLat) pts.push([state.deliveryLat, state.deliveryLng]);
+        if (state.collectionLat) pts.push([state.collectionLat, state.collectionLng]);
+        try {
+            if (pts.length >= 2) map.fitBounds(pts, { padding: [60, 60], maxZoom: 15 });
+            else if (pts.length === 1) map.setView(pts[0], 14);
+        } catch (e) {}
     }
     // お届け(マスコット)/回収(🏁黒)の2ピンを両方表示＝別アイコンで区別。ドラッグは場所ステップで両方可、車両画面はロック
     function updateMarkerDragging() {
@@ -1505,9 +1507,9 @@
                     }
                 }
                 renderLocationBadge();
-                // レイアウト確定後にタイル再描画（flex:1で高さ確定が遅れるため）
+                // レイアウト確定後にタイル再描画＋両ピン(スタート/ゴール)を一括表示
                 setTimeout(() => { if (map) map.invalidateSize(); }, 120);
-                setTimeout(() => { if (map) map.invalidateSize(); }, 400);
+                setTimeout(() => { if (map) { map.invalidateSize(); if (state.deliveryLat && state.collectionLat) fitToPins(); } }, 450);
             });
         }
 
