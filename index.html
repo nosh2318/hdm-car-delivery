@@ -716,6 +716,14 @@
             .top-2col .kd-flow { flex: 1 1 54%; max-width: none !important; margin: 0 !important; }
         }
         .kv-slide { position: absolute; inset: 0; background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0; animation: kvFade 28s infinite; }
+        /* モバイル用キービジュアル帯（PCは左ビジュアルがあるので非表示） */
+        .kv-mobile { display: none; }
+        @media (max-width: 899px) {
+            .kv-mobile { display: block; position: relative; flex: none; height: 112px; overflow: hidden; background: #1a1a1a; }
+            .kv-mobile .kv-slide { background-size: cover; }
+            .kv-mobile-cap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; padding: 18px 14px 8px; background: linear-gradient(transparent, rgba(0,0,0,.65)); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .02em; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+            .kv-mobile-cap .y { color: #FABE00; }
+        }
         .kv-slide:nth-child(1){ animation-delay: 0s; } .kv-slide:nth-child(2){ animation-delay: 7s; }
         .kv-slide:nth-child(3){ animation-delay: 14s; } .kv-slide:nth-child(4){ animation-delay: 21s; }
         @keyframes kvFade { 0%{opacity:0;} 4%{opacity:1;} 23%{opacity:1;} 27%{opacity:0;} 100%{opacity:0;} }
@@ -1582,6 +1590,14 @@
                 </div>
             </div>
             <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+              <!-- モバイル用キービジュアル帯（PCは非表示・左ビジュアルが担当） -->
+              <div class="kv-mobile">
+                  <div class="kv-slide" style="background-image:url(images/top_banner_01.jpg)"></div>
+                  <div class="kv-slide" style="background-image:url(images/top_banner_02.jpg)"></div>
+                  <div class="kv-slide" style="background-image:url(images/top_banner_03.jpg)"></div>
+                  <div class="kv-slide" style="background-image:url(images/top_banner_05.jpg)"></div>
+                  <div class="kv-mobile-cap">札幌どこでも、<span class="y">車をお届け</span> 🚗</div>
+              </div>
               <div class="top-2col">
                 <!-- 左：キービジュアル（PCのみ・スライドショー。画像はバナーをカバー表示） -->
                 <div class="top-visual">
