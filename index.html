@@ -2469,6 +2469,56 @@
         fetchAvailableVehicles();
     }
 
+    // ── Google Places（検索のみ・地図はOSM）。読込失敗時はNominatimにフォールバック ──
+    const GMAPS_KEY = 'AIzaSyCoX1EyEx-N5A0r4vRzC1KmVp3T29HILbI';
+    let gReady = false, gAuto = null, gPlaces = null, gToken = null;
+    function loadGooglePlaces() {
+        try {
+            if (window.google && window.google.maps && window.google.maps.places) { onGmapsReady(); return; }
+            if (document.getElementById('gmapsScript')) return;
+            window.__gmapsReady = onGmapsReady;
+            const s = document.createElement('script');
+            s.id = 'gmapsScript'; s.async = true;
+            s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAPS_KEY + '&libraries=places&language=ja&region=JP&loading=async&callback=__gmapsReady';
+            s.onerror = function () { gReady = false; };
+            document.head.appendChild(s);
+        } catch (e) { gReady = false; }
+    }
+    function onGmapsReady() {
+        try {
+            gAuto = new google.maps.places.AutocompleteService();
+            gPlaces = new google.maps.places.PlacesService(document.createElement('div'));
+            gToken = new google.maps.places.AutocompleteSessionToken();
+            gReady = true;
+        } catch (e) { gReady = false; }
+    }
+    function gSearch(query) {
+        const box = document.getElementById('addressSuggestions');
+        if (!box || !gAuto) { nominatimSearch(query); return; }
+        gAuto.getPlacePredictions({
+            input: query, sessionToken: gToken, language: 'ja',
+            componentRestrictions: { country: 'jp' },
+            location: new google.maps.LatLng(43.0687, 141.3508), radius: 40000,
+        }, function (preds, status) {
+            if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { nominatimSearch(query); return; }
+            box.innerHTML = preds.slice(0, 6).map(function (p) {
+                return '<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'white\'" onclick="selectGooglePlace(\'' + p.place_id + '\')">📍 ' + p.description + '</div>';
+            }).join('');
+            box.style.display = 'block';
+        });
+    }
+    function selectGooglePlace(placeId) {
+        if (!gPlaces) return;
+        gPlaces.getDetails({ placeId: placeId, fields: ['geometry', 'name', 'formatted_address'], sessionToken: gToken, language: 'ja' }, function (place, status) {
+            gToken = new google.maps.places.AutocompleteSessionToken();
+            if (status !== google.maps.places.PlacesServiceStatus.OK || !place || !place.geometry) return;
+            const lat = place.geometry.location.lat(), lng = place.geometry.location.lng();
+            let addr = (place.formatted_address || '').replace(/^日本[、,]\s*/, '').replace(/〒?\s*\d{3}-?\d{4}\s*/, '').trim();
+            const name = place.name ? (place.name + (addr ? ' ' + addr : '')) : addr;
+            selectAddress(lat, lng, name);
+        });
+    }
+
     // ── Address Search ──
     let addressSearchTimer = null;
     function onAddressInput(val) {
@@ -2478,7 +2528,12 @@
         addressSearchTimer = setTimeout(() => searchAddress(val), 400);
     }
 
-    async function searchAddress(query) {
+    // 検索ディスパッチャ：Google Placesが使えればそれ、ダメならNominatim
+    function searchAddress(query) {
+        if (gReady && gAuto) { gSearch(query); return; }
+        nominatimSearch(query);
+    }
+    async function nominatimSearch(query) {
         const box = document.getElementById('addressSuggestions');
         if (!box) return;
         try {
@@ -3600,6 +3655,7 @@
     // ════════════════════════════════════════════
     render();
     resetHeroTimer();
+    loadGooglePlaces(); // 検索用Google Placesを非同期ロード（失敗時はNominatim）
     </script>
 </body>
 </html>
