@@ -713,8 +713,10 @@
         @media (min-width: 900px) {
             .top-2col { flex-direction: row; }
             .top-visual { display: block; flex: 1 1 46%; position: relative; overflow: hidden; background: #1a1a1a; }
-            .top-2col .kd-flow { flex: 1 1 54%; max-width: none !important; margin: 0 !important; }
+            .top-2col .kd-flow { flex: 1 1 54%; max-width: none !important; margin: 0 !important; overflow-y: auto; }
         }
+        /* 地図/予約画面ではPCフッターを隠す（ボタン見切れ防止・縦スペース確保） */
+        .kd-mapscreen .pc-footer { display: none !important; }
         .kv-slide { position: absolute; inset: 0; background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0; animation: kvFade 28s infinite; }
         /* モバイル用キービジュアル帯（PCは左ビジュアルがあるので非表示） */
         .kv-mobile { display: none; }
@@ -734,7 +736,7 @@
         #locPanel { flex: none; display: flex; flex-direction: column; }
         @media (min-width: 768px) {
             .kd-flow { max-width: 880px; margin: 0 auto; width: 100%; padding: 8px 20px 16px; }
-            .kd-mapwrap { min-height: 300px; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,.10); margin: 4px 0; }
+            .kd-mapwrap { min-height: 240px; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,.10); margin: 4px 0; }
             #dateStrip { background: transparent; }
         }
         /* 地図ピン=マスコット（落下後ずっとフワフワ動く） */
