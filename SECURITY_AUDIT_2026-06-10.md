@@ -9,8 +9,14 @@
 | `spk_accounting` | anon で会計データ READ/WRITE 可（財務漏洩） | public ALL ポリシー削除 | anon=[] / authenticated=200 |
 | `nha_accounting` | 同上 | public ALL ポリシー削除 | anon=[] / authenticated=200 |
 
-### 🔴🔴🔴 オーナー要対応（最優先）
-- **`team_password`（handyman2026）は既に公開漏洩済み → 必ず変更**（SPK経営/PASガード等で使用。`checkPassword`がapp_settings.team_passwordを参照）。漏洩した値は無効化が必要。
+### ✅ team_password 変更済み（2026-06-10）
+- 旧 `handyman2026`（平文・漏洩）→ **新パスコード `Hdm-SPK-2026`** に変更。
+- **DBには SHA-256 ハッシュで保存**（`dd7966...`・平文を置かない）。app `checkPassword` は `value.length===64` でハッシュ比較するので新パスで通る（node/app sha256一致確認済）。
+- これはSPKアプリ**ログイン2段目のパスコード**（1段目＝Supabase Auth member@/oshita@）。staffへ新パスコードを周知。別の値にしたい場合は sha256(新値) を app_settings.team_password に再upsertするだけ。
+
+### 追加ロック（2026-06-10・authenticated policyあり＝安全に実施）
+- `monthly_snapshots` `sq_terminal_failed` `store_events`：public ALL 削除（anon=[] / authenticated=200 検証済）。
+- `hdm_todo`：anon専用ポリシー削除（旧・per-table版へ移行済＝封鎖でOK）。
 
 ## ✅ 併せて確認済み（安全だった）
 - anon INSERT `reservations` → 401（RLSで拒否）。顧客の書込は Edge Function `create-booking`(service_role) 経由に一本化。
@@ -22,12 +28,10 @@
 
 | テーブル | 使ってる可能性のあるAPP | 推奨対応 |
 |---|---|---|
-| `vehicle_twins` / `check_events` | 傷チェックAPP(handyman-damage)＝**anon正規利用**。公開共有 v.html は `share_enabled=true` の narrow policy あり | ALL(vt_all/ce_all)を「自店舗のみ」等へ絞る。共有読取は既存narrow維持 |
+| `vehicle_twins` / `check_events` | 傷チェックAPP(handyman-damage)＝**anon正規利用**。公開共有 v.html は `share_enabled=true` の narrow policy あり | ALL(vt_all/ce_all)を「自店舗のみ」等へ絞る。共有読取は既存narrow維持。**※締める前にdamage appをauthenticated化 or narrow検証** |
 | `received_invoices` | invoice_manager.html(file://・anon) + SPKタブ(authenticated) | invoice_managerをauthenticated化 → anon ALL削除 |
 | `inquiries` | 問い合わせAPP(handyman-inquiry/Vercel)・GAS | APPの認証方式確認。GAS=service_role化。anon ALL削除 |
-| `sq_terminal_failed` | SPK(authenticated)・GAS(service_role) | anon ALL削除（読書きともadmin/GASのみ）※要動作確認 |
-| `monthly_snapshots` | 本体(authenticated)・sim/historical(authHeader)・GAS | anon ALL削除 ※要動作確認 |
-| `store_events` `sns_app_state` `handyman_knowledge` `reply_templates` `hdm_todo` | 各種内部/GAS。hdm_todoは旧(per-table版へ移行済) | 用途確認の上 anon ALL削除（hdm_todoは廃止可） |
+| `handyman_knowledge` `reply_templates` `sns_app_state` | 問い合わせ/SNS/monitor 等 | 用途(どのAPPがanonで読むか)確認の上 anon ALL削除 |
 
 ## 体制（恒久ルール）
 1. **anonは「公開ビュー読取」と「Edge Function呼び出し」のみ**を原則とする。ベーステーブルへの anon 直READ/WRITE は持たせない。
