@@ -24,6 +24,8 @@
         }
         /* ── App Container ── */
         .app-container { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; position: relative; overflow-x: hidden; background: white; }
+        /* 描画先#appを親いっぱいに＝中のflex:1(マップ)が画面を埋める（下余白対策） */
+        #app { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
         .demo-nav { display: none; }
 
         /* Mobile: 地図を主役＝縦に大きく。地図に最小高さ(dvh)を保証し、パネルは縮めてスクロール */
@@ -1006,8 +1008,8 @@
                 reverseGeocodeCollection(pos.lat, pos.lng);
             });
         }
-        if (addr) { state.collectionAddr = addr; renderLocPanel(); }
-        else { reverseGeocodeCollection(lat, lng); }
+        if (addr) { state.collectionAddr = addr; state.collectionAddrFull = addr; renderLocationBadge(); renderLocPanel(); }
+        else { renderLocationBadge(); reverseGeocodeCollection(lat, lng); }
         if (map) map.panTo([lat, lng]);
     }
 
@@ -1020,12 +1022,12 @@
 
     async function reverseGeocodeCollection(lat, lng) {
         state.collectionAddr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        renderLocPanel();
+        renderLocationBadge(); renderLocPanel();
         try {
             const r = await fetchFullAddress(lat, lng);
             if (r.addr) { state.collectionAddr = r.addr; state.collectionAddrFull = r.full; }
         } catch (e) {}
-        renderLocPanel();
+        renderLocationBadge(); renderLocPanel();
     }
 
     // ピン位置のフル住所を取得（番地・建物まで）。staff/adminがこのまま動く＝最大詳細で。
@@ -1169,23 +1171,34 @@
     function renderLocationBadge() {
         const existing = document.getElementById('locationBadge');
         if (existing) existing.remove();
-        if (!state.deliveryAddr) return;
-
         const mapContainer = document.getElementById('mapWrap');
         if (!mapContainer) return;
+        // ステップ連動：回収ステップでは回収場所、それ以外はお届け場所を表示
+        const isCol = (state.locStep === 'collection' && state.screen !== 'step_vehicle');
+        const addr = isCol ? state.collectionAddr : state.deliveryAddr;
+        if (!addr) return;
 
         const badge = document.createElement('div');
         badge.id = 'locationBadge';
         badge.className = 'location-badge';
+        badge.style.borderColor = isCol ? '#1a1a1a' : '#FABE00';
+        const clearFn = isCol ? 'clearCollectionPin()' : 'clearDeliveryPin()';
+        const clearBtn = (state.screen === 'step_vehicle') ? '' : `<button class="location-badge-clear" onclick="${clearFn}">✕</button>`;
         badge.innerHTML = `
-            <div class="location-badge-icon">📍</div>
+            <div class="location-badge-icon">${isCol ? '🏁' : '📍'}</div>
             <div class="location-badge-text">
-                <div class="location-badge-label">お届け場所</div>
-                <div class="location-badge-addr">${state.deliveryAddr}</div>
+                <div class="location-badge-label">${isCol ? '回収場所' : 'お届け場所'}</div>
+                <div class="location-badge-addr">${addr}</div>
             </div>
-            <button class="location-badge-clear" onclick="clearDeliveryPin()">✕</button>
+            ${clearBtn}
         `;
         mapContainer.appendChild(badge);
+    }
+    function clearCollectionPin() {
+        state.collectionLat = null; state.collectionLng = null; state.collectionAddr = ''; state.collectionAddrFull = '';
+        if (collectionMarker && map) { map.removeLayer(collectionMarker); collectionMarker = null; }
+        const badge = document.getElementById('locationBadge'); if (badge) badge.remove();
+        renderLocPanel();
     }
 
     function toggleSameCollection(checked) {
@@ -1431,6 +1444,9 @@
                     }
                 }
                 renderLocationBadge();
+                // レイアウト確定後にタイル再描画（flex:1で高さ確定が遅れるため）
+                setTimeout(() => { if (map) map.invalidateSize(); }, 120);
+                setTimeout(() => { if (map) map.invalidateSize(); }, 400);
             });
         }
 
@@ -1803,22 +1819,23 @@
     }
     function renderLocationStepPanel() {
         // 場所（マップで選んだ結果）＋確定/次へ。日付/時間とpillは上部dateStripに表示
+        // 住所は地図上のバッジで表示するためカードは省略＝マップを大きく
         const dt = state.datetime;
         if (state.locStep === 'collection') {
             const ready = !!(dt.endDate && dt.endTime && state.collectionAddr);
             return `
-                <div style="padding:12px 16px 20px;">
-                    <button onclick="useSameCollection()" style="width:100%;padding:11px;background:#1a1a1a;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:10px;">🔁 回収場所はお届けと同じ</button>
-                    ${state.collectionAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#1a1a1a;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">回収場所</div><div style="font-size:13px;font-weight:700;color:#fff;white-space:normal;word-break:break-all;line-height:1.5;">${state.collectionAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:12px 0;"><div style="font-size:24px;">🏁</div><div style="font-size:12px;">地図で回収場所をタップ／上のボタン</div></div>'}
-                    <button class="btn-primary" ${ready ? '' : 'disabled'} onclick="goToVehicleStep()">条件に合う車両を見る ›</button>
-                    <button class="btn-secondary" onclick="backToDelivery()">‹ お届けに戻る</button>
+                <div style="padding:8px 14px 12px;display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;gap:8px;">
+                        <button onclick="useSameCollection()" style="flex:1;padding:11px;background:#1a1a1a;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;">🔁 お届けと同じ</button>
+                        <button onclick="backToDelivery()" style="flex:none;padding:11px 14px;background:#f1f1f1;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#444;cursor:pointer;">‹ 戻る</button>
+                    </div>
+                    <button class="btn-primary" style="margin:0;" ${ready ? '' : 'disabled'} onclick="goToVehicleStep()">🏁 この回収場所で決めて車両を見る ›</button>
                 </div>`;
         }
         const ready = !!(dt.startDate && dt.startTime && state.deliveryAddr);
         return `
-            <div style="padding:12px 16px 20px;">
-                ${state.deliveryAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">お届け場所</div><div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:normal;word-break:break-all;line-height:1.5;">${state.deliveryAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:12px 0;"><div style="font-size:24px;">📍</div><div style="font-size:12px;">地図でお届け場所をタップ</div></div>'}
-                <button class="btn-primary" ${ready ? '' : 'disabled'} onclick="nextToCollection()">次へ: 回収場所と時間を決める ›</button>
+            <div style="padding:8px 14px 12px;">
+                <button class="btn-primary" style="margin:0;" ${ready ? '' : 'disabled'} onclick="nextToCollection()">次へ: 回収場所と時間を決める ›</button>
             </div>`;
     }
 
