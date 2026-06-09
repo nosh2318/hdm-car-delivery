@@ -715,16 +715,10 @@
             .top-visual { display: block; flex: 1 1 46%; position: relative; overflow: hidden; background: #1a1a1a; }
             .top-2col .kd-flow { flex: 1 1 54%; max-width: none !important; margin: 0 !important; }
         }
-        .kv-slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; animation: kvFade 28s infinite; }
+        .kv-slide { position: absolute; inset: 0; background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0; animation: kvFade 28s infinite; }
         .kv-slide:nth-child(1){ animation-delay: 0s; } .kv-slide:nth-child(2){ animation-delay: 7s; }
         .kv-slide:nth-child(3){ animation-delay: 14s; } .kv-slide:nth-child(4){ animation-delay: 21s; }
         @keyframes kvFade { 0%{opacity:0;} 4%{opacity:1;} 23%{opacity:1;} 27%{opacity:0;} 100%{opacity:0;} }
-        .kv-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 48px 44px; background: linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.05) 45%, rgba(0,0,0,.72) 100%); color: #fff; z-index: 2; }
-        .kv-overlay .kv-badge { display: inline-block; align-self: flex-start; background: #FABE00; color: #1a1a1a; font-weight: 900; font-size: 12px; letter-spacing: .08em; padding: 5px 12px; border-radius: 20px; margin-bottom: 16px; }
-        .kv-overlay h2 { font-size: 34px; font-weight: 900; line-height: 1.3; letter-spacing: .01em; text-shadow: 0 2px 12px rgba(0,0,0,.4); }
-        .kv-overlay h2 .y { color: #FABE00; }
-        .kv-overlay p { font-size: 14px; font-weight: 600; margin-top: 14px; line-height: 1.7; opacity: .95; text-shadow: 0 2px 8px rgba(0,0,0,.5); }
-        .kv-mascot { position: absolute; right: 30px; top: 28px; height: 92px; z-index: 3; animation: kdFloat 3.4s ease-in-out infinite; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
         /* 縦フロー：日付/時間(上)→マップ(場所・残り空間を埋める)→確定(下)。1画面にフィット */
         .kd-flow { display: flex; flex-direction: column; flex: 1; min-height: 0; }
         #dateStrip { flex: none; background: #fff; }
