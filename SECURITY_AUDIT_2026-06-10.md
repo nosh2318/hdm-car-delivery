@@ -23,6 +23,12 @@
 - RPC `keydrop_book` → anon/authenticated は 401（service_roleのみ・revoke済）。割当はアトミック（advisory lock）でダブルブッキング防止。
 - 公開ビュー `public_*_v` は全て security_invoker=off ＝ベーステーブルのanonを締めても顧客表示は壊れない。
 
+## ✅ Phase 2-① 問い合わせアプリ 完了（2026-06-10）
+- **アプリ**(handyman-inquiry.vercel.app)：認証ゼロ→**ログイン必須化**（signInWithPasswordゲート追加・同じsbクライアントが認証セッション保持→全`.from`がauthenticated）。Vercel本番デプロイ済。ソース＝`~/Desktop/HANDYMAN/inquiry_system/inquiry_manager.html`＋`inquiry_deploy/index.html`。
+- **GAS**(HANDYMAN 問い合わせ管理)：anonキー→**service_role化**（オーナー貼付済）。
+- **DB**：`inquiries`/`handyman_knowledge`/`reply_templates` の public(anon) ALL ポリシー削除→authenticated(アプリ)＋service_role(GAS)のみ。検証：anon=[]、auth=200。
+- ログイン情報：`oshita@g-lines.jp`/`nosh2318`（or `member@g-lines.jp`/`8888`）。staff周知要。
+
 ## ⚠️ 残り（anon全開・段階対応が必要＝アプリ依存を確認してから締める）
 網羅スキャンで public(anon) に ALL 等を許可している残りテーブル。**一部はアプリが正規にanonを使う**ため、無闇に締めると現場APPが壊れる。各APPの認証方式を確認→authenticated/Edge Fn/narrowポリシーへ移行してから締める。
 
@@ -30,8 +36,8 @@
 |---|---|---|
 | `vehicle_twins` / `check_events` | 傷チェックAPP(handyman-damage)＝**anon正規利用**。公開共有 v.html は `share_enabled=true` の narrow policy あり | ALL(vt_all/ce_all)を「自店舗のみ」等へ絞る。共有読取は既存narrow維持。**※締める前にdamage appをauthenticated化 or narrow検証** |
 | `received_invoices` | invoice_manager.html(file://・anon) + SPKタブ(authenticated) | invoice_managerをauthenticated化 → anon ALL削除 |
-| `inquiries` | 問い合わせAPP(handyman-inquiry/Vercel)・GAS | APPの認証方式確認。GAS=service_role化。anon ALL削除 |
-| `handyman_knowledge` `reply_templates` `sns_app_state` | 問い合わせ/SNS/monitor 等 | 用途(どのAPPがanonで読むか)確認の上 anon ALL削除 |
+| `sns_app_state` | SNS自動投稿GAS・monitor等 | 用途確認の上 anon ALL削除 |
+| ~~`inquiries`/`handyman_knowledge`/`reply_templates`~~ | ✅ **Phase 2-①で完了** | — |
 
 ## 体制（恒久ルール）
 1. **anonは「公開ビュー読取」と「Edge Function呼び出し」のみ**を原則とする。ベーステーブルへの anon 直READ/WRITE は持たせない。
