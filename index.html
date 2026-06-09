@@ -1806,8 +1806,9 @@
         renderLocPanel(); fetchAvailableVehicles();
     }
     // ステップ内の日付/時間（お届け＝STEP1 / 回収＝STEP2）
-    function onStepDelDate(v) { state.datetime.startDate=v; if(!state.datetime.endDate || state.datetime.endDate<v) state.datetime.endDate=v; renderLocPanel(); fetchAvailableVehicles(); }
-    function onStepDelTime(v) { state.datetime.startTime=v; if(!state.datetime.endTime) state.datetime.endTime=v; renderLocPanel(); fetchAvailableVehicles(); }
+    // お届け日時は自動補完しない＝回収の日付/時間は空のまま点滅で入力を促す（回収もFIXさせる）。回収日が過去なら解除
+    function onStepDelDate(v) { state.datetime.startDate=v; if(state.datetime.endDate && state.datetime.endDate<v) state.datetime.endDate=''; renderLocPanel(); fetchAvailableVehicles(); }
+    function onStepDelTime(v) { state.datetime.startTime=v; renderLocPanel(); fetchAvailableVehicles(); }
     function onStepColDate(v) { state.datetime.endDate=v; renderLocPanel(); fetchAvailableVehicles(); }
     function onStepColTime(v) { state.datetime.endTime=v; renderLocPanel(); fetchAvailableVehicles(); }
     // 車両画面で日付/時間を変更（空車なし時の再検索用）
