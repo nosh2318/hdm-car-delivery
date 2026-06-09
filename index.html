@@ -738,8 +738,9 @@
     // ════════════════════════════════════════════
     // ── Vehicle Class Config ──
     // ════════════════════════════════════════════
+    // 顧客公開クラス定義（ホワイトリスト）。ここに無いクラスはマスターに車両があっても顧客に出さない。
+    // A(プレミアム:アルファード/ヴェルファイア)・A2/B2(預かり車) は顧客非公開のため未掲載。
     const VEHICLE_CLASSES = {
-        A: { name: 'プレミアム', icon: '👑', img: 'images/class_A.png', vehicles: 'トヨタ アルファード / ヴェルファイア', color: '#7c3aed' },
         B: { name: 'ミニバン', icon: '🚐', img: 'images/class_B.png', vehicles: 'トヨタ ノア / 三菱 デリカD5', color: '#0284c7' },
         C: { name: 'コンパクトSUV', icon: '🚙', img: 'images/class_C.png', vehicles: 'ダイハツ ロッキー / マツダ CX3', color: '#059669' },
         S: { name: 'SUV', icon: '🏎️', img: 'images/class_S.png', vehicles: 'トヨタ ハリアー / マツダ CX-5', color: '#d97706' },
@@ -748,7 +749,7 @@
     };
 
     // Temporary price table (until DB has prices)
-    const CLASS_PRICES = { A: 15000, B: 10000, C: 7000, S: 12000, F: 5500, H: 6000 };
+    const CLASS_PRICES = { B: 10000, C: 7000, S: 12000, F: 5500, H: 6000 };
 
     // ════════════════════════════════════════════
     // ── Yard (Vehicle Base) Config ──
@@ -865,7 +866,7 @@
         setDeliveryPin(lat, lng);
     }
 
-    function setDeliveryPin(lat, lng) {
+    function setDeliveryPin(lat, lng, addr) {
         state.deliveryLat = lat;
         state.deliveryLng = lng;
 
@@ -887,7 +888,9 @@
             });
         }
 
-        reverseGeocode(lat, lng);
+        // 検索で名称が渡された場合は逆ジオで上書きせず、その名称を「指定場所」として保持
+        if (addr) { state.deliveryAddr = addr; renderLocationBadge(); }
+        else { reverseGeocode(lat, lng); }
         if (map) map.panTo([lat, lng]);
     }
 
@@ -950,7 +953,7 @@
         const classOrder = ['A', 'B', 'C', 'S', 'F', 'H'];
         const filteredClasses = state.selectedClass ? [state.selectedClass] : classOrder;
 
-        html += `<div class="vehicle-count-banner">📍 指定場所対応車両</div>`;
+        html += `<div class="vehicle-count-banner">📍 指定場所予約可能車両</div>`;
 
         html += `<div class="vehicle-list">`;
         let idx = 0;
@@ -1114,8 +1117,9 @@
         }
         state.outOfArea = false;
 
-        // エリア内: 予約・整備で埋まっていない車両を全て表示
-        state.availableVehicles = state.vehicles.filter(v => !busyCodes.has(v.code));
+        // エリア内: 予約・整備で空いており、かつ顧客公開クラス(VEHICLE_CLASSES)に定義のある車両のみ
+        // ※マスター(public_vehicles_v)に車両があっても、非公開クラス(A:プレミアム/A2/B2:預かり)は出さない
+        state.availableVehicles = state.vehicles.filter(v => !busyCodes.has(v.code) && VEHICLE_CLASSES[v.type]);
 
         // Apply class filter
         if (state.selectedClass) {
@@ -2027,13 +2031,15 @@
     function selectAddress(lat, lng, name) {
         const box = document.getElementById('addressSuggestions');
         if (box) box.style.display = 'none';
+        // 選択した名称を「指定場所」として整形（ユーザー・運営の双方に明確な名称/住所を表示）
+        const placeName = (name || '').split(',').slice(0, 3).join(', ').trim();
         const input = document.getElementById('addressSearch');
-        if (input) input.value = '';
+        if (input) input.value = placeName; // 検索窓に選択名を残す（消さない）
         if (map) {
             map.invalidateSize();
             setTimeout(() => {
                 map.setView([lat, lng], 16);
-                setDeliveryPin(lat, lng);
+                setDeliveryPin(lat, lng, placeName); // 逆ジオで上書きせず選択名称を保持
             }, 100);
         }
     }
