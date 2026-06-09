@@ -306,6 +306,8 @@
             outline: none; background: transparent; color: #333;
         }
         .map-search-input::placeholder { color: #bbb; }
+        .map-search-clear { background: none; border: none; font-size: 15px; color: #888; cursor: pointer; padding: 0 10px; line-height: 1; }
+        .map-search-clear:hover { color: #333; }
 
         /* ── Bottom Panel ── */
         .bottom-panel {
@@ -333,7 +335,7 @@
         .location-badge-icon { font-size: 20px; }
         .location-badge-text { flex: 1; }
         .location-badge-label { font-weight: 700; color: #333; font-size: 12px; }
-        .location-badge-addr { font-size: 11px; color: #999; margin-top: 2px; }
+        .location-badge-addr { font-size: 13px; color: #1f2937; margin-top: 2px; font-weight: 600; }
         .location-badge-clear { background: none; border: none; font-size: 16px; cursor: pointer; color: #999; padding: 4px; }
 
         /* ── Section Styles ── */
@@ -889,7 +891,7 @@
         }
 
         // 検索で名称が渡された場合は逆ジオで上書きせず、その名称を「指定場所」として保持
-        if (addr) { state.deliveryAddr = addr; renderLocationBadge(); }
+        if (addr) { state.deliveryAddr = addr; renderLocationBadge(); fetchAvailableVehicles(); }
         else { reverseGeocode(lat, lng); }
         if (map) map.panTo([lat, lng]);
     }
@@ -1387,6 +1389,7 @@
                                 placeholder="ホテル名・住所で検索"
                                 oninput="onAddressInput(this.value)"
                                 onfocus="this.select()">
+                            <button class="map-search-clear" onclick="clearAddressSearch()" title="クリア">✕</button>
                         </div>
                         <div id="addressSuggestions" style="display:none;position:absolute;top:44px;left:8px;right:44px;z-index:1001;background:white;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:150px;overflow-y:auto;"></div>
                         <button class="geolocate-btn" onclick="geolocateUser()" title="札幌駅に戻る">📍</button>
@@ -1495,6 +1498,7 @@
                                 placeholder="ホテル名・住所で検索"
                                 oninput="onAddressInput(this.value)"
                                 onfocus="this.select()">
+                            <button class="map-search-clear" onclick="clearAddressSearch()" title="クリア">✕</button>
                         </div>
                         <div id="addressSuggestions" style="display:none;position:absolute;top:44px;left:8px;right:44px;z-index:1001;background:white;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:150px;overflow-y:auto;"></div>
                         <button class="geolocate-btn" onclick="geolocateUser()" title="札幌駅に戻る">📍</button>
@@ -2042,6 +2046,13 @@
                 setDeliveryPin(lat, lng, placeName); // 逆ジオで上書きせず選択名称を保持
             }, 100);
         }
+    }
+
+    // 検索窓のクリア（PC/モバイル両方のaddressSearchを空に＋候補非表示）
+    function clearAddressSearch() {
+        document.querySelectorAll('#addressSearch').forEach(i => { i.value = ''; });
+        const box = document.getElementById('addressSuggestions');
+        if (box) box.style.display = 'none';
     }
 
     function selectClass(type) {
