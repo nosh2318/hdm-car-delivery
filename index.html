@@ -660,6 +660,12 @@
         .kd-bubble { background:#1a1a1a; color:#fff; font-size:12px; font-weight:700; padding:8px 11px; border-radius:12px 12px 2px 12px;
             box-shadow:0 4px 12px rgba(0,0,0,.2); max-width:170px; line-height:1.5; margin-bottom:26px; pointer-events:none; animation: kdPeek .5s .15s both; }
         .kd-bubble b{ color:#FABE00; }
+        /* ヘッダー直下の案内帯（マスコットが喋る・1体に集約） */
+        #kdGuide { display:flex; align-items:center; gap:9px; padding:8px 14px; background:#fff; border-bottom:1px solid #eee; }
+        #kdGuide .kd-guide-img { height:44px; width:auto; flex:none; transform-origin:50% 90%; animation:kdFloat 3s ease-in-out infinite; -webkit-user-drag:none; }
+        #kdGuide .kd-guide-bubble { flex:1; min-width:0; background:#FABE00; color:#1a1a1a; font-size:12.5px; font-weight:800; padding:8px 12px; border-radius:13px 13px 13px 3px; line-height:1.5; box-shadow:0 2px 8px rgba(0,0,0,.10); }
+        #kdGuide .kd-guide-bubble.dark { background:#1a1a1a; color:#fff; }
+        #kdGuide .kd-guide-bubble b { color:inherit; }
         /* 地図ピン=マスコット（落下後ずっとフワフワ動く） */
         @keyframes kdPinFloat { 0%,100%{ transform: translateY(0) rotate(0); } 30%{ transform: translateY(-5px) rotate(-3deg);} 60%{ transform: translateY(-2px) rotate(2deg);} }
         .kd-pin-mascot { animation: kdPinDrop .6s cubic-bezier(.2,.8,.3,1.1) both; }
@@ -1003,10 +1009,13 @@
         const block = a.block || a.city_block || '';
         const road = a.road || '';
         const hn = a.house_number || '';
-        const bld = a.building || a.amenity || a.tourism || a.shop || a.office || a.hotel || data.name || '';
+        let bld = a.building || a.amenity || a.tourism || a.shop || a.office || a.hotel || data.name || '';
+        // OSMの英語ジャンク値(direction/yes/entrance等)や純ASCII名は建物名として採用しない
+        if (bld && (/^[\x00-\x7F\s]+$/.test(bld) || /^(direction|yes|entrance|node|way)$/i.test(bld.trim()))) bld = '';
         let s = `${pref}${city}${ward}${town}${block}${road}${hn}`;
         if (!s) s = (data.display_name || '').replace(/、?\s*日本$/, '').replace(/〒?\s*\d{3}-?\d{4}\s*/g, '').trim();
         if (bld && !s.includes(bld)) s = `${s} ${bld}`;
+        s = s.replace(/\s*(direction|yes|entrance)\s*$/i, '').trim(); // 末尾ジャンク除去
         return { addr: s.trim(), full: (data.display_name || s).trim() };
     }
 
@@ -1387,17 +1396,27 @@
         mountCornerMascot();
     }
 
-    // ── KEYDROP マスコット マウント（再レンダー毎に再設置） ──
+    // ── KEYDROP マスコット 案内帯（ヘッダー直下に1体・喋る） ──
+    function guideText() {
+        if (state.locStep === 'collection') return { msg: '次は<b>『回収場所』</b>だよ！🏁 お届けと同じならボタンでOK', dark: true };
+        return { msg: 'まずは<b>『お届け場所』</b>を選ぼう！🔑 地図をタップしてね', dark: false };
+    }
     function mountHeaderMascot() {
-        document.querySelectorAll('.app-header .app-logo').forEach(function(logo){
-            if (logo.querySelector('.kd-mascot-head')) return;
-            var m = document.createElement('img');
-            m.src = 'images/mascot_head.png';
-            m.className = 'kd-mascot-head';
-            m.alt = 'KEYDROPマスコット';
-            m.onclick = function(e){ e.stopPropagation(); m.classList.remove('kd-jump'); void m.offsetWidth; m.classList.add('kd-jump'); };
-            logo.appendChild(m);
-        });
+        // 旧: ロゴ横の装飾マスコットは撤去（うるさいので案内帯に統合）
+        document.querySelectorAll('.kd-mascot-head').forEach(function(e){ e.remove(); });
+        var ex = document.getElementById('kdGuide'); if (ex) ex.remove();
+        var inFlow = (state.screen === 'top' || state.screen === 'step_location');
+        var hdr = document.querySelector('.app-header');
+        if (!inFlow || !hdr) return;
+        var g = guideText();
+        var strip = document.createElement('div');
+        strip.id = 'kdGuide';
+        strip.innerHTML = '<img src="images/mascot_head.png" class="kd-guide-img" alt="KEYDROP"><div class="kd-guide-bubble ' + (g.dark ? 'dark' : '') + '">' + g.msg + '</div>';
+        hdr.insertAdjacentElement('afterend', strip);
+    }
+    function updateGuide() {
+        var b = document.querySelector('#kdGuide .kd-guide-bubble'); if (!b) return;
+        var g = guideText(); b.innerHTML = g.msg; b.classList.toggle('dark', g.dark);
     }
     function mountCornerMascot() {
         var ex = document.getElementById('kdCorner'); if (ex) ex.remove();
@@ -1683,6 +1702,7 @@
     function renderLocPanel() {
         const el = document.getElementById('locPanel');
         if (el) el.innerHTML = renderLocationStepPanel();
+        if (typeof updateGuide === 'function') updateGuide();
     }
     function nextToCollection() { if (!state.deliveryLat) return; state.locStep='collection'; renderLocPanel(); }
     function backToDelivery() { state.locStep='delivery'; renderLocPanel(); }
@@ -1710,9 +1730,8 @@
 
         if (state.locStep === 'collection') {
             // 回収＝黒テーマ
-            return stepBar(2) + mascotSay('次は<b>『回収場所』</b>だよ！🏁 お届けと同じならボタンでOK', true) + `
+            return stepBar(2) + `
                 <div style="padding:4px 16px 18px;">
-                    <div style="display:inline-block;background:#1a1a1a;color:#FABE00;font-size:11px;font-weight:800;padding:3px 10px;border-radius:6px;margin-bottom:8px;">STEP 2 ・ 回収</div>
                     <div style="font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:6px;">🏁 どこで車を返しますか？</div>
                     <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px;">地図をタップ／検索で<b>回収場所</b>を指定。お届けと同じならボタンでOK。</div>
                     <button onclick="useSameCollection()" style="width:100%;padding:12px;background:#1a1a1a;border:none;border-radius:10px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:12px;">🔁 お届け場所と同じにする</button>
@@ -1722,9 +1741,8 @@
                 </div>`;
         }
         // delivery (default)＝お届け＝黄テーマ
-        return stepBar(1) + mascotSay('まずは<b>『お届け場所』</b>を選ぼう！🔑 地図をタップしてね', false) + `
+        return stepBar(1) + `
             <div style="padding:4px 16px 18px;">
-                <div style="display:inline-block;background:#FABE00;color:#1a1a1a;font-size:11px;font-weight:800;padding:3px 10px;border-radius:6px;margin-bottom:8px;">STEP 1 ・ お届け</div>
                 <div style="font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:6px;">📍 車をどこへ届けますか？</div>
                 <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px;">地図をタップ、または上の検索窓で<b>お届け場所</b>を指定してください。</div>
                 ${state.deliveryAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">お届け場所</div><div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:normal;word-break:break-all;line-height:1.5;">${state.deliveryAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:18px 0;"><div style="font-size:30px;">📍</div><div style="font-size:13px;">地図で場所をタップ</div></div>'}
