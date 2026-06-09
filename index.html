@@ -1153,6 +1153,15 @@
         if (emptyPanel) emptyPanel.style.display = hasLoc ? 'none' : '';
     }
 
+    // 提供会社（admin/DB登録）：owner_label優先・なければowner_company・自社はHANDYMAN
+    function providerOf(v) {
+        if (!v) return '';
+        const lbl = (v.owner_label || '').trim();
+        const comp = (v.owner_company || '').trim();
+        if (lbl) return lbl;
+        if (comp && comp.toUpperCase() !== 'HANDYMAN') return comp;
+        return 'HANDYMAN';
+    }
     function renderVehiclePanel() {
         const days = getDayCount();
         let html = '';
@@ -1214,6 +1223,7 @@
             const availCount = dbVehicles.length;
             const seats = dbVehicles[0]?.seats || (type === 'A' || type === 'B' ? 8 : 5);
             if (availCount === 0) { idx++; continue; }
+            const providers = [...new Set(dbVehicles.map(providerOf))].filter(Boolean).join(' / ');
 
             html += `
                 <div class="vehicle-card" style="animation:vehicleFadeIn .3s ease ${idx * 0.06}s both;" onclick="selectClass('${type}')">
@@ -1225,6 +1235,7 @@
                             <span>👥 ${seats}人乗り</span>
                             <span>🚗 ${availCount}台空き</span>
                         </div>
+                        ${providers ? `<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">🏢 提供: ${providers}</div>` : ''}
                     </div>
                     <div class="vc-right">
                         <div class="vc-price">¥${totalPrice.toLocaleString()}</div>
@@ -1296,7 +1307,7 @@
             loadClassPrices(); // SPK価格マスター(public_class_price_v)を非同期取得（無ければフォールバック）
             // 公開ビュー参照（札幌adminと同一DB・基テーブルは閉じたまま）
             const [vehicles, maintenance, cfg] = await Promise.all([
-                supabaseGet('public_vehicles_v', 'select=code,type,name,seats'),
+                supabaseGet('public_vehicles_v', 'select=*'),
                 supabaseGet('public_maint_v', 'select=vehicle_code,start_date,end_date'),
                 supabaseGet('public_delivery_config_v', ''),
             ]);
@@ -1997,7 +2008,6 @@
                 <div class="veh-split">
                     <div id="mapWrap" class="veh-map" style="position:relative;">
                         <div id="map" style="height:100%;"></div>
-                        <div style="position:absolute;left:10px;top:10px;z-index:500;background:#1a1a1a;color:#fff;font-size:11px;font-weight:800;padding:6px 11px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.25);">📍 この場所へお届け</div>
                     </div>
                     <div class="panel-content veh-sheet" id="panelContent">${renderVehiclePanel()}</div>
                 </div>
@@ -2066,6 +2076,7 @@
                     <div class="confirm-vehicle-icon">${cls.img ? `<img src="${cls.img}" style="width:180px;height:auto;border-radius:10px;">` : (cls.icon || '🚗')}</div>
                     <div class="confirm-vehicle-name">${cls.name || v.type}クラス</div>
                     <div class="confirm-vehicle-class">${cls.vehicles}</div>
+                    <div style="margin-top:8px;display:inline-block;background:#f1f1f1;color:#444;font-size:12px;font-weight:700;padding:4px 11px;border-radius:14px;">🏢 提供会社：${providerOf(v)}</div>
                     <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;font-size:11px;opacity:.8;">
                         <span>👥 ${v.seats || 5}人乗り</span>
                     </div>
