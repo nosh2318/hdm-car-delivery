@@ -103,7 +103,10 @@
 
         /* ── App Header ── */
         .app-header { background: #ffffff; color: #1a1a1a; padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; font-weight: 600; z-index: 30; border-bottom: 2px solid #FABE00; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
-        .app-logo { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .app-logo { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .app-logo .kd-tagline { font-size: 11px; font-weight: 800; color: #1a1a1a; letter-spacing: .04em; line-height: 1.1; display: inline-flex; align-items: center; gap: 4px; }
+        .app-logo .kd-tagline::before { content: ""; display: inline-block; width: 16px; height: 3px; background: #FABE00; border-radius: 2px; }
+        @media (min-width: 768px) { .app-logo .kd-tagline { font-size: 12.5px; } }
         .app-logo-mark { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #FABE00; }
         .app-service-name { font-size: 13px; font-weight: 700; color: white; line-height: 1.1; }
         .app-service-subtitle { font-size: 9px; color: #FABE00; font-weight: 500; letter-spacing: .5px; }
@@ -950,7 +953,7 @@
         }
 
         // 検索で名称が渡された場合は逆ジオで上書きせず、その名称を「指定場所」として保持
-        if (addr) { state.deliveryAddr = addr; renderLocationBadge(); fetchAvailableVehicles(); }
+        if (addr) { state.deliveryAddr = addr; state.deliveryAddrFull = addr; renderLocationBadge(); if (typeof renderLocPanel === 'function') renderLocPanel(); fetchAvailableVehicles(); }
         else { reverseGeocode(lat, lng); }
         if (map) map.panTo([lat, lng]);
     }
@@ -1394,6 +1397,18 @@
 
         mountHeaderMascot();
         mountCornerMascot();
+        mountLogoTagline();
+    }
+
+    // ロゴ下に読めるタグライン（英語）を全ヘッダーへ注入
+    function mountLogoTagline() {
+        document.querySelectorAll('.app-logo').forEach(function(logo){
+            if (logo.querySelector('.kd-tagline')) return;
+            var t = document.createElement('span');
+            t.className = 'kd-tagline';
+            t.textContent = 'Sapporo Car Delivery Service';
+            logo.appendChild(t);
+        });
     }
 
     // ── KEYDROP マスコット 案内帯（ヘッダー直下に1体・喋る） ──
