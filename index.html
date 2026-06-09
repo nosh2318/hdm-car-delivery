@@ -2111,16 +2111,51 @@
         render();
     }
 
-    function processPayment() {
+    // 札幌SPKと同一DBへ予約成立（reservations+fleet）＝在庫連動。Edge Function経由（anon直書き禁止）。
+    async function createBookingOnServer() {
+        const v = state.selectedVehicle;
+        const cls = state.selectedClassType || (v && v.type);
+        const days = getDayCount();
+        const base = (CLASS_PRICES[cls] || 0) * days;
+        const cdwMap = { none: 'なし', cdw: '免責', noc: 'NOC', full: 'フル' };
+        const payload = {
+            vehicleClass: cls,
+            vehicleModel: v ? v.name : '',
+            lend_date: state.datetime.startDate,
+            return_date: state.datetime.endDate,
+            name: (state.formData && state.formData.name) || '',
+            mail: (state.formData && state.formData.email) || '',
+            tel: (state.formData && state.formData.phone) || '',
+            people: 1,
+            del_place: state.deliveryAddr || '',
+            col_place: state.deliveryAddr || '',
+            base_price: base,
+            option_price: 0,
+            discount: 0,
+            insurance: cdwMap[state.cdw] || 'なし',
+        };
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/create-booking`, {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error((data && data.error) || '予約処理に失敗しました');
+        return data.reservationId;
+    }
+
+    async function processPayment() {
         if (!state.paymentMethod) return;
-        // TODO: Integrate Square payment API
-        // Save to LocalStorage for MyPage
-        const resId = 'HDM' + Date.now().toString().slice(-8);
-        state._lastResId = resId;
-        saveReservationToLocal(resId);
-        state.screen = 'complete';
-        render();
-        // TODO: Save reservation to Supabase
+        try {
+            // 札幌DBに予約成立（在庫が減り、配車表に出る）。決済(Square)はPhase Bで本フローに統合予定
+            const resId = await createBookingOnServer();
+            state._lastResId = resId;
+            saveReservationToLocal(resId);
+            state.screen = 'complete';
+            render();
+        } catch (e) {
+            alert(e.message || '予約に失敗しました。時間をおいて再度お試しください。');
+        }
     }
 
     function resetAndGoTop() {

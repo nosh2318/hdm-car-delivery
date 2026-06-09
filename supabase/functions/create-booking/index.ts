@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
 
   const row: Record<string, unknown> = {
     id,
-    ota: "WEB",
+    ota: "KAMUI", // 新ブランド識別子。SPKは同一在庫・同一配車表で運用し、ota列でブランド/チャネルを分離（HANDYMAN/各OTA/KAMUI）
     vehicle: cls,
     lend_date: lend,
     return_date: ret,

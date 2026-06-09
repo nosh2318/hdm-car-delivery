@@ -1,5 +1,54 @@
 # HDM Car Delivery - プロジェクトコンテキスト
 
+---
+
+## 🚗 KAMUI 新ブランド 本番化（2026-06-09 omni・進行中）
+
+### 構想（オーナー確定）
+- このUI(hdm-car-delivery)を **新ブランド「KAMUI」（案）の顧客予約サイト**として本番化。
+- **SPK(札幌)と同一Supabase `ckrxttbnawkclshczsia` ＝同一在庫・同一配車表で運用**。別DB・別在庫を作らない（二重台帳ゼロ＝在庫ズレ原理的に無し）。
+- **2ブランド（HANDYMAN既存＋KAMUI新）を `reservations.ota` 列で分離**。単一在庫・単一オペレーション・複数ブランド＝稼働最大化＋運用1箇所。
+  - ota: HANDYMAN直販=`HP` / 各OTA=`J/R/S/O/RC/G` / **KAMUI=`KAMUI`**。メール取込もGASが送信元/件名で HANDYMAN/OTA/KAMUI に切り分け（既存の延長）。
+  - 分析・売上は ota で分離（解析タブD等でKAMUI実績が見える）。顧客接点(UI/ドメイン/メール)はKAMUIで別ブランド化。
+- **原則「全てのデータはSPK(admin)マスターから」**。マスターに無いものは顧客に出さない。顧客UIのハードコード(マスター的データ)は廃止していく。
+
+### 連動の心臓（GAS実装で確認済・重要）
+- 予約成立＝**`reservations` INSERT ＋ `fleet` autoAssign の2つだけ**。**tasksは作らない**（SPK APPが reservations+fleet から動的生成して配車表/OPシート/タスク/会計に表示）。
+- ∴ 顧客UIが reservations+fleet を「SPKと同じ形」で作れば、**札幌の配車表に自動で出る**（GAS予約と全く同じ経路）。
+- autoAssignロジック正本: `~/spk-task/gas-email-import-v2.gs` `insertReservation_`(L1230) / `autoAssignVehicle_`(L1248)。
+
+### 実装済み（push済・本番反映）
+- **公開ビュー4本**（`supabase/migrations/001_public_views.sql`・SQL EditorでRUN済）: `public_vehicles_v`/`public_busy_v`/`public_maint_v`/`public_inactive_v`。anon可・**基テーブルは閉じたまま**(`security_invoker=off`で定義者権限・許可列のみ)。→ 札幌の在庫変化が顧客の空き表示へ自動反映。anon検証OK(札幌実車両17台見える/基テーブルvehiclesは0件)。
+  - ⚠️ reservations等の**日付列はtext型**→ビューの日付比較は `列::text >= to_char(current_date,'YYYY-MM-DD')`。
+- **顧客UI読取をビュー参照に差替**（index.html fetchVehicles/fetchAvailableVehicles）。vehicles/fleet/maintenance/reservations の anon直読みを廃止。
+- **配達範囲をDB設定化**（`002_delivery_config.sql`・RUN済）: `app_settings.hdm_delivery_config`(JSON) + 公開ビュー `public_delivery_config_v`。**札幌駅(43.0687,141.3508)中心 半径20km × 札幌市内(住所に「札幌市」)** のAND判定。顧客UIはDB設定を読んで判定（ハードコード`VEHICLE_YARDS`廃止）。anon検証OK。
+- プレミアム(Aクラス)削除、**顧客公開クラス外(A/A2/B2預かり)は非表示**（`VEHICLE_CLASSES`をホワイトリスト化＝マスターに車両があっても載ってないクラスは出さない）。顧客に出るのは B/C/S/F/H。
+- ラベル「指定場所対応車両」→「指定場所予約可能車両」。
+- 住所検索: 選択した名称を「指定場所」として保持（逆ジオで上書きしない）＋画面更新の対称化（検索選択でも `fetchAvailableVehicles()` を呼ぶ・地図クリック経路と揃えた）＋検索クリア✕ボタン(PC/モバイル)＋お届け場所住所を濃く(#1f2937/13px/bold)。
+
+### 実装済み（★未デプロイ/未push＝次の作業）
+- **create-booking Edge Function**（`supabase/functions/create-booking/index.ts`・229行）: 申込→検証→在庫再確認→採番→`reservations`(ota=`KAMUI`/status=`pending_payment`)INSERT＋`fleet`(autoAssign完全移植)。people≤8クランプ。採番 `WEB-YYMM-xxxx`(※将来KAMUI-に変更検討)。service_roleはFn内のみ・CORS *(後でKAMUIドメインに絞る)。
+- **顧客UI申込接続**（index.html `createBookingOnServer`＋`processPayment`をasync化）: 確定→`POST /functions/v1/create-booking`→reservationId取得→complete画面。構文OK・**未push**（Edge未デプロイでpushすると申込が404になるためデプロイ後にpush）。
+
+### 残作業（次セッションはここから）
+1. **Edge Functionデプロイ**: ダッシュボード→Edge Functions→**Via Editor→Open Editor**→関数名`create-booking`→デフォルト削除→index.ts貼付→Deploy（**supabase CLIは未インストール**＝Webエディタが最短）。index.tsは`pbcopy`で渡す。
+2. デプロイ後: curlで `create-booking` 動作確認→**顧客UIをpush**→実機で「申込→札幌SPK配車表にバーが出る＋在庫が1減る」を確認（テスト予約は後で削除）。
+3. **Square決済(Phase B)**: create-bookingでSquare Payment Link発行→`payment-webhook`で`confirmed`化＋`spk_accounting`起票（既存じゃらん事前決済が完成テンプレ・Location `L8N7J9RKPN3WH`）。
+4. **「全データSPKから」完成**: クラス名/価格/公開可否のハードコード(`VEHICLE_CLASSES`/`CLASS_PRICES`)をDB化(`hdm_class_config`+公開ビュー)＋SPK adminにクラス公開設定UI。価格はSPK価格表(seasonal)連動。
+5. **SPK adminに「配達エリア設定」編集UI**（`hdm_delivery_config`を地図ピン/半径で編集＝オーナーの"adminで設定"完成形）。
+6. 独立ドメイン（最後・新規取得＝自前DNS）。Square戻りURL/CORS/CSP追従。
+
+### 関連ドキュメント
+- 設計思想・合格ライン: `~/Desktop/HANDYMAN/デリバリーレンタカー_サービス化_設計書_2026-06.md`
+- 実装プロセス（既存UI前提の順番）: `~/Desktop/HANDYMAN/デリバリーレンタカー_実装プロセス_2026-06.md`
+
+### Lesson
+- 在庫双方向同期＝**同一DB＋公開ビュー(読取)＋Edge Function(書込)** で成立。anon直読み/直PATCH(旧cancelReservation L2765)は廃止していく。
+- 公開ビューは `security_invoker=off` で基テーブルRLSを貫通し許可列のみ返す＝PII/コスト非開示で在庫だけ見せられる。
+- index.ts(Edge Function/TS)を**SQL Editorに貼らない**（//で構文エラー）。Edge FunctionsセクションでDeploy。
+
+---
+
 ## プロジェクト概要
 レンタカーデリバリーサービス「HDM Car Delivery」のプロトタイプUI。
 iPhone端末フレーム内で動作するシングルページHTMLアプリケーション。
