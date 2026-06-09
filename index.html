@@ -1792,7 +1792,7 @@
                 <div style="padding:12px 16px 20px;">
                     <button onclick="useSameCollection()" style="width:100%;padding:11px;background:#1a1a1a;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:10px;">🔁 回収場所はお届けと同じ</button>
                     ${state.collectionAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#1a1a1a;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">回収場所</div><div style="font-size:13px;font-weight:700;color:#fff;white-space:normal;word-break:break-all;line-height:1.5;">${state.collectionAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:12px 0;"><div style="font-size:24px;">🏁</div><div style="font-size:12px;">地図で回収場所をタップ／上のボタン</div></div>'}
-                    <button class="btn-primary" ${ready ? '' : 'disabled'} onclick="goToVehicleStep()">車両を見る ›</button>
+                    <button class="btn-primary" ${ready ? '' : 'disabled'} onclick="goToVehicleStep()">条件に合う車両を見る ›</button>
                     <button class="btn-secondary" onclick="backToDelivery()">‹ お届けに戻る</button>
                 </div>`;
         }
