@@ -1836,11 +1836,16 @@
         const dt = state.datetime;
         if (state.locStep === 'collection') {
             const ready = !!(dt.endDate && dt.endTime && state.collectionAddr);
+            // お届け先を参照表示（「どこにしたっけ？」対策。タップでお届けに戻れる）
+            const delRef = state.deliveryAddr
+                ? `<div onclick="backToDelivery()" style="cursor:pointer;display:flex;align-items:flex-start;gap:7px;background:#fffbf0;border:1px solid #FABE00;border-radius:9px;padding:7px 11px;"><span style="font-size:13px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:9px;color:#a07c00;font-weight:800;">お届け先（タップで変更）</div><div style="font-size:11.5px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr}</div></div><span style="font-size:10px;color:#a07c00;font-weight:800;flex:none;align-self:center;">変更›</span></div>`
+                : '';
             const card = state.collectionAddr
                 ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#1a1a1a;border-radius:10px;padding:9px 12px;"><span style="font-size:15px;flex:none;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">回収場所</div><div style="font-size:12.5px;font-weight:700;color:#fff;white-space:normal;word-break:break-all;line-height:1.45;">${state.collectionAddr}</div></div></div>`
                 : `<div style="text-align:center;color:#bbb;padding:6px 0;font-size:12px;">🏁 地図で回収場所をタップ／右のボタン</div>`;
             return `
                 <div style="padding:8px 14px 12px;display:flex;flex-direction:column;gap:8px;">
+                    ${delRef}
                     <div style="display:flex;gap:8px;">
                         <button onclick="useSameCollection()" style="flex:1;padding:10px;background:#1a1a1a;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;">🔁 お届けと同じ</button>
                         <button onclick="backToDelivery()" style="flex:none;padding:10px 14px;background:#f1f1f1;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#444;cursor:pointer;">‹ 戻る</button>
