@@ -1332,6 +1332,19 @@
         }
     }
 
+    // レンタル期間の年月リスト（除外フラグ照合用・最大36ヶ月の安全装置）
+    function listYearMonths(start, end) {
+        if (!start || !end) return [];
+        const s = new Date(start + 'T00:00:00'), e = new Date(end + 'T00:00:00');
+        if (isNaN(s) || isNaN(e)) return [];
+        const out = []; let y = s.getFullYear(), m = s.getMonth();
+        for (let i = 0; i < 36; i++) {
+            out.push(y + '-' + String(m + 1).padStart(2, '0'));
+            if (y === e.getFullYear() && m === e.getMonth()) break;
+            m++; if (m > 11) { m = 0; y++; }
+        }
+        return out;
+    }
     async function fetchAvailableVehicles() {
         if (!state.vehicles.length) return;
         if (!state.deliveryLat) {
@@ -1367,6 +1380,16 @@
                 busyCodes.add(m.vehicle_code);
             }
         }
+
+        // 配車表の「月別除外フラグ」（public_inactive_v＝vehicle_monthly_kpi active=false）も反映
+        try {
+            const yms = listYearMonths(start, end);
+            if (yms.length) {
+                const inEnc = yms.map(y => `"${y}"`).join(',');
+                const inactive = await supabaseGet('public_inactive_v', `year_month=in.(${inEnc})&select=vehicle_code`);
+                for (const r of (inactive || [])) busyCodes.add(r.vehicle_code);
+            }
+        } catch (e) { /* 除外取得失敗時はスキップ */ }
 
         // 配達可能範囲判定（オーナー設定: 中心(札幌駅)から半径◯km かつ 指定市内）
         const cfg = state.deliveryConfig;
