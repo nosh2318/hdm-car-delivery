@@ -26,6 +26,8 @@
         .app-container { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; position: relative; overflow-x: hidden; background: white; }
         /* 描画先#appを親いっぱいに＝中のflex:1(マップ)が画面を埋める（下余白対策） */
         #app { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+        /* 地図画面は確定高さ＝flex:1のマップが画面を埋める（min-heightだと子が埋めず下に白が出るflexの罠を回避） */
+        .app-container.kd-mapscreen { height: 100vh; height: 100dvh; overflow: hidden; }
         .demo-nav { display: none; }
 
         /* Mobile: 地図を主役＝縦に大きく。地図に最小高さ(dvh)を保証し、パネルは縮めてスクロール */
@@ -1415,6 +1417,10 @@
                 html = renderTopScreen();
         }
         app.innerHTML = html;
+
+        // 地図画面は確定高さ（下余白/白対策）。スクロール画面は従来のmin-height
+        const _cont = document.getElementById('phoneScreen');
+        if (_cont) _cont.classList.toggle('kd-mapscreen', (state.screen === 'top' || state.screen === 'step_location' || state.screen === 'step_vehicle'));
 
         // Add screen fade animation
         const screenEl = app.querySelector('.screen-fade');
