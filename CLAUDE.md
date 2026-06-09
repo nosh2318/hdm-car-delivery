@@ -2,6 +2,38 @@
 
 ---
 
+## 🗺 TOP地図主役リニューアル＋マスコット＋在庫17台一致＋価格マスター連動準備（2026-06-09 omni）
+
+### ① TOP再設計（モバイル）＝「検索フォーム→結果」地図主役
+- ヒーロー画像撤去。TOP＝**日程1行折り畳みバー**(`renderDateBarInner`/`expandDateBar`/`collapseDateBar`・render()を呼ばず`#dateBar`差替で地図を壊さない)＋**地図(主役)**＋場所ステップパネル。
+- 場所＝**お届け→回収のステップ式**を地図上で。**お届け＝黄(#FABE00)/回収＝黒(#1a1a1a)** で全UI統一（stepBar pill・STEPバッジ・サマリーカード・地図ピン）。`renderLocationStepPanel`を2ステップ＋色分けに刷新（locStep='vehicle'枝は撤去）。
+- **車両は次画面**＝新screen `step_vehicle`(`renderVehicleScreen`)：上部にお届け黄/回収黒サマリー固定＋クラスフィルタ＋条件一致車両。`goToVehicleStep()`は1本化(screen='step_vehicle')。`useSameCollection`も同経路。
+- 地図初期化条件に`screen==='top'`追加（モバイルTOPも地図）。再生成時`restorePins()`でピン復元（state→setDeliveryPin/setCollectionPinにaddr渡しで逆ジオ上書き回避）。
+- PC版TOP(renderTopScreenPC)は従来all-in-oneのまま（次段で統一）。
+
+### ② KEYDROP マスコット（生成画像3＝鍵+📍ロボ）
+- 白背景→透明切り抜き(Pillow・border連結成分のみα0＝白本体保持) `images/mascot.png`(314x520)/`mascot_head.png`/`mascot_pin.png`。
+- CSS keyframes(kdFloat/kdWave/kdBounce/kdPeek/kdPinDrop)。**静止画をCSSで生かす方式**(腕個別可動は不可・浮遊/手振り/跳ね/覗き)。
+- ヘッダー：`mountHeaderMascot()`が全`.app-logo`にロゴ横相棒を設置(浮遊＋hover手振り＋click跳ね・再render毎)。地図お届けピン＝マスコット。完了/マイページで`mountCornerMascot()`が右下から吹き出し付き登場。
+
+### ③ 在庫の相違解消＝顧客に17台全部（A/A2/B2公開）
+- 相違の正体＝公開ビュー(public_vehicles_v)は17台全部出てたが、**顧客UIのクラス白リスト(B/C/S/F/H)でA(2)/A2(3)/B2(2)を非表示**にしていた（設計どおりだったが「配車表に出るのに顧客に出ない」）。
+- オーナー判断＝**全部見せる**。VEHICLE_CLASSESにA(プレミアム)/A2/B2追加＋classOrder=['A','A2','B','B2','C','S','F','H']。**クラス表記そのまま**。サーバー(create-booking assignVehicle)は`type=eq.<class>`厳密一致割当＝予約破綻なし。
+
+### ④ 営業時間・検索日
+- `generateTimeOptions`＝**9:00〜19:00**(30分・19:00最終)。`generateDateOptions`＝**本日〜4ヶ月後**まで。
+
+### ⑤ 価格＝SPKマスター連動（"全てはSPKがマスター"）※DBは後でまとめてRUN
+- オーナー指示「価格はSPKが持つ。今は持っていない→KEYDROP連携専用の価格表を新設」。粒度＝**クラス別定額(v1)**。
+- 顧客側はベタ書き`CLASS_PRICES`を**フォールバック化**し、`loadClassPrices()`が`public_class_price_v`(anon)を読み`priceOf(type)`で上書き（ビュー未作成時は自動フォールバック＝今回デプロイで壊れない）。CLASS_PRICES直参照5箇所→`priceOf()`化。
+- **DB(保留・まとめてRUN)**＝`supabase/migrations/003_class_price.sql`：app_settings.`hdm_keydrop_price`(JSON)＋公開ビュー`public_class_price_v`。⚠️価格18000/16000/9000等は**暫定値**（SPKで確定編集する）。
+- **残（次回）**：SPK側 専用価格表UI `keydrop-prices.html`新設（app_settings hdm_keydrop_price 編集）＋TOP導線。SQLは「価格以外も必要」でオーナーがまとめてRUN予定。
+
+### デプロイ
+- hdm-car-delivery＝GitHub Pages・SWなし・バージョン定数なし＝git pushのみ。①〜④＋⑤読み口を本番反映。DDL未RUN（フォールバックで安全）。
+
+---
+
 ## 🗺 場所フロー刷新＝「地図から呼ぶ・届ける・回収する」(2026-06-09・差別化の核)
 オーナー指示「お届け・回収ともにマップで順に選択→お届け地で提供可能な条件一致車両だけ出す／地図主役＝差別化」を受け、場所画面をステップ式に再設計。
 - **state.locStep**（'delivery'→'collection'→'vehicle'）でサブステップ管理。`collectionLat/Lng/collectionAddr`追加。`collectionMarker`(🏁黒ピン)。
