@@ -1253,7 +1253,7 @@
             const cls = VEHICLE_CLASSES[type];
             if (!cls) continue;
             const price = priceOf(type);
-            const totalPrice = price * days;
+            const totalPrice = classTotal(type);
             const dbVehicles = dbGrouped[type] || [];
             const availCount = dbVehicles.length;
             const seats = dbVehicles[0]?.seats || (type === 'A' || type === 'B' ? 8 : 5);
@@ -2111,7 +2111,7 @@
         if (!v) return renderTopScreen();
         const cls = VEHICLE_CLASSES[v.type] || {};
         const days = getDayCount();
-        const basePrice = priceOf(v.type) * days;
+        const basePrice = classTotal(v.type);
         const totalPrice = basePrice;
         state._calcPrice = { basePrice, totalPrice, days };
 
@@ -2404,7 +2404,7 @@
         const v = state.selectedVehicle;
         const cls = VEHICLE_CLASSES[v?.type] || {};
         const days = getDayCount();
-        const basePrice = priceOf(v?.type) * days;
+        const basePrice = classTotal(v?.type);
         const cdwFee = state.cdw === 'cdw' ? 1100 * days : (state.cdw === 'pack' ? 1650 * days : 0);
         const cdwName = state.cdw === 'pack' ? '安心パック' : (state.cdw === 'cdw' ? '免責補償' : '');
         const seatFee = state.options.childSeat * 1000 + state.options.juniorSeat * 500;
@@ -2712,7 +2712,7 @@
         const v = state.selectedVehicle;
         const cls = state.selectedClassType || (v && v.type);
         const days = getDayCount();
-        const base = priceOf(cls) * days;
+        const base = classTotal(cls);
         const cdwMap = { none: 'なし', cdw: '免責', noc: 'NOC', full: 'フル' };
         const payload = {
             vehicleClass: cls,
