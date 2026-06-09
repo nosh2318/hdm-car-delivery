@@ -46,7 +46,7 @@
             body { background: #f5f6f8; }
             /* Header: show nav links */
             .app-header { padding: 12px 32px; }
-            .app-header img { height: 58px !important; }
+            .app-header img { height: 36px !important; }
             .hamburger-btn { display: none; }
             .pc-nav { display: flex; align-items: center; gap: 4px; }
             /* Hero */
@@ -103,10 +103,10 @@
 
         /* ── App Header ── */
         .app-header { background: #ffffff; color: #1a1a1a; padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; font-weight: 600; z-index: 30; border-bottom: 2px solid #FABE00; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
-        .app-logo { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; font-size: 14px; font-weight: 700; cursor: pointer; }
-        .app-logo .kd-tagline { font-size: 11px; font-weight: 800; color: #1a1a1a; letter-spacing: .04em; line-height: 1.1; display: inline-flex; align-items: center; gap: 4px; }
-        .app-logo .kd-tagline::before { content: ""; display: inline-block; width: 16px; height: 3px; background: #FABE00; border-radius: 2px; }
-        @media (min-width: 768px) { .app-logo .kd-tagline { font-size: 12.5px; } }
+        .app-logo { display: flex; flex-direction: row; align-items: center; gap: 9px; cursor: pointer; }
+        .app-logo img { height: 30px !important; width: auto; }
+        .app-logo .kd-tagline { font-style: italic; text-transform: uppercase; font-weight: 900; font-size: 9.5px; color: #1a1a1a; letter-spacing: .05em; line-height: 1.12; border-left: 2px solid #FABE00; padding-left: 8px; white-space: normal; max-width: 116px; }
+        @media (min-width: 768px) { .app-logo img { height: 36px !important; } .app-logo .kd-tagline { font-size: 12.5px; max-width: none; white-space: nowrap; padding-left: 12px; } }
         .app-logo-mark { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #FABE00; }
         .app-service-name { font-size: 13px; font-weight: 700; color: white; line-height: 1.1; }
         .app-service-subtitle { font-size: 9px; color: #FABE00; font-weight: 500; letter-spacing: .5px; }
