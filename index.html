@@ -693,6 +693,16 @@
         #kdGuide .kd-guide-bubble { flex:1; min-width:0; background:#FABE00; color:#1a1a1a; font-size:12px; font-weight:800; padding:7px 11px; border-radius:12px 12px 12px 3px; line-height:1.45; box-shadow:0 2px 8px rgba(0,0,0,.10); }
         #kdGuide .kd-guide-bubble.dark { background:#1a1a1a; color:#fff; }
         #kdGuide .kd-guide-bubble b { color:inherit; }
+        /* 車両画面：モバイル=縦積み（地図上・リスト下シート）／PC=縦割り（地図左・リスト右） */
+        .veh-split { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        .veh-map { flex: none; height: 32vh; min-height: 190px; position: relative; }
+        .veh-sheet { flex: 1; overflow-y: auto; padding: 14px 12px 24px; background: #fff; border-top-left-radius: 18px; border-top-right-radius: 18px; margin-top: -16px; position: relative; z-index: 2; box-shadow: 0 -4px 14px rgba(0,0,0,.07); }
+        @media (min-width: 768px) {
+            .veh-split { flex-direction: row; }
+            .veh-map { flex: 1 1 auto; height: auto; min-height: 0; }
+            .veh-sheet { flex: none; width: 480px; max-width: 44%; margin-top: 0; border-radius: 0; border-left: 1px solid #eee; box-shadow: none; padding: 16px 18px 28px; }
+        }
+        @media (min-width: 1280px) { .veh-sheet { width: 560px; } }
         /* 未入力の日付/時間を点滅（黄グロー）で入力を促す。入力完了で停止 */
         @keyframes kdNeedBlink { 0%,100% { box-shadow: 0 0 0 0 rgba(250,190,0,0); border-color: #FABE00; } 50% { box-shadow: 0 0 0 5px rgba(250,190,0,.40); border-color: #f0a800; } }
         .dt-group select.kd-need { border: 2px solid #FABE00 !important; background: #fffdf4 !important; animation: kdNeedBlink 1.05s ease-in-out infinite; }
@@ -1920,13 +1930,14 @@
                         </div>
                     </div>
                 </div>
-                <!-- 地図：この場所に車を呼ぶ（差別化＝地図から呼ぶ体験を車両選択でも維持） -->
-                <div id="mapWrap" style="position:relative;flex:none;height:32vh;min-height:190px;">
-                    <div id="map" style="height:100%;"></div>
-                    <div style="position:absolute;left:10px;top:10px;z-index:500;background:#1a1a1a;color:#fff;font-size:11px;font-weight:800;padding:6px 11px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.25);">📍 この場所へお届け</div>
+                <!-- PC=マップ左/車両リスト右の縦割り、モバイル=縦積み（地図上・リスト下） -->
+                <div class="veh-split">
+                    <div id="mapWrap" class="veh-map" style="position:relative;">
+                        <div id="map" style="height:100%;"></div>
+                        <div style="position:absolute;left:10px;top:10px;z-index:500;background:#1a1a1a;color:#fff;font-size:11px;font-weight:800;padding:6px 11px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.25);">📍 この場所へお届け</div>
+                    </div>
+                    <div class="panel-content veh-sheet" id="panelContent">${renderVehiclePanel()}</div>
                 </div>
-                <!-- 車両シート（Uber風ボトムシート） -->
-                <div class="panel-content" id="panelContent" style="flex:1;overflow-y:auto;padding:14px 12px 24px;background:#fff;border-top-left-radius:18px;border-top-right-radius:18px;margin-top:-16px;position:relative;z-index:2;box-shadow:0 -4px 14px rgba(0,0,0,.07);">${renderVehiclePanel()}</div>
             </div>
         `;
     }
