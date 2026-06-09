@@ -721,8 +721,8 @@
         @media (max-width: 899px) {
             .kv-mobile { display: block; position: relative; flex: none; height: 112px; overflow: hidden; background: #1a1a1a; }
             .kv-mobile .kv-slide { background-size: cover; }
-            /* 上下グラデーションで馴染ませる（テキストなし） */
-            .kv-mobile::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: linear-gradient(180deg, rgba(26,26,26,.45) 0%, rgba(26,26,26,0) 32%, rgba(26,26,26,0) 64%, rgba(26,26,26,.55) 100%); }
+            /* 上下を白(周囲＝白ヘッダー/ガイド)へフェードさせて馴染ませる */
+            .kv-mobile::after { content: ''; position: absolute; left:0; right:0; top:0; bottom:0; z-index: 5; pointer-events: none; background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0) 26%, rgba(255,255,255,0) 72%, #ffffff 100%); }
         }
         .kv-slide:nth-child(1){ animation-delay: 0s; } .kv-slide:nth-child(2){ animation-delay: 7s; }
         .kv-slide:nth-child(3){ animation-delay: 14s; } .kv-slide:nth-child(4){ animation-delay: 21s; }
