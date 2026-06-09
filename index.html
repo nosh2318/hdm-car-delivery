@@ -43,7 +43,7 @@
             body { background: #f5f6f8; }
             /* Header: show nav links */
             .app-header { padding: 12px 32px; }
-            .app-header img { height: 34px !important; }
+            .app-header img { height: 48px !important; }
             .hamburger-btn { display: none; }
             .pc-nav { display: flex; align-items: center; gap: 4px; }
             /* Hero */
@@ -566,11 +566,11 @@
 
         /* ── Common Buttons ── */
         .btn-primary {
-            width: 100%; padding: 14px; background: #1a1a1a; color: #ffffff; border: none;
+            width: 100%; padding: 14px; background: #FABE00; color: #1a1a1a; border: none;
             border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer;
             font-family: inherit; transition: all .2s;
         }
-        .btn-primary:hover { background: #333333; }
+        .btn-primary:hover { background: #e5ab00; }
         .btn-primary:active { transform: scale(0.98); }
         .btn-primary:disabled { background: #ddd; color: #999; cursor: not-allowed; transform: none; }
         .btn-secondary {
@@ -647,7 +647,7 @@
                 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
                 <div class="slide-menu" id="slideMenu">
                     <div class="menu-header">
-                        <img src="images/logo_header.png" alt="KEYDROP" style="height:24px;">
+                        <img src="images/logo_header.png" alt="KEYDROP" style="height:36px;">
                         <button class="menu-close" onclick="closeMenu()">✕</button>
                     </div>
                     <div class="menu-lang">
@@ -800,6 +800,8 @@
         deliveryLat: null,
         deliveryLng: null,
         deliveryAddr: '',
+        collectionAddr: '',   // ⑦ 回収場所（空=お届けと同じ）
+        sameCollection: true, // ⑦ 既定: 回収=お届けと同じ
         // 配達可能範囲（DB public_delivery_config_v＝adminオーナー設定で上書き。既定=札幌駅中心20km/札幌市内）
         deliveryConfig: { centerLat: 43.0687, centerLng: 141.3508, centerName: '札幌駅', radiusKm: 20, cityFilter: '札幌市' },
         outOfArea: false,
@@ -931,6 +933,23 @@
         const days = getDayCount();
         let html = '';
 
+        // ④ 選んだお届け場所を上部に固定表示 ＋ ⑦ 回収場所
+        html += `<div style="position:sticky;top:0;z-index:6;background:#fff;border-bottom:1px solid #eee;padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:18px;color:#FABE00;">📍</span>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:10px;color:#888;font-weight:600;">お届け場所</div>
+                    <div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr || '未指定'}</div>
+                </div>
+                <button onclick="clearDeliveryPin()" title="場所を変更" style="background:#f1f1f1;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:13px;color:#666;flex:none;">✕</button>
+            </div>
+            <label style="display:flex;align-items:center;gap:7px;margin-top:9px;font-size:12px;color:#444;cursor:pointer;">
+                <input type="checkbox" ${state.sameCollection!==false?'checked':''} onchange="toggleSameCollection(this.checked)" style="width:16px;height:16px;accent-color:#FABE00;">
+                <span>回収場所もお届け場所と同じ</span>
+            </label>
+            ${state.sameCollection===false ? `<input type="text" placeholder="回収場所（住所・ホテル名）" value="${(state.collectionAddr||'').replace(/"/g,'&quot;')}" oninput="state.collectionAddr=this.value" style="width:100%;margin-top:7px;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;box-sizing:border-box;">` : ''}
+        </div>`;
+
         // Class filter
         html += `<div class="class-chips">`;
         html += `<button class="class-chip ${!state.selectedClass ? 'selected' : ''}" onclick="state.selectedClass=null; renderPanel();">すべて</button>`;
@@ -958,7 +977,7 @@
         html += `<div class="vehicle-count-banner">📍 指定場所予約可能車両</div>`;
 
         html += `<div class="vehicle-list">`;
-        let idx = 0;
+        let idx = 0, shown = 0;
         for (const type of filteredClasses) {
             const cls = VEHICLE_CLASSES[type];
             if (!cls) continue;
@@ -986,7 +1005,14 @@
                         <button class="vc-select-btn" onclick="event.stopPropagation(); selectClass('${type}')">選択</button>
                     </div>
                 </div>`;
-            idx++;
+            idx++; shown++;
+        }
+        if (shown === 0) {
+            html += `<div style="padding:30px 18px;text-align:center;color:#888;">
+                <div style="font-size:34px;margin-bottom:10px;">🚗💨</div>
+                <div style="font-size:14px;font-weight:700;color:#444;margin-bottom:6px;">ご指定の日程・場所では予約可能な車両がありません</div>
+                <div style="font-size:12px;line-height:1.7;">日程・時間を変更するか、別のお届け場所でお試しください。<br>お急ぎの場合は <a href="https://rent-handyman.jp/contact/" target="_blank" style="color:#1a1a1a;font-weight:700;text-decoration:underline;">お問い合わせ</a> ください。</div>
+            </div>`;
         }
         html += `</div>`;
 
@@ -1013,6 +1039,12 @@
             <button class="location-badge-clear" onclick="clearDeliveryPin()">✕</button>
         `;
         mapContainer.appendChild(badge);
+    }
+
+    function toggleSameCollection(checked) {
+        state.sameCollection = checked;
+        if (checked) state.collectionAddr = '';
+        renderPanel();
     }
 
     function clearDeliveryPin() {
@@ -1258,7 +1290,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1312,25 +1344,25 @@
                     <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:14px;">利用期間を選択</div>
                     <div class="datetime-grid" style="gap:12px;">
                         <div class="dt-group">
-                            <label>開始日</label>
+                            <label>お届け日</label>
                             <select onchange="state.datetime.startDate=this.value;">
                                 ${generateDateOptions(state.datetime.startDate)}
                             </select>
                         </div>
                         <div class="dt-group">
-                            <label>開始時刻</label>
+                            <label>お届け時間</label>
                             <select onchange="state.datetime.startTime=this.value;">
                                 ${generateTimeOptions(state.datetime.startTime)}
                             </select>
                         </div>
                         <div class="dt-group">
-                            <label>終了日</label>
+                            <label>回収日</label>
                             <select onchange="state.datetime.endDate=this.value;">
                                 ${generateDateOptions(state.datetime.endDate)}
                             </select>
                         </div>
                         <div class="dt-group">
-                            <label>終了時刻</label>
+                            <label>回収時間</label>
                             <select onchange="state.datetime.endTime=this.value;">
                                 ${generateTimeOptions(state.datetime.endTime)}
                             </select>
@@ -1363,7 +1395,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1403,25 +1435,25 @@
                         <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:12px;">📅 利用期間</div>
                         <div class="datetime-grid" style="gap:10px;">
                             <div class="dt-group">
-                                <label>開始日</label>
+                                <label>お届け日</label>
                                 <select onchange="state.datetime.startDate=this.value; fetchAvailableVehicles();">
                                     ${generateDateOptions(state.datetime.startDate)}
                                 </select>
                             </div>
                             <div class="dt-group">
-                                <label>開始時刻</label>
+                                <label>お届け時間</label>
                                 <select onchange="state.datetime.startTime=this.value; fetchAvailableVehicles();">
                                     ${generateTimeOptions(state.datetime.startTime)}
                                 </select>
                             </div>
                             <div class="dt-group">
-                                <label>終了日</label>
+                                <label>回収日</label>
                                 <select onchange="state.datetime.endDate=this.value; fetchAvailableVehicles();">
                                     ${generateDateOptions(state.datetime.endDate)}
                                 </select>
                             </div>
                             <div class="dt-group">
-                                <label>終了時刻</label>
+                                <label>回収時間</label>
                                 <select onchange="state.datetime.endTime=this.value; fetchAvailableVehicles();">
                                     ${generateTimeOptions(state.datetime.endTime)}
                                 </select>
@@ -1472,7 +1504,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1584,7 +1616,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1608,6 +1640,10 @@
                         <span class="confirm-row-value">${state.deliveryAddr}</span>
                     </div>
                     <div class="confirm-row">
+                        <span class="confirm-row-label">📍 回収場所</span>
+                        <span class="confirm-row-value">${(state.sameCollection === false && state.collectionAddr) ? state.collectionAddr : (state.deliveryAddr + '（お届け場所と同じ）')}</span>
+                    </div>
+                    <div class="confirm-row">
                         <span class="confirm-row-label">📅 貸出</span>
                         <span class="confirm-row-value">${startLabel} ${state.datetime.startTime}</span>
                     </div>
@@ -1621,8 +1657,8 @@
                     <div class="confirm-total-label">お支払い見積もり（${days}日間）</div>
                     <div class="confirm-total-price">¥${totalPrice.toLocaleString()}<span style="font-size:12px;font-weight:400;color:#666;">（税込）</span></div>
                 </div>
-                <button class="btn-primary" onclick="state.screen='options'; render();">予約手続きへ進む</button>
-                <button class="btn-secondary" onclick="state.screen='top'; render();">車両選択に戻る</button>
+                <button class="btn-primary" onclick="state.screen='form'; render();">予約手続きに進む</button>
+                <button class="btn-secondary" onclick="state.screen='options'; render();">＋ オプションを追加</button>
             </div>
         `;
     }
@@ -1633,7 +1669,7 @@
     function renderFormScreen() {
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1686,7 +1722,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1798,7 +1834,7 @@
     function renderTermsScreen() {
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1870,14 +1906,13 @@
         const totalPrice = basePrice + cdwFee + seatFee;
 
         const methods = [
-            { id: 'square', icon: '💳', name: 'クレジットカード', desc: 'Visa / Mastercard / JCB / AMEX' },
-            { id: 'applepay', icon: '', name: 'Apple Pay', desc: 'Touch ID / Face IDで簡単決済' },
-            { id: 'paypay', icon: '📱', name: 'PayPay', desc: 'PayPayアプリで決済' },
+            { id: 'square', icon: '💳', name: 'クレジットカード', desc: 'Visa / Mastercard / JCB / AMEX（Square安全決済）' },
         ];
+        if (!state.paymentMethod) state.paymentMethod = 'square';
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1936,7 +1971,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="complete-screen screen-fade">
@@ -2128,7 +2163,7 @@
             tel: (state.formData && state.formData.phone) || '',
             people: 1,
             del_place: state.deliveryAddr || '',
-            col_place: state.deliveryAddr || '',
+            col_place: (state.sameCollection === false && state.collectionAddr) ? state.collectionAddr : (state.deliveryAddr || ''),
             base_price: base,
             option_price: 0,
             discount: 0,
@@ -2252,7 +2287,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:40px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>

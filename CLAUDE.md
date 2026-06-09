@@ -2,10 +2,24 @@
 
 ---
 
+## 🎨 KEYDROP デザイン改修2（2026-06-09・オーナーFB8点）
+①ヘッダーロゴ拡大(28→40px/PC48)②メインCTA(お届け場所を選ぶ)を黒→**黄に戻す**(btn-primary黄/ダーク文字)③該当車両なし時の注釈(空車0で「予約可能な車両がありません」案内+問い合わせ導線)④選んだお届け場所を車両パネル上部に**sticky固定表示**(✕で変更)⑤確認ページのボタンを「＋オプションを追加(→options)」「予約手続きに進む(→form)」に変更⑥支払い=**Squareクレカのみ**(Apple Pay/PayPay削除・自動選択)⑦日程ラベルを開始/終了→**お届け日/お届け時間/回収日/回収時間**＋**回収場所**追加(state.sameCollection既定true＝お届けと同じ/チェックOFFで住所入力→col_place分岐・確認ページに回収場所行)⑧admin(SPK)連携はcreate-bookingで達成済。state追加: collectionAddr/sameCollection。fn追加: toggleSameCollection。※マップ画面の固定カード/回収UIは実機(地図タイル+クリック)で要目視。
+
 ## 🎨 KEYDROP リスキン完了（2026-06-09・commit c4a7c7c・本番反映）
 - **ブランド名確定＝KEYDROP**（旧称KAMUIから変更）「Sapporo Car Delivery Service」。配色＝**ブラック#1a1a1a × イエロー#FABE00**（白背景）。
 - 実施：ネイビー#002063→#1a1a1a 全置換／ロゴ`images/logo_header.png`をKEYDROPロゴに・ヒーロー4枚(`top_banner_01/02/03/05.jpg`)を新メインビジュアルに差替(sips最適化 各172-320KB・元は`images/_pre_keydrop`削除済→git履歴に)／ヘッダー&メニュー白化・ハンバーガー/✕黒・PCナビ黒文字／btn-primary=黒CTA(白字)・vc-select-btn=黄(選択)／title/alt/footer=KEYDROP。**レイアウト/予約ロジックは不変**。素材原本は`images/keydrop/`。
-- ⚠️ **未決：create-booking の `ota` 値が "KAMUI" のまま**（ブランド名変更前に実装）。ブランド=KEYDROPなら **ota="KEYDROP"（or短縮"KD"）に変えるべき**（SPK解析タブD/GAS切り分けのブランド識別子＝分析に直結）。要オーナー判断→決まれば index.ts + デプロイ + （既存KAMUI予約があればDB更新）。
+- ✅ **解決：ota="KEYDROP" / 採番 `KD-YYMM-xxxx` に変更しCLIで再デプロイ済**（2026-06-09・curl実証 KD-2612-0001/ota=KEYDROP→削除）。SPK解析タブD/GAS切り分けのブランド識別子＝KEYDROP。
+
+### 🛠 Edge Function デプロイ手順（CLI・Webエディタ卒業）
+- supabase CLI 導入済：`~/.local/share/supabase/supabase`（v2.105.0・本体+`supabase-go`同梱の正式tarball。`supabase_darwin_arm64.tar.gz`=シムのみでNG、`supabase_<ver>_darwin_arm64.tar.gz`が正）。**Docker不要（`--use-api`）**。
+- アクセストークン：`~/.config/keydrop/sb_token`（git管理外・600・**リポジトリに絶対書かない**）。Personal Access Token＝**30日で失効**→失効したら https://supabase.com/dashboard/account/tokens で再発行しこのファイルを上書き。
+- **デプロイ1発**：
+  ```
+  cd ~/hdm-car-delivery && SUPABASE_ACCESS_TOKEN="$(cat ~/.config/keydrop/sb_token)" \
+    ~/.local/share/supabase/supabase functions deploy create-booking \
+    --project-ref ckrxttbnawkclshczsia --use-api
+  ```
+  関数名を変えれば他Fn（Phase Bの`payment-webhook`等）も同様。verify_jwtはデフォルトON維持（anonキーで通る・UIは apikey+Authorization両送）。
 
 ## 🚗 KEYDROP（旧KAMUI）新ブランド 本番化（2026-06-09 omni・進行中）
 
