@@ -23,10 +23,10 @@
         .app-container { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; position: relative; overflow-x: hidden; background: white; }
         .demo-nav { display: none; }
 
-        /* Mobile */
-        .location-layout { display: flex; flex-direction: column; flex: 1; }
-        .location-map-col { min-height: 350px; position: relative; }
-        .location-panel-col { flex: 1; }
+        /* Mobile: 地図を主役＝縦に伸ばす。パネルは内容ぶん（余白を地図へ） */
+        .location-layout { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+        .location-map-col { flex: 1 1 auto; min-height: 300px; position: relative; }
+        .location-panel-col { flex: 0 0 auto; max-height: 46%; overflow-y: auto; }
         @media (max-width: 767px) {
             .app-header { position: sticky; top: 0; z-index: 30; }
             .location-panel-col { width: 100% !important; border-left: none !important; }
@@ -660,9 +660,11 @@
         .kd-bubble { background:#1a1a1a; color:#fff; font-size:12px; font-weight:700; padding:8px 11px; border-radius:12px 12px 2px 12px;
             box-shadow:0 4px 12px rgba(0,0,0,.2); max-width:170px; line-height:1.5; margin-bottom:26px; pointer-events:none; animation: kdPeek .5s .15s both; }
         .kd-bubble b{ color:#FABE00; }
-        /* 地図ピン=マスコット */
+        /* 地図ピン=マスコット（落下後ずっとフワフワ動く） */
+        @keyframes kdPinFloat { 0%,100%{ transform: translateY(0) rotate(0); } 30%{ transform: translateY(-5px) rotate(-3deg);} 60%{ transform: translateY(-2px) rotate(2deg);} }
         .kd-pin-mascot { animation: kdPinDrop .6s cubic-bezier(.2,.8,.3,1.1) both; }
-        .kd-pin-mascot img { height: 56px; width:auto; filter: drop-shadow(0 4px 5px rgba(0,0,0,.3)); }
+        .kd-pin-mascot img { height: 56px; width:auto; filter: drop-shadow(0 4px 5px rgba(0,0,0,.3));
+            transform-origin: 50% 92%; animation: kdPinFloat 2.6s ease-in-out .6s infinite; }
     </style>
 </head>
 <body>
@@ -842,7 +844,9 @@
         deliveryLat: null,
         deliveryLng: null,
         deliveryAddr: '',
+        deliveryAddrFull: '',  // フル住所（番地・建物まで・DB保存用）
         collectionAddr: '',   // 回収場所（住所/名称）
+        collectionAddrFull: '',
         collectionLat: null,
         collectionLng: null,
         locStep: 'delivery', // 場所フロー: delivery→collection→vehicle
@@ -853,10 +857,10 @@
         mapReady: false,
         // DateTime
         datetime: {
-            startDate: new Date().toISOString().slice(0, 10),
-            startTime: '10:00',
+            startDate: '',
+            startTime: '',
             endDate: '',
-            endTime: '10:00',
+            endTime: '',
         },
         dateExpanded: false, // Date picker expand/collapse
         // Vehicles
@@ -978,41 +982,42 @@
     }
 
     async function reverseGeocodeCollection(lat, lng) {
-        state.collectionAddr = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        state.collectionAddr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
         renderLocPanel();
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`);
-            const data = await res.json();
-            if (data.display_name) {
-                const a = data.address; const parts = [];
-                if (a.city || a.town || a.village) parts.push(a.city || a.town || a.village);
-                if (a.suburb || a.neighbourhood) parts.push(a.suburb || a.neighbourhood);
-                if (a.road) parts.push(a.road);
-                state.collectionAddr = parts.length ? parts.join(' ') : data.display_name.split(',').slice(0,3).join(', ');
-            }
+            const r = await fetchFullAddress(lat, lng);
+            if (r.addr) { state.collectionAddr = r.addr; state.collectionAddrFull = r.full; }
         } catch (e) {}
         renderLocPanel();
     }
 
+    // ピン位置のフル住所を取得（番地・建物まで）。staff/adminがこのまま動く＝最大詳細で。
+    async function fetchFullAddress(lat, lng) {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&accept-language=ja&zoom=18&addressdetails=1&namedetails=1`);
+        const data = await res.json();
+        const a = data.address || {};
+        const pref = a.province || a.state || '';
+        const city = a.city || a.town || a.village || a.municipality || '';
+        const ward = a.city_district || a.ward || a.suburb || a.county || '';
+        const town = a.neighbourhood || a.quarter || a.hamlet || '';
+        const block = a.block || a.city_block || '';
+        const road = a.road || '';
+        const hn = a.house_number || '';
+        const bld = a.building || a.amenity || a.tourism || a.shop || a.office || a.hotel || data.name || '';
+        let s = `${pref}${city}${ward}${town}${block}${road}${hn}`;
+        if (!s) s = (data.display_name || '').replace(/、?\s*日本$/, '').replace(/〒?\s*\d{3}-?\d{4}\s*/g, '').trim();
+        if (bld && !s.includes(bld)) s = `${s} ${bld}`;
+        return { addr: s.trim(), full: (data.display_name || s).trim() };
+    }
+
     async function reverseGeocode(lat, lng) {
-        state.deliveryAddr = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        state.deliveryAddr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`; // 一旦は座標（フル住所取得まで）
         renderLocationBadge();
         if (typeof renderLocPanel === 'function') renderLocPanel();
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`);
-            const data = await res.json();
-            if (data.display_name) {
-                // Extract meaningful address parts
-                const addr = data.address;
-                const parts = [];
-                if (addr.city || addr.town || addr.village) parts.push(addr.city || addr.town || addr.village);
-                if (addr.suburb || addr.neighbourhood) parts.push(addr.suburb || addr.neighbourhood);
-                if (addr.road) parts.push(addr.road);
-                state.deliveryAddr = parts.length > 0 ? parts.join(' ') : data.display_name.split(',').slice(0, 3).join(', ');
-            }
-        } catch (e) {
-            // Keep coordinate-based address
-        }
+            const r = await fetchFullAddress(lat, lng);
+            if (r.addr) { state.deliveryAddr = r.addr; state.deliveryAddrFull = r.full; }
+        } catch (e) { /* 取得失敗時は座標を保持（ピンlat/lngはDBへ） */ }
         renderLocationBadge();
         updateLocationButton();
         if (typeof renderLocPanel === 'function') renderLocPanel();
@@ -1030,6 +1035,16 @@
     function renderVehiclePanel() {
         const days = getDayCount();
         let html = '';
+
+        // 日程未選択ガード（デフォルト空欄のため）
+        const dt = state.datetime;
+        if (!dt.startDate || !dt.startTime || !dt.endDate || !dt.endTime) {
+            return `<div style="padding:34px 18px;text-align:center;color:#888;">
+                <div style="font-size:32px;margin-bottom:10px;">📅</div>
+                <div style="font-size:14px;font-weight:700;color:#444;margin-bottom:6px;">利用期間を選択してください</div>
+                <div style="font-size:12px;line-height:1.7;">上の「利用期間」からお届け日時・回収日時を選ぶと、予約できる車両が表示されます。</div>
+            </div>`;
+        }
 
         // Class filter
         html += `<div class="class-chips">`;
@@ -1249,8 +1264,8 @@
     // ── Helpers ──
     // ════════════════════════════════════════════
     function generateDateOptions(selected) {
-        // 検索可能日：本日〜4ヶ月後まで
-        let html = '';
+        // 検索可能日：本日〜4ヶ月後まで。デフォルト空欄
+        let html = `<option value="" ${!selected ? 'selected' : ''}>日付を選択</option>`;
         const today = new Date(); today.setHours(0,0,0,0);
         const limit = new Date(today); limit.setMonth(limit.getMonth() + 4);
         for (let d = new Date(today); d <= limit; d.setDate(d.getDate() + 1)) {
@@ -1262,8 +1277,8 @@
     }
 
     function generateTimeOptions(selected) {
-        // 営業時間 9:00〜19:00（30分刻み・19:00まで）
-        let html = '';
+        // 営業時間 9:00〜19:00（30分刻み・19:00まで）。デフォルト空欄
+        let html = `<option value="" ${!selected ? 'selected' : ''}>時間を選択</option>`;
         for (let h = 9; h <= 19; h++) {
             for (const m of ['00', '30']) {
                 if (h === 19 && m === '30') continue; // 19:00 が最終
@@ -1284,9 +1299,12 @@
     }
 
     function getDayCount() {
-        const s = new Date(state.datetime.startDate + 'T' + state.datetime.startTime);
-        const e = new Date(state.datetime.endDate + 'T' + state.datetime.endTime);
+        const d = state.datetime;
+        if (!d.startDate || !d.startTime || !d.endDate || !d.endTime) return 1; // 未選択は1（NaN防止）
+        const s = new Date(d.startDate + 'T' + d.startTime);
+        const e = new Date(d.endDate + 'T' + d.endTime);
         const hours = (e - s) / (1000 * 60 * 60);
+        if (isNaN(hours)) return 1;
         return Math.max(1, Math.ceil(hours / 24));
     }
 
@@ -1453,7 +1471,16 @@
     function renderDateBarInner() {
         const sL = formatDateLabel(state.datetime.startDate), eL = formatDateLabel(state.datetime.endDate);
         const days = getDayCount();
+        const isSet = !!(state.datetime.startDate && state.datetime.startTime && state.datetime.endDate && state.datetime.endTime);
         if (!state.dateExpanded) {
+            if (!isSet) {
+                // 未選択＝デフォルト空欄（事前入力で混乱させない）
+                return `<div onclick="expandDateBar()" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fffbf0;border-bottom:1.5px solid #FABE00;">
+                    <span style="font-size:16px;">📅</span>
+                    <div style="flex:1;min-width:0;font-size:13px;font-weight:800;color:#1a1a1a;">利用期間を選択してください</div>
+                    <span style="font-size:12px;color:#a07c00;font-weight:800;flex:none;">選ぶ ▾</span>
+                </div>`;
+            }
             return `<div onclick="expandDateBar()" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 16px;background:#fff;border-bottom:1px solid #eee;">
                 <span style="font-size:16px;">📅</span>
                 <div style="flex:1;min-width:0;font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sL} ${state.datetime.startTime} 〜 ${eL} ${state.datetime.endTime}<span style="color:#888;font-weight:600;"> ・${days}日間</span></div>
@@ -1463,10 +1490,10 @@
         return `<div style="padding:14px 16px;background:#fff;border-bottom:1px solid #eee;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
                 <div style="font-size:14px;font-weight:800;color:#1a1a1a;">利用期間</div>
-                <button onclick="collapseDateBar()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">完了 ▴</button>
+                <button onclick="collapseDateBar()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">閉じる ▴</button>
             </div>
             <div class="datetime-grid" style="gap:10px;">
-                <div class="dt-group"><label>お届け日</label><select onchange="state.datetime.startDate=this.value; fetchAvailableVehicles();">${generateDateOptions(state.datetime.startDate)}</select></div>
+                <div class="dt-group"><label>お届け日</label><select onchange="onDeliveryDate(this.value)">${generateDateOptions(state.datetime.startDate)}</select></div>
                 <div class="dt-group"><label>お届け時間</label><select onchange="state.datetime.startTime=this.value; fetchAvailableVehicles();">${generateTimeOptions(state.datetime.startTime)}</select></div>
                 <div class="dt-group"><label>回収日</label><select onchange="state.datetime.endDate=this.value; fetchAvailableVehicles();">${generateDateOptions(state.datetime.endDate)}</select></div>
                 <div class="dt-group"><label>回収時間</label><select onchange="state.datetime.endTime=this.value; fetchAvailableVehicles();">${generateTimeOptions(state.datetime.endTime)}</select></div>
@@ -1476,6 +1503,14 @@
     function refreshDateBar() { const el = document.getElementById('dateBar'); if (el) el.innerHTML = renderDateBarInner(); }
     function expandDateBar() { state.dateExpanded = true; refreshDateBar(); }
     function collapseDateBar() { state.dateExpanded = false; refreshDateBar(); fetchAvailableVehicles(); }
+    // お届け日を選んだら回収日を自動で同日に（未設定 or 過去日なら）
+    function onDeliveryDate(v) {
+        state.datetime.startDate = v;
+        if (!state.datetime.endDate || state.datetime.endDate < v) state.datetime.endDate = v;
+        if (!state.datetime.endTime && state.datetime.startTime) state.datetime.endTime = state.datetime.startTime;
+        refreshDateBar();
+        fetchAvailableVehicles();
+    }
 
     // ════════════════════════════════════════════
     // ── PC: All-in-one Top Screen ──
@@ -1657,6 +1692,13 @@
         if (collectionMarker && map) { map.removeLayer(collectionMarker); collectionMarker=null; }
         goToVehicleStep();
     }
+    // マスコットがステップを案内する吹き出し（お届け=黄/回収=黒）
+    function mascotSay(msg, dark) {
+        return `<div style="display:flex;align-items:flex-end;gap:8px;padding:12px 16px 2px;">
+            <img src="images/mascot_head.png" alt="" style="height:48px;width:auto;flex:none;animation:kdFloat 3s ease-in-out infinite;-webkit-user-drag:none;">
+            <div style="position:relative;background:${dark?'#1a1a1a':'#FABE00'};color:${dark?'#fff':'#1a1a1a'};font-size:12.5px;font-weight:800;padding:9px 13px;border-radius:14px 14px 14px 3px;line-height:1.55;box-shadow:0 3px 10px rgba(0,0,0,.14);margin-bottom:4px;">${msg}</div>
+        </div>`;
+    }
     function renderLocationStepPanel() {
         // ステップ表示：お届け＝黄(#FABE00) / 回収＝黒(#1a1a1a) で一目で区別
         const stepBar = (n)=>`<div style="display:flex;align-items:center;gap:6px;padding:12px 16px 8px;font-size:12px;font-weight:800;flex-wrap:wrap;">
@@ -1668,24 +1710,24 @@
 
         if (state.locStep === 'collection') {
             // 回収＝黒テーマ
-            return stepBar(2) + `
+            return stepBar(2) + mascotSay('次は<b>『回収場所』</b>だよ！🏁 お届けと同じならボタンでOK', true) + `
                 <div style="padding:4px 16px 18px;">
                     <div style="display:inline-block;background:#1a1a1a;color:#FABE00;font-size:11px;font-weight:800;padding:3px 10px;border-radius:6px;margin-bottom:8px;">STEP 2 ・ 回収</div>
                     <div style="font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:6px;">🏁 どこで車を返しますか？</div>
                     <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px;">地図をタップ／検索で<b>回収場所</b>を指定。お届けと同じならボタンでOK。</div>
                     <button onclick="useSameCollection()" style="width:100%;padding:12px;background:#1a1a1a;border:none;border-radius:10px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:12px;">🔁 お届け場所と同じにする</button>
-                    ${state.collectionAddr ? `<div style="display:flex;align-items:center;gap:8px;background:#1a1a1a;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">回収場所</div><div style="font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.collectionAddr}</div></div></div>` : ''}
+                    ${state.collectionAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#1a1a1a;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">回収場所</div><div style="font-size:13px;font-weight:700;color:#fff;white-space:normal;word-break:break-all;line-height:1.5;">${state.collectionAddr}</div></div></div>` : ''}
                     <button class="btn-primary" ${state.collectionAddr ? '' : 'disabled'} onclick="goToVehicleStep()">車両を見る ›</button>
                     <button class="btn-secondary" onclick="backToDelivery()">‹ お届け場所に戻る</button>
                 </div>`;
         }
         // delivery (default)＝お届け＝黄テーマ
-        return stepBar(1) + `
+        return stepBar(1) + mascotSay('まずは<b>『お届け場所』</b>を選ぼう！🔑 地図をタップしてね', false) + `
             <div style="padding:4px 16px 18px;">
                 <div style="display:inline-block;background:#FABE00;color:#1a1a1a;font-size:11px;font-weight:800;padding:3px 10px;border-radius:6px;margin-bottom:8px;">STEP 1 ・ お届け</div>
                 <div style="font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:6px;">📍 車をどこへ届けますか？</div>
                 <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px;">地図をタップ、または上の検索窓で<b>お届け場所</b>を指定してください。</div>
-                ${state.deliveryAddr ? `<div style="display:flex;align-items:center;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">お届け場所</div><div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:18px 0;"><div style="font-size:30px;">📍</div><div style="font-size:13px;">地図で場所をタップ</div></div>'}
+                ${state.deliveryAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">お届け場所</div><div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:normal;word-break:break-all;line-height:1.5;">${state.deliveryAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:18px 0;"><div style="font-size:30px;">📍</div><div style="font-size:13px;">地図で場所をタップ</div></div>'}
                 <button class="btn-primary" ${state.deliveryAddr ? '' : 'disabled'} onclick="nextToCollection()">次へ：回収場所 ›</button>
             </div>`;
     }
@@ -2328,6 +2370,12 @@
             people: 1,
             del_place: state.deliveryAddr || '',
             col_place: state.collectionAddr || state.deliveryAddr || '',
+            // ピン留め位置情報＋フル住所（staff/adminがこのまま動く・DB列は後追いで保存）
+            del_place_full: state.deliveryAddrFull || state.deliveryAddr || '',
+            col_place_full: state.collectionAddrFull || state.collectionAddr || state.deliveryAddrFull || state.deliveryAddr || '',
+            del_lat: state.deliveryLat, del_lng: state.deliveryLng,
+            col_lat: (state.collectionLat != null ? state.collectionLat : state.deliveryLat),
+            col_lng: (state.collectionLng != null ? state.collectionLng : state.deliveryLng),
             base_price: base,
             option_price: 0,
             discount: 0,
