@@ -721,8 +721,8 @@
         @media (max-width: 899px) {
             .kv-mobile { display: block; position: relative; flex: none; height: 112px; overflow: hidden; background: #1a1a1a; }
             .kv-mobile .kv-slide { background-size: cover; }
-            .kv-mobile-cap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; padding: 18px 14px 8px; background: linear-gradient(transparent, rgba(0,0,0,.65)); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .02em; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
-            .kv-mobile-cap .y { color: #FABE00; }
+            /* 上下グラデーションで馴染ませる（テキストなし） */
+            .kv-mobile::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: linear-gradient(180deg, rgba(26,26,26,.45) 0%, rgba(26,26,26,0) 32%, rgba(26,26,26,0) 64%, rgba(26,26,26,.55) 100%); }
         }
         .kv-slide:nth-child(1){ animation-delay: 0s; } .kv-slide:nth-child(2){ animation-delay: 7s; }
         .kv-slide:nth-child(3){ animation-delay: 14s; } .kv-slide:nth-child(4){ animation-delay: 21s; }
@@ -756,7 +756,7 @@
                 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
                 <div class="slide-menu" id="slideMenu">
                     <div class="menu-header">
-                        <img src="images/logo_header.png?v=2" alt="KEYDROP" style="height:44px;">
+                        <img src="images/logo_header.png?v=3" alt="KEYDROP" style="height:44px;">
                         <button class="menu-close" onclick="closeMenu()">✕</button>
                     </div>
                     <div class="menu-lang">
@@ -1575,7 +1575,7 @@
         // PC/モバイル統一＝地図＋ステップ式（お届け→回収→車両）。.location-layoutがPCで2カラム化
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1596,7 +1596,6 @@
                   <div class="kv-slide" style="background-image:url(images/top_banner_02.jpg)"></div>
                   <div class="kv-slide" style="background-image:url(images/top_banner_03.jpg)"></div>
                   <div class="kv-slide" style="background-image:url(images/top_banner_05.jpg)"></div>
-                  <div class="kv-mobile-cap">札幌どこでも、<span class="y">車をお届け</span> 🚗</div>
               </div>
               <div class="top-2col">
                 <!-- 左：キービジュアル（PCのみ・スライドショー。画像はバナーをカバー表示） -->
@@ -1685,7 +1684,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1794,7 +1793,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1950,7 +1949,7 @@
         const colShow = state.collectionAddr || state.deliveryAddr || '—';
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -2050,7 +2049,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -2103,7 +2102,7 @@
     function renderFormScreen() {
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -2156,7 +2155,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -2268,7 +2267,7 @@
     function renderTermsScreen() {
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -2346,7 +2345,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -2405,7 +2404,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="complete-screen screen-fade">
@@ -2730,7 +2729,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Sapporo Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
