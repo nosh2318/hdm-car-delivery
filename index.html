@@ -870,17 +870,50 @@
 
     // ⚠️ フォールバック価格（SPK価格マスター未作成時の暫定値・正はSPK(DB)→public_class_price_v）
     const CLASS_PRICES = { A: 18000, A2: 16000, B: 10000, B2: 9000, C: 7000, S: 12000, F: 5500, H: 6000 };
-    // SPKマスター（public_class_price_v）から読む上書き。ビュー未作成時はCLASS_PRICESにフォールバック。
-    let PRICE_OVERRIDE = {};
-    function priceOf(type) {
+    // SPKマスター（public_class_price_v）。フラット{A:..}もシーズナル{prices,presets,default}も対応。
+    let PRICE_OVERRIDE = {};        // フラット価格（後方互換）
+    let PRICE_DATA = null;          // シーズナル構造 {prices:{A:[閑散,通常,繁忙],..}, presets:[{name,start:"MM-DD",end:"MM-DD",tier}], default}
+    function priceOf(type) {        // 1日あたり基本（通常tier）。フラット時はそのまま
+        if (PRICE_DATA && PRICE_DATA.prices && PRICE_DATA.prices[type]) {
+            const di = (PRICE_DATA.default != null ? PRICE_DATA.default : 1);
+            return PRICE_DATA.prices[type][di] || 0;
+        }
         return (PRICE_OVERRIDE[type] != null ? PRICE_OVERRIDE[type] : CLASS_PRICES[type]) || 5000;
+    }
+    // 統一シーズナルカレンダー：日付(MM-DD)→tier index（presetに該当なければdefault=通常）
+    function tierIndexOf(dateStr) {
+        const def = (PRICE_DATA && PRICE_DATA.default != null) ? PRICE_DATA.default : 1;
+        if (!PRICE_DATA || !PRICE_DATA.presets) return def;
+        const md = (dateStr || '').slice(5); // MM-DD
+        for (const p of PRICE_DATA.presets) {
+            if (!p.start || !p.end) continue;
+            const inR = (p.start <= p.end) ? (md >= p.start && md <= p.end) : (md >= p.start || md <= p.end);
+            if (inR) return p.tier;
+        }
+        return def;
+    }
+    // クラスの合計料金（選択日数ぶん・日ごとtierで合算）。シーズナル無ければフラット×日数。
+    function classTotal(type) {
+        const days = getDayCount();
+        if (PRICE_DATA && PRICE_DATA.prices && PRICE_DATA.prices[type]) {
+            const d = state.datetime;
+            if (!d.startDate) return priceOf(type) * days;
+            let total = 0; const base = new Date(d.startDate + 'T00:00:00');
+            for (let i = 0; i < days && i < 120; i++) {
+                const dd = new Date(base); dd.setDate(dd.getDate() + i);
+                total += (PRICE_DATA.prices[type][tierIndexOf(dd.toISOString().slice(0, 10))] || 0);
+            }
+            return total;
+        }
+        return priceOf(type) * days;
     }
     async function loadClassPrices() {
         try {
             const rows = await supabaseGet('public_class_price_v', '');
             let v = rows && rows[0] ? rows[0].value : null;
             if (typeof v === 'string') v = JSON.parse(v);
-            if (v && typeof v === 'object') { PRICE_OVERRIDE = v; if (state.screen === 'step_vehicle') renderPanel(); }
+            if (v && v.prices) { PRICE_DATA = v; if (state.screen === 'step_vehicle') renderPanel(); }
+            else if (v && typeof v === 'object') { PRICE_OVERRIDE = v; if (state.screen === 'step_vehicle') renderPanel(); }
         } catch (e) { /* ビュー未作成＝SPK側で価格マスター作成後に自動連動 */ }
     }
 
