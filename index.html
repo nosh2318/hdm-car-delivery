@@ -23,10 +23,10 @@
         .app-container { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; position: relative; overflow-x: hidden; background: white; }
         .demo-nav { display: none; }
 
-        /* Mobile: 地図を主役＝縦に伸ばす。パネルは内容ぶん（余白を地図へ） */
+        /* Mobile: 地図を主役＝縦に大きく。地図に最小高さ(dvh)を保証し、パネルは縮めてスクロール */
         .location-layout { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-        .location-map-col { flex: 1 1 auto; min-height: 300px; position: relative; }
-        .location-panel-col { flex: 0 0 auto; max-height: 46%; overflow-y: auto; }
+        .location-map-col { flex: 1 1 auto; min-height: 40dvh; position: relative; }
+        .location-panel-col { flex: 0 1 auto; max-height: 36%; overflow-y: auto; }
         @media (max-width: 767px) {
             .app-header { position: sticky; top: 0; z-index: 30; }
             .location-panel-col { width: 100% !important; border-left: none !important; }
@@ -661,9 +661,9 @@
             box-shadow:0 4px 12px rgba(0,0,0,.2); max-width:170px; line-height:1.5; margin-bottom:26px; pointer-events:none; animation: kdPeek .5s .15s both; }
         .kd-bubble b{ color:#FABE00; }
         /* ヘッダー直下の案内帯（マスコットが喋る・1体に集約） */
-        #kdGuide { display:flex; align-items:center; gap:9px; padding:8px 14px; background:#fff; border-bottom:1px solid #eee; }
-        #kdGuide .kd-guide-img { height:44px; width:auto; flex:none; transform-origin:50% 90%; animation:kdFloat 3s ease-in-out infinite; -webkit-user-drag:none; }
-        #kdGuide .kd-guide-bubble { flex:1; min-width:0; background:#FABE00; color:#1a1a1a; font-size:12.5px; font-weight:800; padding:8px 12px; border-radius:13px 13px 13px 3px; line-height:1.5; box-shadow:0 2px 8px rgba(0,0,0,.10); }
+        #kdGuide { display:flex; align-items:center; gap:8px; padding:5px 14px; background:#fff; border-bottom:1px solid #eee; }
+        #kdGuide .kd-guide-img { height:38px; width:auto; flex:none; transform-origin:50% 90%; animation:kdFloat 3s ease-in-out infinite; -webkit-user-drag:none; }
+        #kdGuide .kd-guide-bubble { flex:1; min-width:0; background:#FABE00; color:#1a1a1a; font-size:12px; font-weight:800; padding:7px 11px; border-radius:12px 12px 12px 3px; line-height:1.45; box-shadow:0 2px 8px rgba(0,0,0,.10); }
         #kdGuide .kd-guide-bubble.dark { background:#1a1a1a; color:#fff; }
         #kdGuide .kd-guide-bubble b { color:inherit; }
         /* 地図ピン=マスコット（落下後ずっとフワフワ動く） */
@@ -868,7 +868,7 @@
             endDate: '',
             endTime: '',
         },
-        dateExpanded: false, // Date picker expand/collapse
+        dateExpanded: true, // 既定で日付選択を開いた状態に（選びやすく・値は空欄）
         // Vehicles
         vehicles: [],        // From Supabase
         fleet: [],           // From Supabase (booked vehicles)
@@ -884,10 +884,7 @@
         lang: 'ja',            // 'ja' | 'en' | 'zh'
     };
 
-    // Set default endDate to tomorrow
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    state.datetime.endDate = tomorrow.toISOString().slice(0, 10);
+    // 利用期間はデフォルト空欄（お届け日を選ぶと回収日が同日に自動セット）
 
     // ════════════════════════════════════════════
     // ── Leaflet Map ──
@@ -1506,10 +1503,10 @@
                 <span style="font-size:12px;color:#a07c00;font-weight:800;flex:none;">変更 ▾</span>
             </div>`;
         }
-        return `<div style="padding:14px 16px;background:#fff;border-bottom:1px solid #eee;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                <div style="font-size:14px;font-weight:800;color:#1a1a1a;">利用期間</div>
-                <button onclick="collapseDateBar()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">閉じる ▴</button>
+        return `<div style="padding:9px 16px 11px;background:#fff;border-bottom:1px solid #eee;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+                <div style="font-size:13px;font-weight:800;color:#1a1a1a;">📅 利用期間を選択</div>
+                <button onclick="collapseDateBar()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:5px 13px;font-size:12px;font-weight:700;cursor:pointer;">閉じる ▴</button>
             </div>
             <div class="datetime-grid" style="gap:10px;">
                 <div class="dt-group"><label>お届け日</label><select onchange="onDeliveryDate(this.value)">${generateDateOptions(state.datetime.startDate)}</select></div>
