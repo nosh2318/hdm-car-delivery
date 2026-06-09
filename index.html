@@ -1018,6 +1018,19 @@
         if (!map) return;
         if (state.deliveryLat && !deliveryMarker) setDeliveryPin(state.deliveryLat, state.deliveryLng, state.deliveryAddr || '');
         if (state.collectionLat && !collectionMarker) setCollectionPin(state.collectionLat, state.collectionLng, state.collectionAddr || '');
+        updateMarkerDragging();
+    }
+    // 現在のステップのピンだけ操作可能に（回収ステップでお届けピンを動かして お届け場所が変わる事故を防ぐ）
+    function updateMarkerDragging() {
+        try {
+            const vehicle = (state.screen === 'step_vehicle');
+            const onCol = (state.locStep === 'collection' && !vehicle);
+            const onDel = (state.locStep === 'delivery' && !vehicle);
+            if (deliveryMarker && deliveryMarker.dragging) { onDel ? deliveryMarker.dragging.enable() : deliveryMarker.dragging.disable(); }
+            if (deliveryMarker && deliveryMarker._icon) { deliveryMarker._icon.style.opacity = onDel ? '1' : (vehicle ? '1' : '0.55'); }
+            if (collectionMarker && collectionMarker.dragging) { onCol ? collectionMarker.dragging.enable() : collectionMarker.dragging.disable(); }
+            if (collectionMarker && collectionMarker._icon) { collectionMarker._icon.style.opacity = onCol ? '1' : '0.55'; }
+        } catch (e) {}
     }
 
     async function reverseGeocodeCollection(lat, lng) {
@@ -1767,6 +1780,8 @@
         const ds = document.getElementById('dateStrip');
         if (ds) ds.innerHTML = renderStepDateStrip();
         if (typeof updateGuide === 'function') updateGuide();
+        if (typeof renderLocationBadge === 'function') renderLocationBadge();
+        if (typeof updateMarkerDragging === 'function') updateMarkerDragging();
     }
     // ステップpill（お届け=黄 / 回収=黒 / 車両）
     function stepPills(n) {
