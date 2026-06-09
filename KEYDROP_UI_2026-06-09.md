@@ -65,6 +65,13 @@
 3. **SPK専用価格表UI**：`keydrop-prices.html` 新設（`hdm_keydrop_price` 編集）＋TOP導線。
 4. **決済（Phase B）**：Square Payment Link＋`payment-webhook`で`confirmed`化＋`spk_accounting`起票。
 5. 独立ドメイン／CORS絞り（最後）。
+6. **🔴 Google Places検索の有効化（リリース前必須）**：検索ボックスはGoogle Places Autocomplete実装済（`loadGooglePlaces`・キー`AIzaSyCoX1EyEx-N5A0r4vRzC1KmVp3T29HILbI`／project handyman-491221）。**未設定の間はNominatimにフォールバック**（壊れない）。有効化に必要なオーナー作業：
+   - (a) **Places API を有効化**（＋Maps JavaScript API）
+   - (b) **APIキーのHTTPリファラ制限に `https://nosh2318.github.io/*`（独立ドメイン取得後はそのドメインも）を追加**
+   - (c) **請求先(Billing)を有効化**
+   - (d) **予算アラート＋API割当(quota)上限を設定**（暴発防止。小規模は無料枠内でほぼ¥0／Autocompleteのみ課金・地図はOSMで課金なし）
+   - 確認：設定後にサイトで「ベッセルイン札幌…」等を入力し候補が出ればOK。出なければ(a)(b)(c)を再確認。
+   - ※採用方針＝「検索だけGoogle／地図はOSM(無料)」。地図ごとGoogle化は未採用（コスト増のため見送り）。
 
 ## 6. 運用メモ
 - **キャッシュ**：no-cacheメタ入り。画像更新は `?v=N` を上げる。確認時は URL末尾に `?v=日付` を付けると確実。
