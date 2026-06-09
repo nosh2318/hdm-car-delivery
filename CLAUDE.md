@@ -26,14 +26,14 @@
 - ラベル「指定場所対応車両」→「指定場所予約可能車両」。
 - 住所検索: 選択した名称を「指定場所」として保持（逆ジオで上書きしない）＋画面更新の対称化（検索選択でも `fetchAvailableVehicles()` を呼ぶ・地図クリック経路と揃えた）＋検索クリア✕ボタン(PC/モバイル)＋お届け場所住所を濃く(#1f2937/13px/bold)。
 
-### 実装済み（★未デプロイ/未push＝次の作業）
-- **create-booking Edge Function**（`supabase/functions/create-booking/index.ts`・229行）: 申込→検証→在庫再確認→採番→`reservations`(ota=`KAMUI`/status=`pending_payment`)INSERT＋`fleet`(autoAssign完全移植)。people≤8クランプ。採番 `WEB-YYMM-xxxx`(※将来KAMUI-に変更検討)。service_roleはFn内のみ・CORS *(後でKAMUIドメインに絞る)。
-- **顧客UI申込接続**（index.html `createBookingOnServer`＋`processPayment`をasync化）: 確定→`POST /functions/v1/create-booking`→reservationId取得→complete画面。構文OK・**未push**（Edge未デプロイでpushすると申込が404になるためデプロイ後にpush）。
+### ✅ Phase A 完了（2026-06-09・本番稼働）
+- **create-booking Edge Function デプロイ済**（本番 `https://ckrxttbnawkclshczsia.supabase.co/functions/v1/create-booking`）。Webエディタ(Via Editor)で `Deno.serve` 形式のまま貼付→Deploy。Verify JWT=ON（anonキーで通る・UIは apikey+Authorization:Bearer<anon> 両方送る）。SUPABASE_URL/SERVICE_ROLE_KEYは自動注入＝Secrets設定不要。
+- **疎通検証済**: curl正常系→`WEB-2612-0001` 採番→CX-3(CX3)自動配車→reservations(ota=KAMUI/status=pending_payment)+fleet をDB実在確認→テストデータ削除済。異常系(日付不正)も400で弾く。INSERT全19カラム実在・assignVehicleの読取クエリ(fleet埋込join等)全て200を事前検証。
+- **顧客UI申込接続 push済**（commit 5ea8520）: `processPayment`→`createBookingOnServer`(POST /functions/v1/create-booking)。GitHub Pages反映済。
+- 採番は `WEB-YYMM-xxxx`（ota=KAMUIだが番号prefixはWEBのまま・将来KAMUI-検討）。service_roleはFn内のみ・CORS *(Phase DでKAMUIドメインに絞る)。
 
-### 残作業（次セッションはここから）
-1. **Edge Functionデプロイ**: ダッシュボード→Edge Functions→**Via Editor→Open Editor**→関数名`create-booking`→デフォルト削除→index.ts貼付→Deploy（**supabase CLIは未インストール**＝Webエディタが最短）。index.tsは`pbcopy`で渡す。
-2. デプロイ後: curlで `create-booking` 動作確認→**顧客UIをpush**→実機で「申込→札幌SPK配車表にバーが出る＋在庫が1減る」を確認（テスト予約は後で削除）。
-3. **Square決済(Phase B)**: create-bookingでSquare Payment Link発行→`payment-webhook`で`confirmed`化＋`spk_accounting`起票（既存じゃらん事前決済が完成テンプレ・Location `L8N7J9RKPN3WH`）。
+### 残作業（次セッションはここから・Phase B〜）
+1. **Square決済(Phase B)**: create-bookingでSquare Payment Link発行→`payment-webhook`で`confirmed`化＋`spk_accounting`起票（既存じゃらん事前決済が完成テンプレ・Location `L8N7J9RKPN3WH`）。
 4. **「全データSPKから」完成**: クラス名/価格/公開可否のハードコード(`VEHICLE_CLASSES`/`CLASS_PRICES`)をDB化(`hdm_class_config`+公開ビュー)＋SPK adminにクラス公開設定UI。価格はSPK価格表(seasonal)連動。
 5. **SPK adminに「配達エリア設定」編集UI**（`hdm_delivery_config`を地図ピン/半径で編集＝オーナーの"adminで設定"完成形）。
 6. 独立ドメイン（最後・新規取得＝自前DNS）。Square戻りURL/CORS/CSP追従。
