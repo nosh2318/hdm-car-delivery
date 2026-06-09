@@ -70,12 +70,22 @@
             .btn-secondary { padding: 14px; font-size: 15px; }
             .vehicle-card { padding: 14px; }
             .vehicle-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(250,190,0,.2); }
-            /* Location screen: Uber-style 2 columns */
-            .location-layout { display: flex; flex: 1; min-height: calc(100vh - 60px); }
-            .location-map-col { flex: 1; position: relative; }
-            .location-panel-col { width: 400px; background: white; border-left: 1px solid #eee; overflow-y: auto; display: flex; flex-direction: column; }
+            /* Location screen: Uber-style 2 columns（PCはパネル広め＝地図の比率を下げる・余白多め） */
+            .location-layout { display: flex; flex: 1; min-height: calc(100vh - 64px); }
+            .location-map-col { flex: 1; position: relative; min-width: 0; }
+            .location-panel-col { width: 500px; background: white; border-left: 1px solid #eee; overflow-y: auto; display: flex; flex-direction: column; }
             .location-panel-col .panel-content { padding: 16px; }
             .location-panel-col .bottom-panel { border-top: none; flex: 1; }
+            /* PC：マスコット案内帯を大きく＋余白 */
+            #kdGuide { padding: 14px 28px; gap: 14px; }
+            #kdGuide .kd-guide-img { height: 60px; }
+            #kdGuide .kd-guide-bubble { font-size: 15px; padding: 13px 18px; border-radius: 16px 16px 16px 4px; }
+            /* PC：ステップパネルに余白＋日付/車両を大きく */
+            #locPanel { padding: 10px 16px 24px; }
+            #locPanel .dt-group label { font-size: 12px; }
+            #locPanel .dt-group select { font-size: 15px; padding: 13px 14px; }
+            #locPanel .btn-primary { font-size: 16px; padding: 16px; }
+            .location-panel-col .vehicle-card { padding: 16px; }
             /* Vehicle grid */
             .bottom-panel .panel-content { max-width: 100%; }
             /* Footer */
@@ -89,7 +99,7 @@
 
         @media (min-width: 1024px) {
             .app-header { padding: 12px 48px; }
-            .location-panel-col { width: 440px; }
+            .location-panel-col { width: 560px; }
             .pc-content-card { max-width: 700px; padding: 32px 40px; }
         }
 
@@ -105,13 +115,14 @@
         .app-header { background: #ffffff; color: #1a1a1a; padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; font-weight: 600; z-index: 30; border-bottom: 2px solid #FABE00; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
         /* モバイル：ロゴ大きく＋タグラインはロゴ下（横は大ロゴ＋☰と両立しない）。PCは横 */
         .app-logo { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; cursor: pointer; }
-        .app-logo img { height: 42px !important; width: auto; flex: none; }
-        .app-logo .kd-tagline { display: inline-block; font-style: italic; text-transform: uppercase; font-weight: 900; font-size: 9px; color: #1a1a1a; letter-spacing: .08em; line-height: 1; white-space: nowrap; }
+        .app-logo img { height: 36px !important; width: auto; max-width: 64vw; flex: none; }
+        .app-logo .kd-tagline { display: inline-block; font-style: italic; text-transform: uppercase; font-weight: 900; font-size: 8.5px; color: #1a1a1a; letter-spacing: .07em; line-height: 1; white-space: nowrap; }
         .app-header .header-actions { flex: none; }
         @media (min-width: 768px) {
-            .app-logo { flex-direction: row; align-items: center; gap: 11px; }
-            .app-logo img { height: 50px !important; }
-            .app-logo .kd-tagline { font-size: 13px; letter-spacing: .04em; border-left: 2px solid #FABE00; padding-left: 12px; }
+            .app-header { padding: 10px 32px; }
+            .app-logo { flex-direction: row; align-items: center; gap: 13px; }
+            .app-logo img { height: 46px !important; max-width: none; }
+            .app-logo .kd-tagline { font-size: 13px; letter-spacing: .04em; border-left: 2px solid #FABE00; padding-left: 13px; }
         }
         .app-logo-mark { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #FABE00; }
         .app-service-name { font-size: 13px; font-weight: 700; color: white; line-height: 1.1; }
@@ -678,6 +689,16 @@
         #kdGuide .kd-guide-bubble { flex:1; min-width:0; background:#FABE00; color:#1a1a1a; font-size:12px; font-weight:800; padding:7px 11px; border-radius:12px 12px 12px 3px; line-height:1.45; box-shadow:0 2px 8px rgba(0,0,0,.10); }
         #kdGuide .kd-guide-bubble.dark { background:#1a1a1a; color:#fff; }
         #kdGuide .kd-guide-bubble b { color:inherit; }
+        /* 縦フロー：日付/時間(上)→マップ(場所)→確定。PCは中央寄せで余白＆地図比率を抑制 */
+        .kd-flow { display: flex; flex-direction: column; }
+        .kd-mapwrap { position: relative; height: 44vh; min-height: 260px; }
+        #dateStrip { background: #fff; }
+        #locPanel { display: flex; flex-direction: column; }
+        @media (min-width: 768px) {
+            .kd-flow { max-width: 880px; margin: 0 auto; width: 100%; padding: 10px 20px 32px; }
+            .kd-mapwrap { height: 46vh; min-height: 360px; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,.10); margin: 4px 0; }
+            #dateStrip { background: transparent; }
+        }
         /* 地図ピン=マスコット（落下後ずっとフワフワ動く） */
         @keyframes kdPinFloat { 0%,100%{ transform: translateY(0) rotate(0); } 30%{ transform: translateY(-5px) rotate(-3deg);} 60%{ transform: translateY(-2px) rotate(2deg);} }
         .kd-pin-mascot { animation: kdPinDrop .6s cubic-bezier(.2,.8,.3,1.1) both; }
@@ -1459,8 +1480,7 @@
     function isPC() { return window.innerWidth >= 768; }
 
     function renderTopScreen() {
-        if (isPC()) return renderTopScreenPC();
-        // モバイルTOP＝地図主役。日程は1行に折り畳み、地図でお届け→回収を指定（差別化＝地図から呼ぶ）
+        // PC/モバイル統一＝地図＋ステップ式（お届け→回収→車両）。.location-layoutがPCで2カラム化
         return `
             <div class="app-header">
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=2" alt="KEYDROP Sapporo Car Delivery Service"></div>
@@ -1477,29 +1497,24 @@
                     </button>
                 </div>
             </div>
-            <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
-                <!-- 地図（主役）＋場所ステップパネル（日付/時間は各ステップ内で設定） -->
-                <div class="location-layout" style="flex:1;min-height:0;">
-                    <div class="location-map-col">
-                        <div id="mapWrap" style="position:relative; height:100%; min-height:280px;">
-                            <div id="map" style="height:100%;"></div>
-                            <div class="map-search-bar">
-                                <div class="map-search-icon">🔍</div>
-                                <input type="text" id="addressSearch" class="map-search-input"
-                                    placeholder="ホテル名・住所で検索"
-                                    oninput="onAddressInput(this.value)"
-                                    onfocus="this.select()">
-                                <button class="map-search-clear" onclick="clearAddressSearch()" title="クリア">✕</button>
-                            </div>
-                            <div id="addressSuggestions" style="display:none;position:absolute;top:44px;left:8px;right:44px;z-index:1001;background:white;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:150px;overflow-y:auto;"></div>
-                            <button class="geolocate-btn" onclick="geolocateUser()" title="札幌駅に戻る">📍</button>
+            <div style="flex:1;display:flex;flex-direction:column;overflow-y:auto;">
+                <!-- 縦フロー：①ステップpill＋日付＋時間（上）②マップ＝場所③確定＋次へ -->
+                <div class="kd-flow">
+                    <div id="dateStrip">${renderStepDateStrip()}</div>
+                    <div id="mapWrap" class="kd-mapwrap">
+                        <div id="map" style="height:100%;"></div>
+                        <div class="map-search-bar">
+                            <div class="map-search-icon">🔍</div>
+                            <input type="text" id="addressSearch" class="map-search-input"
+                                placeholder="ホテル名・住所で検索"
+                                oninput="onAddressInput(this.value)"
+                                onfocus="this.select()">
+                            <button class="map-search-clear" onclick="clearAddressSearch()" title="クリア">✕</button>
                         </div>
+                        <div id="addressSuggestions" style="display:none;position:absolute;top:44px;left:8px;right:44px;z-index:1001;background:white;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:150px;overflow-y:auto;"></div>
+                        <button class="geolocate-btn" onclick="geolocateUser()" title="札幌駅に戻る">📍</button>
                     </div>
-                    <div class="location-panel-col">
-                        <div id="locPanel" style="display:flex;flex-direction:column;overflow-y:auto;">
-                            ${renderLocationStepPanel()}
-                        </div>
-                    </div>
+                    <div id="locPanel">${renderLocationStepPanel()}</div>
                 </div>
             </div>
         `;
@@ -1721,7 +1736,26 @@
     function renderLocPanel() {
         const el = document.getElementById('locPanel');
         if (el) el.innerHTML = renderLocationStepPanel();
+        const ds = document.getElementById('dateStrip');
+        if (ds) ds.innerHTML = renderStepDateStrip();
         if (typeof updateGuide === 'function') updateGuide();
+    }
+    // ステップpill（お届け=黄 / 回収=黒 / 車両）
+    function stepPills(n) {
+        return `<div style="display:flex;align-items:center;gap:6px;padding:12px 16px 8px;font-size:12px;font-weight:800;flex-wrap:wrap;">
+            <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;${n===1?'background:#FABE00;color:#1a1a1a;':'background:#f1f1f1;color:#bbb;'}">📍 お届け</span>
+            <span style="color:#ddd">›</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;${n===2?'background:#1a1a1a;color:#FABE00;':'background:#f1f1f1;color:#bbb;'}">🏁 回収</span>
+            <span style="color:#ddd">›</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#f1f1f1;color:#bbb;">🚗 車両</span></div>`;
+    }
+    // 上部：ステップpill＋日付＋時間（場所＝下のマップ）
+    function renderStepDateStrip() {
+        const dt = state.datetime;
+        if (state.locStep === 'collection') {
+            return stepPills(2) + `<div style="padding:2px 16px 10px;">${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', '回収日', '回収時間')}<div style="font-size:11px;color:#888;font-weight:700;">🏁 下の地図で<b>回収場所</b>を選ぶ</div></div>`;
+        }
+        return stepPills(1) + `<div style="padding:2px 16px 10px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', 'お届け日', 'お届け時間')}<div style="font-size:11px;color:#888;font-weight:700;">📍 下の地図で<b>お届け場所</b>を選ぶ</div></div>`;
     }
     function nextToCollection() { state.locStep='collection'; renderLocPanel(); }
     function backToDelivery() { state.locStep='delivery'; renderLocPanel(); }
@@ -1750,34 +1784,23 @@
         </div>`;
     }
     function renderLocationStepPanel() {
-        // ステップ表示：お届け＝黄(#FABE00) / 回収＝黒(#1a1a1a) で一目で区別
-        const stepBar = (n)=>`<div style="display:flex;align-items:center;gap:6px;padding:12px 16px 8px;font-size:12px;font-weight:800;flex-wrap:wrap;">
-            <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;${n===1?'background:#FABE00;color:#1a1a1a;':'background:#f1f1f1;color:#bbb;'}">📍 お届け</span>
-            <span style="color:#ddd">›</span>
-            <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;${n===2?'background:#1a1a1a;color:#FABE00;':'background:#f1f1f1;color:#bbb;'}">🏁 回収</span>
-            <span style="color:#ddd">›</span>
-            <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#f1f1f1;color:#bbb;">🚗 車両</span></div>`;
-
+        // 場所（マップで選んだ結果）＋確定/次へ。日付/時間とpillは上部dateStripに表示
         const dt = state.datetime;
         if (state.locStep === 'collection') {
-            // STEP2 回収＝黒テーマ（回収日＋回収時間＋回収場所）
             const ready = !!(dt.endDate && dt.endTime && state.collectionAddr);
-            return stepBar(2) + `
-                <div style="padding:8px 16px 18px;">
-                    ${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', '回収日', '回収時間')}
+            return `
+                <div style="padding:12px 16px 20px;">
                     <button onclick="useSameCollection()" style="width:100%;padding:11px;background:#1a1a1a;border:none;border-radius:10px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:10px;">🔁 回収場所はお届けと同じ</button>
-                    ${state.collectionAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#1a1a1a;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">回収場所</div><div style="font-size:13px;font-weight:700;color:#fff;white-space:normal;word-break:break-all;line-height:1.5;">${state.collectionAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:14px 0;"><div style="font-size:26px;">🏁</div><div style="font-size:12px;">地図で回収場所をタップ／上のボタン</div></div>'}
+                    ${state.collectionAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#1a1a1a;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">回収場所</div><div style="font-size:13px;font-weight:700;color:#fff;white-space:normal;word-break:break-all;line-height:1.5;">${state.collectionAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:12px 0;"><div style="font-size:24px;">🏁</div><div style="font-size:12px;">地図で回収場所をタップ／上のボタン</div></div>'}
                     <button class="btn-primary" ${ready ? '' : 'disabled'} onclick="goToVehicleStep()">車両を見る ›</button>
                     <button class="btn-secondary" onclick="backToDelivery()">‹ お届けに戻る</button>
                 </div>`;
         }
-        // STEP1 お届け＝黄テーマ（お届け日＋お届け時間＋お届け場所）
         const ready = !!(dt.startDate && dt.startTime && state.deliveryAddr);
-        return stepBar(1) + `
-            <div style="padding:8px 16px 18px;">
-                ${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', 'お届け日', 'お届け時間')}
-                ${state.deliveryAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">お届け場所</div><div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:normal;word-break:break-all;line-height:1.5;">${state.deliveryAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:14px 0;"><div style="font-size:26px;">📍</div><div style="font-size:12px;">地図でお届け場所をタップ</div></div>'}
-                <button class="btn-primary" ${ready ? '' : 'disabled'} onclick="nextToCollection()">次へ：回収 ›</button>
+        return `
+            <div style="padding:12px 16px 20px;">
+                ${state.deliveryAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">お届け場所</div><div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:normal;word-break:break-all;line-height:1.5;">${state.deliveryAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:12px 0;"><div style="font-size:24px;">📍</div><div style="font-size:12px;">地図でお届け場所をタップ</div></div>'}
+                <button class="btn-primary" ${ready ? '' : 'disabled'} onclick="nextToCollection()">次へ: 回収場所と時間を決める ›</button>
             </div>`;
     }
 
