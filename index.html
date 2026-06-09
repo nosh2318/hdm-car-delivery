@@ -1812,10 +1812,16 @@
     function onStepColDate(v) { state.datetime.endDate=v; renderLocPanel(); fetchAvailableVehicles(); }
     function onStepColTime(v) { state.datetime.endTime=v; renderLocPanel(); fetchAvailableVehicles(); }
     // 車両画面で日付/時間を変更（空車なし時の再検索用）
+    // 車両画面の日付変更：選ぶ間は確定せず（点滅継続）、最後に「この日程で検索する」で適用
     function onVehDateChange(field, v) {
         state.datetime[field] = v;
-        if (field === 'startDate' && (!state.datetime.endDate || state.datetime.endDate < v)) state.datetime.endDate = v;
-        render(); fetchAvailableVehicles();
+        if (field === 'startDate' && state.datetime.endDate && state.datetime.endDate < v) state.datetime.endDate = '';
+        // ここでは再検索しない（selectの値は保持される）。検索ボタンで確定。
+    }
+    function applyVehDateSearch() {
+        state.vehDateOpen = false; // 点滅消える
+        render();
+        fetchAvailableVehicles();
     }
     function stepDateTimeRow(dateVal, timeVal, dateFn, timeFn, dateLbl, timeLbl) {
         // 未入力枠は点滅（kd-need）で入力を促す
@@ -1894,12 +1900,14 @@
                         <button onclick="state.vehDateOpen=!state.vehDateOpen; render();" style="background:${state.vehDateOpen?'#1a1a1a':'#FABE00'};color:${state.vehDateOpen?'#fff':'#1a1a1a'};border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;flex:none;">📅 日付変更 ${state.vehDateOpen?'▴':'▾'}</button>
                     </div>
                     ${state.vehDateOpen ? `<div style="background:#fafafa;border:1px solid #eee;border-radius:10px;padding:10px;margin-bottom:8px;">
+                        <div style="font-size:11px;color:#a07c00;font-weight:800;margin-bottom:8px;">📅 日付・時間を変更して「この日程で検索する」を押してください</div>
                         <div class="datetime-grid" style="gap:8px;">
-                            <div class="dt-group"><label>お届け日</label><select class="${state.datetime.startDate?'':'kd-need'}" onchange="onVehDateChange('startDate',this.value)">${generateDateOptions(state.datetime.startDate)}</select></div>
-                            <div class="dt-group"><label>お届け時間</label><select class="${state.datetime.startTime?'':'kd-need'}" onchange="onVehDateChange('startTime',this.value)">${generateTimeOptions(state.datetime.startTime)}</select></div>
-                            <div class="dt-group"><label>回収日</label><select class="${state.datetime.endDate?'':'kd-need'}" onchange="onVehDateChange('endDate',this.value)">${generateDateOptions(state.datetime.endDate)}</select></div>
-                            <div class="dt-group"><label>回収時間</label><select class="${state.datetime.endTime?'':'kd-need'}" onchange="onVehDateChange('endTime',this.value)">${generateTimeOptions(state.datetime.endTime)}</select></div>
+                            <div class="dt-group"><label>お届け日</label><select class="kd-need" onchange="onVehDateChange('startDate',this.value)">${generateDateOptions(state.datetime.startDate)}</select></div>
+                            <div class="dt-group"><label>お届け時間</label><select class="kd-need" onchange="onVehDateChange('startTime',this.value)">${generateTimeOptions(state.datetime.startTime)}</select></div>
+                            <div class="dt-group"><label>回収日</label><select class="kd-need" onchange="onVehDateChange('endDate',this.value)">${generateDateOptions(state.datetime.endDate)}</select></div>
+                            <div class="dt-group"><label>回収時間</label><select class="kd-need" onchange="onVehDateChange('endTime',this.value)">${generateTimeOptions(state.datetime.endTime)}</select></div>
                         </div>
+                        <button onclick="applyVehDateSearch()" style="width:100%;margin-top:10px;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;">🔍 この日程で検索する</button>
                     </div>` : ''}
                     <div style="display:flex;gap:8px;">
                         <div style="flex:1;min-width:0;background:#fffbf0;border:1.5px solid #FABE00;border-radius:9px;padding:7px 10px;">
