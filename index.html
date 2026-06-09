@@ -1535,7 +1535,10 @@
         var strip = document.createElement('div');
         strip.id = 'kdGuide';
         strip.innerHTML = '<img src="images/mascot_head.png" class="kd-guide-img" alt="KEYDROP"><div class="kd-guide-bubble ' + (g.dark ? 'dark' : '') + '">' + g.msg + '</div>';
-        hdr.insertAdjacentElement('afterend', strip);
+        // 右の予約カラム(.kd-flow)の先頭に入れる＝PCで左キービジュアルに被らない。無ければヘッダー直下
+        var flow = document.querySelector('.kd-flow');
+        if (flow) { flow.insertBefore(strip, flow.firstChild); }
+        else if (hdr) { hdr.insertAdjacentElement('afterend', strip); }
     }
     function updateGuide() {
         var b = document.querySelector('#kdGuide .kd-guide-bubble'); if (!b) return;
