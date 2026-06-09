@@ -719,7 +719,7 @@
         /* モバイル用キービジュアル帯（PCは左ビジュアルがあるので非表示） */
         .kv-mobile { display: none; }
         @media (max-width: 899px) {
-            .kv-mobile { display: block; position: relative; flex: none; height: 112px; overflow: hidden; background: #1a1a1a; }
+            .kv-mobile { display: block; position: relative; flex: none; height: 160px; overflow: hidden; background: #1a1a1a; }
             .kv-mobile .kv-slide { background-size: cover; }
             /* 上下を白(周囲＝白ヘッダー/ガイド)へフェードさせて馴染ませる */
             .kv-mobile::after { content: ''; position: absolute; left:0; right:0; top:0; bottom:0; z-index: 5; pointer-events: none; background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0) 26%, rgba(255,255,255,0) 72%, #ffffff 100%); }
@@ -1862,10 +1862,11 @@
     // 上部：ステップpill＋日付＋時間（場所＝下のマップ）
     function renderStepDateStrip() {
         const dt = state.datetime;
+        // ステップpillは廃止（ガイド帯がステップを示すため冗長）
         if (state.locStep === 'collection') {
-            return stepPills(2) + `<div style="padding:2px 16px 10px;">${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', '回収日', '回収時間')}<div style="font-size:11px;color:#888;font-weight:700;">🏁 下の地図で<b>回収場所</b>を選ぶ</div></div>`;
+            return `<div style="padding:10px 16px 10px;">${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', '回収日', '回収時間')}<div style="font-size:11px;color:#888;font-weight:700;">🏁 下の地図で<b>回収場所</b>を選ぶ</div></div>`;
         }
-        return stepPills(1) + `<div style="padding:2px 16px 10px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', 'お届け日', 'お届け時間')}<div style="font-size:11px;color:#888;font-weight:700;">📍 下の地図で<b>お届け場所</b>を選ぶ</div></div>`;
+        return `<div style="padding:10px 16px 10px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', 'お届け日', 'お届け時間')}<div style="font-size:11px;color:#888;font-weight:700;">📍 下の地図で<b>お届け場所</b>を選ぶ</div></div>`;
     }
     function nextToCollection() { state.locStep='collection'; renderLocPanel(); }
     function backToDelivery() { state.locStep='delivery'; renderLocPanel(); }
