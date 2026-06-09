@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#002063">
-    <title>HDM Car Delivery</title>
+    <meta name="theme-color" content="#1a1a1a">
+    <title>KEYDROP｜札幌カーデリバリーサービス</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -34,8 +34,8 @@
 
         /* ── Desktop Navigation ── */
         .pc-nav { display: none; }
-        .pc-nav a { color: white; text-decoration: none; font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: 6px; transition: background .2s; }
-        .pc-nav a:hover { background: rgba(255,255,255,.15); }
+        .pc-nav a { color: #1a1a1a; text-decoration: none; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 6px; transition: background .2s; }
+        .pc-nav a:hover { background: rgba(0,0,0,.06); }
         .pc-footer { display: none; }
 
         /* Desktop / Tablet */
@@ -77,7 +77,7 @@
             .bottom-panel .panel-content { max-width: 100%; }
             /* Footer */
             .pc-footer {
-                display: block; background: #002063; color: white; padding: 32px; text-align: center;
+                display: block; background: #1a1a1a; color: white; padding: 32px; text-align: center;
                 font-size: 12px; margin-top: auto;
             }
             .pc-footer a { color: #FABE00; text-decoration: none; margin: 0 10px; }
@@ -99,29 +99,29 @@
         }
 
         /* ── App Header ── */
-        .app-header { background: #002063; color: white; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; font-weight: 600; z-index: 30; border-bottom: 2px solid #FABE00; }
+        .app-header { background: #ffffff; color: #1a1a1a; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; font-weight: 600; z-index: 30; border-bottom: 2px solid #FABE00; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
         .app-logo { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; cursor: pointer; }
         .app-logo-mark { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #FABE00; }
         .app-service-name { font-size: 13px; font-weight: 700; color: white; line-height: 1.1; }
         .app-service-subtitle { font-size: 9px; color: #FABE00; font-weight: 500; letter-spacing: .5px; }
         .header-actions { display: flex; align-items: center; gap: 4px; }
-        .mypage-header-btn { display: flex; align-items: center; gap: 2px; padding: 4px 8px; background: white; color: #002063; border: 1.5px solid #002063; border-radius: 14px; font-size: 10px; font-weight: 700; cursor: pointer; transition: all .2s; }
+        .mypage-header-btn { display: flex; align-items: center; gap: 2px; padding: 4px 8px; background: white; color: #1a1a1a; border: 1.5px solid #1a1a1a; border-radius: 14px; font-size: 10px; font-weight: 700; cursor: pointer; transition: all .2s; }
         .mypage-header-btn:hover { background: #FABE00; border-color: #FABE00; }
 
         /* ── Hamburger Menu ── */
         .hamburger-btn { background: none; border: none; cursor: pointer; padding: 4px; display: flex; flex-direction: column; gap: 4px; justify-content: center; width: 28px; height: 28px; }
-        .hamburger-btn span { display: block; width: 20px; height: 2px; background: white; border-radius: 1px; transition: all .3s; }
+        .hamburger-btn span { display: block; width: 22px; height: 2.5px; background: #1a1a1a; border-radius: 2px; transition: all .3s; }
         .menu-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 100; opacity: 0; pointer-events: none; transition: opacity .3s; }
         .menu-overlay.open { opacity: 1; pointer-events: auto; }
         .slide-menu { position: fixed; top: 0; right: -300px; width: 300px; height: 100%; background: white; z-index: 101; transition: right .3s ease; overflow-y: auto; display: flex; flex-direction: column; }
         @media (max-width: 360px) { .slide-menu { width: 260px; right: -260px; } }
         @media (min-width: 768px) { .slide-menu { width: 360px; right: -360px; } }
         .slide-menu.open { right: 0; }
-        .menu-header { background: #002063; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+        .menu-header { background: #ffffff; padding: 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #FABE00; }
         .menu-header img { height: 24px; }
-        .menu-close { background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 4px; }
+        .menu-close { background: none; border: none; color: #1a1a1a; font-size: 22px; cursor: pointer; padding: 4px; }
         .menu-user { padding: 14px 16px; background: #f8fafc; border-bottom: 1px solid #eee; }
-        .menu-user-btn { width: 100%; padding: 10px; background: #FABE00; color: #002063; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .menu-user-btn { width: 100%; padding: 10px; background: #FABE00; color: #1a1a1a; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
         .menu-section { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
         .menu-section-title { font-size: 10px; font-weight: 700; color: #999; padding: 8px 16px 4px; text-transform: uppercase; letter-spacing: .5px; }
         .menu-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; font-size: 13px; color: #333; cursor: pointer; transition: background .2s; text-decoration: none; }
@@ -129,7 +129,7 @@
         .menu-item-icon { font-size: 16px; width: 20px; text-align: center; }
         .menu-item-arrow { margin-left: auto; font-size: 11px; color: #ccc; }
         .menu-sns { display: flex; gap: 16px; padding: 12px 16px; }
-        .menu-sns a { width: 36px; height: 36px; border-radius: 50%; background: #002063; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 16px; transition: background .2s; }
+        .menu-sns a { width: 36px; height: 36px; border-radius: 50%; background: #1a1a1a; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 16px; transition: background .2s; }
         .menu-sns a:hover { background: #003399; }
         .menu-footer { padding: 12px 16px; font-size: 10px; color: #999; text-align: center; margin-top: auto; }
 
@@ -148,10 +148,10 @@
 
         /* Status Hero Card */
         .mp-status-hero { border-radius: 16px; padding: 24px 20px; text-align: center; margin-bottom: 16px; position: relative; overflow: hidden; }
-        .mp-status-hero.st-confirmed { background: linear-gradient(135deg, #002063 0%, #003399 100%); color: white; }
-        .mp-status-hero.st-assigned { background: linear-gradient(135deg, #002063 0%, #1e40af 100%); color: white; }
+        .mp-status-hero.st-confirmed { background: linear-gradient(135deg, #1a1a1a 0%, #003399 100%); color: white; }
+        .mp-status-hero.st-assigned { background: linear-gradient(135deg, #1a1a1a 0%, #1e40af 100%); color: white; }
         .mp-status-hero.st-preparing { background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%); color: white; }
-        .mp-status-hero.st-delivering { background: linear-gradient(135deg, #FABE00 0%, #f59e0b 100%); color: #002063; }
+        .mp-status-hero.st-delivering { background: linear-gradient(135deg, #FABE00 0%, #f59e0b 100%); color: #1a1a1a; }
         .mp-status-hero.st-active { background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); color: white; }
         .mp-status-hero.st-returning { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); color: white; }
         .mp-status-hero.st-completed { background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%); color: white; }
@@ -168,10 +168,10 @@
         .mp-prog-step { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; position: relative; z-index: 1; }
         .mp-prog-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; background: #e5e7eb; color: #999; transition: all .3s; }
         .mp-prog-icon.done { background: #22c55e; color: white; }
-        .mp-prog-icon.now { background: #FABE00; color: #002063; animation: pulse 2s infinite; box-shadow: 0 0 0 4px rgba(250,190,0,.2); }
+        .mp-prog-icon.now { background: #FABE00; color: #1a1a1a; animation: pulse 2s infinite; box-shadow: 0 0 0 4px rgba(250,190,0,.2); }
         .mp-prog-txt { font-size: 9px; color: #999; margin-top: 4px; text-align: center; white-space: nowrap; font-weight: 600; }
         .mp-prog-txt.done { color: #22c55e; }
-        .mp-prog-txt.now { color: #002063; font-weight: 800; }
+        .mp-prog-txt.now { color: #1a1a1a; font-weight: 800; }
         .mp-prog-line { flex: 1; height: 3px; background: #e5e7eb; margin: 0 -2px; margin-bottom: 18px; }
         .mp-prog-line.done { background: #22c55e; }
 
@@ -179,7 +179,7 @@
         .mp-card { background: white; border: 1.5px solid #e5e7eb; border-radius: 14px; padding: 0; margin-bottom: 12px; overflow: hidden; cursor: pointer; transition: all .2s; }
         .mp-card:hover { border-color: #FABE00; box-shadow: 0 4px 16px rgba(250,190,0,.12); }
         .mp-card-status { padding: 8px 14px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-        .mp-card-status.confirmed { background: #eff6ff; color: #002063; }
+        .mp-card-status.confirmed { background: #eff6ff; color: #1a1a1a; }
         .mp-card-status.assigned { background: #eff6ff; color: #1e40af; }
         .mp-card-status.preparing { background: #e0f2fe; color: #0369a1; }
         .mp-card-status.delivering { background: #fef9c3; color: #92400e; }
@@ -189,7 +189,7 @@
         .mp-card-status.cancelled { background: #fee2e2; color: #dc2626; }
         .mp-card-body { padding: 12px 14px; }
         .mp-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .mp-card-vehicle { font-size: 15px; font-weight: 700; color: #002063; }
+        .mp-card-vehicle { font-size: 15px; font-weight: 700; color: #1a1a1a; }
         .mp-card-price { font-size: 14px; font-weight: 700; color: #333; }
         .mp-card-info { display: flex; flex-direction: column; gap: 4px; }
         .mp-card-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
@@ -198,7 +198,7 @@
 
         /* Detail sections */
         .mp-detail-section { background: white; border: 1px solid #e5e7eb; border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
-        .mp-detail-header { padding: 12px 14px; font-size: 13px; font-weight: 700; color: #002063; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
+        .mp-detail-header { padding: 12px 14px; font-size: 13px; font-weight: 700; color: #1a1a1a; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
         .mp-detail-body { padding: 14px; }
         .mp-detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
         .mp-detail-row-label { color: #888; }
@@ -206,7 +206,7 @@
 
         /* Driver card */
         .mp-driver-card { display: flex; align-items: center; gap: 14px; padding: 14px; }
-        .mp-driver-avatar { width: 48px; height: 48px; border-radius: 50%; background: #002063; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; }
+        .mp-driver-avatar { width: 48px; height: 48px; border-radius: 50%; background: #1a1a1a; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; }
         .mp-driver-info { flex: 1; }
         .mp-driver-name { font-size: 14px; font-weight: 700; color: #333; }
         .mp-driver-sub { font-size: 11px; color: #888; margin-top: 2px; }
@@ -214,7 +214,7 @@
         .mp-driver-call:hover { background: #16a34a; }
 
         /* ETA banner */
-        .mp-eta { background: #002063; color: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
+        .mp-eta { background: #1a1a1a; color: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
         .mp-eta-time { font-size: 28px; font-weight: 800; color: #FABE00; }
         .mp-eta-label { font-size: 12px; opacity: .8; }
         .mp-eta-dest { font-size: 13px; font-weight: 600; margin-top: 2px; }
@@ -222,7 +222,7 @@
         /* Action buttons */
         .mp-actions { display: flex; gap: 8px; margin-top: 16px; margin-bottom: 8px; }
         .mp-action-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; text-align: center; transition: all .2s; }
-        .mp-action-btn.primary { background: #002063; color: white; }
+        .mp-action-btn.primary { background: #1a1a1a; color: white; }
         .mp-action-btn.primary:hover { background: #003399; }
         .mp-action-btn.danger { background: white; color: #dc2626; border: 1.5px solid #dc2626; }
         .mp-action-btn.danger:hover { background: #fef2f2; }
@@ -234,16 +234,16 @@
         .mp-tl-item:last-child { padding-bottom: 0; }
         .mp-tl-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; z-index: 1; }
         .mp-tl-dot.done { background: #22c55e; color: white; }
-        .mp-tl-dot.now { background: #FABE00; color: #002063; animation: pulse 2s infinite; }
+        .mp-tl-dot.now { background: #FABE00; color: #1a1a1a; animation: pulse 2s infinite; }
         .mp-tl-dot.wait { background: #f1f5f9; color: #cbd5e1; border: 2px solid #e2e8f0; }
         .mp-tl-line { position: absolute; left: 13px; top: 28px; width: 2px; height: calc(100% - 28px); background: #e5e7eb; }
         .mp-tl-item:last-child .mp-tl-line { display: none; }
         .mp-tl-line.done { background: #22c55e; }
         .mp-tl-content { flex: 1; padding-top: 3px; }
         .mp-tl-title { font-size: 13px; font-weight: 600; color: #333; }
-        .mp-tl-title.now { color: #002063; font-weight: 800; }
+        .mp-tl-title.now { color: #1a1a1a; font-weight: 800; }
         .mp-tl-sub { font-size: 11px; color: #999; margin-top: 2px; }
-        .mp-tl-sub.highlight { color: #002063; font-weight: 600; }
+        .mp-tl-sub.highlight { color: #1a1a1a; font-weight: 600; }
 
         /* Delivery map placeholder */
         .mp-map-placeholder { width: 100%; height: 160px; border-radius: 12px; overflow: hidden; position: relative; margin-bottom: 12px; }
@@ -256,7 +256,7 @@
         .menu-lang-btn:first-child { border-radius: 6px 0 0 6px; }
         .menu-lang-btn:last-child { border-radius: 0 6px 6px 0; }
         .menu-lang-btn:not(:first-child) { border-left: none; }
-        .menu-lang-btn.active { background: #002063; color: white; border-color: #002063; }
+        .menu-lang-btn.active { background: #1a1a1a; color: white; border-color: #1a1a1a; }
 
         /* ── Screen Transition ── */
         .screen-fade { animation: screenFadeIn .25s ease-out; }
@@ -269,11 +269,11 @@
             width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
             font-size: 11px; font-weight: 800; flex-shrink: 0; transition: all .3s;
         }
-        .top-progress-dot.active { background: #FABE00; color: #002063; }
+        .top-progress-dot.active { background: #FABE00; color: #1a1a1a; }
         .top-progress-dot.done { background: #22c55e; color: white; }
         .top-progress-dot.pending { background: #e5e7eb; color: #999; }
         .top-progress-label { font-size: 10px; font-weight: 600; color: #999; white-space: nowrap; }
-        .top-progress-label.active { color: #002063; }
+        .top-progress-label.active { color: #1a1a1a; }
         .top-progress-label.done { color: #22c55e; }
         .top-progress-line { flex: 1; height: 2px; background: #e5e7eb; margin: 0 4px; }
         .top-progress-line.done { background: #22c55e; }
@@ -287,7 +287,7 @@
         .date-bar-icon { font-size: 16px; flex-shrink: 0; }
         .date-bar-text { flex: 1; font-size: 12px; font-weight: 600; color: #333; line-height: 1.4; }
         .date-bar-sub { font-size: 10px; color: #888; font-weight: 400; }
-        .date-bar-edit { font-size: 10px; color: #002063; font-weight: 700; padding: 4px 10px; border: 1px solid #002063; border-radius: 12px; white-space: nowrap; }
+        .date-bar-edit { font-size: 10px; color: #1a1a1a; font-weight: 700; padding: 4px 10px; border: 1px solid #1a1a1a; border-radius: 12px; white-space: nowrap; }
         .date-expanded { padding: 10px 16px 12px; background: #f8fafc; border-bottom: 1px solid #eee; animation: slideDown .2s ease-out; }
         @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 200px; } }
 
@@ -345,11 +345,11 @@
         .step-badge {
             display: inline-flex; align-items: center; justify-content: center;
             width: 22px; height: 22px; border-radius: 50%;
-            background: #FABE00; color: #002063;
+            background: #FABE00; color: #1a1a1a;
             font-size: 11px; font-weight: 800;
         }
         .step-badge.disabled { background: #ccc; color: #999; }
-        .step-label { font-size: 13px; font-weight: 700; color: #002063; }
+        .step-label { font-size: 13px; font-weight: 700; color: #1a1a1a; }
         .step-label.disabled { color: #999; }
         .step-done { font-size: 10px; color: #2e7d32; font-weight: 600; background: #e8f5e9; padding: 2px 8px; border-radius: 8px; }
 
@@ -371,7 +371,7 @@
             width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px;
             font-size: 13px; font-family: inherit; color: #333;
         }
-        .address-input:focus { outline: none; border-color: #002063; }
+        .address-input:focus { outline: none; border-color: #1a1a1a; }
         .address-suggestions {
             position: absolute; top: 100%; left: 0; right: 0; background: white;
             border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;
@@ -388,9 +388,9 @@
             background: linear-gradient(135deg, #fffbf0, #fff8e6);
             border: 1px solid #FABE00; border-radius: 10px;
             padding: 8px 12px; display: flex; align-items: center; justify-content: center; gap: 6px;
-            font-size: 13px; color: #002063; font-weight: 700; margin-bottom: 10px;
+            font-size: 13px; color: #1a1a1a; font-weight: 700; margin-bottom: 10px;
         }
-        .vehicle-count-num { font-size: 18px; font-weight: 800; color: #002063; }
+        .vehicle-count-num { font-size: 18px; font-weight: 800; color: #1a1a1a; }
         .vehicle-list { display: flex; flex-direction: column; gap: 8px; }
         .vehicle-card {
             display: flex; align-items: center; gap: 10px;
@@ -423,10 +423,10 @@
         .vc-name { font-size: 13px; font-weight: 700; color: #333; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .vc-specs { display: flex; gap: 8px; font-size: 11px; color: #888; margin-top: 3px; }
         .vc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
-        .vc-price { font-size: 15px; font-weight: 800; color: #002063; }
+        .vc-price { font-size: 15px; font-weight: 800; color: #1a1a1a; }
         .vc-price-unit { font-size: 10px; color: #888; font-weight: 500; }
         .vc-select-btn {
-            padding: 5px 14px; background: #FABE00; color: #002063; border: none;
+            padding: 5px 14px; background: #FABE00; color: #1a1a1a; border: none;
             border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .15s;
         }
         .vc-select-btn:hover { background: #e5ab00; }
@@ -440,8 +440,8 @@
             background: white; cursor: pointer; font-size: 12px; font-weight: 500;
             color: #666; transition: all .2s; white-space: nowrap;
         }
-        .class-chip:hover { border-color: #002063; color: #002063; }
-        .class-chip.selected { background: #FABE00; color: #002063; border-color: #FABE00; font-weight: 700; }
+        .class-chip:hover { border-color: #1a1a1a; color: #1a1a1a; }
+        .class-chip.selected { background: #FABE00; color: #1a1a1a; border-color: #FABE00; font-weight: 700; }
 
         /* ── Empty / Loading States ── */
         .empty-state {
@@ -452,7 +452,7 @@
         .empty-state-desc { font-size: 12px; color: #999; line-height: 1.5; }
         .loading-spinner {
             display: inline-block; width: 20px; height: 20px;
-            border: 2px solid #ddd; border-top-color: #002063;
+            border: 2px solid #ddd; border-top-color: #1a1a1a;
             border-radius: 50%; animation: spin .6s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -462,7 +462,7 @@
         /* ── Confirm Screen ── */
         .confirm-screen { padding: 16px; flex: 1; overflow-y: auto; }
         .confirm-vehicle-hero {
-            background: linear-gradient(135deg, #002063, #003399);
+            background: linear-gradient(135deg, #1a1a1a, #003399);
             border-radius: 16px; padding: 20px; color: white; margin-bottom: 16px; text-align: center;
         }
         .confirm-vehicle-icon { font-size: 48px; margin-bottom: 8px; }
@@ -475,7 +475,7 @@
         .confirm-row-value { font-weight: 600; color: #333; text-align: right; max-width: 60%; }
         .confirm-total { background: #fffbf0; border: 2px solid #FABE00; border-radius: 12px; padding: 14px; text-align: center; margin-bottom: 16px; }
         .confirm-total-label { font-size: 12px; color: #666; }
-        .confirm-total-price { font-size: 24px; font-weight: 800; color: #002063; margin-top: 4px; }
+        .confirm-total-price { font-size: 24px; font-weight: 800; color: #1a1a1a; margin-top: 4px; }
         .confirm-total-note { font-size: 10px; color: #999; margin-top: 4px; }
 
         /* ── Form Screen ── */
@@ -487,16 +487,16 @@
             width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
             font-size: 14px; font-family: inherit; color: #333; transition: border-color .2s;
         }
-        .form-input:focus { outline: none; border-color: #002063; box-shadow: 0 0 0 3px rgba(0,32,99,.08); }
+        .form-input:focus { outline: none; border-color: #1a1a1a; box-shadow: 0 0 0 3px rgba(0,32,99,.08); }
         .form-textarea { min-height: 80px; resize: vertical; }
 
         /* ── Options Screen ── */
         .options-screen { padding: 16px; flex: 1; overflow-y: auto; }
         .option-section { margin-bottom: 18px; }
         .option-section-title {
-            font-size: 14px; font-weight: 700; color: #002063; margin-bottom: 8px;
+            font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px;
             display: flex; align-items: center; gap: 6px;
-            padding-bottom: 6px; border-bottom: 2px solid #002063;
+            padding-bottom: 6px; border-bottom: 2px solid #1a1a1a;
         }
         .insurance-card {
             border: 2px solid #e5e7eb; border-radius: 12px; padding: 12px; margin-bottom: 8px;
@@ -506,7 +506,7 @@
         .insurance-card.selected { border-color: #FABE00; background: #fffbf0; }
         .insurance-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
         .insurance-card-name { font-size: 13px; font-weight: 700; color: #333; }
-        .insurance-card-price { font-size: 12px; font-weight: 700; color: #002063; }
+        .insurance-card-price { font-size: 12px; font-weight: 700; color: #1a1a1a; }
         .insurance-card-desc { font-size: 11px; color: #666; line-height: 1.5; }
         .insurance-check {
             width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ddd;
@@ -540,7 +540,7 @@
         .option-counter-val {
             width: 36px; height: 30px; display: flex; align-items: center; justify-content: center;
             border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;
-            font-size: 14px; font-weight: 700; color: #002063;
+            font-size: 14px; font-weight: 700; color: #1a1a1a;
         }
 
         /* ── Payment Screen ── */
@@ -560,21 +560,21 @@
         .complete-screen { padding: 24px; flex: 1; overflow-y: auto; text-align: center; }
         .complete-icon { font-size: 64px; margin-bottom: 16px; animation: completeBounce .5s ease-out; }
         @keyframes completeBounce { 0% { transform: scale(0); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
-        .complete-title { font-size: 20px; font-weight: 700; color: #002063; margin-bottom: 8px; }
+        .complete-title { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
         .complete-desc { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.6; }
         .complete-res-id { background: #f3f4f6; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 700; margin-bottom: 20px; }
 
         /* ── Common Buttons ── */
         .btn-primary {
-            width: 100%; padding: 14px; background: #FABE00; color: #002063; border: none;
+            width: 100%; padding: 14px; background: #1a1a1a; color: #ffffff; border: none;
             border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer;
             font-family: inherit; transition: all .2s;
         }
-        .btn-primary:hover { background: #e5ab00; }
+        .btn-primary:hover { background: #333333; }
         .btn-primary:active { transform: scale(0.98); }
         .btn-primary:disabled { background: #ddd; color: #999; cursor: not-allowed; transform: none; }
         .btn-secondary {
-            width: 100%; padding: 12px; background: white; color: #002063; border: 1.5px solid #002063;
+            width: 100%; padding: 12px; background: white; color: #1a1a1a; border: 1.5px solid #1a1a1a;
             border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
             font-family: inherit; transition: all .2s; margin-top: 8px;
         }
@@ -603,7 +603,7 @@
         .terms-screen { padding: 16px; flex: 1; overflow-y: auto; }
         .terms-box { background: #f9f9f9; border-radius: 10px; padding: 14px; font-size: 12px; color: #555; line-height: 1.7; max-height: 300px; overflow-y: auto; margin-bottom: 14px; }
         .terms-check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 13px; }
-        .terms-check-row input { width: 18px; height: 18px; accent-color: #002063; }
+        .terms-check-row input { width: 18px; height: 18px; accent-color: #1a1a1a; }
 
         /* ── Geolocation Button (on map) ── */
         .geolocate-btn {
@@ -626,7 +626,7 @@
         }
         .pin-marker-inner {
             width: 32px; height: 32px; border-radius: 50% 50% 50% 0;
-            background: #002063; transform: rotate(-45deg);
+            background: #1a1a1a; transform: rotate(-45deg);
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 2px 8px rgba(0,32,99,.4);
         }
@@ -647,7 +647,7 @@
                 <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
                 <div class="slide-menu" id="slideMenu">
                     <div class="menu-header">
-                        <img src="images/logo_header.png" alt="HDM" style="height:24px;">
+                        <img src="images/logo_header.png" alt="KEYDROP" style="height:24px;">
                         <button class="menu-close" onclick="closeMenu()">✕</button>
                     </div>
                     <div class="menu-lang">
@@ -701,7 +701,7 @@
                             <a href="https://www.facebook.com/handyman.rentalcar/" target="_blank" rel="noopener" style="color:white;">f</a>
                         </div>
                     </div>
-                    <div class="menu-footer">© 2026 HANDYMAN</div>
+                    <div class="menu-footer">© 2026 KEYDROP</div>
                 </div>
         <!-- PC Footer -->
         <div class="pc-footer">
@@ -714,7 +714,7 @@
                 <a href="https://rent-handyman.jp/privacy/">プライバシー</a>
                 <a href="https://rent-handyman.jp/legal/">特定商取引法</a>
             </div>
-            <div style="color:rgba(255,255,255,.5);">© 2026 HANDYMAN / Global Lines Inc.</div>
+            <div style="color:rgba(255,255,255,.5);">© 2026 KEYDROP / Global Lines Inc.</div>
         </div>
     </div>
 
@@ -1258,7 +1258,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1309,7 +1309,7 @@
 
                 <!-- Date Form -->
                 <div style="padding:16px;flex:1;max-width:600px;margin:0 auto;width:100%;">
-                    <div style="font-size:15px;font-weight:700;color:#002063;margin-bottom:14px;">利用期間を選択</div>
+                    <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:14px;">利用期間を選択</div>
                     <div class="datetime-grid" style="gap:12px;">
                         <div class="dt-group">
                             <label>開始日</label>
@@ -1339,7 +1339,7 @@
 
                     <!-- Date Summary -->
                     <div style="background:#fffbf0;border:1px solid #FABE00;border-radius:10px;padding:12px;margin-top:14px;text-align:center;">
-                        <div style="font-size:13px;font-weight:700;color:#002063;">${startLabel} ${state.datetime.startTime} 〜 ${endLabel} ${state.datetime.endTime}</div>
+                        <div style="font-size:13px;font-weight:700;color:#1a1a1a;">${startLabel} ${state.datetime.startTime} 〜 ${endLabel} ${state.datetime.endTime}</div>
                         <div style="font-size:12px;color:#888;margin-top:4px;">${days}日間</div>
                     </div>
                 </div>
@@ -1363,7 +1363,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1400,7 +1400,7 @@
                 <div style="width:420px;background:white;border-left:1px solid #eee;display:flex;flex-direction:column;overflow-y:auto;">
                     <!-- Date Section -->
                     <div style="padding:20px;border-bottom:1px solid #eee;">
-                        <div style="font-size:15px;font-weight:700;color:#002063;margin-bottom:12px;">📅 利用期間</div>
+                        <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:12px;">📅 利用期間</div>
                         <div class="datetime-grid" style="gap:10px;">
                             <div class="dt-group">
                                 <label>開始日</label>
@@ -1428,7 +1428,7 @@
                             </div>
                         </div>
                         <div style="background:#fffbf0;border:1px solid #FABE00;border-radius:8px;padding:8px;margin-top:10px;text-align:center;font-size:12px;">
-                            <span style="font-weight:700;color:#002063;">${startLabel} ${state.datetime.startTime} 〜 ${endLabel} ${state.datetime.endTime}</span>
+                            <span style="font-weight:700;color:#1a1a1a;">${startLabel} ${state.datetime.startTime} 〜 ${endLabel} ${state.datetime.endTime}</span>
                             <span style="color:#888;margin-left:6px;">${days}日間</span>
                         </div>
                     </div>
@@ -1472,7 +1472,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -1511,7 +1511,7 @@
                     <div style="padding:14px 16px;border-bottom:1px solid #eee;">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                             <button style="background:none;border:none;font-size:18px;cursor:pointer;" onclick="state.screen='top'; render();">←</button>
-                            <span style="font-size:14px;font-weight:700;color:#002063;">お届け場所と車両を選ぶ</span>
+                            <span style="font-size:14px;font-weight:700;color:#1a1a1a;">お届け場所と車両を選ぶ</span>
                         </div>
                         <div style="font-size:11px;color:#888;">📅 ${startLabel} ${state.datetime.startTime} 〜 ${endLabel} ${state.datetime.endTime}（${days}日間）</div>
                     </div>
@@ -1584,7 +1584,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1633,7 +1633,7 @@
     function renderFormScreen() {
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1686,7 +1686,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1712,7 +1712,7 @@
                             <div style="padding:2px 0;">✓ 車両・対物事故の免責額が0円に</div>
                             <div style="padding:2px 0;">✓ 万一の事故でも自己負担なし</div>
                         </div>
-                        ${state.cdw === 'cdw' ? `<div style="font-size:11px;color:#002063;font-weight:600;margin-top:4px;">合計: ¥${(cdwPrice * days).toLocaleString()}（${days}日間）</div>` : ''}
+                        ${state.cdw === 'cdw' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">合計: ¥${(cdwPrice * days).toLocaleString()}（${days}日間）</div>` : ''}
                     </div>
 
                     <div class="insurance-card ${state.cdw === 'pack' ? 'selected' : ''}" onclick="state.cdw='pack'; render();">
@@ -1720,7 +1720,7 @@
                             <div style="flex:1;">
                                 <div style="display:flex;align-items:center;gap:6px;">
                                     <div class="insurance-card-name">安心パック</div>
-                                    <span style="font-size:9px;background:#002063;color:#FABE00;padding:2px 6px;border-radius:4px;font-weight:700;">おすすめ</span>
+                                    <span style="font-size:9px;background:#1a1a1a;color:#FABE00;padding:2px 6px;border-radius:4px;font-weight:700;">おすすめ</span>
                                 </div>
                                 <div class="insurance-card-price">${packPrice.toLocaleString()}円 / 1日<span style="font-size:10px;color:#888;font-weight:400;">（免責${cdwPrice.toLocaleString()}円+NOC550円）</span></div>
                             </div>
@@ -1731,7 +1731,7 @@
                             <div style="padding:2px 0;">✓ NOC（休業補償）も全額カバー</div>
                             <div style="padding:2px 0;">✓ ロードサービス付き</div>
                         </div>
-                        ${state.cdw === 'pack' ? `<div style="font-size:11px;color:#002063;font-weight:600;margin-top:4px;">合計: ¥${(packPrice * days).toLocaleString()}（${days}日間）</div>` : ''}
+                        ${state.cdw === 'pack' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">合計: ¥${(packPrice * days).toLocaleString()}（${days}日間）</div>` : ''}
                     </div>
 
                     <div class="insurance-card ${state.cdw === 'none' ? 'selected' : ''}" onclick="state.cdw='none'; render();" style="${state.cdw === 'none' ? 'border-color:#999;background:#f9f9f9;' : ''}">
@@ -1776,7 +1776,7 @@
                 <!-- Options Summary -->
                 ${optionsTotal > 0 ? `
                 <div style="background:#fffbf0;border:1px solid #FABE00;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;">
-                    <div style="display:flex;justify-content:space-between;font-weight:700;color:#002063;">
+                    <div style="display:flex;justify-content:space-between;font-weight:700;color:#1a1a1a;">
                         <span>オプション合計</span>
                         <span>+¥${optionsTotal.toLocaleString()}</span>
                     </div>
@@ -1798,7 +1798,7 @@
     function renderTermsScreen() {
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1811,7 +1811,7 @@
                     <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:12px;">以下の約款・規約をご確認ください</div>
                     <a href="https://rent-handyman.jp/clause" target="_blank" rel="noopener"
                        style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:white;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;text-decoration:none;transition:all .2s;"
-                       onmouseover="this.style.borderColor='#002063'" onmouseout="this.style.borderColor='#e5e7eb'">
+                       onmouseover="this.style.borderColor='#1a1a1a'" onmouseout="this.style.borderColor='#e5e7eb'">
                         <div style="display:flex;align-items:center;gap:10px;">
                             <span style="font-size:18px;">📄</span>
                             <div>
@@ -1819,11 +1819,11 @@
                                 <div style="font-size:11px;color:#888;">レンタカー貸渡しに関する約款</div>
                             </div>
                         </div>
-                        <span style="font-size:14px;color:#002063;">→</span>
+                        <span style="font-size:14px;color:#1a1a1a;">→</span>
                     </a>
                     <a href="https://rent-handyman.jp/privacy/" target="_blank" rel="noopener"
                        style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:white;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;text-decoration:none;transition:all .2s;"
-                       onmouseover="this.style.borderColor='#002063'" onmouseout="this.style.borderColor='#e5e7eb'">
+                       onmouseover="this.style.borderColor='#1a1a1a'" onmouseout="this.style.borderColor='#e5e7eb'">
                         <div style="display:flex;align-items:center;gap:10px;">
                             <span style="font-size:18px;">🔒</span>
                             <div>
@@ -1831,11 +1831,11 @@
                                 <div style="font-size:11px;color:#888;">個人情報の取扱いについて</div>
                             </div>
                         </div>
-                        <span style="font-size:14px;color:#002063;">→</span>
+                        <span style="font-size:14px;color:#1a1a1a;">→</span>
                     </a>
                     <a href="https://rent-handyman.jp/cancel-policy/" target="_blank" rel="noopener"
                        style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:white;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none;transition:all .2s;"
-                       onmouseover="this.style.borderColor='#002063'" onmouseout="this.style.borderColor='#e5e7eb'">
+                       onmouseover="this.style.borderColor='#1a1a1a'" onmouseout="this.style.borderColor='#e5e7eb'">
                         <div style="display:flex;align-items:center;gap:10px;">
                             <span style="font-size:18px;">💰</span>
                             <div>
@@ -1843,7 +1843,7 @@
                                 <div style="font-size:11px;color:#888;">予約取消し・変更に関する規定</div>
                             </div>
                         </div>
-                        <span style="font-size:14px;color:#002063;">→</span>
+                        <span style="font-size:14px;color:#1a1a1a;">→</span>
                     </a>
                 </div>
                 <div class="terms-check-row">
@@ -1877,7 +1877,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
@@ -1900,7 +1900,7 @@
                         <span>チャイルドシート</span>
                         <span>¥${seatFee.toLocaleString()}</span>
                     </div>` : ''}
-                    <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:6px;border-top:1px solid #ddd;font-weight:800;color:#002063;font-size:15px;">
+                    <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:6px;border-top:1px solid #ddd;font-weight:800;color:#1a1a1a;font-size:15px;">
                         <span>合計（税込）</span>
                         <span>¥${totalPrice.toLocaleString()}</span>
                     </div>
@@ -1936,11 +1936,11 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
                 <div class="header-actions"></div>
             </div>
             <div class="complete-screen screen-fade">
-                <div class="complete-icon" style="font-size:0;"><img src="images/logo_full.png" alt="HDM" style="width:140px;height:auto;border-radius:16px;"></div>
+                <div class="complete-icon" style="font-size:0;"><img src="images/logo_full.png" alt="KEYDROP" style="width:140px;height:auto;border-radius:16px;"></div>
                 <div class="complete-title">ご予約が完了しました</div>
                 <div class="complete-res-id" style="margin-bottom:16px;">
                     予約番号: <strong>${resId}</strong>
@@ -2252,7 +2252,7 @@
 
         return `
             <div class="app-header">
-                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="HDM HANDYMAN Car Delivery" style="height:28px;"></div>
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png" alt="KEYDROP Sapporo Car Delivery Service" style="height:28px;"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
@@ -2303,10 +2303,10 @@
             html += `
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                     <div>
-                        <div style="font-size:16px;font-weight:800;color:#002063;">ご予約一覧</div>
+                        <div style="font-size:16px;font-weight:800;color:#1a1a1a;">ご予約一覧</div>
                         <div style="font-size:11px;color:#888;margin-top:2px;">${mypageState.email}</div>
                     </div>
-                    <div style="font-size:12px;color:#002063;font-weight:700;">${mypageState.reservations.length}件</div>
+                    <div style="font-size:12px;color:#1a1a1a;font-weight:700;">${mypageState.reservations.length}件</div>
                 </div>
             `;
 
@@ -2340,7 +2340,7 @@
                                 </div>
                             </div>
                             <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:6px;">
-                                <span style="font-size:11px;color:#002063;font-weight:600;">詳細を見る</span>
+                                <span style="font-size:11px;color:#1a1a1a;font-weight:600;">詳細を見る</span>
                                 <span class="mp-card-arrow">›</span>
                             </div>
                         </div>
@@ -2355,8 +2355,8 @@
         // Email lookup form
         html += `
             <div style="text-align:center;padding:24px 0 20px;">
-                <img src="images/logo_compact.png" alt="HDM" style="height:40px;margin-bottom:14px;">
-                <div style="font-size:18px;font-weight:800;color:#002063;margin-bottom:6px;">マイページ</div>
+                <img src="images/logo_compact.png" alt="KEYDROP" style="height:40px;margin-bottom:14px;">
+                <div style="font-size:18px;font-weight:800;color:#1a1a1a;margin-bottom:6px;">マイページ</div>
                 <div style="font-size:13px;color:#888;line-height:1.6;">予約状況やデリバリー状況を<br>リアルタイムで確認できます</div>
             </div>
             <div class="mypage-lookup">
@@ -2371,16 +2371,16 @@
             </div>
 
             <div style="background:#f0f7ff;border-radius:12px;padding:16px;margin-top:16px;">
-                <div style="font-size:13px;font-weight:700;color:#002063;margin-bottom:10px;">デモ用テストアカウント</div>
+                <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;">デモ用テストアカウント</div>
                 <div style="font-size:12px;color:#666;margin-bottom:8px;line-height:1.6;">全ステータスのデモを確認できます</div>
-                <button style="width:100%;padding:10px;background:white;border:1.5px solid #002063;border-radius:8px;font-size:13px;font-weight:700;color:#002063;cursor:pointer;font-family:inherit;" onclick="document.getElementById('mypageEmail').value='test@hdm-demo.com';lookupByEmail();">
+                <button style="width:100%;padding:10px;background:white;border:1.5px solid #1a1a1a;border-radius:8px;font-size:13px;font-weight:700;color:#1a1a1a;cursor:pointer;font-family:inherit;" onclick="document.getElementById('mypageEmail').value='test@hdm-demo.com';lookupByEmail();">
                     test@hdm-demo.com でログイン
                 </button>
             </div>
 
             <div style="text-align:center;margin-top:20px;">
                 <div style="font-size:12px;color:#999;">予約がない場合は</div>
-                <button style="background:none;border:none;font-size:13px;color:#002063;font-weight:600;cursor:pointer;margin-top:4px;" onclick="state.screen='top'; render();">レンタカーを予約する →</button>
+                <button style="background:none;border:none;font-size:13px;color:#1a1a1a;font-weight:600;cursor:pointer;margin-top:4px;" onclick="state.screen='top'; render();">レンタカーを予約する →</button>
             </div>
         `;
 
@@ -2478,7 +2478,7 @@
         // ── Reservation ID ──
         html += `<div style="text-align:center;margin-bottom:12px;">
             <span style="font-size:11px;color:#999;">予約番号</span>
-            <span style="font-size:13px;font-weight:700;color:#002063;margin-left:6px;">${r.id}</span>
+            <span style="font-size:13px;font-weight:700;color:#1a1a1a;margin-left:6px;">${r.id}</span>
         </div>`;
 
         // ── Reservation Details ──
@@ -2492,7 +2492,7 @@
                     </div>
                     ${hasVehicle ? `<div class="mp-detail-row">
                         <span class="mp-detail-row-label">車両コード</span>
-                        <span class="mp-detail-row-value" style="font-weight:700;color:#002063;">${f.vehicle_code}</span>
+                        <span class="mp-detail-row-value" style="font-weight:700;color:#1a1a1a;">${f.vehicle_code}</span>
                     </div>` : ''}
                     <div class="mp-detail-row">
                         <span class="mp-detail-row-label">お届け場所</span>
@@ -2510,7 +2510,7 @@
                     <div style="border-top:1px solid #f0f0f0;margin-top:8px;padding-top:8px;">
                         <div class="mp-detail-row">
                             <span class="mp-detail-row-label" style="font-weight:700;">お支払い金額</span>
-                            <span class="mp-detail-row-value" style="font-size:18px;font-weight:800;color:#002063;">¥${Number(r.price).toLocaleString()}</span>
+                            <span class="mp-detail-row-value" style="font-size:18px;font-weight:800;color:#1a1a1a;">¥${Number(r.price).toLocaleString()}</span>
                         </div>
                     </div>` : ''}
                 </div>
@@ -2582,7 +2582,7 @@
         // Help link
         html += `
             <div style="text-align:center;margin-top:16px;padding-bottom:16px;">
-                <a href="https://rent-handyman.jp/contact/" target="_blank" style="font-size:12px;color:#888;text-decoration:none;">お困りですか？ <span style="color:#002063;font-weight:600;">お問い合わせ →</span></a>
+                <a href="https://rent-handyman.jp/contact/" target="_blank" style="font-size:12px;color:#888;text-decoration:none;">お困りですか？ <span style="color:#1a1a1a;font-weight:600;">お問い合わせ →</span></a>
             </div>
         `;
 
@@ -2750,7 +2750,7 @@
         L.marker([lat, lng], {
             icon: L.divIcon({
                 className: '',
-                html: '<div style="background:#002063;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">📍</div>',
+                html: '<div style="background:#1a1a1a;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">📍</div>',
                 iconSize: [28, 28],
                 iconAnchor: [14, 14],
             })
@@ -2760,7 +2760,7 @@
         L.marker([lat + 0.008, lng - 0.012], {
             icon: L.divIcon({
                 className: '',
-                html: '<div style="background:#FABE00;color:#002063;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">🚗</div>',
+                html: '<div style="background:#FABE00;color:#1a1a1a;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">🚗</div>',
                 iconSize: [32, 32],
                 iconAnchor: [16, 16],
             })
@@ -2793,12 +2793,12 @@
             </div>
 
             <div style="background:#f9f9f9;border-radius:10px;padding:14px;margin-bottom:16px;">
-                <div style="font-size:13px;font-weight:700;color:#002063;margin-bottom:10px;">キャンセルポリシー</div>
+                <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;">キャンセルポリシー</div>
                 <div style="font-size:12px;line-height:1.8;color:#555;">
                     <div style="display:flex;justify-content:space-between;"><span>7日前まで</span><span style="font-weight:600;">無料</span></div>
-                    <div style="display:flex;justify-content:space-between;${cancel.rate === 20 ? 'color:#002063;font-weight:700;' : ''}"><span>6〜3日前</span><span>基本料金の20%</span></div>
-                    <div style="display:flex;justify-content:space-between;${cancel.rate === 30 ? 'color:#002063;font-weight:700;' : ''}"><span>2〜1日前</span><span>基本料金の30%</span></div>
-                    <div style="display:flex;justify-content:space-between;${cancel.rate === 50 ? 'color:#002063;font-weight:700;' : ''}"><span>当日以降</span><span>基本料金の50%</span></div>
+                    <div style="display:flex;justify-content:space-between;${cancel.rate === 20 ? 'color:#1a1a1a;font-weight:700;' : ''}"><span>6〜3日前</span><span>基本料金の20%</span></div>
+                    <div style="display:flex;justify-content:space-between;${cancel.rate === 30 ? 'color:#1a1a1a;font-weight:700;' : ''}"><span>2〜1日前</span><span>基本料金の30%</span></div>
+                    <div style="display:flex;justify-content:space-between;${cancel.rate === 50 ? 'color:#1a1a1a;font-weight:700;' : ''}"><span>当日以降</span><span>基本料金の50%</span></div>
                 </div>
                 <div style="font-size:11px;color:#888;margin-top:8px;line-height:1.5;">※航空便が欠航した場合、欠航証明書のご提示でキャンセル料は無料となります。</div>
             </div>
