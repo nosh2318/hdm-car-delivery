@@ -689,14 +689,14 @@
         #kdGuide .kd-guide-bubble { flex:1; min-width:0; background:#FABE00; color:#1a1a1a; font-size:12px; font-weight:800; padding:7px 11px; border-radius:12px 12px 12px 3px; line-height:1.45; box-shadow:0 2px 8px rgba(0,0,0,.10); }
         #kdGuide .kd-guide-bubble.dark { background:#1a1a1a; color:#fff; }
         #kdGuide .kd-guide-bubble b { color:inherit; }
-        /* 縦フロー：日付/時間(上)→マップ(場所)→確定。PCは中央寄せで余白＆地図比率を抑制 */
-        .kd-flow { display: flex; flex-direction: column; }
-        .kd-mapwrap { position: relative; height: 44vh; min-height: 260px; }
-        #dateStrip { background: #fff; }
-        #locPanel { display: flex; flex-direction: column; }
+        /* 縦フロー：日付/時間(上)→マップ(場所・残り空間を埋める)→確定(下)。1画面にフィット */
+        .kd-flow { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+        #dateStrip { flex: none; background: #fff; }
+        .kd-mapwrap { position: relative; flex: 1 1 auto; min-height: 220px; }
+        #locPanel { flex: none; display: flex; flex-direction: column; }
         @media (min-width: 768px) {
-            .kd-flow { max-width: 880px; margin: 0 auto; width: 100%; padding: 10px 20px 32px; }
-            .kd-mapwrap { height: 46vh; min-height: 360px; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,.10); margin: 4px 0; }
+            .kd-flow { max-width: 880px; margin: 0 auto; width: 100%; padding: 8px 20px 16px; }
+            .kd-mapwrap { min-height: 300px; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 14px rgba(0,0,0,.10); margin: 4px 0; }
             #dateStrip { background: transparent; }
         }
         /* 地図ピン=マスコット（落下後ずっとフワフワ動く） */
