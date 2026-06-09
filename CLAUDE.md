@@ -2,6 +2,15 @@
 
 ---
 
+## 🗺 場所フロー刷新＝「地図から呼ぶ・届ける・回収する」(2026-06-09・差別化の核)
+オーナー指示「お届け・回収ともにマップで順に選択→お届け地で提供可能な条件一致車両だけ出す／地図主役＝差別化」を受け、場所画面をステップ式に再設計。
+- **state.locStep**（'delivery'→'collection'→'vehicle'）でサブステップ管理。`collectionLat/Lng/collectionAddr`追加。`collectionMarker`(🏁黒ピン)。
+- **地図は再構築しない**：step遷移は`renderLocPanel()`で**#locPanelのinnerHTMLのみ差替**（app全体のrender()を呼ばない＝Leaflet地図とピン保持・クリックは`state.locStep`を実行時参照で振り分け）。※render()は#map再構築するので場所画面のstep遷移では使わないのが鉄則。
+- フロー：①お届け「車をどこへ届けますか？」(地図/検索でピン→次へ)→②回収「どこで車を返しますか？」(🔁お届けと同じ ボタン or 地図で別指定→車両を見る)→③車両(上部に📍お届け/🏁回収を固定表示＋クラスフィルタ＋条件一致車両のみ)。3ステップともヘッドレスでスクショ確認済。
+- 地図クリック・検索(selectAddress)は`locStep==='collection'`なら`setCollectionPin`、他は`setDeliveryPin`に振り分け。`reverseGeocode`冒頭/末尾で`renderLocPanel()`呼び（お届け確定→パネル即反映のバグ修正）。
+- createBookingOnServer: `col_place = collectionAddr || deliveryAddr`。confirm画面に回収場所行。
+- ⚠️ **PC版TOP(renderTopScreenPC)は従来のall-in-one(map+panel同時)のまま**＝step式は**モバイルのみ**適用。PC統一は次段。旧チェックボックス式回収(toggleSameCollection)は撤去・関数は未使用残置。
+
 ## 🎨 KEYDROP デザイン改修2（2026-06-09・オーナーFB8点）
 ①ヘッダーロゴ拡大(28→40px/PC48)②メインCTA(お届け場所を選ぶ)を黒→**黄に戻す**(btn-primary黄/ダーク文字)③該当車両なし時の注釈(空車0で「予約可能な車両がありません」案内+問い合わせ導線)④選んだお届け場所を車両パネル上部に**sticky固定表示**(✕で変更)⑤確認ページのボタンを「＋オプションを追加(→options)」「予約手続きに進む(→form)」に変更⑥支払い=**Squareクレカのみ**(Apple Pay/PayPay削除・自動選択)⑦日程ラベルを開始/終了→**お届け日/お届け時間/回収日/回収時間**＋**回収場所**追加(state.sameCollection既定true＝お届けと同じ/チェックOFFで住所入力→col_place分岐・確認ページに回収場所行)⑧admin(SPK)連携はcreate-bookingで達成済。state追加: collectionAddr/sameCollection。fn追加: toggleSameCollection。※マップ画面の固定カード/回収UIは実機(地図タイル+クリック)で要目視。
 

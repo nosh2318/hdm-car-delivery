@@ -800,8 +800,11 @@
         deliveryLat: null,
         deliveryLng: null,
         deliveryAddr: '',
-        collectionAddr: '',   // ⑦ 回収場所（空=お届けと同じ）
-        sameCollection: true, // ⑦ 既定: 回収=お届けと同じ
+        collectionAddr: '',   // 回収場所（住所/名称）
+        collectionLat: null,
+        collectionLng: null,
+        locStep: 'delivery', // 場所フロー: delivery→collection→vehicle
+        sameCollection: true,
         // 配達可能範囲（DB public_delivery_config_v＝adminオーナー設定で上書き。既定=札幌駅中心20km/札幌市内）
         deliveryConfig: { centerLat: 43.0687, centerLng: 141.3508, centerName: '札幌駅', radiusKm: 20, cityFilter: '札幌市' },
         outOfArea: false,
@@ -839,6 +842,7 @@
     // ════════════════════════════════════════════
     let map = null;
     let deliveryMarker = null;
+    let collectionMarker = null;
 
     function initMap(lat, lng) {
         if (map) return;
@@ -855,9 +859,10 @@
             maxZoom: 19,
         }).addTo(map);
 
-        // Tap to set delivery pin
+        // Tap to set pin（locStepで お届け/回収 を振り分け）
         map.on('click', (e) => {
-            setDeliveryPin(e.latlng.lat, e.latlng.lng);
+            if (state.locStep === 'collection') setCollectionPin(e.latlng.lat, e.latlng.lng);
+            else setDeliveryPin(e.latlng.lat, e.latlng.lng);
         });
 
         state.mapReady = true;
@@ -898,9 +903,52 @@
         if (map) map.panTo([lat, lng]);
     }
 
+    // 回収場所ピン（お届けとは別色🏁）
+    function setCollectionPin(lat, lng, addr) {
+        state.collectionLat = lat;
+        state.collectionLng = lng;
+        state.sameCollection = false;
+        if (collectionMarker) {
+            collectionMarker.setLatLng([lat, lng]);
+        } else if (map) {
+            const cIcon = L.divIcon({
+                className: 'custom-pin',
+                html: '<div class="pin-marker pin-collect"><div class="pin-marker-inner" style="background:#1a1a1a;"><span>🏁</span></div><div class="pin-marker-shadow"></div></div>',
+                iconSize: [32, 42], iconAnchor: [16, 42],
+            });
+            collectionMarker = L.marker([lat, lng], { icon: cIcon, draggable: true }).addTo(map);
+            collectionMarker.on('dragend', (e) => {
+                const pos = e.target.getLatLng();
+                state.collectionLat = pos.lat; state.collectionLng = pos.lng;
+                reverseGeocodeCollection(pos.lat, pos.lng);
+            });
+        }
+        if (addr) { state.collectionAddr = addr; renderLocPanel(); }
+        else { reverseGeocodeCollection(lat, lng); }
+        if (map) map.panTo([lat, lng]);
+    }
+
+    async function reverseGeocodeCollection(lat, lng) {
+        state.collectionAddr = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        renderLocPanel();
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`);
+            const data = await res.json();
+            if (data.display_name) {
+                const a = data.address; const parts = [];
+                if (a.city || a.town || a.village) parts.push(a.city || a.town || a.village);
+                if (a.suburb || a.neighbourhood) parts.push(a.suburb || a.neighbourhood);
+                if (a.road) parts.push(a.road);
+                state.collectionAddr = parts.length ? parts.join(' ') : data.display_name.split(',').slice(0,3).join(', ');
+            }
+        } catch (e) {}
+        renderLocPanel();
+    }
+
     async function reverseGeocode(lat, lng) {
         state.deliveryAddr = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
         renderLocationBadge();
+        if (typeof renderLocPanel === 'function') renderLocPanel();
         try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`);
             const data = await res.json();
@@ -918,6 +966,7 @@
         }
         renderLocationBadge();
         updateLocationButton();
+        if (typeof renderLocPanel === 'function') renderLocPanel();
         fetchAvailableVehicles();
     }
 
@@ -932,23 +981,6 @@
     function renderVehiclePanel() {
         const days = getDayCount();
         let html = '';
-
-        // ④ 選んだお届け場所を上部に固定表示 ＋ ⑦ 回収場所
-        html += `<div style="position:sticky;top:0;z-index:6;background:#fff;border-bottom:1px solid #eee;padding:10px 12px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:18px;color:#FABE00;">📍</span>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-size:10px;color:#888;font-weight:600;">お届け場所</div>
-                    <div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr || '未指定'}</div>
-                </div>
-                <button onclick="clearDeliveryPin()" title="場所を変更" style="background:#f1f1f1;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:13px;color:#666;flex:none;">✕</button>
-            </div>
-            <label style="display:flex;align-items:center;gap:7px;margin-top:9px;font-size:12px;color:#444;cursor:pointer;">
-                <input type="checkbox" ${state.sameCollection!==false?'checked':''} onchange="toggleSameCollection(this.checked)" style="width:16px;height:16px;accent-color:#FABE00;">
-                <span>回収場所もお届け場所と同じ</span>
-            </label>
-            ${state.sameCollection===false ? `<input type="text" placeholder="回収場所（住所・ホテル名）" value="${(state.collectionAddr||'').replace(/"/g,'&quot;')}" oninput="state.collectionAddr=this.value" style="width:100%;margin-top:7px;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;box-sizing:border-box;">` : ''}
-        </div>`;
 
         // Class filter
         html += `<div class="class-chips">`;
@@ -1378,7 +1410,7 @@
 
                 <!-- Next Button -->
                 <div style="padding:0 16px 20px;max-width:600px;margin:0 auto;width:100%;">
-                    <button class="btn-primary" onclick="state.screen='step_location'; render();">お届け場所を選ぶ</button>
+                    <button class="btn-primary" onclick="state.screen='step_location'; state.locStep='delivery'; render();">お届け場所を選ぶ</button>
                 </div>
             </div>
         `;
@@ -1537,28 +1569,10 @@
                     </div>
                 </div>
 
-                <!-- Right: Panel -->
+                <!-- Right: ステップパネル（地図は左/上で常時表示） -->
                 <div class="location-panel-col">
-                    <!-- Info bar -->
-                    <div style="padding:14px 16px;border-bottom:1px solid #eee;">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                            <button style="background:none;border:none;font-size:18px;cursor:pointer;" onclick="state.screen='top'; render();">←</button>
-                            <span style="font-size:14px;font-weight:700;color:#1a1a1a;">お届け場所と車両を選ぶ</span>
-                        </div>
-                        <div style="font-size:11px;color:#888;">📅 ${startLabel} ${state.datetime.startTime} 〜 ${endLabel} ${state.datetime.endTime}（${days}日間）</div>
-                    </div>
-
-                    <!-- Vehicle Panel or Empty -->
-                    <div class="bottom-panel" id="bottomPanel" style="flex:1;border-top:none;${hasLocation ? '' : 'display:none;'}">
-                        <div class="panel-content" id="panelContent">
-                            ${hasLocation ? renderVehiclePanel() : ''}
-                        </div>
-                    </div>
-                    <div id="locationEmptyPanel" style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;${hasLocation ? 'display:none;' : ''}">
-                        <div>
-                            <div style="font-size:36px;margin-bottom:8px;">📍</div>
-                            <div style="font-size:14px;color:#999;">マップをタップして<br>お届け場所を指定</div>
-                        </div>
+                    <div id="locPanel" style="display:flex;flex-direction:column;height:100%;overflow-y:auto;">
+                        ${renderLocationStepPanel()}
                     </div>
                 </div>
             </div>
@@ -1568,6 +1582,66 @@
     // ════════════════════════════════════════════
     // ── STEP 3: Vehicle Selection ──
     // ════════════════════════════════════════════
+
+    // ── 場所フロー: ステップ別パネル（地図は再構築せずパネルのみ更新） ──
+    function renderLocPanel() {
+        const el = document.getElementById('locPanel');
+        if (el) el.innerHTML = renderLocationStepPanel();
+    }
+    function nextToCollection() { if (!state.deliveryLat) return; state.locStep='collection'; renderLocPanel(); }
+    function backToDelivery() { state.locStep='delivery'; renderLocPanel(); }
+    function goToVehicleStep() { state.locStep='vehicle'; renderLocPanel(); fetchAvailableVehicles(); }
+    function useSameCollection() {
+        state.collectionLat=state.deliveryLat; state.collectionLng=state.deliveryLng;
+        state.collectionAddr=state.deliveryAddr; state.sameCollection=true;
+        if (collectionMarker && map) { map.removeLayer(collectionMarker); collectionMarker=null; }
+        state.locStep='vehicle'; renderLocPanel(); fetchAvailableVehicles();
+    }
+    function renderLocationStepPanel() {
+        const days = getDayCount();
+        const sL = formatDateLabel(state.datetime.startDate), eL = formatDateLabel(state.datetime.endDate);
+        const stepBar = (n)=>`<div style="display:flex;align-items:center;gap:6px;padding:12px 16px 4px;font-size:12px;font-weight:800;">
+            <span style="color:${n>=1?'#1a1a1a':'#ccc'}">①お届け</span><span style="color:#ddd">›</span>
+            <span style="color:${n>=2?'#1a1a1a':'#ccc'}">②回収</span><span style="color:#ddd">›</span>
+            <span style="color:${n>=3?'#1a1a1a':'#ccc'}">③車両</span></div>`;
+        const dateChip = `<div style="font-size:11px;color:#888;padding:0 16px 8px;">📅 ${sL} ${state.datetime.startTime} 〜 ${eL} ${state.datetime.endTime}（${days}日間）</div>`;
+        const topRow = `<div style="display:flex;align-items:center;gap:8px;padding:12px 16px 0;">
+            <button style="background:none;border:none;font-size:18px;cursor:pointer;" onclick="state.screen='top'; render();">←</button>
+            <span style="font-size:12px;color:#888;">日程を変更</span></div>`;
+
+        if (state.locStep === 'collection') {
+            return topRow + stepBar(2) + dateChip + `
+                <div style="padding:4px 16px 18px;">
+                    <div style="font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:6px;">どこで車を返しますか？</div>
+                    <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px;">地図をタップ／検索で回収場所を指定。お届けと同じならボタンでOK。</div>
+                    <button onclick="useSameCollection()" style="width:100%;padding:12px;background:#fff;border:1.5px solid #1a1a1a;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px;">🔁 お届け場所と同じにする</button>
+                    ${state.collectionAddr ? `<div style="display:flex;align-items:center;gap:8px;background:#f6f6f6;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#888;font-weight:600;">回収場所</div><div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.collectionAddr}</div></div></div>` : ''}
+                    <button class="btn-primary" ${state.collectionAddr ? '' : 'disabled'} onclick="goToVehicleStep()">車両を見る ›</button>
+                    <button class="btn-secondary" onclick="backToDelivery()">‹ お届け場所に戻る</button>
+                </div>`;
+        }
+        if (state.locStep === 'vehicle') {
+            const colShow = state.collectionAddr || state.deliveryAddr || '—';
+            return `<div style="position:sticky;top:0;z-index:6;background:#fff;border-bottom:1px solid #eee;padding:10px 12px;">
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:11px;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📍 お届け：<b>${state.deliveryAddr || '—'}</b></div>
+                            <div style="font-size:11px;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;">🏁 回収：<b>${colShow}</b></div>
+                        </div>
+                        <button onclick="backToDelivery()" style="flex:none;background:#f1f1f1;border:none;border-radius:8px;padding:7px 11px;font-size:11px;font-weight:700;cursor:pointer;">場所を変更</button>
+                    </div>
+                </div>
+                <div class="panel-content" id="panelContent" style="flex:1;">${renderVehiclePanel()}</div>`;
+        }
+        // delivery (default)
+        return topRow + stepBar(1) + dateChip + `
+            <div style="padding:4px 16px 18px;">
+                <div style="font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:6px;">車をどこへ届けますか？</div>
+                <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px;">地図をタップ、または上の検索窓でお届け場所を指定してください。</div>
+                ${state.deliveryAddr ? `<div style="display:flex;align-items:center;gap:8px;background:#fffbf0;border:1px solid #FABE00;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#888;font-weight:600;">お届け場所</div><div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:18px 0;"><div style="font-size:30px;">📍</div><div style="font-size:13px;">地図で場所をタップ</div></div>'}
+                <button class="btn-primary" ${state.deliveryAddr ? '' : 'disabled'} onclick="nextToCollection()">次へ：回収場所 ›</button>
+            </div>`;
+    }
 
     function renderPanel() {
         const el = document.getElementById('panelContent');
@@ -2078,7 +2152,8 @@
             map.invalidateSize();
             setTimeout(() => {
                 map.setView([lat, lng], 16);
-                setDeliveryPin(lat, lng, placeName); // 逆ジオで上書きせず選択名称を保持
+                if (state.locStep === 'collection') setCollectionPin(lat, lng, placeName);
+                else setDeliveryPin(lat, lng, placeName);
             }, 100);
         }
     }
@@ -2163,7 +2238,7 @@
             tel: (state.formData && state.formData.phone) || '',
             people: 1,
             del_place: state.deliveryAddr || '',
-            col_place: (state.sameCollection === false && state.collectionAddr) ? state.collectionAddr : (state.deliveryAddr || ''),
+            col_place: state.collectionAddr || state.deliveryAddr || '',
             base_price: base,
             option_price: 0,
             discount: 0,
