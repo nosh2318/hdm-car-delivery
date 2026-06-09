@@ -1731,9 +1731,7 @@
         if (state.locStep === 'collection') {
             // 回収＝黒テーマ
             return stepBar(2) + `
-                <div style="padding:4px 16px 18px;">
-                    <div style="font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:6px;">🏁 どこで車を返しますか？</div>
-                    <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px;">地図をタップ／検索で<b>回収場所</b>を指定。お届けと同じならボタンでOK。</div>
+                <div style="padding:8px 16px 18px;">
                     <button onclick="useSameCollection()" style="width:100%;padding:12px;background:#1a1a1a;border:none;border-radius:10px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:12px;">🔁 お届け場所と同じにする</button>
                     ${state.collectionAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#1a1a1a;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">回収場所</div><div style="font-size:13px;font-weight:700;color:#fff;white-space:normal;word-break:break-all;line-height:1.5;">${state.collectionAddr}</div></div></div>` : ''}
                     <button class="btn-primary" ${state.collectionAddr ? '' : 'disabled'} onclick="goToVehicleStep()">車両を見る ›</button>
@@ -1742,9 +1740,7 @@
         }
         // delivery (default)＝お届け＝黄テーマ
         return stepBar(1) + `
-            <div style="padding:4px 16px 18px;">
-                <div style="font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:6px;">📍 車をどこへ届けますか？</div>
-                <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:12px;">地図をタップ、または上の検索窓で<b>お届け場所</b>を指定してください。</div>
+            <div style="padding:8px 16px 18px;">
                 ${state.deliveryAddr ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:10px 12px;margin-bottom:12px;"><span style="font-size:16px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">お届け場所</div><div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:normal;word-break:break-all;line-height:1.5;">${state.deliveryAddr}</div></div></div>` : '<div style="text-align:center;color:#bbb;padding:18px 0;"><div style="font-size:30px;">📍</div><div style="font-size:13px;">地図で場所をタップ</div></div>'}
                 <button class="btn-primary" ${state.deliveryAddr ? '' : 'disabled'} onclick="nextToCollection()">次へ：回収場所 ›</button>
             </div>`;
