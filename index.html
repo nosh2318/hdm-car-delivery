@@ -1033,13 +1033,13 @@
     async function fetchVehicles() {
         try {
             state.loading = true;
-            const [vehicles, fleet, maintenance] = await Promise.all([
-                supabaseGet('vehicles', 'insurance_veh=eq.false'),
-                supabaseGet('fleet'),
-                supabaseGet('maintenance'),
+            // 公開ビュー参照（札幌adminと同一DB・基テーブルは閉じたまま）
+            const [vehicles, maintenance] = await Promise.all([
+                supabaseGet('public_vehicles_v', 'select=code,type,name,seats'),
+                supabaseGet('public_maint_v', 'select=vehicle_code,start_date,end_date'),
             ]);
             state.vehicles = vehicles || [];
-            state.fleet = fleet || [];
+            state.fleet = [];
             state.maintenance = maintenance || [];
             state.loading = false;
             fetchAvailableVehicles();
@@ -1066,29 +1066,17 @@
             return;
         }
 
-        // Get busy vehicle codes (overlapping fleet + maintenance)
+        // Get busy vehicle codes (overlapping reservations + maintenance)
         const busyCodes = new Set();
 
-        // Check fleet (reservations)
-        for (const f of state.fleet) {
-            // We need to check reservation dates — join with reservations
-            // For now, fetch reservation data inline
-        }
-
-        // Simpler approach: fetch reservations that overlap with selected dates
+        // 予約で埋まっている車両（公開ビュー public_busy_v: vehicle_code＋期間を直接保持・PII非公開）
         try {
-            const reservations = await supabaseGet('reservations',
-                `status=neq.cancelled&lend_date=lte.${end}&return_date=gte.${start}`
+            const busy = await supabaseGet('public_busy_v',
+                `lend_date=lte.${end}&return_date=gte.${start}&select=vehicle_code`
             );
-            const bookedResIds = new Set((reservations || []).map(r => r.id));
-
-            for (const f of state.fleet) {
-                if (bookedResIds.has(f.reservation_id)) {
-                    busyCodes.add(f.vehicle_code);
-                }
-            }
+            for (const b of (busy || [])) busyCodes.add(b.vehicle_code);
         } catch (e) {
-            console.error('Failed to check reservations:', e);
+            console.error('Failed to check availability:', e);
         }
 
         // Check maintenance
