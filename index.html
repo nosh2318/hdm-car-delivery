@@ -1484,11 +1484,12 @@
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
     function generateDateOptions(selected) {
-        // 検索可能日：本日〜4ヶ月後まで。デフォルト空欄
+        // 検索可能日：最短48時間後（＝2日後）〜4ヶ月後まで。デフォルト空欄
         let html = `<option value="" ${!selected ? 'selected' : ''}>日付を選択</option>`;
         const today = new Date(); today.setHours(0,0,0,0);
+        const start = new Date(today); start.setDate(start.getDate() + 2); // 最短予約 = 48時間後
         const limit = new Date(today); limit.setMonth(limit.getMonth() + 4);
-        for (let d = new Date(today); d <= limit; d.setDate(d.getDate() + 1)) {
+        for (let d = new Date(start); d <= limit; d.setDate(d.getDate() + 1)) {
             const val = localYMD(d);
             const label = `${d.getMonth() + 1}/${d.getDate()}（${'日月火水木金土'[d.getDay()]}）`;
             html += `<option value="${val}" ${val === selected ? 'selected' : ''}>${label}</option>`;
