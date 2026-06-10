@@ -60,14 +60,19 @@
 6. **client を push**（GitHub Pages＝push即本番）。これで決済リダイレクト＋マイページが動く。
 7. **疎通テスト**：少額予約→Square決済→`?paid=`復帰→`reservations.status=confirmed`＋`keydrop_payments.status=paid`＋**顧客に完了メール**＋Slack通知 を確認→テストデータ削除。マイページから「キャンセルをリクエスト」→**運営に依頼メール**＋Slack＋changed_jsonマーカー を確認。署名不正で401も確認。
 
-### 🔴 残り（これだけ・オーナー作業／一部は鍵をもらえば私が実行）
-1. **DB RUN**：`007_keydrop_payments.sql`・`008_keydrop_notifications.sql`・`006`(60分版・再RUN)。
-2. **Square管理画面**：Webhook作成（endpoint=`.../functions/v1/payment-webhook`／`payment.created`,`payment.updated`）→**署名キー取得**＋本番アクセストークン。
-3. **secrets設定**（値をもらえば私が`supabase secrets set`実行）：`SQUARE_ACCESS_TOKEN`/`SQUARE_LOCATION_ID`=L8N7J9RKPN3WH/`SQUARE_WEBHOOK_SIGNATURE_KEY`/`SQUARE_WEBHOOK_URL`（＋任意 Slack/`KEYDROP_OPS_EMAIL`）。
+### ✅ Go-Live ほぼ完了（2026-06-10・残=GASメールのみ）
+1. ~~DB RUN~~ ✅ **完了**（007/008/006 を Management API `/v1/projects/{ref}/database/query` で実行＝SQL Editor不要。⚠️python urllibはCloudflare 1010で弾かれる→**curlで叩く**。PAT=`~/.config/keydrop/sb_token`）。TTLは60分でcron登録(`keydrop-expire-pending` */5)。
+2. ~~Square管理画面~~ ✅ **完了**（Webhook「KEYDROP」作成・Enabled・events=Payments(2)=payment.created/updated。App=HandymanOnline・Production）。
+3. ~~secrets設定~~ ✅ **完了**：`SQUARE_ACCESS_TOKEN`/`SQUARE_LOCATION_ID`=L8N7J9RKPN3WH(既存じゃらんと同じLocation・後で`L8Q5E50YG6M7K`札幌デリバリーに切替可)/`SQUARE_WEBHOOK_SIGNATURE_KEY`/`SQUARE_WEBHOOK_URL`/`SLACK_BOT_TOKEN`/`SLACK_KEYDROP_CHANNEL`=C08TDTPEB36。
 4. ~~Edge Functionデプロイ~~ ✅ 完了（3本）。
-5. **GASメール送信ワーカー**：`gas/keydrop_mail.gs` を新規GAS化＋service_roleキー＋reserve@エイリアス＋`setupKeydropMailTrigger()`。
+5. 🔴 **GASメール送信ワーカー（唯一の残り）**：`gas/keydrop_mail.gs` を新規GAS(noritaka.oshita@)化＋ScriptProperty `SUPABASE_SERVICE_KEY`(service_role)＋reserve@ send-asエイリアス＋`setupKeydropMailTrigger()`実行(5分)。**これが無いと完了/キャンセルメールがキューに溜まるだけで届かない**。
 6. ~~client push~~ ✅ 完了。
-7. **疎通テスト**：少額決済→confirmed＋顧客完了メール＋Slack／キャンセル依頼→運営通知 を確認。
+7. ~~疎通テスト（バックエンドE2E）~~ ✅ **完了**：create-booking→Square link発行(WTuSGDML)＋CX-3自動配車＋price¥7,000→署名付きwebhook(payment.updated/COMPLETED)→**reservations.status=confirmed＋keydrop_payments.status=paid＋keydrop_notifications(type=confirm)投入**を実証→テストデータ全削除。署名不正は401・GET405も確認済。**実カード決済での最終確認はGAS設置後にオーナーが1件実施**。
+
+### ⚠️ 現状の到達点
+- **決済の裏側は完全稼働**（支払う→Square→入金webhook→confirmed＋Slack）。実課金アンロック済み。
+- **唯一GASメール未設置**＝顧客への完了メール／運営へのキャンセル依頼メールが「届かない（キューに残る）」。GAS設置で即配信（溜まった分も送られる）。
+- ∴ **一般公開はGAS設置後**が望ましい（メール必須要件のため）。それまではオーナーのテスト運用のみ。
 
 ### 残（決済導入後）
 - 返金フロー（運営確定時の Square Refund 自動化）＝既存 payment_bot のRefund実装が流用可。

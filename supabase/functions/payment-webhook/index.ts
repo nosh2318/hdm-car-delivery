@@ -179,12 +179,32 @@ Deno.serve(async (req) => {
 
   const amt = payment.amount_money?.amount ? `¥${Number(payment.amount_money.amount).toLocaleString()}` : "";
   console.log(`[webhook] PAID ${resvId} ${amt} order=${orderId}`);
-  await notifySlack(`✅ *KEYDROP 入金確認* ${resvId} ${amt}\n予約を確定（confirmed）にしました。`);
+
+  // 予約詳細を取得（Slack通知＋完了メールの両方で使う）
+  let rv: any = null;
+  try {
+    rv = (await sbGet("reservations",
+      `id=eq.${encodeURIComponent(resvId)}&select=id,name,mail,vehicle,lend_date,return_date,lend_time,del_time,return_time,col_time,del_place,col_place,price,people,insurance`))[0];
+  } catch (e) { console.error("[webhook] fetch reservation:", e); }
+
+  // --- 🆕 新規予約（入金確定）を運営Slackへ（車両・日時・場所つき）---
+  if (rv) {
+    const lt = rv.lend_time || rv.del_time || "";
+    const rt = rv.return_time || rv.col_time || "";
+    await notifySlack([
+      `🆕 *KEYDROP 新規予約*（入金確認・確定）`,
+      `予約番号: ${resvId} / ${rv.name || ""}様`,
+      `車両: ${rv.vehicle || ""}クラス`,
+      `お届け: ${rv.lend_date || ""} ${lt}　${rv.del_place || ""}`,
+      `回収: ${rv.return_date || ""} ${rt}　${rv.col_place || rv.del_place || ""}`,
+      `金額: ${amt || ("¥" + Number(rv.price || 0).toLocaleString())}`,
+    ].join("\n"));
+  } else {
+    await notifySlack(`🆕 *KEYDROP 新規予約*（入金確認・確定） ${resvId} ${amt}`);
+  }
 
   // --- 予約完了メールをキューに投入（GAS送信ワーカーが reserve@ から顧客へ送信）---
   try {
-    const rv = (await sbGet("reservations",
-      `id=eq.${encodeURIComponent(resvId)}&select=id,name,mail,vehicle,lend_date,return_date,lend_time,del_time,return_time,col_time,del_place,col_place,price,people,insurance`))[0];
     if (rv && rv.mail) {
       await sbPost("keydrop_notifications", {
         type: "confirm",
