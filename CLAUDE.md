@@ -76,7 +76,8 @@
 - 残りは **実カード決済での最終E2E（オーナーがテスト予約1件）** のみ。⚠️実課金＝テスト後はマイページ→キャンセル依頼→SPKで返金 or Square Dashboardで返金。
 
 ### 追記（2026-06-10 後半セッション）
-- **スパム対策①②実装済**（テスト合格）：011 `keydrop_rate`(IP×時間窓・1時間毎purge cron)。create-booking＝ハニーポット(payload `hp`・隠しフィールド `formCompanyUrl`)即拒否＋IP1時間8件超で429。keydrop-mypage＝IP1時間30回超で429(総当たり防止)。③Turnstileは未（スパム実発生時・要Cloudflare登録）。
+- **スパム対策②レート制限のみ採用**：011 `keydrop_rate`(IP×時間窓・1時間毎purge cron)。create-booking＝IP1時間8件超で429。keydrop-mypage＝IP1時間30回超で429(総当たり防止)。
+  - 🔴**①ハニーポットは撤去**（2026-06-10）：隠しテキスト欄をブラウザ自動入力が埋め、実客が「不正なリクエスト」で弾かれた（決済フローで実客ブロックは厳禁）。bot対策はレート制限＋将来③Turnstile(要Cloudflare登録)で対応。隠しフィールド方式は使わない。
 - **最短予約=48時間後**（generateDateOptions開始をtoday+2）。
 - **メール表記 KEY-DROP**：GAS `keydrop_mail.gs` の FROM_NAME/件名/挨拶/署名を「CARデリバリー KEY-DROP」に＋「緊急連絡先」行削除（営業時間のみ）。⚠️**GASは手動貼付なので、最新版をGASエディタに貼り直すまで旧表記のまま**。
 - 🔴**価格マスターUIは既存 `~/spk-task/keydrop-pricing.html`（SPK TOP「💴KEYDROP価格」タイル）が正**。配達範囲UIも既存 `keydrop-admin.html`（「📍KEYDROP配達範囲」）。**新規に作らない**（当方が重複でkeydrop-prices.htmlを作り→撤去した。次回も既存を使う）。価格は `app_settings.hdm_keydrop_price`(prices{class:[閑散,通常,繁忙]}/presets/default)＝keydrop_book(005)がサーバ計算。
