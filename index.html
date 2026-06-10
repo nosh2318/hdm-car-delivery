@@ -3283,42 +3283,16 @@
             </div>
         `;
 
-        // ── 予約内容（お届け・回収の場所/時間）の変更：独立セクション（出発24時間前まで）──
-        if (!isCancelled && !isCompleted) {
-            const ed = canEditMypage(r);
-            if (ed.editable) {
-                html += `
-                <div class="mp-detail-section" style="border:1.5px solid #FABE00;">
-                    <div class="mp-detail-header" style="background:#fffbf0;color:#a07c00;">✏️ お届け・回収の変更</div>
-                    <div class="mp-detail-body">
-                        <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:10px;">場所・時間は<b>出発の24時間前まで</b>マイページから変更できます。<br>（車種・日付の変更は公式LINEへ）</div>
-                        <button class="btn-primary" style="margin:0;" onclick="mpEditOpen()">📝 場所・時間を変更する</button>
-                    </div>
-                </div>`;
-            } else {
-                html += `
-                <div class="mp-detail-section">
-                    <div class="mp-detail-header">✏️ お届け・回収の変更</div>
-                    <div class="mp-detail-body">
-                        <div style="font-size:12px;color:#555;line-height:1.7;">${ed.reason}</div>
-                        <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:12px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:7px 12px;">💬 公式LINEで変更を依頼</a>
-                    </div>
-                </div>`;
-            }
-        }
-
-        // ── 固定マップ（お届け地点＋回収地点を一括表示）──
+        // ── ご予約後の変更案内（自己変更UI・地図は廃止＝公式LINEで承る）──
         if (!isCancelled) {
             html += `
                 <div class="mp-detail-section">
-                    <div class="mp-detail-header">🗺 お届け・回収マップ</div>
-                    <div id="mypageMap" data-del="${encodeURIComponent(r.del_place || '')}" data-col="${encodeURIComponent(r.col_place || '')}" style="height:240px;border-radius:0 0 12px 12px;overflow:hidden;background:#eaeef2;"></div>
-                    <div style="display:flex;gap:14px;justify-content:center;padding:8px 0 2px;font-size:11px;color:#666;font-weight:700;">
-                        <span>📍 <span style="color:#16a34a;">お届け</span></span>
-                        <span>🏁 <span style="color:#dc2626;">回収</span></span>
+                    <div class="mp-detail-header">🔁 ご予約後の変更について</div>
+                    <div class="mp-detail-body">
+                        <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:10px;">ご予約後の変更（車種・お届け／回収の<b>場所・時間</b>）は、<b>公式LINE</b>にて承ります。お気軽にご連絡ください。</div>
+                        <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:inline-block;font-size:12px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:8px 13px;">💬 公式LINEで変更を依頼</a>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
         // ── ① 予約内容の変更について（独立・折りたたみ・既定で閉）──
@@ -3336,11 +3310,11 @@
                     </div>
                     <div style="font-size:12px;line-height:1.7;color:#444;margin-bottom:10px;">
                         <div style="font-weight:800;color:#1a1a1a;margin-bottom:2px;">② お届け場所／回収場所の変更</div>
-                        マイページの「✏️ お届け・回収の変更」から、<b>出発の24時間前まで</b>ご自身で変更できます。それ以降は公式LINEへ。
+                        公式LINEよりご連絡ください。担当者が承ります。
                     </div>
                     <div style="font-size:12px;line-height:1.7;color:#444;margin-bottom:8px;">
                         <div style="font-weight:800;color:#1a1a1a;margin-bottom:2px;">③ お届け時間／回収時間の変更</div>
-                        マイページの「✏️ お届け・回収の変更」から、<b>出発の24時間前まで</b>ご自身で変更できます。それ以降は公式LINEへ。
+                        公式LINEよりご連絡ください。担当者が承ります。
                     </div>
                     <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:inline-block;font-size:11.5px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:5px 10px;">💬 公式LINEで連絡</a>
                 </div>
