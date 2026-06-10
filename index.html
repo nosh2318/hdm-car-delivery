@@ -1543,13 +1543,14 @@
     }
 
     function getDayCount() {
+        // 暦日カウント：日を跨いだら +1 日（例 6/13→6/14 = 2日間）。時刻は料金日数に影響しない。
         const d = state.datetime;
-        if (!d.startDate || !d.startTime || !d.endDate || !d.endTime) return 1; // 未選択は1（NaN防止）
-        const s = new Date(d.startDate + 'T' + d.startTime);
-        const e = new Date(d.endDate + 'T' + d.endTime);
-        const hours = (e - s) / (1000 * 60 * 60);
-        if (isNaN(hours)) return 1;
-        return Math.max(1, Math.ceil(hours / 24));
+        if (!d.startDate || !d.endDate) return 1; // 未選択は1（NaN防止）
+        const s = new Date(d.startDate + 'T00:00:00');
+        const e = new Date(d.endDate + 'T00:00:00');
+        const dayDiff = Math.round((e - s) / (1000 * 60 * 60 * 24));
+        if (isNaN(dayDiff)) return 1;
+        return Math.max(1, dayDiff + 1);
     }
 
     // ════════════════════════════════════════════
