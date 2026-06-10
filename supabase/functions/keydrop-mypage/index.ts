@@ -109,6 +109,15 @@ Deno.serve(async (req) => {
   let p: any;
   try { p = await req.json(); } catch { return json({ error: "invalid json" }, 400, origin); }
 
+  // --- スパム対策②：レート制限（予約番号+メールの総当たり探索を防止）---
+  const _ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+  try {
+    const since = new Date(Date.now() - 3600 * 1000).toISOString();
+    const recent = await sbGet("keydrop_rate", `ip=eq.${encodeURIComponent(_ip)}&path=eq.mypage&created_at=gte.${encodeURIComponent(since)}&select=id`);
+    if (recent.length >= 30) return json({ error: "アクセスが集中しています。しばらくしてから再度お試しください" }, 429, origin);
+    await sbPost("keydrop_rate", { ip: _ip, path: "mypage" });
+  } catch (e) { console.error("[rate]", e); }
+
   const action = String(p.action || "").trim();
   const mail = String(p.mail || "").trim().toLowerCase();
   const resId = String(p.resId || p.reservationId || "").trim();

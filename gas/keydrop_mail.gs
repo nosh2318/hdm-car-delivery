@@ -18,7 +18,7 @@
 
 var SB_URL = 'https://ckrxttbnawkclshczsia.supabase.co';
 var FROM_EMAIL = 'reserve@rent-handyman.jp';
-var FROM_NAME  = 'CARデリバリー KEYDROP';
+var FROM_NAME  = 'CARデリバリー KEY-DROP';
 var MYPAGE_URL = 'https://nosh2318.github.io/hdm-car-delivery/?mypage=1';
 var LINE_URL   = 'https://lin.ee/g6iDNYz';
 var LINE_ID    = '@730kyhwl';
@@ -75,10 +75,10 @@ function sendKeydropNotifications() {
 function _buildConfirmMail_(n) {
   var p = n.payload || {};
   var id = n.reservation_id || '';
-  var subject = '【KEYDROP】ご予約が確定しました（予約番号 ' + id + '）';
+  var subject = '【KEY-DROP】ご予約が確定しました（予約番号 ' + id + '）';
   var body =
     (p.name || 'お客様') + ' 様\n\n' +
-    'この度はCARデリバリーKEYDROPをご利用いただき誠にありがとうございます。\n' +
+    'この度はCARデリバリーKEY-DROPをご利用いただき誠にありがとうございます。\n' +
     'お支払いを確認し、ご予約が確定いたしました。\n\n' +
     '━━━━━━━━━━━━━━━━━━━━\n' +
     '■ ご予約内容\n' +
@@ -100,7 +100,7 @@ function _buildConfirmMail_(n) {
     '■ お問い合わせ\n' +
     '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
     '営業時間：9:00〜19:00\n\n' +
-    'CARデリバリー KEYDROP\n';
+    'CARデリバリー KEY-DROP\n';
   return { subject: subject, body: body };
 }
 
@@ -108,7 +108,7 @@ function _buildConfirmMail_(n) {
 function _buildCancelRequestMail_(n) {
   var p = n.payload || {};
   var id = n.reservation_id || '';
-  var subject = '【KEYDROP】キャンセル依頼 予約番号 ' + id + ' / ' + (p.name || '') + '様';
+  var subject = '【KEY-DROP】キャンセル依頼 予約番号 ' + id + ' / ' + (p.name || '') + '様';
   var body =
     '顧客がマイページでキャンセルを依頼しました。\n' +
     '返金額（キャンセル料率）を判断のうえ、SPK admin で確定処理をしてください。\n\n' +

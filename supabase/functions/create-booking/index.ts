@@ -215,6 +215,16 @@ Deno.serve(async (req) => {
   let p: any;
   try { p = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
 
+  // --- スパム対策①②：ハニーポット＋レート制限 ---
+  if (String(p.hp || "").trim()) return json({ error: "不正なリクエストです" }, 400); // 隠しフィールドが埋まっている＝bot
+  const _ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+  try {
+    const since = new Date(Date.now() - 3600 * 1000).toISOString();
+    const recent = await sbGet("keydrop_rate", `ip=eq.${encodeURIComponent(_ip)}&path=eq.book&created_at=gte.${encodeURIComponent(since)}&select=id`);
+    if (recent.length >= 8) return json({ error: "短時間に予約が集中しています。しばらくしてから再度お試しください" }, 429);
+    await sbPost("keydrop_rate", { ip: _ip, path: "book" });
+  } catch (e) { console.error("[rate]", e); /* 判定失敗時は可用性優先で通す */ }
+
   // --- 入力検証 ---
   const cls = String(p.vehicleClass || p.vehicle || "").trim();
   const lend = String(p.lend_date || "").trim();
