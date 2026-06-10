@@ -754,11 +754,8 @@
         }
         /* 地図/予約画面ではPCフッターを隠す（ボタン見切れ防止・縦スペース確保） */
         .kd-mapscreen .pc-footer { display: none !important; }
-        .kv-slide { position: absolute; inset: 0; opacity: 0; animation: kvFade 28s infinite; }
-        /* 黒帯を「同じ画像のぼかし版」で埋める＝黒が消える（cover+blur+拡大） */
-        .kv-slide::before { content: ''; position: absolute; inset: 0; background-image: var(--kvimg); background-size: cover; background-position: center; filter: blur(34px) brightness(0.82); transform: scale(1.2); }
-        /* 主役の画像（全体が見えるcontain・焼込テキストも切れない） */
-        .kv-slide::after { content: ''; position: absolute; inset: 0; background-image: var(--kvimg); background-size: contain; background-repeat: no-repeat; background-position: center; }
+        /* 枠いっぱいに敷く（cover）＝上下の黒帯もぼかしも出ない。画像中央基準で表示 */
+        .kv-slide { position: absolute; inset: 0; background-image: var(--kvimg); background-size: cover; background-position: center; opacity: 0; animation: kvFade 28s infinite; }
         /* モバイル用キービジュアル帯（PCは左ビジュアルがあるので非表示） */
         .kv-mobile { display: none; }
         @media (max-width: 899px) {
