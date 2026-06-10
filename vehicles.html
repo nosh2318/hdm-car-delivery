@@ -58,7 +58,7 @@
 const SU='https://ckrxttbnawkclshczsia.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
 const COLORS={A:'#7c3aed',A2:'#6d28d9',B:'#0284c7',B2:'#0369a1',C:'#059669',S:'#d97706',F:'#db2777',H:'#64748b'};
-const IMG={A:'class_A',A2:'class_A',B:'class_B',B2:'class_B',C:'class_C',S:'class_S',F:'class_F',H:'class_H'};
+const IMG={A:'class_A',A2:'class_A',B:'class_B',B2:'class_B2',C:'class_C',S:'class_S',F:'class_F',H:'class_H'};
 const TIERS=['閑散','通常','繁忙'];
 async function get(path){try{const r=await fetch(SU+'/rest/v1/'+path,{headers:{apikey:SK,Authorization:'Bearer '+SK}});if(!r.ok)return null;return await r.json();}catch(e){return null;}}
 function pv(v){if(v==null)return null;if(typeof v==='string'){try{return JSON.parse(v);}catch(e){return null;}}return v;}
