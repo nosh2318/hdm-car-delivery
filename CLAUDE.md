@@ -75,6 +75,15 @@
 - **キャンセル/返金 3層 完成**：①顧客マイページ「キャンセルをリクエスト」(ポリシー同意チェック＋送信・独立セクション)→②SPK TOP「🚫KEYDROPキャンセル依頼」リスト(返金額/料率/Square決済ID表示)→③スタッフがSquare手動返金→「確定」(2段階)＝keydrop-refund(記録のみ・自動返金しない)→予約キャンセル/台帳refunded/配車解放/Slack。マーカーは`keydrop_payments.cancel_requested_at`(reservationsにchanged_json列なし)。
 - 残りは **実カード決済での最終E2E（オーナーがテスト予約1件）** のみ。⚠️実課金＝テスト後はマイページ→キャンセル依頼→SPKで返金 or Square Dashboardで返金。
 
+### 🔴 決済＝埋め込み型に変更（2026-06-10 夜・最新）
+- **リダイレクト型(Payment Link)→ 埋め込み型(Square Web Payments SDK)に変更**（一般EC型・サイト内でカード入力→その場決済→完了画面）。オーナー要望「リダイレクトは見慣れない挙動」。
+- **client**：支払い画面に `#card-container`（Square SDKカードフォーム）。head に `https://web.squarecdn.com/v1/square.js`。`SQUARE_APP_ID='sq0idp-C0XgrzYXhgIEbE7G8GGgpA'` / `SQUARE_LOCATION_ID='L8N7J9RKPN3WH'`。`initSquareCard()`(render時に描画・destroy→再attach) / `payWithCard()`(tokenize→keydrop-pay→完了画面)。render()内 `screen==='payment'` で初期化。
+- **server**：新Edge Function **`keydrop-pay`**（verify_jwt ON）＝`keydrop_book_v2`(012)で予約+総額確定→**Square Payments API `/v2/payments`でtoken即時課金**→成功:confirmed+keydrop_payments paid+完了メール+Slack／失敗:予約をcancelled(配車解放)。idempotency_key=`kdpay-{resId}`。
+- **012 `keydrop_book_v2`**：金額バグ修正＝**ceil(時間/24)日数×クラスtier＋オプション(pack安心¥1650/cdw免責¥1100/日・child¥1000・junior¥500)をサーバ計算**＝表示額と一致。base_price=クラス計/option_price=オプション計/price=総額。insurance_label(pack→フル/cdw→免責/none→なし)。時刻も保存。
+- 旧 `create-booking`＋`processPayment`(リダイレクト)は**残置・未使用**（payment-webhookも埋め込みでは同期確定するため実質バックアップ）。
+- ✅検証：偽トークン→Square拒否402＋予約自動cancelled確認。カードフォーム本番描画OK(スクショ)。**実カードの成功課金E2Eはオーナーが実施(残)**。
+- ⚠️Square Web Payments SDKは本番AppID+Locationで動作。カードフォームは本番表示確認済。
+
 ### 追記（2026-06-10 後半セッション）
 - **スパム対策②レート制限のみ採用**：011 `keydrop_rate`(IP×時間窓・1時間毎purge cron)。create-booking＝IP1時間8件超で429。keydrop-mypage＝IP1時間30回超で429(総当たり防止)。
   - 🔴**①ハニーポットは撤去**（2026-06-10）：隠しテキスト欄をブラウザ自動入力が埋め、実客が「不正なリクエスト」で弾かれた（決済フローで実客ブロックは厳禁）。bot対策はレート制限＋将来③Turnstile(要Cloudflare登録)で対応。隠しフィールド方式は使わない。
@@ -84,10 +93,10 @@
 - **マップ（最適解＝全部無料・Google不使用）**：地図=OSM/Leaflet(無料)／住所検索=**国土地理院GSI(`msearch.gsi.go.jp/address-search`・無料・キー不要・日本特化)を主→Nominatim(無料)フォールバック**(`searchAddress`→`gsiSearch`)／逆ジオ(map tap→住所)=Nominatim(無料・`fetchFullAddress`)。**Google Placesは有料化リスクのため不使用に切替**（`loadGooglePlaces`は冒頭return・`searchAddress`もGoogle分岐撤去。コードは将来用に残置）。∴マップ系の課金リスク=ゼロ。
 - **課金（固定費）**：実質 **Supabase Pro $25/月のみ**（明日変更予定）。GitHub Pages/GAS/地図=無料。Square=取引手数料のみ。月100本規模はPro($25)で余裕（重い閲覧アクセスはPages/OSMが捌き、Supabaseは小さなデータ取得のみ）。
 
-### Edge Functions（4本・全デプロイ済）
-- `create-booking`(verify_jwt ON) / `keydrop-mypage`(同・lookup/cancel/update/cancel_request) / `payment-webhook`(**--no-verify-jwt**・署名検証) / `keydrop-refund`(同verify_jwt ON・authenticated限定・記録のみ)。
+### Edge Functions（5本・全デプロイ済）
+- `keydrop-pay`(verify_jwt ON・**埋め込み決済の本線**) / `keydrop-mypage`(lookup/cancel/update/cancel_request) / `payment-webhook`(**--no-verify-jwt**・署名検証・バックアップ) / `keydrop-refund`(authenticated限定・記録のみ) / `create-booking`(旧リダイレクト・未使用残置)。
 - secrets：SQUARE_ACCESS_TOKEN / SQUARE_LOCATION_ID=L8N7J9RKPN3WH / SQUARE_WEBHOOK_SIGNATURE_KEY / SQUARE_WEBHOOK_URL / SLACK_BOT_TOKEN / SLACK_KEYDROP_CHANNEL=C08TDTPEB36。
-- DB migration 001–010 全RUN済（Management API `/database/query`＝curl。pythonはCloudflare1010で不可）。keydrop_payments：authenticated SELECT可・更新はservice_role限定。
+- DB migration 001–012 全RUN済（Management API `/database/query`＝**curl**。pythonはCloudflare1010で不可。PAT=`~/.config/keydrop/sb_token`）。keydrop_payments：authenticated SELECT可・更新はservice_role限定。価格RPCは`keydrop_book_v2`(012)が本線。
 - Square Webhook「KEYDROP」Enabled(payment.created/updated)・App=HandymanOnline/Production。
 
 ### 残（決済導入後）
