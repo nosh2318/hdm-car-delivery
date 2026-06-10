@@ -2054,11 +2054,13 @@
                     <div style="display:flex;gap:8px;">
                         <div style="flex:1;min-width:0;background:#fffbf0;border:1.5px solid #FABE00;border-radius:9px;padding:7px 10px;">
                             <div style="font-size:10px;color:#a07c00;font-weight:800;">📍 お届け</div>
-                            <div style="font-size:12px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr || '—'}</div>
+                            <div style="font-size:12px;font-weight:800;color:#1a1a1a;">📅 ${formatDateLabel(state.datetime.startDate) || '日付未選択'}${state.datetime.startTime ? ' '+state.datetime.startTime : ''}</div>
+                            <div style="font-size:11px;font-weight:600;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${state.deliveryAddr || '—'}</div>
                         </div>
                         <div style="flex:1;min-width:0;background:#1a1a1a;border-radius:9px;padding:7px 10px;">
                             <div style="font-size:10px;color:#FABE00;font-weight:800;">🏁 回収</div>
-                            <div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${colShow}</div>
+                            <div style="font-size:12px;font-weight:800;color:#fff;">📅 ${formatDateLabel(state.datetime.endDate) || '日付未選択'}${state.datetime.endTime ? ' '+state.datetime.endTime : ''}</div>
+                            <div style="font-size:11px;font-weight:600;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${colShow}</div>
                         </div>
                     </div>
                 </div>
