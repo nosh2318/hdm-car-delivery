@@ -1010,7 +1010,7 @@
         cdw: 'none',           // 'none' | 'cdw' | 'pack'
         options: { childSeat: 0, juniorSeat: 0 },
         // Language
-        lang: 'ja',            // 'ja' | 'en' | 'zh'
+        lang: (function(){try{return localStorage.getItem('kd_lang')||'ja';}catch(e){return 'ja';}})(),  // 'ja' | 'en' | 'zh'
     };
 
     // 利用期間はデフォルト空欄（お届け日を選ぶと回収日が同日に自動セット）
@@ -2137,7 +2137,7 @@
             </div>
             <div class="screen-header">
                 <button class="screen-header-back" onclick="state.screen='step_vehicle'; render();">←</button>
-                <span class="screen-header-title">予約内容の確認</span>
+                <span class="screen-header-title">${t('confirmTitle')}</span>
                 <button onclick="state.screen='step_vehicle'; render();" style="margin-left:auto;background:#f1f1f1;border:none;border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;">‹ 車両選択へ戻る</button>
             </div>
             ${renderBookingProgress(1)}
@@ -2191,13 +2191,13 @@
             </div>
             <div class="screen-header">
                 <button class="screen-header-back" onclick="state.screen='options'; render();">←</button>
-                <span class="screen-header-title">予約者情報</span>
+                <span class="screen-header-title">${t('hdrBooker')}</span>
             </div>
             ${renderBookingProgress(2)}
             <div class="form-screen screen-fade">
-                <div style="font-size:11px;color:#888;margin-bottom:12px;line-height:1.5;">ご予約者さまの情報を入力してください。運転される方が異なる場合は下のチェックを入れてください。</div>
+                <div style="font-size:11px;color:#888;margin-bottom:12px;line-height:1.5;">${t('bookerDesc')}</div>
                 <div id="formError" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#dc2626;"></div>
-                <div style="font-size:12px;font-weight:900;color:#1a1a1a;margin-bottom:8px;">👤 予約者情報</div>
+                <div style="font-size:12px;font-weight:900;color:#1a1a1a;margin-bottom:8px;">${t('bookerSection')}</div>
                 <div class="form-group">
                     <label class="form-label">お名前<span class="required">*必須</span></label>
                     <input class="form-input" type="text" id="formName" oninput="validateForm()" placeholder="山田 太郎" value="${state.formData?.name || ''}">
@@ -2213,7 +2213,7 @@
                 <div class="form-group">
                     <label class="form-label">メールアドレス<span class="required">*必須</span></label>
                     <input class="form-input" type="email" id="formEmail" oninput="validateForm()" placeholder="example@mail.com" value="${state.formData?.email || ''}">
-                    <div style="font-size:11px;color:#dc2626;font-weight:700;margin-top:5px;line-height:1.6;">⚠️ このメールアドレスは<u>マイページのログイン</u>に使用します。予約確認メールもこちらに送信されます。</div>
+                    <div style="font-size:11px;color:#dc2626;font-weight:700;margin-top:5px;line-height:1.6;">${t('emailLoginNote')}</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">特記事項</label>
@@ -2222,10 +2222,10 @@
 
                 <label style="display:flex;align-items:center;gap:9px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:13px;font-weight:700;color:#1a1a1a;cursor:pointer;margin:6px 0 4px;">
                     <input type="checkbox" id="driverDiffers" ${state.formData?.driverDiffers ? 'checked' : ''} onchange="toggleDriverDiff()" style="width:18px;height:18px;accent-color:#FABE00;">
-                    予約者と運転者が異なる場合
+                    ${t('diffDriver')}
                 </label>
                 <div id="driverSection" style="display:${state.formData?.driverDiffers ? 'block' : 'none'};background:#fffbf0;border:1.5px solid #FABE00;border-radius:12px;padding:14px;margin-bottom:8px;">
-                    <div style="font-size:12px;font-weight:900;color:#a07c00;margin-bottom:10px;">🚗 運転者情報（免許証と一致）</div>
+                    <div style="font-size:12px;font-weight:900;color:#a07c00;margin-bottom:10px;">${t('driverSection')}</div>
                     <div class="form-group">
                         <label class="form-label">お名前<span class="required">*必須</span></label>
                         <input class="form-input" type="text" id="driverName" oninput="validateForm()" placeholder="佐藤 花子" value="${state.formData?.driverName || ''}">
@@ -2236,8 +2236,8 @@
                     </div>
                 </div>
 
-                <button class="btn-primary" id="formNext" onclick="submitForm()">次へ進む</button>
-                <button class="btn-secondary" onclick="state.screen='options'; render();">戻る</button>
+                <button class="btn-primary" id="formNext" onclick="submitForm()">${t('next')}</button>
+                <button class="btn-secondary" onclick="state.screen='options'; render();">${t('back')}</button>
             </div>
         `;
     }
@@ -2284,26 +2284,26 @@
             </div>
             <div class="screen-header">
                 <button class="screen-header-back" onclick="state.screen='confirm'; render();">←</button>
-                <span class="screen-header-title">オプション選択</span>
+                <span class="screen-header-title">${t('optionsTitle')}</span>
             </div>
             ${renderBookingProgress(3)}
             <div class="options-screen screen-fade">
 
                 <!-- 免責補償制度 -->
                 <div class="option-section">
-                    <div class="option-section-title">🛡️ 免責補償制度</div>
+                    <div class="option-section-title">🛡️ ${t('cdwTitle')}</div>
 
                     <div class="insurance-card ${state.cdw === 'cdw' ? 'selected' : ''}" onclick="state.cdw='cdw'; render();">
                         <div class="insurance-card-header">
                             <div style="flex:1;">
-                                <div class="insurance-card-name">免責補償（CDW）</div>
+                                <div class="insurance-card-name">${t('cdwName')}</div>
                                 <div class="insurance-card-price">${cdwPrice.toLocaleString()}円 / 1日</div>
                             </div>
                             <div class="insurance-check">${state.cdw === 'cdw' ? '✓' : ''}</div>
                         </div>
                         <div class="insurance-card-desc">
-                            <div style="padding:2px 0;">✓ 車両・対物事故の免責額が0円に</div>
-                            <div style="padding:2px 0;">✓ 万一の事故でも自己負担なし</div>
+                            <div style="padding:2px 0;">✓ ${t('cdwDesc1')}</div>
+                            <div style="padding:2px 0;">✓ ${t('cdwDesc2')}</div>
                         </div>
                         ${state.cdw === 'cdw' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">合計: ¥${(cdwPrice * days).toLocaleString()}（${days}日間）</div>` : ''}
                     </div>
@@ -2312,38 +2312,38 @@
                         <div class="insurance-card-header">
                             <div style="flex:1;">
                                 <div style="display:flex;align-items:center;gap:6px;">
-                                    <div class="insurance-card-name">安心パック</div>
-                                    <span style="font-size:9px;background:#1a1a1a;color:#FABE00;padding:2px 6px;border-radius:4px;font-weight:700;">おすすめ</span>
+                                    <div class="insurance-card-name">${t('packName')}</div>
+                                    <span style="font-size:9px;background:#1a1a1a;color:#FABE00;padding:2px 6px;border-radius:4px;font-weight:700;">${t('recommended')}</span>
                                 </div>
                                 <div class="insurance-card-price">${packPrice.toLocaleString()}円 / 1日<span style="font-size:10px;color:#888;font-weight:400;">（免責${cdwPrice.toLocaleString()}円+NOC550円）</span></div>
                             </div>
                             <div class="insurance-check">${state.cdw === 'pack' ? '✓' : ''}</div>
                         </div>
                         <div class="insurance-card-desc">
-                            <div style="padding:2px 0;">✓ 免責補償（CDW）の全内容</div>
-                            <div style="padding:2px 0;">✓ NOC（休業補償）も全額カバー</div>
-                            <div style="padding:2px 0;">✓ ロードサービス付き</div>
+                            <div style="padding:2px 0;">✓ ${t('packDesc1')}</div>
+                            <div style="padding:2px 0;">✓ ${t('packDesc2')}</div>
+                            <div style="padding:2px 0;">✓ ${t('packDesc3')}</div>
                         </div>
                         ${state.cdw === 'pack' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">合計: ¥${(packPrice * days).toLocaleString()}（${days}日間）</div>` : ''}
                     </div>
 
                     <div class="insurance-card ${state.cdw === 'none' ? 'selected' : ''}" onclick="state.cdw='none'; render();" style="${state.cdw === 'none' ? 'border-color:#999;background:#f9f9f9;' : ''}">
                         <div class="insurance-card-header" style="margin-bottom:0;">
-                            <div class="insurance-card-name" style="color:#666;">加入しない</div>
+                            <div class="insurance-card-name" style="color:#666;">${t('noInsurance')}</div>
                             <div class="insurance-check" style="${state.cdw === 'none' ? 'background:#999;border-color:#999;' : ''}">${state.cdw === 'none' ? '✓' : ''}</div>
                         </div>
                     </div>
 
-                    <div class="insurance-note">※「免責補償」と「安心パック」の同時加入はできません。</div>
+                    <div class="insurance-note">${t('insuranceNote')}</div>
                 </div>
 
                 <!-- チャイルドシート -->
                 <div class="option-section">
-                    <div class="option-section-title">👶 チャイルドシート</div>
+                    <div class="option-section-title">👶 ${t('childSeatTitle')}</div>
                     <div style="background:#f9f9f9;border-radius:10px;padding:10px 14px;">
                         <div class="option-item">
                             <div class="option-item-info">
-                                <div class="option-item-name">チャイルドシート</div>
+                                <div class="option-item-name">${t('childSeat')}</div>
                                 <div class="option-item-price">1〜4歳 / ${optPrices.childSeat.toLocaleString()}円</div>
                             </div>
                             <div class="option-counter">
@@ -2354,7 +2354,7 @@
                         </div>
                         <div class="option-item">
                             <div class="option-item-info">
-                                <div class="option-item-name">ジュニアシート</div>
+                                <div class="option-item-name">${t('juniorSeat')}</div>
                                 <div class="option-item-price">4〜10歳 / ${optPrices.juniorSeat.toLocaleString()}円</div>
                             </div>
                             <div class="option-counter">
@@ -2370,7 +2370,7 @@
                 ${optionsTotal > 0 ? `
                 <div style="background:#fffbf0;border:1px solid #FABE00;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;">
                     <div style="display:flex;justify-content:space-between;font-weight:700;color:#1a1a1a;">
-                        <span>オプション合計</span>
+                        <span>${t('optTotal')}</span>
                         <span>+¥${optionsTotal.toLocaleString()}</span>
                     </div>
                     <div style="color:#888;margin-top:2px;">
@@ -2379,8 +2379,8 @@
                 </div>
                 ` : ''}
 
-                <button class="btn-primary" onclick="state.screen='form'; render();">次へ進む</button>
-                <button class="btn-secondary" onclick="state.screen='confirm'; render();">戻る</button>
+                <button class="btn-primary" onclick="state.screen='form'; render();">${t('next')}</button>
+                <button class="btn-secondary" onclick="state.screen='confirm'; render();">${t('back')}</button>
             </div>
         `;
     }
@@ -2396,20 +2396,20 @@
             </div>
             <div class="screen-header">
                 <button class="screen-header-back" onclick="state.screen='form'; render();">←</button>
-                <span class="screen-header-title">貸渡約款</span>
+                <span class="screen-header-title">${t('termsTitle')}</span>
             </div>
             ${renderBookingProgress(4)}
             <div class="terms-screen screen-fade">
                 <div style="background:#f9f9f9;border-radius:12px;padding:16px;margin-bottom:16px;">
-                    <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:12px;">以下の約款・規約をご確認ください</div>
+                    <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:12px;">${t('termsDesc')}</div>
                     <a href="clause.html" target="_blank" rel="noopener"
                        style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:white;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;text-decoration:none;transition:all .2s;"
                        onmouseover="this.style.borderColor='#1a1a1a'" onmouseout="this.style.borderColor='#e5e7eb'">
                         <div style="display:flex;align-items:center;gap:10px;">
                             <span style="font-size:18px;">📄</span>
                             <div>
-                                <div style="font-size:13px;font-weight:700;color:#333;">自動車貸渡約款</div>
-                                <div style="font-size:11px;color:#888;">レンタカー貸渡しに関する約款</div>
+                                <div style="font-size:13px;font-weight:700;color:#333;">${t('termsClause')}</div>
+                                <div style="font-size:11px;color:#888;">${t('termsClauseSub')}</div>
                             </div>
                         </div>
                         <span style="font-size:14px;color:#1a1a1a;">→</span>
@@ -2420,8 +2420,8 @@
                         <div style="display:flex;align-items:center;gap:10px;">
                             <span style="font-size:18px;">🔒</span>
                             <div>
-                                <div style="font-size:13px;font-weight:700;color:#333;">プライバシーポリシー</div>
-                                <div style="font-size:11px;color:#888;">個人情報の取扱いについて</div>
+                                <div style="font-size:13px;font-weight:700;color:#333;">${t('termsPrivacy')}</div>
+                                <div style="font-size:11px;color:#888;">${t('termsPrivacySub')}</div>
                             </div>
                         </div>
                         <span style="font-size:14px;color:#1a1a1a;">→</span>
@@ -2432,8 +2432,8 @@
                         <div style="display:flex;align-items:center;gap:10px;">
                             <span style="font-size:18px;">💰</span>
                             <div>
-                                <div style="font-size:13px;font-weight:700;color:#333;">キャンセルポリシー</div>
-                                <div style="font-size:11px;color:#888;">予約取消し・変更に関する規定</div>
+                                <div style="font-size:13px;font-weight:700;color:#333;">${t('termsCancel')}</div>
+                                <div style="font-size:11px;color:#888;">${t('termsCancelSub')}</div>
                             </div>
                         </div>
                         <span style="font-size:14px;color:#1a1a1a;">→</span>
@@ -2441,10 +2441,10 @@
                 </div>
                 <div class="terms-check-row">
                     <input type="checkbox" id="termsCheck" ${state.termsAgreed ? 'checked' : ''} onchange="state.termsAgreed=this.checked; render();">
-                    <label for="termsCheck" style="font-weight:600;">上記の貸渡約款・規約に同意します</label>
+                    <label for="termsCheck" style="font-weight:600;">${t('termsAgree')}</label>
                 </div>
-                <button class="btn-primary" ${!state.termsAgreed ? 'disabled' : ''} onclick="if(state.termsAgreed){state.screen='payment'; render();}">お支払いへ進む</button>
-                <button class="btn-secondary" onclick="state.screen='form'; render();">戻る</button>
+                <button class="btn-primary" ${!state.termsAgreed ? 'disabled' : ''} onclick="if(state.termsAgreed){state.screen='payment'; render();}">${t('termsNext')}</button>
+                <button class="btn-secondary" onclick="state.screen='form'; render();">${t('back')}</button>
             </div>
         `;
     }
@@ -2474,7 +2474,7 @@
             </div>
             <div class="screen-header">
                 <button class="screen-header-back" onclick="state.screen='terms'; render();">←</button>
-                <span class="screen-header-title">お支払い</span>
+                <span class="screen-header-title">${t('paymentTitle')}</span>
             </div>
             ${renderBookingProgress(5)}
             <div class="payment-screen screen-fade">
@@ -2493,12 +2493,12 @@
                         <span>¥${seatFee.toLocaleString()}</span>
                     </div>` : ''}
                     <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:6px;border-top:1px solid #ddd;font-weight:800;color:#1a1a1a;font-size:15px;">
-                        <span>合計（税込）</span>
+                        <span>${t('total')}</span>
                         <span>¥${totalPrice.toLocaleString()}</span>
                     </div>
                 </div>
 
-                <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">お支払い方法を選択</div>
+                <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">${t('paymentSelect')}</div>
                 ${methods.map(m => `
                     <div class="payment-method-card ${state.paymentMethod === m.id ? 'selected' : ''}" onclick="state.paymentMethod='${m.id}'; render();">
                         <div class="payment-method-icon">${m.icon}</div>
@@ -2511,7 +2511,7 @@
                 <button class="btn-primary" style="margin-top:14px;" ${!state.paymentMethod ? 'disabled' : ''} onclick="processPayment();">
                     ¥${totalPrice.toLocaleString()} を支払う
                 </button>
-                <button class="btn-secondary" onclick="state.screen='terms'; render();">戻る</button>
+                <button class="btn-secondary" onclick="state.screen='terms'; render();">${t('back')}</button>
             </div>
         `;
     }
@@ -2533,7 +2533,7 @@
             </div>
             <div class="complete-screen screen-fade">
                 <div class="complete-icon" style="font-size:0;"><img src="images/logo_header.png?v=3" alt="KEYDROP" style="width:200px;height:auto;"></div>
-                <div class="complete-title">ご予約が完了しました</div>
+                <div class="complete-title">${t('completeTitle')}</div>
                 <div class="complete-res-id" style="margin-bottom:12px;">
                     予約番号: <strong>${resId}</strong>
                 </div>
@@ -2561,21 +2561,21 @@
                 </div>
 
                 <div style="text-align:left;margin-bottom:16px;">
-                    <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:8px;">次のステップ</div>
+                    <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:8px;">${t('nextStep')}</div>
                     <div style="background:#fffbf0;border:1px solid #FABE00;border-radius:10px;padding:12px;font-size:12px;line-height:1.8;">
                         <div style="display:flex;align-items:center;gap:8px;">
                             <span style="font-size:16px;">📧</span>
-                            <span>確認メールを送信しました</span>
+                            <span>${t('emailSent')}</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;">
                             <span style="font-size:16px;">📱</span>
-                            <span>マイページで予約状況を確認</span>
+                            <span>${t('checkMypage')}</span>
                         </div>
                     </div>
                 </div>
 
-                <button class="btn-primary" onclick="state.screen='mypage'; mypageState.view='lookup'; render();">マイページで確認</button>
-                <button class="btn-secondary" onclick="resetAndGoTop();">トップに戻る</button>
+                <button class="btn-primary" onclick="state.screen='mypage'; mypageState.view='lookup'; render();">${t('checkMypage')}</button>
+                <button class="btn-secondary" onclick="resetAndGoTop();">${t('goTop')}</button>
             </div>
         `;
     }
@@ -3363,7 +3363,7 @@
             </div>
 
             <div style="background:#f9f9f9;border-radius:10px;padding:14px;margin-bottom:16px;">
-                <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;">キャンセルポリシー</div>
+                <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;">${t('termsCancel')}</div>
                 <div style="font-size:12px;line-height:1.8;color:#555;">
                     <div style="display:flex;justify-content:space-between;"><span>7日前まで</span><span style="font-weight:600;">無料</span></div>
                     <div style="display:flex;justify-content:space-between;${cancel.rate === 20 ? 'color:#1a1a1a;font-weight:700;' : ''}"><span>6〜3日前</span><span>基本料金の20%</span></div>
@@ -3382,7 +3382,7 @@
             </div>
 
             <div style="display:flex;gap:8px;">
-                <button style="flex:1;padding:12px;background:white;color:#333;border:1.5px solid #ddd;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;" onclick="closeCancelModal()">戻る</button>
+                <button style="flex:1;padding:12px;background:white;color:#333;border:1.5px solid #ddd;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;" onclick="closeCancelModal()">${t('back')}</button>
                 <button style="flex:1;padding:12px;background:#dc2626;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;" onclick="closeCancelModal(); cancelReservation('${resId}');">キャンセルする</button>
             </div>
         `;
@@ -3508,6 +3508,12 @@
             completeTitle: 'ご予約が完了しました', resNo: '予約番号',
             nextStep: '次のステップ', emailSent: '確認メールを送信しました', checkMypage: 'マイページで予約状況を確認',
             goTop: 'トップに戻る',
+            hdrBooker: '予約者情報', bookerSection: '👤 予約者情報',
+            bookerDesc: 'ご予約者さまの情報を入力してください。運転される方が異なる場合は下のチェックを入れてください。',
+            diffDriver: '予約者と運転者が異なる場合', driverSection: '🚗 運転者情報（免許証と一致）',
+            emailLoginNote: '⚠️ このメールアドレスはマイページのログインに使用します。予約確認メールもこちらに送信されます。',
+            driverNamePh: '佐藤 花子', driverKanaPh: 'サトウ ハナコ',
+            confirmProceed: 'オプション確認／予約手続きに進む ›',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -3553,6 +3559,12 @@
             completeTitle: 'Booking Confirmed!', resNo: 'Reservation No.',
             nextStep: 'Next Steps', emailSent: 'Confirmation email sent', checkMypage: 'Check status on My Page',
             goTop: 'Back to Top',
+            hdrBooker: 'Booker Information', bookerSection: '👤 Booker Information',
+            bookerDesc: "Please enter the booker's details. If the driver is different, check the box below.",
+            diffDriver: 'If the driver differs from the booker', driverSection: '🚗 Driver Info (must match license)',
+            emailLoginNote: 'This email is used to log in to My Page. Your confirmation email is also sent here.',
+            driverNamePh: 'Hanako Sato', driverKanaPh: 'サトウ ハナコ',
+            confirmProceed: 'Confirm options / Proceed to booking ›',
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
@@ -3598,6 +3610,12 @@
             completeTitle: '預約已完成！', resNo: '預約編號',
             nextStep: '下一步', emailSent: '已發送確認郵件', checkMypage: '在我的頁面確認預約狀態',
             goTop: '回到首頁',
+            hdrBooker: '預約者資訊', bookerSection: '👤 預約者資訊',
+            bookerDesc: '請輸入預約者資訊。若駕駛人不同，請勾選下方選項。',
+            diffDriver: '預約者與駕駛人不同時', driverSection: '🚗 駕駛人資訊（須與駕照一致）',
+            emailLoginNote: '⚠️ 此電子郵件用於登入「我的頁面」，確認郵件也會寄送至此。',
+            driverNamePh: '佐藤 花子', driverKanaPh: 'サトウ ハナコ',
+            confirmProceed: '確認選項／進入預約手續 ›',
         },
     };
 
@@ -3605,6 +3623,7 @@
 
     function switchLang(lang) {
         state.lang = lang;
+        try{localStorage.setItem('kd_lang',lang);}catch(e){}
         // Update menu lang buttons
         document.querySelectorAll('.menu-lang-btn').forEach(btn => {
             btn.classList.toggle('active', btn.textContent.trim() === ({ja:'日本語',en:'English',zh:'繁體中文'}[lang]));
