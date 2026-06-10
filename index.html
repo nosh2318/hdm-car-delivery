@@ -1136,8 +1136,13 @@
         }
 
         // 検索で名称が渡された場合は逆ジオで上書きせず、その名称を「指定場所」として保持
-        if (addr) { state.deliveryAddr = addr; state.deliveryAddrFull = addr; renderLocationBadge(); if (typeof renderLocPanel === 'function') renderLocPanel(); fetchAvailableVehicles(); }
-        else { reverseGeocode(lat, lng); }
+        if (addr) {
+            state.deliveryAddr = addr; state.deliveryAddrFull = addr; state.deliveryAddrCanon = '';
+            renderLocationBadge(); if (typeof renderLocPanel === 'function') renderLocPanel(); fetchAvailableVehicles();
+            // 表示名は保持しつつ、エリア判定用に正規住所(市区町村)を裏で取得
+            fetchFullAddress(lat, lng).then(r => { if (r && r.full) { state.deliveryAddrCanon = r.full; if (typeof updateAreaAlert === 'function') updateAreaAlert(); if (typeof renderLocPanel === 'function') renderLocPanel(); } }).catch(() => {});
+        }
+        else { state.deliveryAddrCanon = ''; reverseGeocode(lat, lng); }
         if (map) map.panTo([lat, lng]);
     }
 
@@ -2001,7 +2006,7 @@
     }
     // お届けピンのエリア判定→state更新＋マップ上に赤い警告バナーを表示/非表示
     function updateAreaAlert() {
-        const chk = checkDeliverable(state.deliveryLat, state.deliveryLng, state.deliveryAddr);
+        const chk = checkDeliverable(state.deliveryLat, state.deliveryLng, (state.deliveryAddr||'')+' '+(state.deliveryAddrCanon||''));
         state.outOfArea = !chk.ok;
         state.outOfAreaReason = chk.reason || '';
         const mw = document.getElementById('mapWrap');
@@ -2757,10 +2762,34 @@
         addressSearchTimer = setTimeout(() => searchAddress(val), 400);
     }
 
-    // 検索ディスパッチャ：国土地理院(GSI・無料・日本特化)を主 → Nominatim(無料)に自動フォールバック。
-    // ※Google Placesは有料化リスクのため不使用（地図はOSM/Leaflet・無料のまま）。
+    // 検索ディスパッチャ：Photon(OSM・無料・キー不要・施設名/部分入力に強くオートコンプリート可)を主
+    //  → GSI(国土地理院・日本の住所に正確) → Nominatim の順に自動フォールバック。Google Placesは未有効化のため不使用。
     function searchAddress(query) {
-        gsiSearch(query);
+        photonSearch(query);
+    }
+    function photonLabel(p){
+        const name=p.name||'';
+        const adr=[p.state,p.city,p.district,p.street,p.housenumber].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
+        if(name&&adr) return name+'（'+adr+'）';
+        return name||adr||'(名称不明)';
+    }
+    // Photon: ホテル名・施設名・部分入力に強い（札幌中心にバイアス）。日本(JP)結果のみ表示。
+    async function photonSearch(query){
+        const box=document.getElementById('addressSuggestions');
+        if(!box)return;
+        try{
+            const res=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(query)+'&lat=43.0687&lon=141.3508&limit=8');
+            const d=await res.json();
+            const feats=((d&&d.features)||[]).filter(f=>{const p=(f&&f.properties)||{};return (!p.countrycode||p.countrycode==='JP')&&f.geometry&&f.geometry.coordinates;});
+            if(!feats.length){gsiSearch(query);return;}
+            const html=feats.slice(0,7).map(f=>{
+                const p=f.properties||{},c=f.geometry.coordinates;
+                const label=photonLabel(p);
+                return '<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;transition:background .2s;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'white\'" onclick="selectAddress('+c[1]+', '+c[0]+', \''+label.replace(/\\/g,"\\\\").replace(/'/g,"\\'")+'\')">📍 '+label+'</div>';
+            }).join('');
+            if(!html){gsiSearch(query);return;}
+            box.innerHTML=html; box.style.display='block';
+        }catch(e){ gsiSearch(query); }
     }
     // 国土地理院 住所検索（無料・キー不要・日本の住所に強い）
     async function gsiSearch(query) {
