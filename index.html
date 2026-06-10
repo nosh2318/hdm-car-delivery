@@ -10,6 +10,13 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>KEYDROP｜札幌カーデリバリーサービス</title>
+    <!-- 接続先を事前に確立（初回表示の体感速度向上） -->
+    <link rel="preconnect" href="https://ckrxttbnawkclshczsia.supabase.co" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="dns-prefetch" href="https://a.tile.openstreetmap.org">
+    <link rel="dns-prefetch" href="https://b.tile.openstreetmap.org">
+    <link rel="dns-prefetch" href="https://c.tile.openstreetmap.org">
+    <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -1262,7 +1269,7 @@
 
             html += `
                 <div class="vehicle-card" style="animation:vehicleFadeIn .3s ease ${idx * 0.06}s both;" onclick="selectClass('${type}')">
-                    <div class="vc-icon ${type}">${cls.img ? `<img src="${cls.img}" alt="${cls.name}">` : (cls.icon || '🚗')}</div>
+                    <div class="vc-icon ${type}">${cls.img ? `<img src="${cls.img}" alt="${cls.name}" loading="lazy" decoding="async">` : (cls.icon || '🚗')}</div>
                     <div class="vc-body">
                         <div class="vc-class-tag ${type}">${cls.name}クラス</div>
                         <div class="vc-name" title="${cls.vehicles}">${cls.vehicles}</div>
@@ -1397,32 +1404,22 @@
         // Get busy vehicle codes (overlapping reservations + maintenance)
         const busyCodes = new Set();
 
-        // 予約で埋まっている車両（公開ビュー public_busy_v: vehicle_code＋期間を直接保持・PII非公開）
-        try {
-            const busy = await supabaseGet('public_busy_v',
-                `lend_date=lte.${end}&return_date=gte.${start}&select=vehicle_code`
-            );
-            for (const b of (busy || [])) busyCodes.add(b.vehicle_code);
-        } catch (e) {
-            console.error('Failed to check availability:', e);
-        }
+        // 予約稼働(public_busy_v)＋月別除外(public_inactive_v)を並列取得（1往復に短縮）
+        const yms = listYearMonths(start, end);
+        const inEnc = yms.map(y => `"${y}"`).join(',');
+        const [busy, inactive] = await Promise.all([
+            supabaseGet('public_busy_v', `lend_date=lte.${end}&return_date=gte.${start}&select=vehicle_code`).catch(() => []),
+            yms.length ? supabaseGet('public_inactive_v', `year_month=in.(${inEnc})&select=vehicle_code`).catch(() => []) : Promise.resolve([]),
+        ]);
+        for (const b of (busy || [])) busyCodes.add(b.vehicle_code);
+        for (const r of (inactive || [])) busyCodes.add(r.vehicle_code);
 
-        // Check maintenance
+        // Check maintenance（既にstateにある）
         for (const m of state.maintenance) {
             if (m.start_date <= end && m.end_date >= start) {
                 busyCodes.add(m.vehicle_code);
             }
         }
-
-        // 配車表の「月別除外フラグ」（public_inactive_v＝vehicle_monthly_kpi active=false）も反映
-        try {
-            const yms = listYearMonths(start, end);
-            if (yms.length) {
-                const inEnc = yms.map(y => `"${y}"`).join(',');
-                const inactive = await supabaseGet('public_inactive_v', `year_month=in.(${inEnc})&select=vehicle_code`);
-                for (const r of (inactive || [])) busyCodes.add(r.vehicle_code);
-            }
-        } catch (e) { /* 除外取得失敗時はスキップ */ }
 
         // 配達可能範囲判定（オーナー設定: 中心(札幌駅)から半径◯km かつ 指定市内）
         const cfg = state.deliveryConfig;
