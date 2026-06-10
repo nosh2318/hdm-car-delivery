@@ -965,14 +965,20 @@
         }
         return priceOf(type) * days;
     }
-    async function loadClassPrices() {
+    async function loadClassPrices(retry) {
         try {
             const rows = await supabaseGet('public_class_price_v', '');
             let v = rows && rows[0] ? rows[0].value : null;
             if (typeof v === 'string') v = JSON.parse(v);
-            if (v && v.prices) { PRICE_DATA = v; if (state.screen === 'step_vehicle') renderPanel(); }
-            else if (v && typeof v === 'object') { PRICE_OVERRIDE = v; if (state.screen === 'step_vehicle') renderPanel(); }
-        } catch (e) { /* ビュー未作成＝SPK側で価格マスター作成後に自動連動 */ }
+            // 取得できたら画面に依らず価格カード(#panelContent)を必ず再描画
+            //（旧コードは step_vehicle の時だけ再描画→TOPで取得した端末はハードコード価格のまま=端末間でズレる原因）
+            if (v && v.prices) { PRICE_DATA = v; renderPanel(); }
+            else if (v && typeof v === 'object') { PRICE_OVERRIDE = v; renderPanel(); }
+            else if (!retry) { setTimeout(() => loadClassPrices(true), 1500); } // 値が空＝一時的（ビュー反映待ち等）→1回だけ再試行
+        } catch (e) {
+            // 一時的な取得失敗で片方の端末だけフォールバック価格に取り残されないよう1回だけ再試行
+            if (!retry) setTimeout(() => loadClassPrices(true), 1500);
+        }
     }
 
     // ════════════════════════════════════════════
