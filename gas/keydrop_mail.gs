@@ -75,7 +75,7 @@ function sendKeydropNotifications() {
 function _buildConfirmMail_(n) {
   var p = n.payload || {};
   var id = n.reservation_id || '';
-  var subject = '【KEY-DROP】ご予約が確定しました（予約番号 ' + id + '）';
+  var subject = 'CARデリバリー KEY-DROP ご予約が確定しました';
   var body =
     (p.name || 'お客様') + ' 様\n\n' +
     'この度はCARデリバリーKEY-DROPをご利用いただき誠にありがとうございます。\n' +
