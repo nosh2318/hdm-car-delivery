@@ -2213,6 +2213,7 @@
                 <div class="form-group">
                     <label class="form-label">メールアドレス<span class="required">*必須</span></label>
                     <input class="form-input" type="email" id="formEmail" oninput="validateForm()" placeholder="example@mail.com" value="${state.formData?.email || ''}">
+                    <div style="font-size:11px;color:#dc2626;font-weight:700;margin-top:5px;line-height:1.6;">⚠️ このメールアドレスは<u>マイページのログイン</u>に使用します。予約確認メールもこちらに送信されます。</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">特記事項</label>
@@ -2531,10 +2532,13 @@
                 <div class="header-actions"></div>
             </div>
             <div class="complete-screen screen-fade">
-                <div class="complete-icon" style="font-size:0;"><img src="images/logo_full.png" alt="KEYDROP" style="width:140px;height:auto;border-radius:16px;"></div>
+                <div class="complete-icon" style="font-size:0;"><img src="images/logo_header.png?v=3" alt="KEYDROP" style="width:200px;height:auto;"></div>
                 <div class="complete-title">ご予約が完了しました</div>
-                <div class="complete-res-id" style="margin-bottom:16px;">
+                <div class="complete-res-id" style="margin-bottom:12px;">
                     予約番号: <strong>${resId}</strong>
+                </div>
+                <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:11px 13px;margin-bottom:16px;font-size:12px;color:#dc2626;font-weight:700;line-height:1.7;text-align:left;">
+                    ⚠️ マイページのログインには<u>予約番号</u>と<u>ご予約時のメールアドレス</u>が必要となります。予約番号は大切に保管してください。
                 </div>
 
                 <div style="background:#f9f9f9;border-radius:12px;padding:14px;text-align:left;margin-bottom:16px;font-size:12px;line-height:1.8;">
