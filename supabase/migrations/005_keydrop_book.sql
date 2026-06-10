@@ -23,6 +23,7 @@ declare
   v_id      text;
   v_prefix  text;
   v_max     int;
+  v_suffix  text;
   v_assigned text := '未配車';
   -- 価格計算用
   v_cfg     jsonb;
@@ -113,13 +114,18 @@ begin
     return jsonb_build_object('error', 'ご希望の期間・クラスは満車です', 'soldOut', true);
   end if;
 
-  -- 採番 KD-YYMM-xxxx（lock内なので衝突なし）
+  -- 採番 KD-YYMM-NNNN-XXX（連番＋ランダム3文字。番号総当たり対策。lock内なので衝突なし）
   v_prefix := 'KD-' || to_char(v_lend::date, 'YYMM') || '-';
-  select coalesce(max( nullif(substring(id from char_length(v_prefix)+1), '')::int ), 0)
+  select coalesce(max( nullif(split_part(substring(id from char_length(v_prefix)+1), '-', 1), '')::int ), 0)
     into v_max
   from reservations
   where id like v_prefix || '%';
-  v_id := v_prefix || lpad((v_max + 1)::text, 4, '0');
+  v_suffix := '';
+  for v_i in 1..3 loop
+    -- 紛らわしい文字(0,O,1,I)を除外したアルファベット
+    v_suffix := v_suffix || substr('ABCDEFGHJKMNPQRSTUVWXYZ23456789', 1 + floor(random() * 31)::int, 1);
+  end loop;
+  v_id := v_prefix || lpad((v_max + 1)::text, 4, '0') || '-' || v_suffix;
 
   -- reservations INSERT（金額はサーバ計算値 v_total を採用）
   insert into reservations
