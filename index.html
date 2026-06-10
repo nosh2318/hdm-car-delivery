@@ -3191,26 +3191,15 @@
             `;
         }
 
-        // ── 予約内容の変更／キャンセルについて（折りたたみ・既定で閉）──
+        // ── ① 予約内容の変更について（独立・折りたたみ・既定で閉）──
         if (!isCancelled) {
             html += `
             <details class="mp-faq" style="margin-top:14px;background:#fff;border:1px solid #eee;border-radius:12px;overflow:hidden;">
                 <summary style="list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;font-size:13.5px;font-weight:800;color:#1a1a1a;">
-                    <span>📝 予約内容の変更／キャンセルについて</span>
+                    <span>🔁 予約内容の変更について</span>
                     <span class="mp-faq-arw" style="font-size:12px;color:#888;transition:transform .2s;">▼</span>
                 </summary>
                 <div style="padding:2px 16px 16px;border-top:1px solid #f3f3f3;">
-                    <!-- キャンセル -->
-                    <div style="font-size:12.5px;font-weight:800;color:#dc2626;margin:12px 0 4px;">❌ キャンセルについて</div>
-                    <p style="font-size:12px;line-height:1.75;color:#444;margin:0 0 6px;">キャンセルをご希望の場合は、下の「キャンセルをリクエストする」よりお申し込みください。運営が内容を確認し、返金可否・キャンセル料をご案内のうえ確定いたします（その場では確定されません）。お急ぎの場合は公式LINEでもお受けします。</p>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-                        <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:5px 10px;">💬 公式LINEで連絡</a>
-                        <a href="faq.html#c2" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:800;color:#1a1a1a;text-decoration:none;border:1px solid #ddd;border-radius:8px;padding:5px 10px;">📄 キャンセルポリシー</a>
-                    </div>
-
-                    <!-- 変更 -->
-                    <div style="font-size:12.5px;font-weight:800;color:#1a1a1a;margin:16px 0 6px;border-top:1px solid #f3f3f3;padding-top:14px;">🔁 予約内容の変更について</div>
-
                     <div style="font-size:12px;line-height:1.7;color:#444;margin-bottom:10px;">
                         <div style="font-weight:800;color:#1a1a1a;margin-bottom:2px;">① 車種の変更</div>
                         大変申し訳ございませんが、マイページからの車種変更はできません。ご希望の場合は公式LINEよりご連絡をお願いいたします。
@@ -3219,25 +3208,52 @@
                         <div style="font-weight:800;color:#1a1a1a;margin-bottom:2px;">② お届け場所／回収場所の変更</div>
                         マイページの「✏️ お届け・回収の変更」から、<b>出発の24時間前まで</b>ご自身で変更できます。それ以降は公式LINEへ。
                     </div>
-                    <div style="font-size:12px;line-height:1.7;color:#444;margin-bottom:4px;">
+                    <div style="font-size:12px;line-height:1.7;color:#444;margin-bottom:8px;">
                         <div style="font-weight:800;color:#1a1a1a;margin-bottom:2px;">③ お届け時間／回収時間の変更</div>
                         マイページの「✏️ お届け・回収の変更」から、<b>出発の24時間前まで</b>ご自身で変更できます。それ以降は公式LINEへ。
                     </div>
+                    <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:inline-block;font-size:11.5px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:5px 10px;">💬 公式LINEで連絡</a>
                 </div>
+            </details>`;
+        }
+
+        // ── ② キャンセルについて（独立・折りたたみ）＝ポリシー同意チェック＋送信ボタン ──
+        const canCancel = !isCancelled && !isCompleted && !isActive && !isDelivering;
+        if (canCancel) {
+            const cancelInner = r._cancelRequested
+                ? `<div style="text-align:center;padding:14px;background:#fff7ed;border:1px solid #fdba74;border-radius:10px;color:#9a3412;font-size:12.5px;line-height:1.7;">✅ キャンセル依頼を受け付けました。<br>運営より折り返しご連絡いたします（返金可否・キャンセル料を含む）。</div>`
+                : `
+                    <p style="font-size:12px;line-height:1.7;color:#444;margin:0 0 8px;">キャンセルをご希望の場合は、下記ポリシーをご確認のうえ「キャンセルリクエストを送信」してください。<b>この場では確定されません。</b>運営が内容を確認し、返金可否・キャンセル料をご案内のうえ確定いたします。</p>
+                    <div style="background:#f9f9f9;border-radius:10px;padding:10px 12px;font-size:12px;color:#555;line-height:1.9;margin-bottom:10px;">
+                        <div style="font-weight:800;color:#1a1a1a;margin-bottom:4px;">📄 キャンセルポリシー（キャンセル料）</div>
+                        <div style="display:flex;justify-content:space-between;"><span>7日前まで</span><span style="font-weight:700;">無料</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>6〜3日前</span><span>基本料金の20%</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>2〜1日前</span><span>基本料金の30%</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>当日以降</span><span>基本料金の50%</span></div>
+                        <div style="font-size:10.5px;color:#888;margin-top:6px;">※航空便欠航時は欠航証明書のご提示でキャンセル料無料。</div>
+                    </div>
+                    <label class="form-label" style="display:block;font-size:11.5px;color:#444;font-weight:700;margin-bottom:4px;">キャンセル理由（任意）</label>
+                    <textarea id="kdCancelReason" rows="2" placeholder="例：予定が変わったため" style="width:100%;box-sizing:border-box;padding:9px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;margin-bottom:10px;"></textarea>
+                    <label style="display:flex;align-items:flex-start;gap:9px;font-size:12.5px;font-weight:700;color:#1a1a1a;cursor:pointer;margin-bottom:10px;line-height:1.5;">
+                        <input type="checkbox" id="kdCancelAgree" onchange="document.getElementById('kdCancelBtn').disabled=!this.checked;" style="width:18px;height:18px;flex:none;accent-color:#dc2626;margin-top:1px;">
+                        上記キャンセルポリシーを確認し、同意します
+                    </label>
+                    <button id="kdCancelBtn" disabled onclick="submitCancelRequestInline('${r.id}')" style="width:100%;padding:13px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;opacity:1;">キャンセルリクエストを送信</button>
+                    <div style="text-align:center;margin-top:8px;"><a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:800;color:#06c755;text-decoration:none;">お急ぎの場合は公式LINEへ 💬</a></div>`;
+            html += `
+            <details class="mp-faq" style="margin-top:10px;background:#fff;border:1px solid #fecaca;border-radius:12px;overflow:hidden;">
+                <summary style="list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;font-size:13.5px;font-weight:800;color:#dc2626;">
+                    <span>❌ キャンセルについて</span>
+                    <span class="mp-faq-arw" style="font-size:12px;color:#888;transition:transform .2s;">▼</span>
+                </summary>
+                <div style="padding:2px 16px 16px;border-top:1px solid #fde8e8;">${cancelInner}</div>
             </details>`;
         }
 
         // ── 確認・お問い合わせ（LINE）──
         html += `<a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;padding:14px;background:#06c755;color:#fff;border-radius:12px;font-size:14px;font-weight:800;text-decoration:none;box-shadow:0 3px 10px rgba(6,199,85,.3);">💬 確認・お問い合わせ（公式LINE）</a>`;
 
-        // ── キャンセル依頼（出発前のみ）──
-        if (!isCancelled && !isCompleted && !isActive && !isDelivering) {
-            if (r._cancelRequested) {
-                html += `<div class="mp-detail-section" style="margin-top:10px;"><div class="mp-detail-body" style="text-align:center;padding:14px;background:#fff7ed;border:1px solid #fdba74;border-radius:10px;color:#9a3412;font-size:12.5px;line-height:1.7;">✅ キャンセル依頼を受け付けました。<br>運営より折り返しご連絡いたします（返金可否・キャンセル料を含む）。</div></div>`;
-            } else {
-                html += `<div class="mp-actions" style="margin-top:10px;"><button class="mp-action-btn danger" onclick="showCancelConfirm('${r.id}', '${r.lend_date}', ${r.price || 0})">キャンセルをリクエストする</button></div>`;
-            }
-        }
+        // ── キャンセル依頼は上の「❌ キャンセルについて」セクションに統合済み ──
         if (isCancelled) {
             html += `<div class="mp-detail-section" style="margin-top:12px;"><div class="mp-detail-body" style="text-align:center;padding:16px;color:#dc2626;font-size:13px;">この予約はキャンセルされました</div></div>`;
         }
@@ -3698,6 +3714,46 @@
     }
 
     // キャンセル「リクエスト」：即キャンセルせず運営へ依頼（運営に自動でキャンセルメールが届く）。
+    // マイページ「❌ キャンセルについて」セクションの送信（ポリシー同意チェック＋送信）
+    async function submitCancelRequestInline(resId) {
+        const agree = document.getElementById('kdCancelAgree');
+        if (!agree || !agree.checked) { alert('キャンセルポリシーへの同意が必要です'); return; }
+        const reasonEl = document.getElementById('kdCancelReason');
+        const reason = reasonEl ? reasonEl.value.trim().slice(0, 500) : '';
+        if (!window.confirm('キャンセルリクエストを送信します。よろしいですか？\n※この場では確定されません。運営が返金可否・キャンセル料をご案内します。')) return;
+        const btn = document.getElementById('kdCancelBtn');
+        if (btn) { btn.disabled = true; btn.textContent = '送信中…'; }
+        try {
+            const email = mypageState.email || localStorage.getItem('hdm_mypage_email') || '';
+            if (email !== MOCK_EMAIL) {
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
+                    method: 'POST',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'cancel_request', mail: email, resId, reason }),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.ok) {
+                    alert((data && data.error) || 'キャンセル依頼に失敗しました');
+                    if (btn) { btn.disabled = false; btn.textContent = 'キャンセルリクエストを送信'; }
+                    return;
+                }
+                if (data.alreadyCancelled) {
+                    if (mypageState.reservation) { mypageState.reservation.status = 'キャンセル'; mypageState.reservation.demo_status = null; }
+                    render(); return;
+                }
+            }
+            if (mypageState.reservation) mypageState.reservation._cancelRequested = true;
+            if (mypageState.reservations) {
+                const li = mypageState.reservations.findIndex(r => r.id === resId);
+                if (li >= 0) mypageState.reservations[li]._cancelRequested = true;
+            }
+            render();
+        } catch (e) {
+            alert('キャンセル依頼に失敗しました。お手数ですが公式LINEよりご連絡ください。');
+            if (btn) { btn.disabled = false; btn.textContent = 'キャンセルリクエストを送信'; }
+        }
+    }
+
     async function requestCancellation(resId) {
         const reasonEl = document.getElementById('cancelReason');
         const reason = reasonEl ? reasonEl.value.trim().slice(0, 500) : '';
