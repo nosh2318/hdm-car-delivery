@@ -3038,62 +3038,43 @@
         const cls = VEHICLE_CLASSES[r.vehicle] || {};
         const f = mypageState.fleet;
         const status = getDeliveryStatus(r, f);
-        const ds = DELIVERY_STATUSES[status];
+        const ds = DELIVERY_STATUSES[status] || { icon:'📋', label:'予約確定', sub:'', heroClass:'' };
         const progressIdx = getProgressIndex(status);
         const isCancelled = status === 'cancelled';
         const isCompleted = status === 'completed';
         const isDelivering = status === 'delivering';
         const isActive = status === 'active';
-        const isPreparing = status === 'preparing';
         const hasVehicle = !!(f && f.vehicle_code);
+
+        // 決済状況ラベル
+        const rawSt = (r.status || '');
+        let payLabel, payColor;
+        if (/cancel|キャンセル/i.test(rawSt)) { payLabel = 'キャンセル済み'; payColor = '#dc2626'; }
+        else if (rawSt === 'pending_payment') { payLabel = 'お支払い待ち（未決済）'; payColor = '#d97706'; }
+        else { payLabel = '決済済み'; payColor = '#16a34a'; }
 
         let html = '';
 
-        // ── Status Hero Card ──
+        // ── ステータス Hero（残す）──
         html += `
             <div class="mp-status-hero ${ds.heroClass}">
                 <div class="mp-status-icon">${ds.icon}</div>
                 <div class="mp-status-label">${ds.label}</div>
-                <div class="mp-status-sub">${ds.sub}</div>
-                ${isDelivering ? '<div class="mp-car-animation">🚗💨</div>' : ''}
+                <div class="mp-status-sub">${ds.sub || ''}</div>
             </div>
         `;
 
-        // ── ETA Banner (delivering) ──
-        if (isDelivering) {
-            html += `
-                <div class="mp-eta">
-                    <div class="mp-eta-time">15<span style="font-size:14px;font-weight:600;">分</span></div>
-                    <div style="flex:1;">
-                        <div class="mp-eta-label">到着予定</div>
-                        <div class="mp-eta-dest">📍 ${r.del_place || 'お届け先'}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // ── Map (delivering / active) ──
-        if (isDelivering || isPreparing) {
-            const lat = r.demo_lat || 43.0621;
-            const lng = r.demo_lng || 141.3544;
-            html += `
-                <div class="mp-map-placeholder" id="mypageMap" data-lat="${lat}" data-lng="${lng}"></div>
-            `;
-        }
-
-        // ── Progress Bar (not cancelled) ──
+        // ── ステータスバー（残す・OPシートからのトリガーで進行）──
         if (!isCancelled) {
             html += `<div class="mp-progress">`;
             PROGRESS_STEPS.forEach((step, i) => {
                 const isDone = i < progressIdx;
                 const isNow = i === progressIdx;
                 const dotClass = isDone ? 'done' : (isNow ? 'now' : '');
-                const txtClass = isDone ? 'done' : (isNow ? 'now' : '');
-
                 html += `
                     <div class="mp-prog-step">
                         <div class="mp-prog-icon ${dotClass}">${isDone ? '✓' : step.icon}</div>
-                        <div class="mp-prog-txt ${txtClass}">${step.label}</div>
+                        <div class="mp-prog-txt ${dotClass}">${step.label}</div>
                     </div>
                 `;
                 if (i < PROGRESS_STEPS.length - 1) {
@@ -3103,133 +3084,50 @@
             html += `</div>`;
         }
 
-        // ── Driver Card (assigned / preparing / delivering) ──
-        if (hasVehicle && !isCancelled && !isCompleted && (status === 'assigned' || isPreparing || isDelivering || isActive)) {
-            const driverName = r.demo_driver || 'スタッフ';
-            html += `
-                <div class="mp-detail-section" style="margin-bottom:12px;">
-                    <div class="mp-driver-card">
-                        <div class="mp-driver-avatar">${driverName.charAt(0)}</div>
-                        <div class="mp-driver-info">
-                            <div class="mp-driver-name">${driverName}</div>
-                            <div class="mp-driver-sub">${f.vehicle_code} ・ ${cls.name || r.vehicle}クラス</div>
-                        </div>
-                        <button class="mp-driver-call" onclick="alert('ドライバーへの通話機能は準備中です')">📞</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        // ── Reservation ID ──
-        html += `<div style="text-align:center;margin-bottom:12px;">
-            <span style="font-size:11px;color:#999;">予約番号</span>
-            <span style="font-size:13px;font-weight:700;color:#1a1a1a;margin-left:6px;">${r.id}</span>
-        </div>`;
-
-        // ── Reservation Details ──
+        // ── 予約情報（簡潔：予約者 〜 金額）──
         html += `
             <div class="mp-detail-section">
                 <div class="mp-detail-header">📋 予約情報</div>
                 <div class="mp-detail-body">
-                    <div class="mp-detail-row">
-                        <span class="mp-detail-row-label">車両クラス</span>
-                        <span class="mp-detail-row-value">${cls.name || r.vehicle}クラス</span>
-                    </div>
-                    ${hasVehicle ? `<div class="mp-detail-row">
-                        <span class="mp-detail-row-label">車両コード</span>
-                        <span class="mp-detail-row-value" style="font-weight:700;color:#1a1a1a;">${f.vehicle_code}</span>
-                    </div>` : ''}
-                    <div class="mp-detail-row">
-                        <span class="mp-detail-row-label">お届け場所</span>
-                        <span class="mp-detail-row-value">${r.del_place || '-'}</span>
-                    </div>
-                    <div class="mp-detail-row">
-                        <span class="mp-detail-row-label">お届け日時</span>
-                        <span class="mp-detail-row-value">${formatDateLabel(r.lend_date)} ${r.lend_time || ''}</span>
-                    </div>
-                    <div class="mp-detail-row">
-                        <span class="mp-detail-row-label">返却日時</span>
-                        <span class="mp-detail-row-value">${formatDateLabel(r.return_date)} ${r.return_time || ''}</span>
-                    </div>
-                    ${r.price ? `
-                    <div style="border-top:1px solid #f0f0f0;margin-top:8px;padding-top:8px;">
-                        <div class="mp-detail-row">
-                            <span class="mp-detail-row-label" style="font-weight:700;">お支払い金額</span>
-                            <span class="mp-detail-row-value" style="font-size:18px;font-weight:800;color:#1a1a1a;">¥${Number(r.price).toLocaleString()}</span>
-                        </div>
-                    </div>` : ''}
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">予約者</span><span class="mp-detail-row-value">${r.name || '-'} 様</span></div>
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">予約番号</span><span class="mp-detail-row-value" style="font-weight:700;color:#1a1a1a;">${r.id}</span></div>
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">車両クラス</span><span class="mp-detail-row-value">${cls.name || r.vehicle}クラス${hasVehicle ? `（${f.vehicle_code}）` : ''}</span></div>
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">お届け</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.lend_date)} ${r.lend_time || ''}<br><span style="font-size:11px;color:#888;">${r.del_place || '-'}</span></span></div>
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">回収</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.return_date)} ${r.return_time || ''}<br><span style="font-size:11px;color:#888;">${r.col_place || '-'}</span></span></div>
+                    ${r.people ? `<div class="mp-detail-row"><span class="mp-detail-row-label">ご利用人数</span><span class="mp-detail-row-value">${r.people} 名</span></div>` : ''}
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">決済状況</span><span class="mp-detail-row-value" style="color:${payColor};font-weight:700;">${payLabel}</span></div>
+                    ${r.price ? `<div style="border-top:1px solid #f0f0f0;margin-top:8px;padding-top:8px;"><div class="mp-detail-row"><span class="mp-detail-row-label" style="font-weight:700;">お支払い金額</span><span class="mp-detail-row-value" style="font-size:18px;font-weight:800;color:#1a1a1a;">¥${Number(r.price).toLocaleString()}</span></div></div>` : ''}
                 </div>
             </div>
         `;
 
-        // ── Delivery Timeline ──
+        // ── 固定マップ（お届け地点＋回収地点を一括表示）──
         if (!isCancelled) {
-            const timelineSteps = [
-                { key: 'confirmed', icon: '📋', label: '予約受付', sub: r.created_at ? formatDateLabel(r.created_at.slice(0,10)) + ' ' + (r.created_at.slice(11,16) || '') : '', done: true },
-                { key: 'assigned', icon: '🔑', label: '配車確定', sub: hasVehicle ? `車両: ${f.vehicle_code}` : '', done: progressIdx >= 1 },
-                { key: 'preparing', icon: '🔧', label: '出発準備', sub: progressIdx >= 2 ? '車両点検・清掃完了' : '', done: progressIdx >= 2 },
-                { key: 'delivering', icon: '🚗', label: 'デリバリー出発', sub: progressIdx >= 3 ? `${r.del_place} へ向かっています` : '', done: progressIdx >= 3 },
-                { key: 'active', icon: '✅', label: 'お届け完了', sub: progressIdx >= 4 ? 'ご利用中' : '', done: progressIdx >= 4 },
-                { key: 'completed', icon: '🏁', label: '返却完了', sub: progressIdx >= 5 ? formatDateLabel(r.return_date) : '', done: progressIdx >= 5 },
-            ];
-
             html += `
                 <div class="mp-detail-section">
-                    <div class="mp-detail-header">🕐 デリバリー状況</div>
-                    <div class="mp-detail-body">
-                        <div class="mp-timeline">
-            `;
-            timelineSteps.forEach((s, i) => {
-                const isDone = s.done;
-                const isNow = !isDone && (i === 0 || timelineSteps[i-1].done);
-                const dotClass = isDone ? 'done' : (isNow ? 'now' : 'wait');
-                const lineClass = isDone ? 'done' : '';
-
-                html += `
-                    <div class="mp-tl-item">
-                        <div class="mp-tl-dot ${dotClass}">${isDone ? '✓' : s.icon}</div>
-                        <div class="mp-tl-line ${lineClass}"></div>
-                        <div class="mp-tl-content">
-                            <div class="mp-tl-title ${isNow ? 'now' : ''}">${s.label}</div>
-                            ${s.sub ? `<div class="mp-tl-sub ${isNow ? 'highlight' : ''}">${s.sub}</div>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-            html += `</div></div></div>`;
-        }
-
-        // ── Cancelled info ──
-        if (isCancelled) {
-            html += `
-                <div class="mp-detail-section">
-                    <div class="mp-detail-header" style="color:#dc2626;">✕ キャンセル情報</div>
-                    <div class="mp-detail-body" style="text-align:center;padding:20px;">
-                        <div style="font-size:14px;color:#666;">この予約はキャンセルされました</div>
-                        <div style="font-size:12px;color:#999;margin-top:4px;">キャンセル料の詳細はメールをご確認ください</div>
+                    <div class="mp-detail-header">🗺 お届け・回収マップ</div>
+                    <div id="mypageMap" data-del="${encodeURIComponent(r.del_place || '')}" data-col="${encodeURIComponent(r.col_place || '')}" style="height:240px;border-radius:0 0 12px 12px;overflow:hidden;background:#eaeef2;"></div>
+                    <div style="display:flex;gap:14px;justify-content:center;padding:8px 0 2px;font-size:11px;color:#666;font-weight:700;">
+                        <span>📍 <span style="color:#16a34a;">お届け</span></span>
+                        <span>🏁 <span style="color:#dc2626;">回収</span></span>
                     </div>
                 </div>
             `;
         }
 
-        // ── Actions ──
-        html += `<div class="mp-actions">`;
-        if (isDelivering || isActive) {
-            html += `<button class="mp-action-btn primary" onclick="alert('ドライバーへの通話機能は準備中です')">📞 ドライバーに連絡</button>`;
-        }
+        // ── 確認・お問い合わせ（LINE）──
+        html += `<a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;padding:14px;background:#06c755;color:#fff;border-radius:12px;font-size:14px;font-weight:800;text-decoration:none;box-shadow:0 3px 10px rgba(6,199,85,.3);">💬 確認・お問い合わせ（公式LINE）</a>`;
+
+        // ── キャンセル（出発前のみ）──
         if (!isCancelled && !isCompleted && !isActive && !isDelivering) {
-            html += `<button class="mp-action-btn danger" onclick="showCancelConfirm('${r.id}', '${r.lend_date}', ${r.price || 0})">キャンセル</button>`;
+            html += `<div class="mp-actions" style="margin-top:10px;"><button class="mp-action-btn danger" onclick="showCancelConfirm('${r.id}', '${r.lend_date}', ${r.price || 0})">予約をキャンセルする</button></div>`;
         }
-        html += `</div>`;
+        if (isCancelled) {
+            html += `<div class="mp-detail-section" style="margin-top:12px;"><div class="mp-detail-body" style="text-align:center;padding:16px;color:#dc2626;font-size:13px;">この予約はキャンセルされました</div></div>`;
+        }
 
-        html += `<button class="btn-secondary" style="margin-top:4px;" onclick="mypageState.view='lookup'; mypageState.reservation=null; render();">← 予約一覧に戻る</button>`;
-
-        // Help link
-        html += `
-            <div style="text-align:center;margin-top:16px;padding-bottom:16px;">
-                <a href="https://lin.ee/g6iDNYz" target="_blank" style="font-size:12px;color:#888;text-decoration:none;">お困りですか？ <span style="color:#1a1a1a;font-weight:600;">お問い合わせ →</span></a>
-            </div>
-        `;
+        // ── 別の予約を確認（1ユーザー複数予約に対応）──
+        html += `<button class="btn-secondary" style="margin-top:10px;" onclick="mypageState.view='lookup'; mypageState.reservation=null; mypageState.error=''; render();">← 別の予約を確認する</button>`;
 
         // Cancel modal
         html += `
@@ -3244,10 +3142,10 @@
     const MOCK_EMAIL = 'test@hdm-demo.com';
     const MOCK_RESERVATIONS = [
         {
-            id: 'HDM-2604-0001', mail: MOCK_EMAIL, name: 'テスト 太郎',
+            id: 'HDM-2604-0001', mail: MOCK_EMAIL, name: 'テスト 太郎', people: 2,
             vehicle: 'C', lend_date: '2026-04-05', lend_time: '14:00',
             return_date: '2026-04-06', return_time: '14:00',
-            status: '確定', del_place: '札幌グランドホテル',
+            status: '確定', del_place: '札幌グランドホテル', col_place: '札幌駅',
             price: 7700, created_at: '2026-04-02T09:30:00Z',
             demo_status: 'delivering',
             demo_fleet: { vehicle_code: 'FIT-01' },
@@ -3396,36 +3294,46 @@
     }
 
     // Initialize delivery tracking map
-    function initMypageMap() {
+    // 住所→緯度経度（Nominatim・前方ジオコード）
+    async function geocodeJP(q) {
+        if (!q) return null;
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&accept-language=ja&countrycodes=jp&limit=1`);
+            const d = await res.json();
+            if (d && d[0]) return [parseFloat(d[0].lat), parseFloat(d[0].lon)];
+        } catch (e) {}
+        return null;
+    }
+    // 固定マップ：お届け地点＋回収地点を一括表示
+    async function initMypageMap() {
         const mapEl = document.getElementById('mypageMap');
         if (!mapEl || mapEl.querySelector('.leaflet-container')) return;
-        const lat = parseFloat(mapEl.dataset.lat) || 43.0621;
-        const lng = parseFloat(mapEl.dataset.lng) || 141.3544;
+        const del = decodeURIComponent(mapEl.dataset.del || '');
+        const col = decodeURIComponent(mapEl.dataset.col || '');
 
-        const map = L.map(mapEl, { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false }).setView([lat, lng], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        const map = L.map(mapEl, { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView([43.0621, 141.3544], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
-        // Destination marker
-        L.marker([lat, lng], {
-            icon: L.divIcon({
-                className: '',
-                html: '<div style="background:#1a1a1a;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">📍</div>',
-                iconSize: [28, 28],
-                iconAnchor: [14, 14],
-            })
-        }).addTo(map);
+        const pin = (label, bg, emo) => L.divIcon({
+            className: '',
+            html: `<div style="display:flex;flex-direction:column;align-items:center;">
+                     <div style="background:${bg};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);margin-bottom:2px;">${label}</div>
+                     <div style="background:${bg};color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">${emo}</div>
+                   </div>`,
+            iconSize: [60, 48], iconAnchor: [30, 48],
+        });
 
-        // Car marker (slightly offset to simulate approaching)
-        L.marker([lat + 0.008, lng - 0.012], {
-            icon: L.divIcon({
-                className: '',
-                html: '<div style="background:#FABE00;color:#1a1a1a;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">🚗</div>',
-                iconSize: [32, 32],
-                iconAnchor: [16, 16],
-            })
-        }).addTo(map);
+        const [d, c] = await Promise.all([geocodeJP(del), geocodeJP(col)]);
+        const pts = [];
+        if (d) { L.marker(d, { icon: pin('お届け', '#16a34a', '📍') }).addTo(map); pts.push(d); }
+        if (c) { L.marker(c, { icon: pin('回収', '#dc2626', '🏁') }).addTo(map); pts.push(c); }
 
-        setTimeout(() => map.invalidateSize(), 200);
+        setTimeout(() => {
+            map.invalidateSize();
+            const same = pts.length === 2 && Math.abs(pts[0][0]-pts[1][0]) < 0.0005 && Math.abs(pts[0][1]-pts[1][1]) < 0.0005;
+            if (pts.length >= 2 && !same) { map.fitBounds(pts, { padding: [45, 55], maxZoom: 15 }); }
+            else if (pts.length >= 1) { map.setView(pts[0], 14); }
+        }, 200);
     }
 
     function getCancelFee(lendDate, basePrice) {
