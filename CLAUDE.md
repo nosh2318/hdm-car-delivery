@@ -69,10 +69,17 @@
 6. ~~client push~~ ✅ 完了。
 7. ~~疎通テスト（バックエンドE2E）~~ ✅ **完了**：create-booking→Square link発行(WTuSGDML)＋CX-3自動配車＋price¥7,000→署名付きwebhook(payment.updated/COMPLETED)→**reservations.status=confirmed＋keydrop_payments.status=paid＋keydrop_notifications(type=confirm)投入**を実証→テストデータ全削除。署名不正は401・GET405も確認済。**実カード決済での最終確認はGAS設置後にオーナーが1件実施**。
 
-### ⚠️ 現状の到達点
-- **決済の裏側は完全稼働**（支払う→Square→入金webhook→confirmed＋Slack）。実課金アンロック済み。
-- **唯一GASメール未設置**＝顧客への完了メール／運営へのキャンセル依頼メールが「届かない（キューに残る）」。GAS設置で即配信（溜まった分も送られる）。
-- ∴ **一般公開はGAS設置後**が望ましい（メール必須要件のため）。それまではオーナーのテスト運用のみ。
+### ✅ 到達点（2026-06-10・全機能ライブ）
+- 決済の裏側 完全稼働（支払う→Square→入金webhook→confirmed＋Slack）。実課金アンロック済み。
+- **GASメール送信ワーカー 稼働開始**（新規GASプロジェクト・`SUPABASE_SERVICE_KEY`(legacy JWT)設定・`setupKeydropMailTrigger`済・5分間隔）。**予約完了メール 実送信ライブ確認済**（reserve@→顧客・sent=1）。キュー(keydrop_notifications)→reserve@配信。
+- **キャンセル/返金 3層 完成**：①顧客マイページ「キャンセルをリクエスト」(ポリシー同意チェック＋送信・独立セクション)→②SPK TOP「🚫KEYDROPキャンセル依頼」リスト(返金額/料率/Square決済ID表示)→③スタッフがSquare手動返金→「確定」(2段階)＝keydrop-refund(記録のみ・自動返金しない)→予約キャンセル/台帳refunded/配車解放/Slack。マーカーは`keydrop_payments.cancel_requested_at`(reservationsにchanged_json列なし)。
+- 残りは **実カード決済での最終E2E（オーナーがテスト予約1件）** のみ。⚠️実課金＝テスト後はマイページ→キャンセル依頼→SPKで返金 or Square Dashboardで返金。
+
+### Edge Functions（4本・全デプロイ済）
+- `create-booking`(verify_jwt ON) / `keydrop-mypage`(同・lookup/cancel/update/cancel_request) / `payment-webhook`(**--no-verify-jwt**・署名検証) / `keydrop-refund`(同verify_jwt ON・authenticated限定・記録のみ)。
+- secrets：SQUARE_ACCESS_TOKEN / SQUARE_LOCATION_ID=L8N7J9RKPN3WH / SQUARE_WEBHOOK_SIGNATURE_KEY / SQUARE_WEBHOOK_URL / SLACK_BOT_TOKEN / SLACK_KEYDROP_CHANNEL=C08TDTPEB36。
+- DB migration 001–010 全RUN済（Management API `/database/query`＝curl。pythonはCloudflare1010で不可）。keydrop_payments：authenticated SELECT可・更新はservice_role限定。
+- Square Webhook「KEYDROP」Enabled(payment.created/updated)・App=HandymanOnline/Production。
 
 ### 残（決済導入後）
 - 返金フロー（運営確定時の Square Refund 自動化）＝既存 payment_bot のRefund実装が流用可。
