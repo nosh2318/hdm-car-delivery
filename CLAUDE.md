@@ -75,6 +75,14 @@
 - **キャンセル/返金 3層 完成**：①顧客マイページ「キャンセルをリクエスト」(ポリシー同意チェック＋送信・独立セクション)→②SPK TOP「🚫KEYDROPキャンセル依頼」リスト(返金額/料率/Square決済ID表示)→③スタッフがSquare手動返金→「確定」(2段階)＝keydrop-refund(記録のみ・自動返金しない)→予約キャンセル/台帳refunded/配車解放/Slack。マーカーは`keydrop_payments.cancel_requested_at`(reservationsにchanged_json列なし)。
 - 残りは **実カード決済での最終E2E（オーナーがテスト予約1件）** のみ。⚠️実課金＝テスト後はマイページ→キャンセル依頼→SPKで返金 or Square Dashboardで返金。
 
+### 追記（2026-06-10 後半セッション）
+- **スパム対策①②実装済**（テスト合格）：011 `keydrop_rate`(IP×時間窓・1時間毎purge cron)。create-booking＝ハニーポット(payload `hp`・隠しフィールド `formCompanyUrl`)即拒否＋IP1時間8件超で429。keydrop-mypage＝IP1時間30回超で429(総当たり防止)。③Turnstileは未（スパム実発生時・要Cloudflare登録）。
+- **最短予約=48時間後**（generateDateOptions開始をtoday+2）。
+- **メール表記 KEY-DROP**：GAS `keydrop_mail.gs` の FROM_NAME/件名/挨拶/署名を「CARデリバリー KEY-DROP」に＋「緊急連絡先」行削除（営業時間のみ）。⚠️**GASは手動貼付なので、最新版をGASエディタに貼り直すまで旧表記のまま**。
+- 🔴**価格マスターUIは既存 `~/spk-task/keydrop-pricing.html`（SPK TOP「💴KEYDROP価格」タイル）が正**。配達範囲UIも既存 `keydrop-admin.html`（「📍KEYDROP配達範囲」）。**新規に作らない**（当方が重複でkeydrop-prices.htmlを作り→撤去した。次回も既存を使う）。価格は `app_settings.hdm_keydrop_price`(prices{class:[閑散,通常,繁忙]}/presets/default)＝keydrop_book(005)がサーバ計算。
+- **マップ（最適解＝全部無料・Google不使用）**：地図=OSM/Leaflet(無料)／住所検索=**国土地理院GSI(`msearch.gsi.go.jp/address-search`・無料・キー不要・日本特化)を主→Nominatim(無料)フォールバック**(`searchAddress`→`gsiSearch`)／逆ジオ(map tap→住所)=Nominatim(無料・`fetchFullAddress`)。**Google Placesは有料化リスクのため不使用に切替**（`loadGooglePlaces`は冒頭return・`searchAddress`もGoogle分岐撤去。コードは将来用に残置）。∴マップ系の課金リスク=ゼロ。
+- **課金（固定費）**：実質 **Supabase Pro $25/月のみ**（明日変更予定）。GitHub Pages/GAS/地図=無料。Square=取引手数料のみ。月100本規模はPro($25)で余裕（重い閲覧アクセスはPages/OSMが捌き、Supabaseは小さなデータ取得のみ）。
+
 ### Edge Functions（4本・全デプロイ済）
 - `create-booking`(verify_jwt ON) / `keydrop-mypage`(同・lookup/cancel/update/cancel_request) / `payment-webhook`(**--no-verify-jwt**・署名検証) / `keydrop-refund`(同verify_jwt ON・authenticated限定・記録のみ)。
 - secrets：SQUARE_ACCESS_TOKEN / SQUARE_LOCATION_ID=L8N7J9RKPN3WH / SQUARE_WEBHOOK_SIGNATURE_KEY / SQUARE_WEBHOOK_URL / SLACK_BOT_TOKEN / SLACK_KEYDROP_CHANNEL=C08TDTPEB36。

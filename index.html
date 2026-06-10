@@ -2636,6 +2636,7 @@
     const GMAPS_KEY = 'AIzaSyCoX1EyEx-N5A0r4vRzC1KmVp3T29HILbI';
     let gReady = false, gAuto = null, gPlaces = null, gToken = null;
     function loadGooglePlaces() {
+        return; // 課金回避のためGoogle Placesは不使用（検索は国土地理院GSI＋Nominatim・無料）。以下は将来用に残置
         try {
             if (window.google && window.google.maps && window.google.maps.places) { onGmapsReady(); return; }
             if (document.getElementById('gmapsScript')) return;
@@ -2691,10 +2692,31 @@
         addressSearchTimer = setTimeout(() => searchAddress(val), 400);
     }
 
-    // 検索ディスパッチャ：Google Placesが使えればそれ、ダメならNominatim
+    // 検索ディスパッチャ：国土地理院(GSI・無料・日本特化)を主 → Nominatim(無料)に自動フォールバック。
+    // ※Google Placesは有料化リスクのため不使用（地図はOSM/Leaflet・無料のまま）。
     function searchAddress(query) {
-        if (gReady && gAuto) { gSearch(query); return; }
-        nominatimSearch(query);
+        gsiSearch(query);
+    }
+    // 国土地理院 住所検索（無料・キー不要・日本の住所に強い）
+    async function gsiSearch(query) {
+        const box = document.getElementById('addressSuggestions');
+        if (!box) return;
+        try {
+            const res = await fetch('https://msearch.gsi.go.jp/address-search/AddressSearch?q=' + encodeURIComponent(query));
+            const arr = await res.json();
+            if (!Array.isArray(arr) || !arr.length) { nominatimSearch(query); return; }
+            const html = arr.slice(0, 6).map(r => {
+                const c = r.geometry && r.geometry.coordinates; // [lng, lat]
+                const title = (r.properties && r.properties.title) || '';
+                if (!c || !title) return '';
+                return `<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;transition:background .2s;"
+                     onmouseover="this.style.background='#f5f8ff'" onmouseout="this.style.background='white'"
+                     onclick="selectAddress(${c[1]}, ${c[0]}, '${title.replace(/'/g, "\\'")}')">📍 ${title}</div>`;
+            }).join('');
+            if (!html) { nominatimSearch(query); return; }
+            box.innerHTML = html;
+            box.style.display = 'block';
+        } catch (e) { nominatimSearch(query); }
     }
     async function nominatimSearch(query) {
         const box = document.getElementById('addressSuggestions');
