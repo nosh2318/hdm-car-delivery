@@ -2866,6 +2866,9 @@
         // For demo: use demo_status if set (allows showing all statuses)
         if (r.demo_status) return r.demo_status;
 
+        // OPシート（SPK）が設定した明示ステータスを最優先（出発/お届け完了/返却完了）
+        if (r.kd_status) return r.kd_status;
+
         if (now > returnDT) return 'completed';
         if (now >= lendDT && now <= returnDT) return 'active';
         if (!hasVehicle) return 'confirmed';

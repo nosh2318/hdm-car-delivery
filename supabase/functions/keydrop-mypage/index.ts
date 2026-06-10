@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
   // 予約を1件だけ取得（id一致 かつ mail一致 のときのみ）
   const rows = await sbGet(
     "reservations",
-    `id=eq.${encodeURIComponent(resId)}&select=id,ota,vehicle,lend_date,return_date,name,mail,tel,people,price,status,insurance,del_place,col_place`,
+    `id=eq.${encodeURIComponent(resId)}&select=id,ota,vehicle,lend_date,return_date,name,mail,tel,people,price,status,insurance,del_place,col_place,kd_status`,
   );
   const r = rows[0];
   if (!r || String(r.mail || "").trim().toLowerCase() !== mail) {
@@ -89,6 +89,7 @@ Deno.serve(async (req) => {
         id: r.id, vehicle: r.vehicle, lend_date: r.lend_date, return_date: r.return_date,
         name: r.name, people: r.people, price: r.price, status: r.status,
         insurance: r.insurance, del_place: r.del_place, col_place: r.col_place,
+        kd_status: r.kd_status || null,
         vehicle_code: fleet[0]?.vehicle_code || null,
       },
     }, 200, origin);
