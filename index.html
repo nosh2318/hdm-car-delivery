@@ -145,9 +145,9 @@
         /* ── Hamburger Menu ── */
         .hamburger-btn { background: none; border: none; cursor: pointer; padding: 4px; display: flex; flex-direction: column; gap: 4px; justify-content: center; width: 28px; height: 28px; }
         .hamburger-btn span { display: block; width: 22px; height: 2.5px; background: #1a1a1a; border-radius: 2px; transition: all .3s; }
-        .menu-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 100; opacity: 0; pointer-events: none; transition: opacity .3s; }
+        .menu-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity .3s; }
         .menu-overlay.open { opacity: 1; pointer-events: auto; }
-        .slide-menu { position: fixed; top: 0; right: -300px; width: 300px; height: 100%; background: white; z-index: 101; transition: right .3s ease; overflow-y: auto; display: flex; flex-direction: column; }
+        .slide-menu { position: fixed; top: 0; right: -300px; width: 300px; height: 100%; background: white; z-index: 9999; transition: right .3s ease; overflow-y: auto; display: flex; flex-direction: column; }
         @media (max-width: 360px) { .slide-menu { width: 260px; right: -260px; } }
         @media (min-width: 768px) { .slide-menu { width: 360px; right: -360px; } }
         .slide-menu.open { right: 0; }
@@ -328,6 +328,13 @@
         /* ── Map ── */
         #map { width: 100%; flex: 1; min-height: 280px; z-index: 1; }
         .map-loading { display: flex; align-items: center; justify-content: center; height: 280px; color: #999; font-size: 13px; }
+        /* メニュー展開中は地図のフローティング要素を隠す（メニューに被らないように） */
+        body.menu-open .map-search-bar,
+        body.menu-open #addressSuggestions,
+        body.menu-open .kd-mascot-corner,
+        body.menu-open .geolocate-btn,
+        body.menu-open .map-fab,
+        body.menu-open .leaflet-control-container { visibility: hidden !important; }
         .map-search-bar {
             position: absolute; top: 8px; left: 8px; right: 44px; z-index: 1000;
             display: flex; align-items: center; gap: 0;
@@ -797,7 +804,7 @@
                         <a class="menu-item" href="faq.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">❓</span>よくある質問（札幌店）<span class="menu-item-arrow">→</span>
                         </a>
-                        <a class="menu-item" href="https://rent-handyman.jp/contact/" target="_blank" rel="noopener">
+                        <a class="menu-item" href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener">
                             <span class="menu-item-icon">✉️</span>お問い合わせ<span class="menu-item-arrow">→</span>
                         </a>
                     </div>
@@ -831,7 +838,7 @@
                 <a href="https://rent-handyman.jp/vehicle/">車両と料金</a>
                 <a href="insurance.html">保険プラン</a>
                 <a href="faq.html">FAQ</a>
-                <a href="https://rent-handyman.jp/contact/">お問い合わせ</a>
+                <a href="https://lin.ee/g6iDNYz">お問い合わせ</a>
                 <a href="clause.html">貸渡約款</a>
                 <a href="privacy.html">プライバシー</a>
                 <a href="transaction.html">特定商取引法</a>
@@ -1229,7 +1236,7 @@
                 <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:10px;line-height:1.6;">大変申し訳ございませんが<br>該当日に空車がございません</div>
                 <div style="font-size:12.5px;line-height:1.8;margin-bottom:18px;">下のボタンから<b>お届け／回収の日付</b>を変えると<br>空車が見つかる場合があります。</div>
                 <button onclick="state.vehDateOpen=true; render(); var e=document.querySelector('.app-header'); if(e)e.scrollIntoView({behavior:'smooth',block:'start'});" style="background:#FABE00;color:#1a1a1a;border:none;border-radius:11px;padding:14px 26px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(250,190,0,.45);">📅 日付を変更して探す</button>
-                <div style="font-size:11px;line-height:1.8;margin-top:18px;color:#aaa;">別のお届け場所でも空車が出る場合があります。<br>お急ぎは <a href="https://rent-handyman.jp/contact/" target="_blank" style="color:#1a1a1a;font-weight:700;text-decoration:underline;">お問い合わせ</a> ください。</div>
+                <div style="font-size:11px;line-height:1.8;margin-top:18px;color:#aaa;">別のお届け場所でも空車が出る場合があります。<br>お急ぎは <a href="https://lin.ee/g6iDNYz" target="_blank" style="color:#1a1a1a;font-weight:700;text-decoration:underline;">お問い合わせ</a> ください。</div>
             </div>`;
         if (!state.availableVehicles.length) return apologyHtml;
 
@@ -1650,7 +1657,7 @@
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
                         <a href="https://rent-handyman.jp/vehicle/" target="_blank">車両・料金</a>
                         <a href="faq.html" target="_blank">FAQ</a>
-                        <a href="https://rent-handyman.jp/contact/" target="_blank">お問い合わせ</a>
+                        <a href="https://lin.ee/g6iDNYz" target="_blank">お問い合わせ</a>
                     </nav>
                     <button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
@@ -1759,7 +1766,7 @@
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
                         <a href="https://rent-handyman.jp/vehicle/" target="_blank">車両・料金</a>
                         <a href="faq.html" target="_blank">FAQ</a>
-                        <a href="https://rent-handyman.jp/contact/" target="_blank">お問い合わせ</a>
+                        <a href="https://lin.ee/g6iDNYz" target="_blank">お問い合わせ</a>
                     </nav>
                     <button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
@@ -1868,7 +1875,7 @@
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
                         <a href="https://rent-handyman.jp/vehicle/" target="_blank">車両・料金</a>
                         <a href="faq.html" target="_blank">FAQ</a>
-                        <a href="https://rent-handyman.jp/contact/" target="_blank">お問い合わせ</a>
+                        <a href="https://lin.ee/g6iDNYz" target="_blank">お問い合わせ</a>
                     </nav>
                     <button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
@@ -2025,7 +2032,7 @@
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
                         <a href="https://rent-handyman.jp/vehicle/" target="_blank">車両・料金</a>
                         <a href="faq.html" target="_blank">FAQ</a>
-                        <a href="https://rent-handyman.jp/contact/" target="_blank">お問い合わせ</a>
+                        <a href="https://lin.ee/g6iDNYz" target="_blank">お問い合わせ</a>
                     </nav>
                     <button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
                 </div>
@@ -2862,7 +2869,7 @@
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
                         <a href="https://rent-handyman.jp/vehicle/" target="_blank">車両・料金</a>
                         <a href="faq.html" target="_blank">FAQ</a>
-                        <a href="https://rent-handyman.jp/contact/" target="_blank">お問い合わせ</a>
+                        <a href="https://lin.ee/g6iDNYz" target="_blank">お問い合わせ</a>
                     </nav>
                     <button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
@@ -3190,7 +3197,7 @@
         // Help link
         html += `
             <div style="text-align:center;margin-top:16px;padding-bottom:16px;">
-                <a href="https://rent-handyman.jp/contact/" target="_blank" style="font-size:12px;color:#888;text-decoration:none;">お困りですか？ <span style="color:#1a1a1a;font-weight:600;">お問い合わせ →</span></a>
+                <a href="https://lin.ee/g6iDNYz" target="_blank" style="font-size:12px;color:#888;text-decoration:none;">お困りですか？ <span style="color:#1a1a1a;font-weight:600;">お問い合わせ →</span></a>
             </div>
         `;
 
@@ -3695,10 +3702,12 @@
     function openMenu() {
         document.getElementById('menuOverlay')?.classList.add('open');
         document.getElementById('slideMenu')?.classList.add('open');
+        document.body.classList.add('menu-open');
     }
     function closeMenu() {
         document.getElementById('menuOverlay')?.classList.remove('open');
         document.getElementById('slideMenu')?.classList.remove('open');
+        document.body.classList.remove('menu-open');
     }
 
     // ════════════════════════════════════════════
