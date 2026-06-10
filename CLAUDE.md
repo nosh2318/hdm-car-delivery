@@ -2,9 +2,16 @@
 
 ---
 
-## 💳 KEYDROP Square決済＋予約完了メール＋キャンセル依頼（Phase B）実装（2026-06-10）※コードは working tree・未push/未deploy
+## 💳 KEYDROP Square決済＋予約完了メール＋キャンセル依頼（Phase B）実装（2026-06-10）
 
-オーナー指示：「squareを実装」「予約完了時にユーザーへ自動返信メール必須」「キャンセルもマイページに実装＝ユーザーがリクエスト→運営に自動でキャンセルメール」。**コードは全部書いたが push もデプロイもしていない**（Squareシークレット未設定の状態で client を push すると全予約が決済不能→TTLで自動消滅するため、**下記「Go-Live順序」を守って最後に client を push**）。
+オーナー指示：「squareを実装」「予約完了時にユーザーへ自動返信メール必須」「キャンセルもマイページに実装＝ユーザーがリクエスト→運営に自動でキャンセルメール」。
+
+### ✅ 反映済み（2026-06-10）
+- **client push済**（commit `bf0b06f`・本番反映）。
+- **Edge Function 3本 deploy済**：`create-booking`（Square link発行・鍵未設定時はpayUrl=nullで安全degrade）／`keydrop-mypage`（cancel_request追加）／`payment-webhook`（**--no-verify-jwt**でdeploy・SIG鍵未設定の間は全て401で安全）。
+- **モバイル下部CTAクリップ不具合も修正・反映済**（後述）。
+- ∴ 現状：場所選択〜予約フローは本番で動く。**「支払う」だけ未完**（Square鍵未設定→payUrl null→「決済ページに接続できません→LINE」アラート）。残りはオーナー作業（下記Go-Live 2,3,5＋DB RUN）だけ。
+- ⚠️ Squareシークレット設定までは決済不能＝**まだ一般公開しない**（テスト予約はTTLで自動消滅）。
 
 ### アーキ（重要設計判断）
 - 予約の正本は `reservations`（ota=KEYDROP / 採番KD-YYMM-NNNN-XXX）。金額は `keydrop_book` RPC が**サーバ側で価格マスターから確定**(005)。client値は信用しない。
@@ -53,10 +60,25 @@
 6. **client を push**（GitHub Pages＝push即本番）。これで決済リダイレクト＋マイページが動く。
 7. **疎通テスト**：少額予約→Square決済→`?paid=`復帰→`reservations.status=confirmed`＋`keydrop_payments.status=paid`＋**顧客に完了メール**＋Slack通知 を確認→テストデータ削除。マイページから「キャンセルをリクエスト」→**運営に依頼メール**＋Slack＋changed_jsonマーカー を確認。署名不正で401も確認。
 
+### 🔴 残り（これだけ・オーナー作業／一部は鍵をもらえば私が実行）
+1. **DB RUN**：`007_keydrop_payments.sql`・`008_keydrop_notifications.sql`・`006`(60分版・再RUN)。
+2. **Square管理画面**：Webhook作成（endpoint=`.../functions/v1/payment-webhook`／`payment.created`,`payment.updated`）→**署名キー取得**＋本番アクセストークン。
+3. **secrets設定**（値をもらえば私が`supabase secrets set`実行）：`SQUARE_ACCESS_TOKEN`/`SQUARE_LOCATION_ID`=L8N7J9RKPN3WH/`SQUARE_WEBHOOK_SIGNATURE_KEY`/`SQUARE_WEBHOOK_URL`（＋任意 Slack/`KEYDROP_OPS_EMAIL`）。
+4. ~~Edge Functionデプロイ~~ ✅ 完了（3本）。
+5. **GASメール送信ワーカー**：`gas/keydrop_mail.gs` を新規GAS化＋service_roleキー＋reserve@エイリアス＋`setupKeydropMailTrigger()`。
+6. ~~client push~~ ✅ 完了。
+7. **疎通テスト**：少額決済→confirmed＋顧客完了メール＋Slack／キャンセル依頼→運営通知 を確認。
+
 ### 残（決済導入後）
 - 返金フロー（運営確定時の Square Refund 自動化）＝既存 payment_bot のRefund実装が流用可。
 - レート制限/CAPTCHA（スパム予約）。
 - 独自ドメイン化時：CORS ALLOWED と `KEYDROP_RETURN_URL`・Square redirect を追従。
+
+### 📱 モバイル下部CTAクリップ不具合 修正（2026-06-10・commit `bf0b06f`・反映済）
+- 症状：お届け/回収画面の最下部CTA（「次へ」「車両を見る」）がスマホで切れる/出ない（iPhone15含む全デバイス）。
+- 真因：TOP(場所)画面が `.kd-mapscreen{height:100dvh;overflow:hidden}`＋内側ラッパー`overflow:hidden`で1画面固定→iOS/Androidのツールバー高さ差で下部がクリップ。
+- 修正：**モバイル(max-width:899)のTOPだけ**（`kd-top`クラスにスコープ）`height:auto;overflow:visible`＋`.kd-mapwrap`を固定高`42vh`＋主CTAを`position:sticky;bottom:0`(safe-area対応)で常時表示。**車両画面(step_vehicle=kd-top無し)は従来挙動を維持**。renderTopScreenのインライン`overflow:hidden`ラッパーは`.top-body`クラス化。CTAは`.kd-cta-sticky`でラップ。iPhone15相当(393×852)で下部CTA全表示をヘッドレス検証済。
+- 教訓：**モバイルで `100dvh + overflow:hidden` による"1画面フィット"は危険**（ツールバー差で下部クリップ）。地図系は「地図に固定高＋本文はスクロール＋CTAはsticky」が堅牢。
 
 ---
 
