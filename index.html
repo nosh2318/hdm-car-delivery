@@ -750,6 +750,9 @@
         @media (min-width: 900px) {
             .top-2col { flex-direction: row; }
             .top-visual { display: block; flex: 1 1 46%; position: relative; overflow: hidden; background: #1a1a1a; }
+            /* 画像の上下（contain時の黒帯）をグラデーションで馴染ませる（硬い境界をぼかす） */
+            .top-visual::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+                background: linear-gradient(180deg, #1a1a1a 0%, rgba(26,26,26,0.55) 9%, rgba(26,26,26,0) 24%, rgba(26,26,26,0) 76%, rgba(26,26,26,0.55) 91%, #1a1a1a 100%); }
             .top-2col .kd-flow { flex: 1 1 54%; max-width: none !important; margin: 0 !important; overflow-y: auto; }
         }
         /* 地図/予約画面ではPCフッターを隠す（ボタン見切れ防止・縦スペース確保） */
