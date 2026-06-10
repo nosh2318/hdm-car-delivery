@@ -750,19 +750,21 @@
         @media (min-width: 900px) {
             .top-2col { flex-direction: row; }
             .top-visual { display: block; flex: 1 1 46%; position: relative; overflow: hidden; background: #1a1a1a; }
-            /* 画像の上下（contain時の黒帯）をグラデーションで馴染ませる（硬い境界をぼかす） */
-            .top-visual::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
-                background: linear-gradient(180deg, #1a1a1a 0%, rgba(26,26,26,0.55) 9%, rgba(26,26,26,0) 24%, rgba(26,26,26,0) 76%, rgba(26,26,26,0.55) 91%, #1a1a1a 100%); }
             .top-2col .kd-flow { flex: 1 1 54%; max-width: none !important; margin: 0 !important; overflow-y: auto; }
         }
         /* 地図/予約画面ではPCフッターを隠す（ボタン見切れ防止・縦スペース確保） */
         .kd-mapscreen .pc-footer { display: none !important; }
-        .kv-slide { position: absolute; inset: 0; background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0; animation: kvFade 28s infinite; }
+        .kv-slide { position: absolute; inset: 0; opacity: 0; animation: kvFade 28s infinite; }
+        /* 黒帯を「同じ画像のぼかし版」で埋める＝黒が消える（cover+blur+拡大） */
+        .kv-slide::before { content: ''; position: absolute; inset: 0; background-image: var(--kvimg); background-size: cover; background-position: center; filter: blur(34px) brightness(0.82); transform: scale(1.2); }
+        /* 主役の画像（全体が見えるcontain・焼込テキストも切れない） */
+        .kv-slide::after { content: ''; position: absolute; inset: 0; background-image: var(--kvimg); background-size: contain; background-repeat: no-repeat; background-position: center; }
         /* モバイル用キービジュアル帯（PCは左ビジュアルがあるので非表示） */
         .kv-mobile { display: none; }
         @media (max-width: 899px) {
             .kv-mobile { display: block; position: relative; flex: none; height: 160px; overflow: hidden; background: #1a1a1a; }
-            .kv-mobile .kv-slide { background-size: cover; }
+            .kv-mobile .kv-slide::after { background-size: cover; }
+            .kv-mobile .kv-slide::before { display: none; }
             /* 上下を白(周囲＝白ヘッダー/ガイド)へフェードさせて馴染ませる */
             .kv-mobile::after { content: ''; position: absolute; left:0; right:0; top:0; bottom:0; z-index: 5; pointer-events: none; background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0) 26%, rgba(255,255,255,0) 72%, #ffffff 100%); }
         }
@@ -1712,18 +1714,18 @@
             <div class="top-body">
               <!-- モバイル用キービジュアル帯（PCは非表示・左ビジュアルが担当） -->
               <div class="kv-mobile">
-                  <div class="kv-slide" style="background-image:url(images/top_banner_01.jpg)"></div>
-                  <div class="kv-slide" style="background-image:url(images/top_banner_02.jpg)"></div>
-                  <div class="kv-slide" style="background-image:url(images/top_banner_03.jpg)"></div>
-                  <div class="kv-slide" style="background-image:url(images/top_banner_05.jpg)"></div>
+                  <div class="kv-slide" style="--kvimg:url(images/top_banner_01.jpg)"></div>
+                  <div class="kv-slide" style="--kvimg:url(images/top_banner_02.jpg)"></div>
+                  <div class="kv-slide" style="--kvimg:url(images/top_banner_03.jpg)"></div>
+                  <div class="kv-slide" style="--kvimg:url(images/top_banner_05.jpg)"></div>
               </div>
               <div class="top-2col">
                 <!-- 左：キービジュアル（PCのみ・スライドショー。画像はバナーをカバー表示） -->
                 <div class="top-visual">
-                    <div class="kv-slide" style="background-image:url(images/top_banner_01.jpg)"></div>
-                    <div class="kv-slide" style="background-image:url(images/top_banner_02.jpg)"></div>
-                    <div class="kv-slide" style="background-image:url(images/top_banner_03.jpg)"></div>
-                    <div class="kv-slide" style="background-image:url(images/top_banner_05.jpg)"></div>
+                    <div class="kv-slide" style="--kvimg:url(images/top_banner_01.jpg)"></div>
+                    <div class="kv-slide" style="--kvimg:url(images/top_banner_02.jpg)"></div>
+                    <div class="kv-slide" style="--kvimg:url(images/top_banner_03.jpg)"></div>
+                    <div class="kv-slide" style="--kvimg:url(images/top_banner_05.jpg)"></div>
                 </div>
                 <!-- 右：機能（縦フロー：日付/時間→マップ→確定） -->
                 <div class="kd-flow">
