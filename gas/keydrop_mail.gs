@@ -57,7 +57,9 @@ function sendKeydropNotifications() {
   for (var i = 0; i < rows.length; i++) {
     var n = rows[i];
     try {
-      var mail = (n.type === 'confirm') ? _buildConfirmMail_(n) : _buildCancelRequestMail_(n);
+      var mail = (n.type === 'confirm') ? _buildConfirmMail_(n)
+               : (n.type === 'cancel_ack') ? _buildCancelAckMail_(n)
+               : _buildCancelRequestMail_(n);
       if (!n.to_email || n.to_email.indexOf('@') < 0) throw new Error('宛先不正: ' + n.to_email);
       GmailApp.sendEmail(n.to_email, mail.subject, mail.body, { from: FROM_EMAIL, name: FROM_NAME });
       _sbPatch_('keydrop_notifications?id=eq.' + n.id, { sent: true, sent_at: new Date().toISOString(), error: null });
@@ -97,6 +99,41 @@ function _buildConfirmMail_(n) {
     MYPAGE_URL + '\n' +
     '※お届け・回収の場所/時間の変更は出発24時間前まで。\n' +
     '※キャンセルのご依頼はマイページの「キャンセルをリクエスト」より承ります。\n\n' +
+    '■ お問い合わせ\n' +
+    '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
+    '営業時間：9:00〜19:00\n\n' +
+    'CARデリバリー KEY-DROP\n';
+  return { subject: subject, body: body };
+}
+
+/** キャンセル依頼 受付メール（顧客向け） */
+function _buildCancelAckMail_(n) {
+  var p = n.payload || {};
+  var id = n.reservation_id || '';
+  var subject = 'CARデリバリー KEY-DROP キャンセル依頼を受け付けました（予約番号 ' + id + '）';
+  var body =
+    (p.name || 'お客様') + ' 様\n\n' +
+    'キャンセルのご依頼を受け付けいたしました。\n' +
+    '※この時点ではまだキャンセルは確定しておりません。\n' +
+    '内容（返金可否・キャンセル料）を確認のうえ、担当者より折り返しご連絡いたします。\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '■ ご依頼内容\n' +
+    '予約番号　：' + id + '\n' +
+    '車両クラス：' + (p.vehicleClass || '') + '\n' +
+    'お届け　　：' + _dt_(p.lend_date, p.lend_time) + '\n' +
+    'ご返却　　：' + _dt_(p.return_date, p.return_time) + '\n' +
+    'お支払い額：' + _yen_(p.price) + '\n' +
+    'ご依頼理由：' + (p.reason || '（記入なし）') + '\n' +
+    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '■ キャンセル料（目安）\n' +
+    '・7日前まで：無料\n' +
+    '・6〜3日前：基本料金の20%\n' +
+    '・2〜1日前：基本料金の30%\n' +
+    '・当日以降：基本料金の50%\n' +
+    '※航空便欠航時は欠航証明書のご提示でキャンセル料無料。\n\n' +
+    '■ ご確認\n' +
+    'マイページで現在の状況をご確認いただけます。\n' +
+    MYPAGE_URL + '\n\n' +
     '■ お問い合わせ\n' +
     '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
     '営業時間：9:00〜19:00\n\n' +

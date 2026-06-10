@@ -277,6 +277,22 @@ Deno.serve(async (req) => {
     await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`,
       { cancel_requested_at: nowIso, cancel_reason: reason || null });
 
+    // 1.5) 顧客へ「キャンセル依頼を受け付けました」メールをキュー投入（GAS送信ワーカーが reserve@ から送信）
+    if (r.mail && String(r.mail).indexOf("@") > 0) {
+      await sbPost("keydrop_notifications", {
+        type: "cancel_ack",
+        reservation_id: resId,
+        to_email: r.mail,
+        payload: {
+          name: r.name || "", vehicleClass: r.vehicle || "",
+          lend_date: r.lend_date || "", lend_time: r.lend_time || r.del_time || "",
+          return_date: r.return_date || "", return_time: r.return_time || r.col_time || "",
+          del_place: r.del_place || "", col_place: r.col_place || "",
+          price: r.price || 0, reason,
+        },
+      });
+    }
+
     // 2) 配車表/OPシートに出るよう d-/c- タスクのmemoに🔴依頼マーカー（存在すれば）
     const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
     const marker = `🔴キャンセル依頼(${stamp})${reason ? "：" + reason : ""}`;
