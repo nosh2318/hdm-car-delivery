@@ -99,7 +99,7 @@ function _buildConfirmMail_(n) {
     '※キャンセルのご依頼はマイページの「キャンセルをリクエスト」より承ります。\n\n' +
     '■ お問い合わせ\n' +
     '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
-    '緊急連絡先：' + TEL + '（営業時間 9:00〜19:00）\n\n' +
+    '営業時間：9:00〜19:00\n\n' +
     'CARデリバリー KEYDROP\n';
   return { subject: subject, body: body };
 }
