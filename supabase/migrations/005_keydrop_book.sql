@@ -1,11 +1,10 @@
 -- ============================================================
--- 005 KEYDROP 予約のアトミック化（ダブルブッキング/採番衝突 防止）
+-- 005 KEYDROP 予約のアトミック化＋サーバ側金額再計算（ダブルブッキング/採番衝突/価格偽装 防止）
 -- 2026-06-10 / omni
--- create-booking(Edge Fn) の「在庫確認→採番→reservations/fleet INSERT」を
--- 1関数・1トランザクション・グローバルadvisory lockで直列化する。
--- 除外ロジックは表示(public_*_v)/GAS自動配車と同一：
---   保険車両/除却(active) ・ 月別除外(vehicle_monthly_kpi active=false) ・
---   予約稼働(fleet×reservations cancelled除外・期間重複) ・ メンテ+入庫+協力会社予約(maintenance 期間重複)
+-- ・在庫確認→採番→reservations/fleet INSERT を 1関数・1txn・グローバルadvisory lockで直列化
+-- ・★金額はクライアント値を信用せず、価格マスター(app_settings.hdm_keydrop_price)から
+--   選択日ごとのtier(閑散/通常/繁忙)×クラス価格をサーバで合算して確定（決済前提の脆弱性対策）
+-- ・除外ロジックは表示(public_*_v)/GAS自動配車と同一
 -- ============================================================
 
 create or replace function public.keydrop_book(p jsonb)
@@ -25,15 +24,61 @@ declare
   v_prefix  text;
   v_max     int;
   v_assigned text := '未配車';
+  -- 価格計算用
+  v_cfg     jsonb;
+  v_prices  jsonb;
+  v_presets jsonb;
+  v_default int;
+  v_days    int;
+  v_total   numeric := 0;
+  v_tier    int;
+  v_md      text;
+  v_preset  jsonb;
+  v_i       int;
 begin
   if v_class is null then
     return jsonb_build_object('error', 'クラス未指定');
   end if;
+  if v_lend is null or v_ret is null then
+    return jsonb_build_object('error', '日付未指定');
+  end if;
 
-  -- 全KEYDROP予約を直列化（チェック〜INSERTをアトミックに）。低頻度ゆえ性能影響なし。
+  -- 全KEYDROP予約を直列化（チェック〜INSERTをアトミックに）
   perform pg_advisory_xact_lock(hashtext('keydrop_booking'));
 
-  -- 空き車両を1台（表示/GASと同一の除外条件）
+  -- ===== サーバ側 金額再計算（クライアントのprice/base_priceは信用しない）=====
+  begin
+    select value::jsonb into v_cfg from app_settings where key = 'hdm_keydrop_price';
+  exception when others then v_cfg := null; end;
+
+  if v_cfg is not null and (v_cfg ? 'prices') and (v_cfg->'prices' ? v_class) then
+    v_prices  := v_cfg->'prices'->v_class;                 -- [閑散,通常,繁忙]
+    v_presets := coalesce(v_cfg->'presets', '[]'::jsonb);
+    v_default := coalesce((v_cfg->>'default')::int, 1);
+    v_days    := greatest(1, (v_ret::date - v_lend::date)); -- 日数（最低1日）
+    for v_i in 0..(v_days - 1) loop
+      v_md   := to_char((v_lend::date + v_i), 'MM-DD');
+      v_tier := v_default;
+      for v_preset in select * from jsonb_array_elements(v_presets) loop
+        if (v_preset->>'start') is null or (v_preset->>'end') is null then continue; end if;
+        if (v_preset->>'start') <= (v_preset->>'end') then
+          if v_md >= (v_preset->>'start') and v_md <= (v_preset->>'end') then
+            v_tier := (v_preset->>'tier')::int; exit;
+          end if;
+        else  -- 年跨ぎ
+          if v_md >= (v_preset->>'start') or v_md <= (v_preset->>'end') then
+            v_tier := (v_preset->>'tier')::int; exit;
+          end if;
+        end if;
+      end loop;
+      v_total := v_total + coalesce((v_prices->>v_tier)::numeric, 0);
+    end loop;
+  else
+    -- 価格マスター未設定時のみ、クライアント値にフォールバック（移行期の保険）
+    v_total := coalesce((p->>'price')::numeric, 0);
+  end if;
+
+  -- ===== 空き車両を1台（表示/GASと同一の除外条件）=====
   select v.code, v.name into v_code, v_name
   from vehicles v
   where v.type = v_class
@@ -42,7 +87,6 @@ begin
     and ( v_model = ''
           or upper(regexp_replace(coalesce(v.name,''), '[0-9①-⑩]+$', '')) = upper(v_model)
           or replace(replace(upper(coalesce(v.name,'')),' ',''),'-','') = replace(replace(upper(v_model),' ',''),'-','') )
-    -- 月別除外フラグ（期間に重なる年月のいずれかで active=false なら不可）
     and not exists (
       select 1 from vehicle_monthly_kpi k
       where k.vehicle_code = v.code and k.active = false
@@ -51,14 +95,12 @@ begin
           from generate_series(date_trunc('month', v_lend::date), v_ret::date, interval '1 month') d
         )
     )
-    -- 予約稼働の重複（cancelled除外）
     and not exists (
       select 1 from fleet f join reservations r on r.id = f.reservation_id
       where f.vehicle_code = v.code
         and coalesce(r.status,'') not in ('cancelled','キャンセル','cancel')
         and r.lend_date <= v_ret and r.return_date >= v_lend
     )
-    -- メンテ＋入庫＋協力会社予約の重複（maintenance全block_type）
     and not exists (
       select 1 from maintenance m
       where m.vehicle_code = v.code
@@ -67,7 +109,6 @@ begin
   order by v.code
   limit 1;
 
-  -- requireStock=true なら、空きが無ければ予約を作らず満車で返す（lockはtxn終了で解放）
   if v_code is null and coalesce((p->>'requireStock')::boolean, false) then
     return jsonb_build_object('error', 'ご希望の期間・クラスは満車です', 'soldOut', true);
   end if;
@@ -80,7 +121,7 @@ begin
   where id like v_prefix || '%';
   v_id := v_prefix || lpad((v_max + 1)::text, 4, '0');
 
-  -- reservations INSERT
+  -- reservations INSERT（金額はサーバ計算値 v_total を採用）
   insert into reservations
     (id, ota, vehicle, lend_date, return_date, name, mail, tel, people,
      base_price, option_price, discount, price, status, insurance,
@@ -88,21 +129,20 @@ begin
   values
     (v_id, 'KEYDROP', v_class, v_lend, v_ret,
      p->>'name', p->>'mail', p->>'tel', coalesce((p->>'people')::int, 1),
-     coalesce((p->>'base_price')::numeric, 0), coalesce((p->>'option_price')::numeric, 0),
-     coalesce((p->>'discount')::numeric, 0), coalesce((p->>'price')::numeric, 0),
+     v_total, 0, 0, v_total,
      'pending_payment', coalesce(p->>'insurance','なし'),
      coalesce(p->>'del_place',''), coalesce(p->>'col_place',''),
      coalesce(nullif(p->>'visit_type',''),'DEL'), coalesce(nullif(p->>'return_type',''),'COL'));
 
-  -- fleet 割当（取れた場合のみ）
   if v_code is not null then
     insert into fleet (reservation_id, vehicle_code) values (v_id, v_code);
     v_assigned := coalesce(v_name,'') || '(' || v_code || ')';
   end if;
 
-  return jsonb_build_object('reservationId', v_id, 'assigned', v_assigned, 'vehicleCode', v_code, 'status','pending_payment');
+  return jsonb_build_object(
+    'reservationId', v_id, 'assigned', v_assigned, 'vehicleCode', v_code,
+    'status','pending_payment', 'price', v_total);
 end;
 $$;
 
--- service_role のみ実行（Edge Function 経由）。anon/authenticated には付与しない。
 revoke all on function public.keydrop_book(jsonb) from public, anon, authenticated;

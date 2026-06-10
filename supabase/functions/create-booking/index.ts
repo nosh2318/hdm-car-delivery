@@ -20,16 +20,25 @@
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*", // Phase Dで新サービスのドメインに絞る
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "content-type",
-};
-
+// 許可オリジン（KEYDROP公開元）。独自ドメイン取得時に追記。
+const ALLOWED = [
+  "https://nosh2318.github.io",
+  // "https://keydrop.example.com",
+];
+function corsHeaders(origin: string | null) {
+  const allow = origin && ALLOWED.includes(origin) ? origin : ALLOWED[0];
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "content-type, apikey, authorization",
+    "Vary": "Origin",
+  };
+}
+let _origin: string | null = null;
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...CORS, "content-type": "application/json" },
+    headers: { ...corsHeaders(_origin), "content-type": "application/json" },
   });
 }
 
@@ -156,7 +165,8 @@ async function nextId(lend: string): Promise<string> {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  _origin = req.headers.get("origin");
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(_origin) });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
   let p: any;

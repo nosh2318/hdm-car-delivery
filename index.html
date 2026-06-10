@@ -2964,20 +2964,25 @@
                 <div style="font-size:13px;color:#888;line-height:1.6;">予約状況やデリバリー状況を<br>リアルタイムで確認できます</div>
             </div>
             <div class="mypage-lookup">
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label class="form-label">ご予約番号</label>
+                    <input class="form-input" type="text" id="mypageResId" placeholder="KD-0000-0000" autocapitalize="characters" style="font-size:16px;">
+                </div>
                 <div class="form-group" style="margin-bottom:14px;">
                     <label class="form-label">ご予約時のメールアドレス</label>
                     <input class="form-input" type="email" id="mypageEmail" placeholder="example@mail.com" value="${savedEmail}" style="font-size:16px;">
                 </div>
                 ${mypageState.error ? `<div style="color:#dc2626;font-size:12px;margin-bottom:8px;">${mypageState.error}</div>` : ''}
-                <button class="btn-primary" onclick="lookupByEmail();" ${mypageState.loading ? 'disabled' : ''}>
+                <button class="btn-primary" onclick="lookupMypage();" ${mypageState.loading ? 'disabled' : ''}>
                     ${mypageState.loading ? '<span class="loading-spinner"></span>' : '予約を確認する'}
                 </button>
+                <div style="font-size:11px;color:#999;margin-top:8px;line-height:1.6;text-align:center;">ご予約時にお送りした予約番号（KD-…）とメールアドレスでご確認いただけます</div>
             </div>
 
             <div style="background:#f0f7ff;border-radius:12px;padding:16px;margin-top:16px;">
                 <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;">デモ用テストアカウント</div>
                 <div style="font-size:12px;color:#666;margin-bottom:8px;line-height:1.6;">全ステータスのデモを確認できます</div>
-                <button style="width:100%;padding:10px;background:white;border:1.5px solid #1a1a1a;border-radius:8px;font-size:13px;font-weight:700;color:#1a1a1a;cursor:pointer;font-family:inherit;" onclick="document.getElementById('mypageEmail').value='test@hdm-demo.com';lookupByEmail();">
+                <button style="width:100%;padding:10px;background:white;border:1.5px solid #1a1a1a;border-radius:8px;font-size:13px;font-weight:700;color:#1a1a1a;cursor:pointer;font-family:inherit;" onclick="document.getElementById('mypageEmail').value='test@hdm-demo.com';document.getElementById('mypageResId').value='DEMO';lookupMypage();">
                     test@hdm-demo.com でログイン
                 </button>
             </div>
@@ -3259,40 +3264,54 @@
         },
     ];
 
-    async function lookupByEmail() {
+    // 予約番号＋メールの両方で本人確認（keydrop-mypage Edge Function・service_role）。
+    // ※anonでreservationsを直読みしない（PII漏洩・総当たり防止）。
+    async function lookupMypage() {
         const email = document.getElementById('mypageEmail')?.value?.trim();
-
-        if (!email) {
-            mypageState.error = 'メールアドレスを入力してください';
+        const resId = document.getElementById('mypageResId')?.value?.trim();
+        if (!email || !resId) {
+            mypageState.error = '予約番号とメールアドレスを入力してください';
             render();
             return;
         }
-
         mypageState.loading = true;
         mypageState.error = '';
         render();
 
-        try {
-            let reservations;
-            if (email === MOCK_EMAIL) {
-                reservations = MOCK_RESERVATIONS;
-            } else {
-                reservations = await supabaseGet('reservations', `mail=eq.${encodeURIComponent(email)}&order=created_at.desc`);
-            }
-
-            localStorage.setItem('hdm_mypage_email', email);
+        // デモアカウントはローカルmockで表示
+        if (email === MOCK_EMAIL) {
+            const m = MOCK_RESERVATIONS.find(r => r.id === resId) || MOCK_RESERVATIONS[0];
             mypageState.email = email;
+            mypageState.reservation = m;
+            mypageState.fleet = m.demo_fleet || null;
+            mypageState.view = 'detail';
+            mypageState.loading = false;
+            render();
+            setTimeout(() => initMypageMap(), 100);
+            return;
+        }
 
-            if (!reservations || reservations.length === 0) {
-                mypageState.reservations = [];
+        try {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
+                method: 'POST',
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'lookup', mail: email, resId }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) {
+                mypageState.error = data.error || '予約番号またはメールアドレスが一致しません';
                 mypageState.loading = false;
                 render();
                 return;
             }
-
-            mypageState.reservations = reservations;
+            localStorage.setItem('hdm_mypage_email', email);
+            mypageState.email = email;
+            mypageState.reservation = data.reservation;
+            mypageState.fleet = data.reservation.vehicle_code ? { vehicle_code: data.reservation.vehicle_code } : null;
+            mypageState.view = 'detail';
             mypageState.loading = false;
             render();
+            setTimeout(() => initMypageMap(), 100);
         } catch (e) {
             mypageState.error = '通信エラーが発生しました';
             mypageState.loading = false;
@@ -3431,15 +3450,21 @@
 
     async function cancelReservation(resId) {
         try {
-            await fetch(`${SUPABASE_URL}/rest/v1/reservations?id=eq.${encodeURIComponent(resId)}`, {
-                method: 'PATCH',
-                headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ status: 'キャンセル' }),
-            });
+            const email = mypageState.email || localStorage.getItem('hdm_mypage_email') || '';
+            // 本番はEdge Function（service_role・本人確認）でキャンセル。デモ(mock)はローカルのみ。
+            if (email !== MOCK_EMAIL) {
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
+                    method: 'POST',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'cancel', mail: email, resId }),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.ok) {
+                    mypageState.error = data.error || 'キャンセルに失敗しました';
+                    render();
+                    return;
+                }
+            }
             // Update local state
             if (mypageState.reservation) {
                 mypageState.reservation.status = 'キャンセル';

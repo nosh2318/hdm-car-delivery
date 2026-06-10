@@ -39,6 +39,22 @@
 | `sns_app_state` | SNS自動投稿GAS・monitor等 | 用途確認の上 anon ALL削除 |
 | ~~`inquiries`/`handyman_knowledge`/`reply_templates`~~ | ✅ **Phase 2-①で完了** | — |
 
+## ✅ KEYDROP（顧客公開面）launch堅牢化（2026-06-10）
+公開前提（全世界＝攻撃者）＋決済導入前提での是正：
+| 項目 | 対応 |
+|---|---|
+| **価格偽装**（client が price=1 送信） | `keydrop_book`を**サーバ側で価格マスターから再計算**（005）。client値は無視。検証：price=1送付→¥18,000採用 |
+| **ダブルブッキング/採番衝突** | グローバルadvisory lock＋1txnでアトミック（005） |
+| **未決済の幽霊在庫** | **TTL**：pending_payment 30分超を自動cancel＋fleet解放。pg_cron 5分毎（006）。confirmed(決済済)は対象外 |
+| **マイページのPII漏洩/他人予約キャンセル** | `keydrop-mypage` Edge Function（service_role）。**予約番号＋メール両方一致**のみ照会/キャンセル可。不一致は404。顧客UIはanon直read/PATCHを廃止 |
+| **CORS** | create-booking / keydrop-mypage を `https://nosh2318.github.io` ホワイトリストに（独自ドメイン時追記） |
+| service_role/secret | クライアント混入0（anonキーのみ）。service_roleはEdge Function env のみ |
+
+### ⏳ KEYDROP 残（決済導入時）
+- **Square**：APIトークン=Edge Function secret／**Webhook署名検証**／冪等性／決済成立で status→confirmed（TTL対象外化）。要オーナー：Squareトークン・LocationID・Webhook署名キー。
+- レート制限/CAPTCHA（スパム予約対策・必要に応じ）。
+- 那覇連動（多店舗store分岐）＝launch後拡張（KEYDROP=デリバリー専門なので那覇もデリバリーで同UX複製可）。
+
 ## 体制（恒久ルール）
 1. **anonは「公開ビュー読取」と「Edge Function呼び出し」のみ**を原則とする。ベーステーブルへの anon 直READ/WRITE は持たせない。
 2. **顧客(KEYDROP)書込は必ず Edge Function(service_role)経由**（create-booking）。anon直INSERT/PATCHを作らない。
