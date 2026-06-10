@@ -59,6 +59,7 @@ function sendKeydropNotifications() {
     try {
       var mail = (n.type === 'confirm') ? _buildConfirmMail_(n)
                : (n.type === 'cancel_ack') ? _buildCancelAckMail_(n)
+               : (n.type === 'cancel_done') ? _buildCancelDoneMail_(n)
                : _buildCancelRequestMail_(n);
       if (!n.to_email || n.to_email.indexOf('@') < 0) throw new Error('宛先不正: ' + n.to_email);
       GmailApp.sendEmail(n.to_email, mail.subject, mail.body, { from: FROM_EMAIL, name: FROM_NAME });
@@ -137,6 +138,33 @@ function _buildCancelAckMail_(n) {
     '■ お問い合わせ\n' +
     '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
     '営業時間：9:00〜19:00\n\n' +
+    'CARデリバリー KEY-DROP\n';
+  return { subject: subject, body: body };
+}
+
+/** キャンセル確定（返金）メール（顧客向け） */
+function _buildCancelDoneMail_(n) {
+  var p = n.payload || {};
+  var id = n.reservation_id || '';
+  var subject = 'CARデリバリー KEY-DROP キャンセルが確定しました（予約番号 ' + id + '）';
+  var body =
+    (p.name || 'お客様') + ' 様\n\n' +
+    'ご予約のキャンセルが確定いたしました。\n' +
+    'ご返金の手続きを行いましたのでお知らせいたします。\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '■ キャンセル内容\n' +
+    '予約番号　：' + id + '\n' +
+    '車両クラス：' + (p.vehicleClass || '') + '\n' +
+    'お届け予定：' + (p.lend_date || '') + '\n' +
+    'お支払い額：' + _yen_(p.paid) + '\n' +
+    'キャンセル料：' + _yen_(p.fee) + (p.rate != null ? '（' + p.rate + '%）' : '') + '\n' +
+    'ご返金額　：' + _yen_(p.refund) + '\n' +
+    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '※ご返金はカード会社の処理により、反映までお時間をいただく場合がございます。\n\n' +
+    '■ お問い合わせ\n' +
+    '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
+    '営業時間：9:00〜19:00\n\n' +
+    'またのご利用を心よりお待ちしております。\n' +
     'CARデリバリー KEY-DROP\n';
   return { subject: subject, body: body };
 }

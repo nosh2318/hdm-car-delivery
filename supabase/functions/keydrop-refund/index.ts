@@ -41,6 +41,12 @@ async function sbPatch(t: string, q: string, d: unknown): Promise<boolean> {
 async function sbDelete(t: string, q: string) {
   await fetch(`${SB_URL}/rest/v1/${t}?${q}`, { method: "DELETE", headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } });
 }
+async function sbPost(t: string, d: unknown) {
+  const r = await fetch(`${SB_URL}/rest/v1/${t}`, { method: "POST",
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" },
+    body: JSON.stringify(d) });
+  if (!r.ok) console.error(`POST ${t}: ${await r.text()}`);
+}
 async function notifySlack(text: string) {
   const token = Deno.env.get("SLACK_BOT_TOKEN"); const channel = Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
   if (!token) return;
@@ -118,6 +124,20 @@ Deno.serve(async (req) => {
     { status: "refunded", refund_amount: refundActual, cancel_fee: fee, cancel_rate: rate, refunded_at: nowIso });
   await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}`, { status: "キャンセル" });
   await sbDelete("fleet", `reservation_id=eq.${encodeURIComponent(resId)}`);
+
+  // 顧客へ「キャンセル確定（返金）」メールをキュー投入（GAS送信ワーカーが reserve@ から送信）
+  if (rv.mail && String(rv.mail).indexOf("@") > 0) {
+    await sbPost("keydrop_notifications", {
+      type: "cancel_done",
+      reservation_id: resId,
+      to_email: rv.mail,
+      payload: {
+        name: rv.name || "", vehicleClass: rv.vehicle || "",
+        lend_date: rv.lend_date || "",
+        paid: paid, fee: fee, rate: rate, refund: refundActual,
+      },
+    });
+  }
 
   await notifySlack([
     `✅ *KEYDROP キャンセル確定*（返金はスタッフが手動実施）`,
