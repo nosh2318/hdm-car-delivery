@@ -3118,6 +3118,30 @@
             </div>
         `;
 
+        // ── 予約内容（お届け・回収の場所/時間）の変更：独立セクション（出発24時間前まで）──
+        if (!isCancelled && !isCompleted) {
+            const ed = canEditMypage(r);
+            if (ed.editable) {
+                html += `
+                <div class="mp-detail-section" style="border:1.5px solid #FABE00;">
+                    <div class="mp-detail-header" style="background:#fffbf0;color:#a07c00;">✏️ お届け・回収の変更</div>
+                    <div class="mp-detail-body">
+                        <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:10px;">場所・時間は<b>出発の24時間前まで</b>マイページから変更できます。<br>（車種・日付の変更は公式LINEへ）</div>
+                        <button class="btn-primary" style="margin:0;" onclick="mpEditOpen()">📝 場所・時間を変更する</button>
+                    </div>
+                </div>`;
+            } else {
+                html += `
+                <div class="mp-detail-section">
+                    <div class="mp-detail-header">✏️ お届け・回収の変更</div>
+                    <div class="mp-detail-body">
+                        <div style="font-size:12px;color:#555;line-height:1.7;">${ed.reason}</div>
+                        <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:12px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:7px 12px;">💬 公式LINEで変更を依頼</a>
+                    </div>
+                </div>`;
+            }
+        }
+
         // ── 固定マップ（お届け地点＋回収地点を一括表示）──
         if (!isCancelled) {
             html += `
@@ -3158,11 +3182,11 @@
                     </div>
                     <div style="font-size:12px;line-height:1.7;color:#444;margin-bottom:10px;">
                         <div style="font-weight:800;color:#1a1a1a;margin-bottom:2px;">② お届け場所／回収場所の変更</div>
-                        現在は公式LINEにて受付しております。<span style="color:#a07c00;font-weight:700;">（マイページからの変更機能は準備中）</span>
+                        マイページの「✏️ お届け・回収の変更」から、<b>出発の24時間前まで</b>ご自身で変更できます。それ以降は公式LINEへ。
                     </div>
                     <div style="font-size:12px;line-height:1.7;color:#444;margin-bottom:4px;">
                         <div style="font-weight:800;color:#1a1a1a;margin-bottom:2px;">③ お届け時間／回収時間の変更</div>
-                        現在は公式LINEにて受付しております。<span style="color:#a07c00;font-weight:700;">（マイページからの変更機能は準備中）</span>
+                        マイページの「✏️ お届け・回収の変更」から、<b>出発の24時間前まで</b>ご自身で変更できます。それ以降は公式LINEへ。
                     </div>
                 </div>
             </details>`;
@@ -3188,7 +3212,190 @@
             <div style="background:white;border-radius:16px;max-width:380px;width:90%;padding:24px;margin:20px;" id="cancelModalContent"></div>
         </div>`;
 
+        // 変更モーダル（場所・時間）
+        html += `
+        <div id="mpEditModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:210;align-items:flex-end;justify-content:center;">
+            <div style="background:white;border-radius:18px 18px 0 0;max-width:480px;width:100%;max-height:92vh;overflow:auto;padding:18px 16px 24px;" id="mpEditContent"></div>
+        </div>`;
+
         return html;
+    }
+
+    // 変更可否：出発(お届け)24時間前まで・確定/支払待ちのみ（配車後・出発済みは不可）
+    function canEditMypage(r) {
+        const f = mypageState.fleet;
+        const status = getDeliveryStatus(r, f);
+        if (status === 'cancelled') return { editable: false, reason: 'この予約はキャンセルされています。' };
+        if (status === 'completed' || status === 'active' || status === 'delivering') {
+            return { editable: false, reason: '配車が開始されているため、マイページからは変更できません。お手数ですが公式LINEへご連絡ください。' };
+        }
+        if (mpWithin24h(r)) {
+            return { editable: false, reason: '出発24時間前を過ぎているため、マイページからの変更はできません。お手数ですが公式LINEへご連絡ください。' };
+        }
+        return { editable: true, reason: '' };
+    }
+    // 出発(お届け日時)の24時間前を過ぎているか（JST基準）。Edge Functionと同一判定。
+    function mpWithin24h(r) {
+        const t = /^\d{2}:\d{2}$/.test(r.lend_time || '') ? r.lend_time : '10:00';
+        const dep = new Date(`${r.lend_date}T${t}:00+09:00`).getTime();
+        return Date.now() >= dep - 24 * 3600 * 1000;
+    }
+
+    // 変更モーダルの作業用state
+    let mpEdit = null;
+    function mpEditOpen() {
+        const r = mypageState.reservation;
+        if (!r) return;
+        mpEdit = {
+            lend_time: r.lend_time || '', return_time: r.return_time || '',
+            del_place: r.del_place || '', col_place: r.col_place || '',
+            orig: { lend_time: r.lend_time || '', return_time: r.return_time || '', del_place: r.del_place || '', col_place: r.col_place || '' },
+            mapMode: null, // null | 'del' | 'col'
+            saving: false, error: '',
+        };
+        renderMpEdit();
+    }
+    function mpEditClose() {
+        const m = document.getElementById('mpEditModal');
+        if (m) m.style.display = 'none';
+        if (mpEditMap) { try { mpEditMap.remove(); } catch (e) {} mpEditMap = null; }
+        mpEdit = null;
+    }
+    let mpEditMap = null, mpEditMarker = null;
+    function renderMpEdit() {
+        const el = document.getElementById('mpEditContent');
+        const modal = document.getElementById('mpEditModal');
+        if (!el || !modal || !mpEdit) return;
+        modal.style.display = 'flex';
+        if (mpEditMap) { try { mpEditMap.remove(); } catch (e) {} mpEditMap = null; }
+
+        // 地図ピック表示
+        if (mpEdit.mapMode) {
+            const isDel = mpEdit.mapMode === 'del';
+            el.innerHTML = `
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div style="font-size:15px;font-weight:800;color:#1a1a1a;">${isDel ? '📍 お届け場所' : '🏁 回収場所'}を地図で選ぶ</div>
+                    <button onclick="mpEditBackToForm()" style="background:#f1f1f1;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">戻る</button>
+                </div>
+                <div style="font-size:12px;color:#666;margin-bottom:8px;">地図をタップして場所を指定してください。</div>
+                <div id="mpEditMap" style="height:300px;border-radius:12px;overflow:hidden;background:#eaeef2;"></div>
+                <div id="mpEditPicked" style="font-size:12.5px;font-weight:700;color:#1a1a1a;margin:10px 2px 12px;min-height:18px;">${(isDel ? mpEdit.del_place : mpEdit.col_place) || '未選択'}</div>
+                <button class="btn-primary" style="margin:0;" onclick="mpEditBackToForm()">この場所で決定 ›</button>
+            `;
+            setTimeout(initMpEditMap, 60);
+            return;
+        }
+
+        // フォーム表示
+        const timeOpts = (sel) => generateTimeOptions(sel);
+        el.innerHTML = `
+            <div style="width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 14px;"></div>
+            <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:4px;">✏️ お届け・回収の変更</div>
+            <div style="font-size:11.5px;color:#888;margin-bottom:14px;">変更できるのは場所・時間のみ・出発24時間前までです。</div>
+
+            <div style="font-weight:800;font-size:12.5px;color:#a07c00;margin:6px 0 6px;">📍 お届け</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:12px;color:#666;width:40px;flex:none;">時間</span>
+                    <select onchange="mpEdit.lend_time=this.value" style="flex:1;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:14px;">${timeOpts(mpEdit.lend_time)}</select>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;">
+                    <span style="font-size:12px;color:#666;width:40px;flex:none;margin-top:9px;">場所</span>
+                    <div style="flex:1;">
+                        <div style="font-size:13px;font-weight:700;color:#1a1a1a;word-break:break-all;line-height:1.5;margin-bottom:6px;">${mpEdit.del_place || '未設定'}</div>
+                        <button onclick="mpEditPickPlace('del')" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">📍 地図で変更</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="font-weight:800;font-size:12.5px;color:#1a1a1a;margin:6px 0 6px;border-top:1px solid #f0f0f0;padding-top:12px;">🏁 回収</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:12px;color:#666;width:40px;flex:none;">時間</span>
+                    <select onchange="mpEdit.return_time=this.value" style="flex:1;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:14px;">${timeOpts(mpEdit.return_time)}</select>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;">
+                    <span style="font-size:12px;color:#666;width:40px;flex:none;margin-top:9px;">場所</span>
+                    <div style="flex:1;">
+                        <div style="font-size:13px;font-weight:700;color:#1a1a1a;word-break:break-all;line-height:1.5;margin-bottom:6px;">${mpEdit.col_place || '未設定'}</div>
+                        <button onclick="mpEditPickPlace('col')" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">📍 地図で変更</button>
+                    </div>
+                </div>
+            </div>
+
+            ${mpEdit.error ? `<div style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;margin-bottom:12px;">${mpEdit.error}</div>` : ''}
+            <div style="display:flex;gap:8px;">
+                <button onclick="mpEditClose()" style="flex:none;padding:13px 18px;background:#f1f1f1;color:#444;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">閉じる</button>
+                <button class="btn-primary" style="margin:0;flex:1;" ${mpEdit.saving ? 'disabled' : ''} onclick="mpEditSave()">${mpEdit.saving ? '保存中…' : '変更を保存する'}</button>
+            </div>
+        `;
+    }
+    function mpEditPickPlace(which) { mpEdit.mapMode = which; renderMpEdit(); }
+    function mpEditBackToForm() { mpEdit.mapMode = null; renderMpEdit(); }
+    async function initMpEditMap() {
+        const el = document.getElementById('mpEditMap');
+        if (!el || typeof L === 'undefined' || !mpEdit) return;
+        const isDel = mpEdit.mapMode === 'del';
+        // 初期中心：現在の住所をジオコード、なければ札幌中心
+        let center = [43.0621, 141.3544];
+        const cur = isDel ? mpEdit.del_place : mpEdit.col_place;
+        if (cur) { try { const g = await geocodeJP(cur); if (g) center = g; } catch (e) {} }
+        mpEditMap = L.map(el, { zoomControl: true, attributionControl: false }).setView(center, 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mpEditMap);
+        mpEditMarker = L.marker(center, { draggable: true }).addTo(mpEditMap);
+        const setFrom = async (lat, lng) => {
+            const pe = document.getElementById('mpEditPicked');
+            if (pe) pe.textContent = '住所を取得中…';
+            let addr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            try { const a = await fetchFullAddress(lat, lng); if (a.addr) addr = a.addr; } catch (e) {}
+            if (isDel) mpEdit.del_place = addr; else mpEdit.col_place = addr;
+            if (pe) pe.textContent = addr;
+        };
+        mpEditMap.on('click', (e) => { mpEditMarker.setLatLng(e.latlng); setFrom(e.latlng.lat, e.latlng.lng); });
+        mpEditMarker.on('dragend', () => { const ll = mpEditMarker.getLatLng(); setFrom(ll.lat, ll.lng); });
+        setTimeout(() => { try { mpEditMap.invalidateSize(); } catch (e) {} }, 120);
+    }
+    async function mpEditSave() {
+        if (!mpEdit || mpEdit.saving) return;
+        const r = mypageState.reservation;
+        const o = mpEdit.orig;
+        // 変更された項目だけ送る
+        const body = { action: 'update', mail: (mypageState.email || localStorage.getItem('hdm_mypage_email') || ''), resId: r.id };
+        let changed = false;
+        if (mpEdit.lend_time && mpEdit.lend_time !== o.lend_time) { body.lend_time = mpEdit.lend_time; changed = true; }
+        if (mpEdit.return_time && mpEdit.return_time !== o.return_time) { body.return_time = mpEdit.return_time; changed = true; }
+        if (mpEdit.del_place && mpEdit.del_place !== o.del_place) { body.del_place = mpEdit.del_place; changed = true; }
+        if (mpEdit.col_place && mpEdit.col_place !== o.col_place) { body.col_place = mpEdit.col_place; changed = true; }
+        if (!changed) { mpEdit.error = '変更内容がありません。'; renderMpEdit(); return; }
+        mpEdit.saving = true; mpEdit.error = ''; renderMpEdit();
+
+        // デモ(mock)はローカルのみ反映
+        if (body.mail === MOCK_EMAIL) {
+            Object.assign(r, { lend_time: mpEdit.lend_time, return_time: mpEdit.return_time, del_place: mpEdit.del_place, col_place: mpEdit.col_place });
+            mpEditClose(); render(); return;
+        }
+        try {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
+                method: 'POST',
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) {
+                mpEdit.saving = false;
+                mpEdit.error = (data && data.error) || '変更の保存に失敗しました';
+                renderMpEdit();
+                return;
+            }
+            // 反映
+            const u = data.updated || {};
+            r.del_place = u.del_place; r.col_place = u.col_place; r.lend_time = u.lend_time; r.return_time = u.return_time;
+            mpEditClose();
+            render();
+            setTimeout(() => alert('変更を保存しました。運営にも通知されました。'), 60);
+        } catch (e) {
+            mpEdit.saving = false; mpEdit.error = '通信エラーが発生しました'; renderMpEdit();
+        }
     }
 
     // Mock data — covers all delivery statuses for demo
