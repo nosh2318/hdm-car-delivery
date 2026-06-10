@@ -43,4 +43,5 @@ begin
 exception when others then null;
 end $$;
 
-select cron.schedule('keydrop-expire-pending', '*/5 * * * *', $$ select public.keydrop_expire_pending(30) $$);
+-- 60分超の未決済を解放（Square決済中に枠が消えるレースを避けるため30→60に延長）
+select cron.schedule('keydrop-expire-pending', '*/5 * * * *', $$ select public.keydrop_expire_pending(60) $$);

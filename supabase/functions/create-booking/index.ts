@@ -20,6 +20,14 @@
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// --- Square (Phase B) ---
+const SQUARE_TOKEN = Deno.env.get("SQUARE_ACCESS_TOKEN") || "";
+const SQUARE_LOCATION = Deno.env.get("SQUARE_LOCATION_ID") || "L8N7J9RKPN3WH";
+const SQUARE_API = "https://connect.squareup.com";
+// 決済完了後に戻る先（独自ドメイン取得時に env で差し替え）
+const KEYDROP_RETURN_URL = Deno.env.get("KEYDROP_RETURN_URL") ||
+  "https://nosh2318.github.io/hdm-car-delivery/";
+
 // 許可オリジン（KEYDROP公開元）。独自ドメイン取得時に追記。
 const ALLOWED = [
   "https://nosh2318.github.io",
@@ -164,6 +172,41 @@ async function nextId(lend: string): Promise<string> {
   return `${prefix}${String(max + 1).padStart(4, "0")}`;
 }
 
+// --- Square Payment Link 発行（reference_id=予約番号 / 金額=サーバ確定値）---
+//   戻り値: { url, orderId, linkId } または null（Square未設定・失敗時）
+async function createSquareLink(reservationId: string, amountJpy: number, cls: string): Promise<{ url: string; orderId: string; linkId: string } | null> {
+  if (!SQUARE_TOKEN) { console.warn("[square] SQUARE_ACCESS_TOKEN 未設定→決済リンクなしで受理"); return null; }
+  if (!amountJpy || amountJpy <= 0) { console.warn("[square] 金額0→リンク発行スキップ"); return null; }
+  try {
+    const r = await fetch(`${SQUARE_API}/v2/online-checkout/payment-links`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${SQUARE_TOKEN}`, "content-type": "application/json", "Square-Version": "2024-06-04" },
+      body: JSON.stringify({
+        idempotency_key: crypto.randomUUID(),
+        order: {
+          location_id: SQUARE_LOCATION,
+          reference_id: reservationId, // ← webhookが予約を特定するキー
+          line_items: [{
+            name: `KEYDROP レンタカー ${cls}クラス（${reservationId}）`,
+            quantity: "1",
+            base_price_money: { amount: Math.round(amountJpy), currency: "JPY" },
+          }],
+        },
+        checkout_options: {
+          redirect_url: `${KEYDROP_RETURN_URL}?paid=${encodeURIComponent(reservationId)}`,
+          ask_for_shipping_address: false,
+        },
+        payment_note: `KEYDROP ${reservationId}`,
+      }),
+    });
+    if (!r.ok) { console.error(`[square] link error: ${await r.text()}`); return null; }
+    const j = await r.json();
+    const pl = j?.payment_link;
+    if (!pl?.url) return null;
+    return { url: pl.url, orderId: pl.order_id || "", linkId: pl.id || "" };
+  } catch (e) { console.error("[square]", e); return null; }
+}
+
 Deno.serve(async (req) => {
   _origin = req.headers.get("origin");
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(_origin) });
@@ -220,12 +263,27 @@ Deno.serve(async (req) => {
 
   console.log(`[create-booking] ${rpc.reservationId} ${cls} ${lend}~${ret} → ${rpc.assigned}`);
 
-  // Phase B: ここで Square Payment Link を発行し payUrl を返す
+  // --- Phase B: Square 決済リンク発行（金額はRPCのサーバ確定値 rpc.price を使用）---
+  const payAmount = Number(rpc.price || price || 0);
+  const link = await createSquareLink(rpc.reservationId, payAmount, cls);
+  if (link) {
+    // 決済台帳に pending で記録（webhookが order_id で突合→冪等化）
+    await sbPost("keydrop_payments", {
+      reservation_id: rpc.reservationId,
+      square_order_id: link.orderId,
+      square_payment_link_id: link.linkId,
+      payment_url: link.url,
+      amount: payAmount,
+      status: "pending",
+    });
+  }
+
   return json({
     ok: true,
     reservationId: rpc.reservationId,
     assigned: rpc.assigned,
     status: rpc.status || "pending_payment",
-    // payUrl: <Phase Bで追加>
+    amount: payAmount,
+    payUrl: link?.url || null, // null時はSquare未設定 or 発行失敗→クライアントはLINE/手動案内へ
   });
 });

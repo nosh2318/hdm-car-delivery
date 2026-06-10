@@ -8,6 +8,10 @@
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// キャンセル依頼の運営通知は Slack を主とする。メールは「専用アドレスを設定した時だけ」送る。
+// ⚠️ reserve@ を既定にしない（問い合わせ管理GASが reserve@ 受信箱を監視＝誤取込を避ける）。
+// 設定する場合は Slackチャンネルのメール連携アドレス or 専用 ops@ を KEYDROP_OPS_EMAIL に入れる。未設定ならメールは送らずSlackのみ。
+const OPS_EMAIL = (Deno.env.get("KEYDROP_OPS_EMAIL") || "").trim();
 
 // 許可オリジン（KEYDROP公開元）。それ以外のブラウザからは弾く。
 const ALLOWED = [
@@ -52,6 +56,14 @@ async function sbDelete(table: string, query: string): Promise<void> {
     method: "DELETE",
     headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
   });
+}
+async function sbPost(table: string, body: unknown): Promise<void> {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    method: "POST",
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) console.error(`POST ${table}: ${await r.text()}`);
 }
 
 // 運営へSlack通知（任意：環境変数が無ければスキップ＝変更自体は成立）
@@ -235,6 +247,69 @@ Deno.serve(async (req) => {
         return_time: returnTime !== null ? returnTime : r.return_time,
       },
     }, 200, origin);
+  }
+
+  // ── キャンセル依頼（顧客が押す → 即キャンセルせず運営へメール＋Slack。返金判断は運営）──
+  if (action === "cancel_request") {
+    const st = String(r.status || "");
+    if (st === "cancelled" || st === "キャンセル" || st === "cancel") {
+      return json({ ok: true, alreadyCancelled: true }, 200, origin);
+    }
+    const reason = String(p.reason || "").trim().slice(0, 500);
+    const nowIso = new Date().toISOString();
+
+    // 1) 予約に「キャンセル依頼」マーカーを記録（statusは変えない＝運営が返金判断後にSPK adminで確定）
+    let cj: any = {};
+    try {
+      const cur = await sbGet("reservations", `id=eq.${encodeURIComponent(resId)}&select=changed_json`);
+      const raw = cur[0]?.changed_json;
+      cj = raw && typeof raw === "object" ? raw : (raw ? JSON.parse(raw) : {});
+    } catch { cj = {}; }
+    cj.kd_cancel_requested_at = nowIso;
+    if (reason) cj.kd_cancel_reason = reason;
+    await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}`, { changed_json: cj });
+
+    // 2) 配車表/OPシートに出るよう d-/c- タスクのmemoに🔴依頼マーカー（存在すれば）
+    const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
+    const marker = `🔴キャンセル依頼(${stamp})${reason ? "：" + reason : ""}`;
+    for (const tid of [`d-${resId}`, `c-${resId}`]) {
+      const cur = await sbGet("tasks", `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
+      if (!cur[0]) continue;
+      const memo = String(cur[0].memo || "");
+      if (!memo.includes("キャンセル依頼")) {
+        await sbPatch("tasks", `_id=eq.${encodeURIComponent(tid)}`, { memo: memo ? memo + " " + marker : marker });
+      }
+    }
+
+    // 3) 運営へキャンセル依頼メールをキュー投入（KEYDROP_OPS_EMAIL を設定した時のみ。
+    //    未設定なら送らない＝運営通知は下のSlackが主。reserve@ 誤取込を避けるため既定では送らない）
+    if (OPS_EMAIL && OPS_EMAIL.indexOf("@") > 0) {
+      await sbPost("keydrop_notifications", {
+        type: "cancel_request",
+        reservation_id: resId,
+        to_email: OPS_EMAIL,
+        payload: {
+          name: r.name || "", mail: r.mail || "", tel: r.tel || "",
+          vehicleClass: r.vehicle || "",
+          lend_date: r.lend_date || "", lend_time: r.lend_time || r.del_time || "",
+          return_date: r.return_date || "", return_time: r.return_time || r.col_time || "",
+          del_place: r.del_place || "", col_place: r.col_place || "",
+          price: r.price || 0, status: st, reason,
+        },
+      });
+    }
+
+    // 4) 運営へSlack即時通知（主・任意env）
+    await notifySlack([
+      `🔴 *KEYDROP キャンセル依頼* （顧客がマイページで申請）`,
+      `予約番号: ${resId} / ${r.name || ""}様（${r.mail || ""}）`,
+      `期間: ${r.lend_date} ${r.lend_time || r.del_time || ""} 〜 ${r.return_date} ${r.return_time || r.col_time || ""}`,
+      `クラス: ${r.vehicle || ""} / 金額: ¥${Number(r.price || 0).toLocaleString()}`,
+      reason ? `理由: ${reason}` : null,
+      `➡️ *返金判断のうえ SPK adminでキャンセル確定してください*`,
+    ].filter(Boolean).join("\n"));
+
+    return json({ ok: true, requested: true }, 200, origin);
   }
 
   return json({ error: "不正なアクション" }, 400, origin);

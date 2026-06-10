@@ -2,6 +2,92 @@
 
 ---
 
+## 💳 KEYDROP Square決済＋予約完了メール＋キャンセル依頼（Phase B）実装（2026-06-10）※コードは working tree・未push/未deploy
+
+オーナー指示：「squareを実装」「予約完了時にユーザーへ自動返信メール必須」「キャンセルもマイページに実装＝ユーザーがリクエスト→運営に自動でキャンセルメール」。**コードは全部書いたが push もデプロイもしていない**（Squareシークレット未設定の状態で client を push すると全予約が決済不能→TTLで自動消滅するため、**下記「Go-Live順序」を守って最後に client を push**）。
+
+### アーキ（重要設計判断）
+- 予約の正本は `reservations`（ota=KEYDROP / 採番KD-YYMM-NNNN-XXX）。金額は `keydrop_book` RPC が**サーバ側で価格マスターから確定**(005)。client値は信用しない。
+- 決済フロー：client `processPayment` → `create-booking`(RPCで pending_payment 作成＋**Square Payment Link発行**) → 返却 `payUrl` へ `window.location` リダイレクト → Square Checkout → 決済成功で `redirect_url=...?paid=<予約番号>` に復帰（client が完了画面）→ Square が `payment-webhook` を叩く → **署名検証＋冪等＋pending_payment→confirmed**。
+- 🔴 **会計起票しない**：KEYDROP売上は `reservations.price` 経由でダッシュボード/解析に計上済み。`spk_accounting` に入れると**二重計上（AIスタッフ_G事故と同型）**。webhookは状態遷移＋入金記録＋メール投入のみ。
+- 突合台帳 `keydrop_payments`(007)：reservation_id PK・square_order_id・status(pending/paid)・paid_at。webhookの冪等性根拠（paidなら再処理しない）。anon/authenticated不可・service_roleのみ。
+- レース対策：①TTL 30→**60分**に延長(006)②webhookで「決済成立だが pending_payment が無い(=TTL解放/取消)」を検知し **🔴要対応Slack通知**（入金あるのに枠なし＝再配車/返金を人手で）。
+
+### 📧 通知（メール）＝キュー方式に一本化（重要）
+- **`keydrop_notifications`(008)** に Edge Function が「送るべき通知」を1行=1通として積む → **GAS送信ワーカー `gas/keydrop_mail.gs`（5分トリガー）** が `reserve@rent-handyman.jp` から送信し sent=true 化。webhook/関数から直接送らずキュー化＝メール障害でも取りこぼさず再送可。Edge FunctionはGmailエイリアスを使えないのでGASが送信エンジン（既存HANDYMAN踏襲）。
+- `type='confirm'`：**予約完了（入金確認）→ 顧客へ**。payment-webhookが confirmed 化と同時に投入（宛先=予約のmail・予約内容＋マイページURL＋LINE）。
+- `type='cancel_request'`：**キャンセル依頼 → 運営へ**。運営通知は **Slackが主**（keydrop-mypageが常時Slack通知）。メールは **`KEYDROP_OPS_EMAIL` を設定した時だけ**送る（🔴既定はreserve@にしない＝問い合わせ管理GASがreserve@受信箱を監視→誤取込を避ける。設定するならSlackチャンネルのメール連携アドレス or 専用ops@。未設定ならSlackのみ）。オーナー選択=A（2026-06-10）。
+
+### 🚫 キャンセルは「リクエスト」化（即キャンセルしない）
+- マイページのキャンセルボタン＝「**キャンセルをリクエストする**」。理由入力可。`keydrop-mypage action='cancel_request'`：**statusは変えず** reservations.changed_json に `kd_cancel_requested_at`＋理由を記録／d-,c-タスクmemoに🔴依頼マーカー／`keydrop_notifications`に運営宛メール投入／Slack即時通知。
+- 返金額（キャンセル料率）の判断は**運営がSPK adminで実施→status=キャンセル確定**。client は「依頼受付・運営から折り返し」バナー表示（statusはキャンセルにしない）。
+- 旧 `action='cancel'`（即時自己キャンセル）はEdge Functionに残置（UIからは未使用・将来/admin用）。
+
+### 変更ファイル（working tree）
+| ファイル | 変更 |
+|---|---|
+| `supabase/migrations/006_keydrop_ttl.sql` | TTL 30→60分 |
+| `supabase/migrations/007_keydrop_payments.sql` | **新規**：決済台帳 |
+| `supabase/migrations/008_keydrop_notifications.sql` | **新規**：通知キュー |
+| `supabase/functions/create-booking/index.ts` | `createSquareLink()` 追加・RPC後にリンク発行＋台帳pending記録・`payUrl`返却 |
+| `supabase/functions/payment-webhook/index.ts` | **新規**：HMAC署名検証＋冪等＋confirmed化＋Slack＋レース警告＋**confirmメール投入** |
+| `supabase/functions/keydrop-mypage/index.ts` | **`action='cancel_request'` 追加**（依頼記録＋運営メール投入＋Slack）。OPS_EMAIL定数 |
+| `gas/keydrop_mail.gs` | **新規**：通知キュー送信ワーカー（reserve@・5分） |
+| `index.html` | `processPayment`→payUrlリダイレクト／`?paid=`復帰で完了画面／`?mypage=1`でマイページ／キャンセルを`requestCancellation`（cancel_request）に変更＋受付バナー |
+
+### 🔴 Go-Live 順序（この順でないと予約が壊れる）
+1. **DB RUN**：`007`・`008` を RUN。`006`(60分版)を再RUN。（005適用済前提・未なら005も）
+2. **Square ダッシュボード**：本番アプリで Webhook subscription 作成 → endpoint=`https://ckrxttbnawkclshczsia.supabase.co/functions/v1/payment-webhook` / イベント=`payment.created`,`payment.updated` → **Signature Key 取得**。
+3. **Edge Function secrets**（supabase secrets set）：
+   - `SQUARE_ACCESS_TOKEN`（本番・PAYMENTS_WRITE/ORDERS） / `SQUARE_LOCATION_ID`=`L8N7J9RKPN3WH`
+   - `SQUARE_WEBHOOK_SIGNATURE_KEY`（手順2） / `SQUARE_WEBHOOK_URL`=上記endpoint（署名計算に厳密一致）
+   - （任意）`SLACK_BOT_TOKEN` / `SLACK_KEYDROP_CHANNEL`=`C08TDTPEB36`（キャンセル依頼の運営通知＝主） / `KEYDROP_RETURN_URL`
+   - `KEYDROP_OPS_EMAIL`：キャンセル依頼メールの宛先。**Slackチャンネルのメール連携アドレス推奨**（reserve@は使わない）。未設定＝メール送らずSlackのみ。
+4. **Edge Function デプロイ**：`create-booking`・`keydrop-mypage` 再デプロイ。`payment-webhook` は **`--no-verify-jwt` でデプロイ**（Squareは Supabase JWT を送らない＝verify_jwt ON だと401で届かない・署名検証は関数内）。
+   ```
+   cd ~/hdm-car-delivery && SUPABASE_ACCESS_TOKEN="$(cat ~/.config/keydrop/sb_token)" \
+     ~/.local/share/supabase/supabase functions deploy payment-webhook \
+     --project-ref ckrxttbnawkclshczsia --use-api --no-verify-jwt
+   ```
+5. **GASメール送信ワーカー**：新規GASプロジェクトを noritaka.oshita@gmail.com で作成→`gas/keydrop_mail.gs` 貼付→ScriptProperty `SUPABASE_SERVICE_KEY`(service_role JWT)設定→reserve@ の send-as エイリアス確認→`setupKeydropMailTrigger()` を1回実行（5分トリガー）。`debugKeydropMail()` で本文確認。
+6. **client を push**（GitHub Pages＝push即本番）。これで決済リダイレクト＋マイページが動く。
+7. **疎通テスト**：少額予約→Square決済→`?paid=`復帰→`reservations.status=confirmed`＋`keydrop_payments.status=paid`＋**顧客に完了メール**＋Slack通知 を確認→テストデータ削除。マイページから「キャンセルをリクエスト」→**運営に依頼メール**＋Slack＋changed_jsonマーカー を確認。署名不正で401も確認。
+
+### 残（決済導入後）
+- 返金フロー（運営確定時の Square Refund 自動化）＝既存 payment_bot のRefund実装が流用可。
+- レート制限/CAPTCHA（スパム予約）。
+- 独自ドメイン化時：CORS ALLOWED と `KEYDROP_RETURN_URL`・Square redirect を追従。
+
+---
+
+## 📝 KEYDROP マイページ変更機能＋日付ズレ修正（2026-06-10）
+
+### 実装したもの（push済・本番稼働）
+1. **回収画面(STEP2)にお届け日バッジ**（`renderStepDateStrip` collection枝・回収日セレクタ直上に「📍 お届け M/D(曜) HH:MM〜」）。
+2. **🔴日付1日ズレ修正（既存バグ）**：`generateDateOptions`の選択肢valueが`d.toISOString().slice(0,10)`=UTCで、JST午前0時のDateが前日にズレ→ラベル(6/12)と値(6/11)不一致→予約日が1日前で保存されていた。共通ヘルパー`localYMD()`でローカルYMDに統一（選択肢＋`classTotal`のtier判定の2箇所）。コミット`38a5897`。
+3. **マイページ 折りたたみFAQ**「📝 予約内容の変更／キャンセルについて」（`renderMypageDetail`・`<details class="mp-faq">`既定で閉）。
+4. **マイページ 場所/時間の自己変更機能**（独立セクション「✏️ お届け・回収の変更」）：
+   - 編集可＝**confirm/pending（配車前）かつ お届け24h前まで**。`canEditMypage`/`mpWithin24h`。`kd_status`が delivering/active/completed か 24h超過でロック→LINE導線。
+   - 変更UI＝時間(営業時間セレクタ)＋場所(Leaflet地図タップ→`fetchFullAddress`逆ジオコード)。`mpEditOpen/renderMpEdit/initMpEditMap/mpEditSave`。変更項目のみ送信。
+   - **Edge Function `keydrop-mypage` に `action='update'` 追加**（`supabase/functions/keydrop-mypage/index.ts`）：本人確認(予約番号+メール)→24h前ゲート(`within24h`)→時刻検証(`validTime`)→`reservations`(正本)更新(del_place/col_place＋lend_time&del_time/return_time&col_time)→既存`tasks`(d-/c-)のplace/time同期＋memoに🔔顧客変更マーカー＋changed_json.kd_customer_changed_at→Slack通知`notifySlack`(任意env)。
+   - **デプロイ済**：`SUPABASE_ACCESS_TOKEN="$(cat ~/.config/keydrop/sb_token)" npx supabase functions deploy keydrop-mypage --project-ref ckrxttbnawkclshczsia`。Slackシークレット設定済(`SLACK_BOT_TOKEN`/`SLACK_KEYDROP_CHANNEL=C08TDTPEB36`=#sapporo_reservation)。
+   - 本番テスト：メール不一致→拒否／キャンセル予約→拒否 を確認。
+
+### ⚠️ 仕様メモ（「編集ボタンが出ない」の正体）
+- ✏️編集ボタンは**配車前(confirm/pending)＆お届け24h以上前**の予約だけ表示。それ以外（キャンセル/配車後/24h以内/過去）はロック表示「変更不可→公式LINE」。
+- 例(6/10時点): KD-2606-0004/0005(お届け6/13・配車前)=編集可／oshita@g-lines.jpの予約は全キャンセル=出ない。「実装されてない」ではなくテスト予約がロック条件に該当していただけ。
+
+### 🟡 オーナー保留中の判断（未決・次回これを聞く）
+- 「お届け・回収の場所/時間 自己変更（✏️の箱）は**希望してない**」「ここに『ご予約後の車種変更は公式LINEにて承る』を表示」との指示あり。
+- **未決**：A=✏️箱を残す／B=外して「ご予約後の車種変更は公式LINEにて承ります」案内に置換（場所/時間もLINE統一）。→ **次回まずA/Bを確認**。Bなら`renderMypageDetail`の「予約内容（お届け・回収の場所/時間）の変更：独立セクション」ブロックを車種=LINE案内に差し替え＋折りたたみFAQ②③の文言もLINEに戻す。Edge Functionの`update`はそのまま残置(無害)。
+
+### 関連DBスキーマ（KEYDROP=SPK Supabase ckrxttbnawkclshczsia・ota='KEYDROP'）
+- `reservations`: del_place/col_place・lend_time/del_time(お届け時間2系統)・return_time/col_time(回収時間2系統)・kd_status/kd_status_at。**緯度経度カラムは無い＝場所は文字列のみ**。
+- `tasks`: `_id`=`d-{resvId}`(DEL:place=お届け場所/time=お届け時間)・`c-{resvId}`(COL:place=回収場所/time=回収時間)・`w-{resvId}`(洗車)。**tasksは本体APPがreservationsから動的生成**。
+- 接続: curlは`/auth/v1/token?grant_type=password`(oshita@g-lines.jp/nosh2318)でtoken→REST。デプロイtoken=`~/.config/keydrop/sb_token`(sbp_・30日失効)。
+
+---
+
 ## 🗺 TOP地図主役リニューアル＋マスコット＋在庫17台一致＋価格マスター連動準備（2026-06-09 omni）
 
 ### ① TOP再設計（モバイル）＝「検索フォーム→結果」地図主役

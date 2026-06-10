@@ -2793,20 +2793,33 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) throw new Error((data && data.error) || '予約処理に失敗しました');
-        return data.reservationId;
+        return data; // { ok, reservationId, assigned, status, amount, payUrl }
     }
 
     async function processPayment() {
         if (!state.paymentMethod) return;
+        const btn = document.querySelector('.payment-screen .btn-primary');
+        if (btn) { btn.disabled = true; btn.textContent = '処理中…'; }
         try {
-            // 札幌DBに予約成立（在庫が減り、配車表に出る）。決済(Square)はPhase Bで本フローに統合予定
-            const resId = await createBookingOnServer();
+            // 札幌DBに予約成立（pending_payment・在庫確保）→ Square決済リンクへ遷移
+            const data = await createBookingOnServer();
+            const resId = data.reservationId;
             state._lastResId = resId;
             saveReservationToLocal(resId);
+
+            if (data.payUrl) {
+                // Square Checkout へリダイレクト（決済完了でwebhookが confirmed 化）
+                window.location.href = data.payUrl;
+                return; // 遷移するのでrenderしない
+            }
+            // payUrl無し（Square未設定/発行失敗）＝決済に進めない。LINE案内付き完了画面へ
+            // ※pending_paymentは30分でTTL自動解放されるため、必ず手動フォローが要る
+            alert('決済ページに接続できませんでした。お手数ですが公式LINEよりお支払い手続きをお願いいたします。');
             state.screen = 'complete';
             render();
         } catch (e) {
             alert(e.message || '予約に失敗しました。時間をおいて再度お試しください。');
+            render(); // 決済ボタンを元の文言・活性状態に戻す
         }
     }
 
@@ -3167,7 +3180,7 @@
                 <div style="padding:2px 16px 16px;border-top:1px solid #f3f3f3;">
                     <!-- キャンセル -->
                     <div style="font-size:12.5px;font-weight:800;color:#dc2626;margin:12px 0 4px;">❌ キャンセルについて</div>
-                    <p style="font-size:12px;line-height:1.75;color:#444;margin:0 0 6px;">キャンセルをご希望の場合は、お手数ですが公式LINEにてご連絡をお願い申し上げます。</p>
+                    <p style="font-size:12px;line-height:1.75;color:#444;margin:0 0 6px;">キャンセルをご希望の場合は、下の「キャンセルをリクエストする」よりお申し込みください。運営が内容を確認し、返金可否・キャンセル料をご案内のうえ確定いたします（その場では確定されません）。お急ぎの場合は公式LINEでもお受けします。</p>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
                         <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:5px 10px;">💬 公式LINEで連絡</a>
                         <a href="faq.html#c2" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:800;color:#1a1a1a;text-decoration:none;border:1px solid #ddd;border-radius:8px;padding:5px 10px;">📄 キャンセルポリシー</a>
@@ -3195,9 +3208,13 @@
         // ── 確認・お問い合わせ（LINE）──
         html += `<a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;padding:14px;background:#06c755;color:#fff;border-radius:12px;font-size:14px;font-weight:800;text-decoration:none;box-shadow:0 3px 10px rgba(6,199,85,.3);">💬 確認・お問い合わせ（公式LINE）</a>`;
 
-        // ── キャンセル（出発前のみ）──
+        // ── キャンセル依頼（出発前のみ）──
         if (!isCancelled && !isCompleted && !isActive && !isDelivering) {
-            html += `<div class="mp-actions" style="margin-top:10px;"><button class="mp-action-btn danger" onclick="showCancelConfirm('${r.id}', '${r.lend_date}', ${r.price || 0})">予約をキャンセルする</button></div>`;
+            if (r._cancelRequested) {
+                html += `<div class="mp-detail-section" style="margin-top:10px;"><div class="mp-detail-body" style="text-align:center;padding:14px;background:#fff7ed;border:1px solid #fdba74;border-radius:10px;color:#9a3412;font-size:12.5px;line-height:1.7;">✅ キャンセル依頼を受け付けました。<br>運営より折り返しご連絡いたします（返金可否・キャンセル料を含む）。</div></div>`;
+            } else {
+                html += `<div class="mp-actions" style="margin-top:10px;"><button class="mp-action-btn danger" onclick="showCancelConfirm('${r.id}', '${r.lend_date}', ${r.price || 0})">キャンセルをリクエストする</button></div>`;
+            }
         }
         if (isCancelled) {
             html += `<div class="mp-detail-section" style="margin-top:12px;"><div class="mp-detail-body" style="text-align:center;padding:16px;color:#dc2626;font-size:13px;">この予約はキャンセルされました</div></div>`;
@@ -3616,7 +3633,8 @@
         content.innerHTML = `
             <div style="text-align:center;margin-bottom:16px;">
                 <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
-                <div style="font-size:16px;font-weight:700;color:#333;">予約をキャンセルしますか？</div>
+                <div style="font-size:16px;font-weight:700;color:#333;">キャンセルをリクエストしますか？</div>
+                <div style="font-size:11.5px;color:#888;margin-top:6px;line-height:1.6;">この場で確定はされません。運営が内容を確認し、返金可否・キャンセル料をご案内のうえ確定します。</div>
             </div>
 
             <div style="background:#f9f9f9;border-radius:10px;padding:14px;margin-bottom:16px;">
@@ -3635,12 +3653,17 @@
                 <div style="font-size:20px;font-weight:800;color:${cancel.fee > 0 ? '#dc2626' : '#16a34a'};margin-top:4px;">
                     ${cancel.fee > 0 ? '¥' + cancel.fee.toLocaleString() : '無料'}
                 </div>
-                <div style="font-size:11px;color:#888;margin-top:2px;">${cancel.label}</div>
+                <div style="font-size:11px;color:#888;margin-top:2px;">${cancel.label}（目安・最終金額は運営がご案内）</div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="display:block;font-size:12px;font-weight:700;color:#444;margin-bottom:6px;">キャンセル理由（任意）</label>
+                <textarea id="cancelReason" rows="2" placeholder="例：予定が変わったため" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;"></textarea>
             </div>
 
             <div style="display:flex;gap:8px;">
                 <button style="flex:1;padding:12px;background:white;color:#333;border:1.5px solid #ddd;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;" onclick="closeCancelModal()">${t('back')}</button>
-                <button style="flex:1;padding:12px;background:#dc2626;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;" onclick="closeCancelModal(); cancelReservation('${resId}');">キャンセルする</button>
+                <button style="flex:1;padding:12px;background:#dc2626;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;" onclick="requestCancellation('${resId}');">キャンセルをリクエスト</button>
             </div>
         `;
 
@@ -3652,44 +3675,41 @@
         if (modal) modal.style.display = 'none';
     }
 
-    async function cancelReservation(resId) {
+    // キャンセル「リクエスト」：即キャンセルせず運営へ依頼（運営に自動でキャンセルメールが届く）。
+    async function requestCancellation(resId) {
+        const reasonEl = document.getElementById('cancelReason');
+        const reason = reasonEl ? reasonEl.value.trim().slice(0, 500) : '';
+        closeCancelModal();
         try {
             const email = mypageState.email || localStorage.getItem('hdm_mypage_email') || '';
-            // 本番はEdge Function（service_role・本人確認）でキャンセル。デモ(mock)はローカルのみ。
+            // 本番はEdge Function（service_role・本人確認）で依頼受付＋運営へメール/Slack。デモ(mock)はローカルのみ。
             if (email !== MOCK_EMAIL) {
                 const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
                     method: 'POST',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'cancel', mail: email, resId }),
+                    body: JSON.stringify({ action: 'cancel_request', mail: email, resId, reason }),
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok || !data.ok) {
-                    mypageState.error = data.error || 'キャンセルに失敗しました';
+                    mypageState.error = data.error || 'キャンセル依頼に失敗しました';
+                    render();
+                    return;
+                }
+                if (data.alreadyCancelled) {
+                    if (mypageState.reservation) { mypageState.reservation.status = 'キャンセル'; mypageState.reservation.demo_status = null; }
                     render();
                     return;
                 }
             }
-            // Update local state
-            if (mypageState.reservation) {
-                mypageState.reservation.status = 'キャンセル';
-                mypageState.reservation.demo_status = null; // clear demo override
-            }
-            // Update mock list too
-            const mockIdx = MOCK_RESERVATIONS.findIndex(r => r.id === resId);
-            if (mockIdx >= 0) MOCK_RESERVATIONS[mockIdx].status = 'キャンセル';
-            // Also update reservations list
+            // 依頼受付（ステータスは変えない＝運営が返金判断後に確定）。受付バナーを表示。
+            if (mypageState.reservation) mypageState.reservation._cancelRequested = true;
             if (mypageState.reservations) {
-                const listIdx = mypageState.reservations.findIndex(r => r.id === resId);
-                if (listIdx >= 0) mypageState.reservations[listIdx].status = 'キャンセル';
+                const li = mypageState.reservations.findIndex(r => r.id === resId);
+                if (li >= 0) mypageState.reservations[li]._cancelRequested = true;
             }
-            // Update LocalStorage
-            const saved = JSON.parse(localStorage.getItem('hdm_reservations') || '[]');
-            const idx = saved.findIndex(r => r.id === resId);
-            if (idx >= 0) saved[idx].status = 'キャンセル';
-            localStorage.setItem('hdm_reservations', JSON.stringify(saved));
             render();
         } catch (e) {
-            alert('キャンセルに失敗しました');
+            alert('キャンセル依頼に失敗しました。お手数ですが公式LINEよりご連絡ください。');
         }
     }
 
@@ -3972,6 +3992,28 @@
     // ════════════════════════════════════════════
     // ── Init ──
     // ════════════════════════════════════════════
+    // Square決済から戻った直後（?paid=<予約番号>）→ 完了画面を表示
+    (function handlePaymentReturn() {
+        try {
+            const sp = new URLSearchParams(window.location.search);
+            const paid = sp.get('paid');
+            if (paid) {
+                state._lastResId = paid;
+                saveReservationToLocal(paid);
+                state.screen = 'complete';
+                // クエリを消してリロード時に再表示しない
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, '', window.location.pathname);
+                }
+            } else if (sp.get('mypage')) {
+                // メール内リンク（?mypage=1）→ マイページを開く
+                state.screen = 'mypage';
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, '', window.location.pathname);
+                }
+            }
+        } catch (e) { /* noop */ }
+    })();
     render();
     resetHeroTimer();
     loadGooglePlaces(); // 検索用Google Placesを非同期ロード（失敗時はNominatim）

@@ -29,7 +29,12 @@
 - **DB**：`inquiries`/`handyman_knowledge`/`reply_templates` の public(anon) ALL ポリシー削除→authenticated(アプリ)＋service_role(GAS)のみ。検証：anon=[]、auth=200。
 - ログイン情報：`oshita@g-lines.jp`/`nosh2318`（or `member@g-lines.jp`/`8888`）。staff周知要。
 
-## ⚠️ 残り（anon全開・段階対応が必要＝アプリ依存を確認してから締める）
+## 🟢 オーナー判断（2026-06-10）：下記①残りテーブルは「据え置き」
+- オーナー指示「①（vehicle_twins/check_events・received_invoices・sns_app_state）は**営業本体（KEYDROP/SPK予約・配車・会計）とは別系統なので問題ない**」＝**リスク受容で当面据え置き**。
+- ∴ KEYDROP launch のセキュリティ判定は「公開面は是正済み＝出して良い」。残るセキュリティ事項は **②Square Webhook署名検証/冪等性（決済導入時・実装する）／③レート制限・CAPTCHA（公開規模次第）** の2つに収束。
+- 次回エージェントへ：①を「未対応の穴」として蒸し返さない（オーナー受容済み）。締める場合は各APPをauthenticated化してから。
+
+## ⚠️ 残り（anon全開）※上記オーナー判断で据え置き・アプリ依存を確認してから締める
 網羅スキャンで public(anon) に ALL 等を許可している残りテーブル。**一部はアプリが正規にanonを使う**ため、無闇に締めると現場APPが壊れる。各APPの認証方式を確認→authenticated/Edge Fn/narrowポリシーへ移行してから締める。
 
 | テーブル | 使ってる可能性のあるAPP | 推奨対応 |
