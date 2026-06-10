@@ -258,16 +258,10 @@ Deno.serve(async (req) => {
     const reason = String(p.reason || "").trim().slice(0, 500);
     const nowIso = new Date().toISOString();
 
-    // 1) 予約に「キャンセル依頼」マーカーを記録（statusは変えない＝運営が返金判断後にSPK adminで確定）
-    let cj: any = {};
-    try {
-      const cur = await sbGet("reservations", `id=eq.${encodeURIComponent(resId)}&select=changed_json`);
-      const raw = cur[0]?.changed_json;
-      cj = raw && typeof raw === "object" ? raw : (raw ? JSON.parse(raw) : {});
-    } catch { cj = {}; }
-    cj.kd_cancel_requested_at = nowIso;
-    if (reason) cj.kd_cancel_reason = reason;
-    await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}`, { changed_json: cj });
+    // 1) キャンセル依頼マーカーを keydrop_payments に記録（reservationsには changed_json 列が無いため）。
+    //    statusは変えない＝運営が返金判断後にSPK adminで確定。SPKはこの列を読んで一覧表示する。
+    await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`,
+      { cancel_requested_at: nowIso, cancel_reason: reason || null });
 
     // 2) 配車表/OPシートに出るよう d-/c- タスクのmemoに🔴依頼マーカー（存在すれば）
     const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
