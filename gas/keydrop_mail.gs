@@ -18,7 +18,7 @@
 
 var SB_URL = 'https://ckrxttbnawkclshczsia.supabase.co';
 var FROM_EMAIL = 'reserve@rent-handyman.jp';
-var FROM_NAME  = 'KEYDROP（HANDYMAN 札幌デリバリー専門店）';
+var FROM_NAME  = 'CARデリバリー KEYDROP';
 var MYPAGE_URL = 'https://nosh2318.github.io/hdm-car-delivery/?mypage=1';
 var LINE_URL   = 'https://lin.ee/g6iDNYz';
 var LINE_ID    = '@730kyhwl';
@@ -78,7 +78,7 @@ function _buildConfirmMail_(n) {
   var subject = '【KEYDROP】ご予約が確定しました（予約番号 ' + id + '）';
   var body =
     (p.name || 'お客様') + ' 様\n\n' +
-    'この度はKEYDROPをご利用いただき誠にありがとうございます。\n' +
+    'この度はCARデリバリーKEYDROPをご利用いただき誠にありがとうございます。\n' +
     'お支払いを確認し、ご予約が確定いたしました。\n\n' +
     '━━━━━━━━━━━━━━━━━━━━\n' +
     '■ ご予約内容\n' +
@@ -100,7 +100,7 @@ function _buildConfirmMail_(n) {
     '■ お問い合わせ\n' +
     '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
     '緊急連絡先：' + TEL + '（営業時間 9:00〜19:00）\n\n' +
-    'KEYDROP（HANDYMAN 札幌デリバリー専門店）\n';
+    'CARデリバリー KEYDROP\n';
   return { subject: subject, body: body };
 }
 
