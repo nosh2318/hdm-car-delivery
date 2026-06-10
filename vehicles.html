@@ -64,33 +64,26 @@ async function get(path){try{const r=await fetch(SU+'/rest/v1/'+path,{headers:{a
 function pv(v){if(v==null)return null;if(typeof v==='string'){try{return JSON.parse(v);}catch(e){return null;}}return v;}
 function yen(n){return '¥'+Number(n||0).toLocaleString();}
 async function load(){
-  const [clsRows,priceRows]=await Promise.all([
-    get('public_keydrop_classes_v?select=value'),
-    get('public_class_price_v?select=value')
-  ]);
+  const clsRows=await get('public_keydrop_classes_v?select=value');
   const cls=pv(clsRows&&clsRows[0]&&clsRows[0].value)||{order:[],items:{}};
-  const price=pv(priceRows&&priceRows[0]&&priceRows[0].value)||{};
-  const prices=price.prices||{};
   const order=cls.order||Object.keys(cls.items||{});
+  const equip=cls.equipment||[];
+  const equipTags=equip.map(function(e){return '<span>'+e+'</span>';}).join('');
   let html='';
   order.forEach(function(k){
     const it=(cls.items||{})[k]; if(!it||it.show===false)return;
-    const p=prices[k]; // [閑散,通常,繁忙]
-    const normal=p?p[1]:null, low=p?p[0]:null, high=p?p[2]:null;
     const img='images/'+(IMG[k]||'class_C')+'.png';
     html+='<div class="card">'
       +'<div class="img"><span class="tag" style="background:'+(COLORS[k]||'#1a1a1a')+'">'+k+'クラス</span><img src="'+img+'" alt="'+(it.label||'')+'" loading="lazy"></div>'
       +'<div class="body">'
       +'<h2>'+(it.label||k)+'</h2>'
       +'<div class="veh">'+(it.vehicles||'')+'</div>'
-      +'<div class="meta"><span>👥 '+(it.seats||'')+'</span><span>🚙 4WD</span><span>🚭 禁煙</span></div>'
-      +'<div class="feat">'+(it.feature||'')+'</div>'
-      +(p?('<div class="price"><div class="main"><span class="num">'+yen(normal)+'</span><span class="unit">/ 1日（通常期）</span></div>'
-          +'<div class="range">閑散期 '+yen(low)+'　〜　繁忙期 '+yen(high)+'</div></div>'):'')
+      +'<div class="meta"><span>👥 '+(it.seats||'')+'</span>'+equipTags+'</div>'
+      +(it.price?('<div class="price"><div class="main"><span class="unit" style="margin-right:4px">基本料金</span><span class="num">'+yen(it.price)+'</span><span class="unit">/ 1日（税込）</span></div></div>'):'')
       +'</div></div>';
   });
   document.getElementById('grid').innerHTML=html||'<div class="loading">車両情報がありません</div>';
-  document.getElementById('common').innerHTML='<div class="common"><b>全車共通：</b>'+(cls.common||'')+'<br><span style="color:#999">'+(cls.note||'')+'</span></div>';
+  document.getElementById('common').innerHTML='<div class="common"><b>標準装備：</b>'+equip.join('／')+'<br><span style="color:#999">'+(cls.note||'')+'</span></div>';
 }
 load();
 </script>
