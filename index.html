@@ -209,6 +209,7 @@
         .mp-status-hero.st-active { background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); color: white; }
         .mp-status-hero.st-returning { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); color: white; }
         .mp-status-hero.st-completed { background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%); color: white; }
+        .mp-status-hero.st-cancelreq { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); color: white; }
         .mp-status-hero.st-cancelled { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white; }
         .mp-status-icon { font-size: 48px; margin-bottom: 8px; line-height: 1; }
         .mp-status-label { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
@@ -3074,6 +3075,7 @@
         active:     { icon: '✅', label: 'ご利用中', sub: 'ドライブをお楽しみください', heroClass: 'st-active', cardClass: 'active' },
         returning:  { icon: '🔄', label: '返却手続き中', sub: '返却を確認しています', heroClass: 'st-returning', cardClass: 'returning' },
         completed:  { icon: '🏁', label: '返却完了', sub: 'ご利用ありがとうございました', heroClass: 'st-completed', cardClass: 'completed' },
+        cancel_requested: { icon: '⏳', label: 'キャンセル申請中', sub: '運営が内容（返金可否・キャンセル料）を確認しています', heroClass: 'st-cancelreq', cardClass: 'cancelreq' },
         cancelled:  { icon: '✕', label: 'キャンセル', sub: 'この予約はキャンセルされました', heroClass: 'st-cancelled', cardClass: 'cancelled' },
     };
 
@@ -3090,6 +3092,9 @@
 
         // OPシート（SPK）が設定した明示ステータスを最優先（出発/お届け完了/返却完了）
         if (r.kd_status) return r.kd_status;
+
+        // キャンセル申請中（運営未確定）＝配車確定/利用前の表示を上書き
+        if (r._cancelRequested) return 'cancel_requested';
 
         if (now > returnDT) return 'completed';
         if (now >= lendDT && now <= returnDT) return 'active';
@@ -3269,6 +3274,7 @@
         const isCompleted = status === 'completed';
         const isDelivering = status === 'delivering';
         const isActive = status === 'active';
+        const isCancelRequested = status === 'cancel_requested';
         const hasVehicle = !!(f && f.vehicle_code);
 
         // 決済状況ラベル
@@ -3289,8 +3295,8 @@
             </div>
         `;
 
-        // ── ステータスバー（残す・OPシートからのトリガーで進行）──
-        if (!isCancelled) {
+        // ── ステータスバー（残す・OPシートからのトリガーで進行）。キャンセル申請中は進行バーを出さない ──
+        if (!isCancelled && !isCancelRequested) {
             html += `<div class="mp-progress">`;
             PROGRESS_STEPS.forEach((step, i) => {
                 const isDone = i < progressIdx;
@@ -3326,8 +3332,8 @@
             </div>
         `;
 
-        // ── お届け・回収の「場所・時間」の変更：出発24時間前までマイページから可能（車種変更は不可＝LINE/取り直し）──
-        if (!isCancelled && !isCompleted) {
+        // ── お届け・回収の「場所・時間」の変更：出発24時間前までマイページから可能（車種変更は不可＝LINE/取り直し）。キャンセル申請中は隠す ──
+        if (!isCancelled && !isCompleted && !isCancelRequested) {
             const ed = canEditMypage(r);
             if (ed.editable) {
                 html += `
@@ -3715,6 +3721,8 @@
             localStorage.setItem('hdm_mypage_email', email);
             mypageState.email = email;
             mypageState.reservation = data.reservation;
+            // キャンセル依頼済みなら復元（再入場でも「申請中」表示＝再依頼を防ぐ）
+            if (data.reservation && data.reservation.cancel_requested_at) data.reservation._cancelRequested = true;
             mypageState.fleet = data.reservation.vehicle_code ? { vehicle_code: data.reservation.vehicle_code } : null;
             mypageState.view = 'detail';
             mypageState.loading = false;

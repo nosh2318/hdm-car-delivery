@@ -139,13 +139,18 @@ Deno.serve(async (req) => {
 
   if (action === "lookup") {
     const fleet = await sbGet("fleet", `reservation_id=eq.${encodeURIComponent(resId)}&select=vehicle_code`);
+    // キャンセル依頼マーカー（keydrop_payments.cancel_requested_at）を返す＝再入場でも「申請中」を表示し再依頼を防ぐ
+    const pay = await sbGet("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}&select=cancel_requested_at,cancel_reason`).catch(() => []);
     return json({
       ok: true,
       reservation: {
         id: r.id, vehicle: r.vehicle, lend_date: r.lend_date, return_date: r.return_date,
+        lend_time: r.lend_time, return_time: r.return_time, del_time: r.del_time, col_time: r.col_time,
         name: r.name, people: r.people, price: r.price, status: r.status,
         insurance: r.insurance, del_place: r.del_place, col_place: r.col_place,
         kd_status: r.kd_status || null,
+        cancel_requested_at: pay[0]?.cancel_requested_at || null,
+        cancel_reason: pay[0]?.cancel_reason || null,
         vehicle_code: fleet[0]?.vehicle_code || null,
       },
     }, 200, origin);
