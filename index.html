@@ -3031,7 +3031,7 @@
     // Delivery status definitions
     const DELIVERY_STATUSES = {
         confirmed:  { icon: '📋', label: '予約確定', sub: 'ご予約を受け付けました', heroClass: 'st-confirmed', cardClass: 'confirmed' },
-        assigned:   { icon: '🔑', label: '配車確定', sub: 'お車が決まりました', heroClass: 'st-assigned', cardClass: 'assigned' },
+        assigned:   { icon: '🔑', label: 'ご予約確定', sub: 'お車が決まりました', heroClass: 'st-assigned', cardClass: 'assigned' },
         preparing:  { icon: '🔧', label: '出発準備中', sub: 'スタッフが車両を準備しています', heroClass: 'st-preparing', cardClass: 'preparing' },
         delivering: { icon: '🚗', label: 'お届け中', sub: 'お届け先に向かっています', heroClass: 'st-delivering', cardClass: 'delivering' },
         active:     { icon: '✅', label: 'ご利用中', sub: 'ドライブをお楽しみください', heroClass: 'st-active', cardClass: 'active' },
@@ -3279,9 +3279,9 @@
                 <div class="mp-detail-body">
                     <div class="mp-detail-row"><span class="mp-detail-row-label">予約者</span><span class="mp-detail-row-value">${r.name || '-'} 様</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">予約番号</span><span class="mp-detail-row-value" style="font-weight:700;color:#1a1a1a;">${r.id}</span></div>
-                    <div class="mp-detail-row"><span class="mp-detail-row-label">車両クラス</span><span class="mp-detail-row-value">${cls.name || r.vehicle}クラス${hasVehicle ? `（${f.vehicle_code}）` : ''}</span></div>
-                    <div class="mp-detail-row"><span class="mp-detail-row-label">お届け</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.lend_date)} ${r.lend_time || ''}<br><span style="font-size:11px;color:#888;">${r.del_place || '-'}</span></span></div>
-                    <div class="mp-detail-row"><span class="mp-detail-row-label">回収</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.return_date)} ${r.return_time || ''}<br><span style="font-size:11px;color:#888;">${r.col_place || '-'}</span></span></div>
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">車両クラス</span><span class="mp-detail-row-value">${cls.name || r.vehicle}クラス</span></div>
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">お届け</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.lend_date)} ${r.lend_time || r.del_time || ''}<br><span style="font-size:11px;color:#888;">${r.del_place || '-'}</span></span></div>
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">回収</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.return_date)} ${r.return_time || r.col_time || ''}<br><span style="font-size:11px;color:#888;">${r.col_place || '-'}</span></span></div>
                     ${r.people ? `<div class="mp-detail-row"><span class="mp-detail-row-label">ご利用人数</span><span class="mp-detail-row-value">${r.people} 名</span></div>` : ''}
                     <div class="mp-detail-row"><span class="mp-detail-row-label">決済状況</span><span class="mp-detail-row-value" style="color:${payColor};font-weight:700;">${payLabel}</span></div>
                     ${r.price ? `<div style="border-top:1px solid #f0f0f0;margin-top:8px;padding-top:8px;"><div class="mp-detail-row"><span class="mp-detail-row-label" style="font-weight:700;">お支払い金額</span><span class="mp-detail-row-value" style="font-size:18px;font-weight:800;color:#1a1a1a;">¥${Number(r.price).toLocaleString()}</span></div></div>` : ''}
