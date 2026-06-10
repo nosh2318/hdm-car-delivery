@@ -720,6 +720,7 @@
         /* 未入力の日付/時間を点滅（黄グロー）で入力を促す。入力完了で停止 */
         @keyframes kdNeedBlink { 0%,100% { box-shadow: 0 0 0 0 rgba(250,190,0,0); border-color: #FABE00; } 50% { box-shadow: 0 0 0 5px rgba(250,190,0,.40); border-color: #f0a800; } }
         .dt-group select.kd-need { border: 2px solid #FABE00 !important; background: #fffdf4 !important; animation: kdNeedBlink 1.05s ease-in-out infinite; }
+        .form-input.kd-need { border: 2px solid #FABE00 !important; background: #fffdf4 !important; animation: kdNeedBlink 1.05s ease-in-out infinite; }
         .dt-group.kd-need-wrap label { color: #a07c00; font-weight: 800; }
         /* TOP：PCは左キービジュアル/右機能の2カラム。モバイルは右(機能)のみ */
         .top-2col { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -1558,6 +1559,11 @@
             if (firstChild && state.screen !== 'top') firstChild.classList.add('screen-fade');
         }
 
+        // 予約者情報フォーム：初期表示で未入力枠を点滅＋次へボタンを無効化
+        if (state.screen === 'form') {
+            requestAnimationFrame(() => { try { validateForm(); } catch (e) {} });
+        }
+
         // Map init (TOP=地図主役・モバイル/PC両方 / 旧step_location互換)
         if (state.screen === 'step_location' || state.screen === 'top' || state.screen === 'step_vehicle') {
             requestAnimationFrame(() => {
@@ -2185,36 +2191,75 @@
             </div>
             <div class="screen-header">
                 <button class="screen-header-back" onclick="state.screen='options'; render();">←</button>
-                <span class="screen-header-title">運転者情報</span>
+                <span class="screen-header-title">予約者情報</span>
             </div>
             ${renderBookingProgress(2)}
             <div class="form-screen screen-fade">
-                <div style="font-size:11px;color:#888;margin-bottom:12px;line-height:1.5;">運転される方の情報を入力してください。免許証と一致する必要があります。</div>
+                <div style="font-size:11px;color:#888;margin-bottom:12px;line-height:1.5;">ご予約者さまの情報を入力してください。運転される方が異なる場合は下のチェックを入れてください。</div>
                 <div id="formError" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#dc2626;"></div>
+                <div style="font-size:12px;font-weight:900;color:#1a1a1a;margin-bottom:8px;">👤 予約者情報</div>
                 <div class="form-group">
                     <label class="form-label">お名前<span class="required">*必須</span></label>
-                    <input class="form-input" type="text" id="formName" placeholder="山田 太郎" value="${state.formData?.name || ''}">
+                    <input class="form-input" type="text" id="formName" oninput="validateForm()" placeholder="山田 太郎" value="${state.formData?.name || ''}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">フリガナ<span class="required">*必須</span></label>
-                    <input class="form-input" type="text" id="formKana" placeholder="ヤマダ タロウ" value="${state.formData?.kana || ''}">
+                    <input class="form-input" type="text" id="formKana" oninput="validateForm()" placeholder="ヤマダ タロウ" value="${state.formData?.kana || ''}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">電話番号<span class="required">*必須</span></label>
-                    <input class="form-input" type="tel" id="formPhone" placeholder="090-1234-5678" value="${state.formData?.phone || ''}">
+                    <input class="form-input" type="tel" id="formPhone" oninput="validateForm()" placeholder="090-1234-5678" value="${state.formData?.phone || ''}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">メールアドレス<span class="required">*必須</span></label>
-                    <input class="form-input" type="email" id="formEmail" placeholder="example@mail.com" value="${state.formData?.email || ''}">
+                    <input class="form-input" type="email" id="formEmail" oninput="validateForm()" placeholder="example@mail.com" value="${state.formData?.email || ''}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">特記事項</label>
                     <textarea class="form-input form-textarea" id="formNotes" placeholder="チャイルドシート希望、到着時間の相談 等">${state.formData?.notes || ''}</textarea>
                 </div>
-                <button class="btn-primary" onclick="submitForm()">次へ進む</button>
+
+                <label style="display:flex;align-items:center;gap:9px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:13px;font-weight:700;color:#1a1a1a;cursor:pointer;margin:6px 0 4px;">
+                    <input type="checkbox" id="driverDiffers" ${state.formData?.driverDiffers ? 'checked' : ''} onchange="toggleDriverDiff()" style="width:18px;height:18px;accent-color:#FABE00;">
+                    予約者と運転者が異なる場合
+                </label>
+                <div id="driverSection" style="display:${state.formData?.driverDiffers ? 'block' : 'none'};background:#fffbf0;border:1.5px solid #FABE00;border-radius:12px;padding:14px;margin-bottom:8px;">
+                    <div style="font-size:12px;font-weight:900;color:#a07c00;margin-bottom:10px;">🚗 運転者情報（免許証と一致）</div>
+                    <div class="form-group">
+                        <label class="form-label">お名前<span class="required">*必須</span></label>
+                        <input class="form-input" type="text" id="driverName" oninput="validateForm()" placeholder="佐藤 花子" value="${state.formData?.driverName || ''}">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">フリガナ<span class="required">*必須</span></label>
+                        <input class="form-input" type="text" id="driverKana" oninput="validateForm()" placeholder="サトウ ハナコ" value="${state.formData?.driverKana || ''}">
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="formNext" onclick="submitForm()">次へ進む</button>
                 <button class="btn-secondary" onclick="state.screen='options'; render();">戻る</button>
             </div>
         `;
+    }
+    function validateForm() {
+        const ids = ['formName','formKana','formPhone','formEmail'];
+        if (document.getElementById('driverDiffers')?.checked) ids.push('driverName','driverKana');
+        let ok = true;
+        ids.forEach(function(id){
+            const el = document.getElementById(id); if (!el) return;
+            let bad = !el.value.trim();
+            if (id === 'formEmail' && el.value.trim() && el.value.indexOf('@') < 0) bad = true;
+            el.classList.toggle('kd-need', bad);
+            if (bad) ok = false;
+        });
+        const btn = document.getElementById('formNext');
+        if (btn) btn.disabled = !ok;
+        return ok;
+    }
+    function toggleDriverDiff() {
+        const diff = document.getElementById('driverDiffers')?.checked;
+        const sec = document.getElementById('driverSection');
+        if (sec) sec.style.display = diff ? 'block' : 'none';
+        validateForm();
     }
 
     // ════════════════════════════════════════════
@@ -2678,37 +2723,18 @@
     }
 
     function submitForm() {
-        const name = document.getElementById('formName')?.value?.trim();
-        const kana = document.getElementById('formKana')?.value?.trim();
-        const phone = document.getElementById('formPhone')?.value?.trim();
-        const email = document.getElementById('formEmail')?.value?.trim();
-        const notes = document.getElementById('formNotes')?.value?.trim();
-
-        // Inline validation
-        const errors = [];
-        if (!name) errors.push('お名前');
-        if (!kana) errors.push('フリガナ');
-        if (!phone) errors.push('電話番号');
-        if (!email) errors.push('メールアドレス');
-
-        const errorEl = document.getElementById('formError');
-        if (errors.length > 0) {
-            if (errorEl) {
-                errorEl.textContent = `${errors.join('・')} を入力してください`;
-                errorEl.style.display = 'block';
-            }
-            // Highlight empty fields
-            ['formName','formKana','formPhone','formEmail'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el && !el.value.trim()) {
-                    el.style.borderColor = '#dc2626';
-                } else if (el) {
-                    el.style.borderColor = '#ddd';
-                }
-            });
-            return;
-        }
-        state.formData = { name, kana, phone, email, notes };
+        if (!validateForm()) return; // 未入力枠は点滅で表示済み
+        const driverDiffers = !!document.getElementById('driverDiffers')?.checked;
+        state.formData = {
+            name: document.getElementById('formName')?.value?.trim(),
+            kana: document.getElementById('formKana')?.value?.trim(),
+            phone: document.getElementById('formPhone')?.value?.trim(),
+            email: document.getElementById('formEmail')?.value?.trim(),
+            notes: document.getElementById('formNotes')?.value?.trim(),
+            driverDiffers: driverDiffers,
+            driverName: driverDiffers ? document.getElementById('driverName')?.value?.trim() : '',
+            driverKana: driverDiffers ? document.getElementById('driverKana')?.value?.trim() : '',
+        };
         state.screen = 'terms';
         render();
     }
