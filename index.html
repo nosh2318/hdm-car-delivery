@@ -2702,7 +2702,11 @@
         fetchAvailableVehicles();
     }
 
-    // ── Google Places（検索のみ・地図はOSM）。読込失敗時はNominatimにフォールバック ──
+    // ── Google Places（検索のみ・地図はOSM）。読込失敗時は自動でPhoton/GSI/Nominatimにフォールバック ──
+    // ★ Google検索のON/OFFスイッチ：false にすると即座にPhoton運用へ（GCP操作不要・暴走課金の緊急停止用）
+    const USE_GOOGLE_SEARCH = true;
+    // どのエンジンが検索を返したか（品質が無料レベルに落ちてないか確認用）。コンソール＋window.__searchEngineで見える
+    function _markEngine(name){ try{ window.__searchEngine=name; console.log('[KEYDROP検索] エンジン= '+name); }catch(e){} }
     const GMAPS_KEY = 'AIzaSyCoX1EyEx-N5A0r4vRzC1KmVp3T29HILbI';
     let gReady = false, gAuto = null, gPlaces = null, gToken = null;
     function loadGooglePlaces() {
@@ -2735,6 +2739,7 @@
             location: new google.maps.LatLng(43.0687, 141.3508), radius: 40000,
         }, function (preds, status) {
             if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { photonSearch(query); return; }
+            _markEngine('google');
             box.innerHTML = preds.slice(0, 6).map(function (p) {
                 return '<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'white\'" onclick="selectGooglePlace(\'' + p.place_id + '\')">📍 ' + p.description + '</div>';
             }).join('');
@@ -2765,7 +2770,7 @@
     // 検索ディスパッチャ：Photon(OSM・無料・キー不要・施設名/部分入力に強くオートコンプリート可)を主
     //  → GSI(国土地理院・日本の住所に正確) → Nominatim の順に自動フォールバック。Google Placesは未有効化のため不使用。
     function searchAddress(query) {
-        if (gReady && gAuto) { gSearch(query); return; } // Google Places（最良）→ 失敗時はphoton/GSI/Nominatim
+        if (USE_GOOGLE_SEARCH && gReady && gAuto) { gSearch(query); return; } // Google Places（最良）→ 失敗時はphoton/GSI/Nominatim
         photonSearch(query);
     }
     function photonLabel(p){
@@ -2789,6 +2794,7 @@
                 return '<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;transition:background .2s;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'white\'" onclick="selectAddress('+c[1]+', '+c[0]+', \''+label.replace(/\\/g,"\\\\").replace(/'/g,"\\'")+'\')">📍 '+label+'</div>';
             }).join('');
             if(!html){gsiSearch(query);return;}
+            _markEngine('photon');
             box.innerHTML=html; box.style.display='block';
         }catch(e){ gsiSearch(query); }
     }
@@ -2809,6 +2815,7 @@
                      onclick="selectAddress(${c[1]}, ${c[0]}, '${title.replace(/'/g, "\\'")}')">📍 ${title}</div>`;
             }).join('');
             if (!html) { nominatimSearch(query); return; }
+            _markEngine('gsi');
             box.innerHTML = html;
             box.style.display = 'block';
         } catch (e) { nominatimSearch(query); }
@@ -2824,6 +2831,7 @@
                 box.style.display = 'block';
                 return;
             }
+            _markEngine('nominatim');
             box.innerHTML = results.map(r => `
                 <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;transition:background .2s;"
                      onmouseover="this.style.background='#f5f8ff'"
