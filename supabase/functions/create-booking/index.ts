@@ -215,8 +215,7 @@ Deno.serve(async (req) => {
   let p: any;
   try { p = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
 
-  // --- スパム対策①②：ハニーポット＋レート制限 ---
-  if (String(p.hp || "").trim()) return json({ error: "不正なリクエストです" }, 400); // 隠しフィールドが埋まっている＝bot
+  // --- スパム対策：レート制限のみ（ハニーポットはブラウザ自動入力で実客を誤爆するため撤去）---
   const _ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
   try {
     const since = new Date(Date.now() - 3600 * 1000).toISOString();

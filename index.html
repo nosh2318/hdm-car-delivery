@@ -2256,8 +2256,6 @@
                     <label class="form-label">特記事項</label>
                     <textarea class="form-input form-textarea" id="formNotes" placeholder="チャイルドシート希望、到着時間の相談 等">${state.formData?.notes || ''}</textarea>
                 </div>
-                <!-- スパム対策ハニーポット（人間には見えない・botが埋めると弾く） -->
-                <input type="text" id="formCompanyUrl" name="company_url" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;" value="">
 
                 <label style="display:flex;align-items:center;gap:9px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:13px;font-weight:700;color:#1a1a1a;cursor:pointer;margin:6px 0 4px;">
                     <input type="checkbox" id="driverDiffers" ${state.formData?.driverDiffers ? 'checked' : ''} onchange="toggleDriverDiff()" style="width:18px;height:18px;accent-color:#FABE00;">
