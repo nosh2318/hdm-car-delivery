@@ -965,7 +965,7 @@
         const isSP = window.matchMedia('(max-width:768px)').matches;
         const KD_HERO = { pc: 'images/hero_pc.jpg?v=2', sp: 'images/hero_sp.jpg?v=2' };
         const HOT_PC = [ { id: 'sapporo', label: '札幌', x: 72.8, y: 7.5 }, { id: 'naha', label: '那覇', x: 24.5, y: 63 } ]; // hero_pc.jpg(DROP YOUR KEY横長)基準
-        const HOT_SP = [ { id: 'sapporo', label: '札幌', x: 72, y: 34 }, { id: 'naha', label: '那覇', x: 28, y: 64 } ];     // hero_sp.jpg(縦長)基準・実画像配置後に微調整
+        const HOT_SP = [ { id: 'sapporo', label: '札幌', x: 60, y: 32 }, { id: 'naha', label: '那覇', x: 16.5, y: 74 } ];   // hero_sp.jpg(縦長 DROP YOUR KEY)基準
         let HOT = (isSP ? HOT_SP : HOT_PC).slice();
         const g = document.createElement('div');
         g.id = 'kd-area-gate';
