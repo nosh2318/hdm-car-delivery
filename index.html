@@ -833,6 +833,11 @@
                         <button class="menu-user-btn" onclick="closeMenu(); state.screen='mypage'; render();">予約を確認する（マイページ）</button>
                     </div>
                     <div class="menu-section">
+                        <a class="menu-item" href="#" onclick="closeMenu(); kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">
+                            <span class="menu-item-icon">📍</span>エリアを選び直す<span class="menu-item-arrow">→</span>
+                        </a>
+                    </div>
+                    <div class="menu-section">
                         <div class="menu-section-title">サービス</div>
                         <a class="menu-item" href="guide.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">📖</span>ご利用方法<span class="menu-item-arrow">→</span>
@@ -923,6 +928,12 @@
         sp.set('area', area); sp.delete('pick');
         location.search = sp.toString();
     }
+    // エリア選択画面に戻る（?area= を外す→入口のエリア選択を再表示）
+    function kdBackToAreaSelect() {
+        try { localStorage.removeItem('kd_selectedArea'); } catch (e) {}
+        location.href = location.pathname;
+    }
+    window.kdBackToAreaSelect = kdBackToAreaSelect;
     function kdShowAreaGate() {
         const qs = new URLSearchParams(location.search);
         if (qs.get('area')) return;
@@ -1834,6 +1845,7 @@
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 エリア選択</a>
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
                         <a href="vehicles.html" target="_blank">車両・料金</a>
@@ -1943,6 +1955,7 @@
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 エリア選択</a>
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
                         <a href="vehicles.html" target="_blank">車両・料金</a>
@@ -2052,6 +2065,7 @@
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 エリア選択</a>
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
                         <a href="vehicles.html" target="_blank">車両・料金</a>
@@ -2254,6 +2268,7 @@
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 エリア選択</a>
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
                         <a href="vehicles.html" target="_blank">車両・料金</a>
@@ -3286,6 +3301,7 @@
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 エリア選択</a>
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
                         <a href="vehicles.html" target="_blank">車両・料金</a>
