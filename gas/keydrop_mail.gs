@@ -28,7 +28,7 @@ function _mypageLink_(n) {
   return MYPAGE_URL;
 }
 var LINE_URL   = 'https://lin.ee/ZxBknUv';
-var LINE_ID    = '@730kyhwl';
+var LINE_ID    = '@149ahjll';
 var TEL        = '050-1724-6197';
 
 function _sbKey_() {
@@ -68,6 +68,7 @@ function sendKeydropNotifications() {
                : (n.type === 'cancel_ack') ? _buildCancelAckMail_(n)
                : (n.type === 'cancel_done') ? _buildCancelDoneMail_(n)
                : (n.type === 'change_done') ? _buildChangeDoneMail_(n)
+               : (n.type === 'reminder') ? _buildReminderMail_(n)
                : _buildCancelRequestMail_(n);
       if (!n.to_email || n.to_email.indexOf('@') < 0) throw new Error('宛先不正: ' + n.to_email);
       GmailApp.sendEmail(n.to_email, mail.subject, mail.body, { from: FROM_EMAIL, name: FROM_NAME });
@@ -173,6 +174,39 @@ function _buildCancelDoneMail_(n) {
     '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
     '営業時間：9:00〜19:00\n\n' +
     'またのご利用を心よりお待ちしております。\n' +
+    'CARデリバリー KEY-DROP\n';
+  return { subject: subject, body: body };
+}
+
+/** 出発前日リマインドメール（顧客向け・最新の予約情報） */
+function _buildReminderMail_(n) {
+  var p = n.payload || {};
+  var id = n.reservation_id || '';
+  var subject = '【明日お届け】CARデリバリー KEY-DROP ご予約のご確認（予約番号 ' + id + '）';
+  var body =
+    (p.name || 'お客様') + ' 様\n\n' +
+    'いつもありがとうございます。明日が貸出予定日です。\n' +
+    '最新のご予約内容をお送りしますので、念のためご確認ください。\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '■ ご予約内容（最新）\n' +
+    '予約番号　：' + id + '\n' +
+    '車両クラス：' + (p.vehicleClass || '') + 'クラス\n' +
+    'お届け　　：' + _dt_(p.lend_date, p.lend_time) + '\n' +
+    '　　場所　：' + (p.del_place || '（ご指定の場所）') + '\n' +
+    'ご返却　　：' + _dt_(p.return_date, p.return_time) + '\n' +
+    '　　場所　：' + (p.col_place || p.del_place || '（ご指定の場所）') + '\n' +
+    'ご利用人数：' + (p.people || 1) + '名\n' +
+    '補償　　　：' + (p.insurance || 'なし') + '\n' +
+    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '■ 内容に変更がある場合\n' +
+    'お届け／回収の時間・場所の変更は、マイページまたは公式LINEへお早めにご連絡ください。\n' +
+    '（お届けの変更は出発48時間前まで／回収は返却2時間前まで・運営の承認後に反映）\n' +
+    _mypageLink_(n) + '\n\n' +
+    '■ 当日について\n' +
+    'ご指定の場所・時間にお届けにあがります。安全に停車・受け渡しができる場所でお待ちください。\n\n' +
+    '■ お問い合わせ\n' +
+    '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
+    '緊急連絡先：' + TEL + ' ／ 営業時間 9:00〜19:00\n\n' +
     'CARデリバリー KEY-DROP\n';
   return { subject: subject, body: body };
 }

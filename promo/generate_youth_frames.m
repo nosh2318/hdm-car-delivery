@@ -1,0 +1,33 @@
+#import <AppKit/AppKit.h>
+
+static CGFloat W=1080,H=1920;
+static NSColor *Y,*B,*C,*INK;
+static NSRect TR(CGFloat x,CGFloat y,CGFloat w,CGFloat h){return NSMakeRect(x,H-y-h,w,h);}
+static CGFloat CL(double x){return MAX(0,MIN(1,x));}
+static CGFloat E(double x){CGFloat q=CL(x);return 1-pow(1-q,3);}
+static CGFloat A(double t,double a,double b){return CL((t-a)/.38)*CL((b-t)/.38);}
+static void Fill(NSColor*c,CGFloat a){[[c colorWithAlphaComponent:a]setFill];NSRectFill(NSMakeRect(0,0,W,H));}
+static void RR(NSRect r,CGFloat rad,NSColor*c,CGFloat a){[[c colorWithAlphaComponent:a]setFill];[[NSBezierPath bezierPathWithRoundedRect:r xRadius:rad yRadius:rad]fill];}
+static void Text(NSString*s,CGFloat x,CGFloat y,CGFloat w,CGFloat n,NSFontWeight weight,NSColor*c,NSTextAlignment al,CGFloat a){NSMutableParagraphStyle*p=[NSMutableParagraphStyle new];p.alignment=al;[s drawInRect:TR(x,y,w,n*1.4) withAttributes:@{NSFontAttributeName:[NSFont systemFontOfSize:n weight:weight],NSForegroundColorAttributeName:[c colorWithAlphaComponent:a],NSParagraphStyleAttributeName:p}];}
+static void Cover(NSImage*im,NSRect r,CGFloat zoom,CGFloat ox,CGFloat oy,CGFloat a){NSSize s=im.size;CGFloat scale=MAX(r.size.width/s.width,r.size.height/s.height)*zoom,sw=r.size.width/scale,sh=r.size.height/scale;NSRect src=NSMakeRect((s.width-sw)*ox,(s.height-sh)*oy,sw,sh);[im drawInRect:r fromRect:src operation:NSCompositingOperationSourceOver fraction:a respectFlipped:NO hints:@{NSImageHintInterpolation:@(NSImageInterpolationHigh)}];}
+static void Pill(NSString*s,CGFloat x,CGFloat y,CGFloat w,NSColor*bg,NSColor*fg,CGFloat a){RR(TR(x,y,w,76),38,bg,a);Text(s,x,y+17,w,29,NSFontWeightHeavy,fg,NSTextAlignmentCenter,a);}
+static void Shade(CGFloat a){NSGradient*g=[[NSGradient alloc]initWithColors:@[[NSColor colorWithWhite:0 alpha:.86*a],[NSColor colorWithWhite:0 alpha:0]]];[g drawInRect:TR(0,0,W,850) angle:-90];}
+static void Confetti(double t,CGFloat a){NSArray*cs=@[Y,B,C,NSColor.whiteColor];for(int i=0;i<16;i++){CGFloat x=(i*173+93)%1080,y=(i*257+120+(int)(t*75))%1920;RR(TR(x,y,15,42),7,cs[i%4],.72*a);}}
+static void Photo(NSDictionary*ims,NSString*k,double t,double st,double en,NSString*title,NSString*sub,NSString*tag,NSColor*tc,CGFloat ox){CGFloat aa=A(t,st,en);if(aa<=0)return;CGFloat p=E((t-st)/(en-st));Cover(ims[k],TR(-30*p,0,W+60*p,H),1.04+.04*p,ox,.5,aa);Shade(aa);Text(title,64,155,950,75,NSFontWeightHeavy,NSColor.whiteColor,NSTextAlignmentLeft,aa);Text(sub,67,253,930,35,NSFontWeightBold,Y,NSTextAlignmentLeft,aa);[[Y colorWithAlphaComponent:aa]setFill];NSRectFill(TR(67,325,250*E((t-st-.25)/.7),11));Pill(tag,65,390,250,tc,tc==Y?INK:NSColor.whiteColor,aa*E((t-st-.5)/.45));}
+
+int main(){@autoreleasepool{
+  Y=[NSColor colorWithCalibratedRed:250/255. green:190/255. blue:0 alpha:1];B=[NSColor colorWithCalibratedRed:56/255. green:174/255. blue:245/255. alpha:1];C=[NSColor colorWithCalibratedRed:1 green:104/255. blue:92/255. alpha:1];INK=[NSColor colorWithCalibratedRed:17/255. green:24/255. blue:39/255. alpha:1];
+  NSString*root=[[[NSFileManager defaultManager]currentDirectoryPath]stringByAppendingPathComponent:@"promo"],*out=[root stringByAppendingPathComponent:@"frames_short_youth"];
+  [[NSFileManager defaultManager]removeItemAtPath:out error:nil];[[NSFileManager defaultManager]createDirectoryAtPath:out withIntermediateDirectories:YES attributes:nil error:nil];
+  NSDictionary*ps=@{@"phone":@"assets/youth/01_phone_friends.png",@"handover":@"assets/youth/02_key_handover.png",@"drive":@"assets/youth/03_city_drive.png",@"trip":@"assets/youth/04_roadtrip.png",@"logo":@"../images/logo_header.png",@"m1":@"assets/mobile_map.png",@"m2":@"assets/mobile_cars.png",@"m3":@"assets/mobile_confirm.png"};NSMutableDictionary*ims=[NSMutableDictionary new];for(NSString*k in ps)ims[k]=[[NSImage alloc]initWithContentsOfFile:[root stringByAppendingPathComponent:ps[k]]];
+  for(int f=0;f<24*29;f++){@autoreleasepool{double t=f/24.;NSImage*can=[[NSImage alloc]initWithSize:NSMakeSize(W,H)];[can lockFocus];Fill(INK,1);
+    CGFloat ia=A(t,0,3.3);if(ia>0){Fill([NSColor colorWithCalibratedRed:.92 green:.98 blue:1 alpha:1],ia);Confetti(t,ia);RR(TR(75,590,930,240),55,INK,ia*E(t/.5));Text(@"クルマ、取りに行く？",75,650,930,63,NSFontWeightHeavy,NSColor.whiteColor,NSTextAlignmentCenter,ia*E(t/.5));RR(TR(135,930,810,240),55,Y,ia*E((t-.65)/.5));Text(@"届けてもらお。",135,990,810,79,NSFontWeightHeavy,INK,NSTextAlignmentCenter,ia*E((t-.65)/.5));Pill(@"CAR DELIVERY",330,1280,420,B,NSColor.whiteColor,ia*E((t-1.35)/.5));}
+    Photo(ims,@"phone",t,2.7,6.8,@"集合場所をタップ。",@"ホテルでも、街でも。",@"01  PLACE",Y,.52);
+    Photo(ims,@"handover",t,6.2,10.8,@"クルマが来る。",@"受け取ったら、即スタート。",@"02  KEY",C,.56);
+    Photo(ims,@"drive",t,10.2,14.9,@"予定より、自由。",@"街から旅が始まる。",@"03  DRIVE",B,.58);
+    Photo(ims,@"trip",t,14.3,19,@"行きたい場所が、",@"今日の目的地。",@"GOOD DAY!",Y,.5);
+    CGFloat ma=A(t,18.4,25.3);if(ma>0){Fill([NSColor colorWithCalibratedRed:.92 green:.98 blue:1 alpha:1],ma);Confetti(t*.35,ma);Text(@"スマホで、サクッと。",60,80,960,62,NSFontWeightHeavy,INK,NSTextAlignmentCenter,ma);Text(@"場所 → 車 → 予約",60,160,960,33,NSFontWeightHeavy,B,NSTextAlignmentCenter,ma);NSArray*cards=@[@[@"m1",@18.6,@"1  場所を選ぶ"],@[@"m2",@20.45,@"2  車を選ぶ"],@[@"m3",@22.3,@"3  予約を確認"]];for(NSArray*q in cards){double d=[q[1]doubleValue];CGFloat aa=ma*A(t,d,d+2.55);if(aa>0){CGFloat p=E((t-d)/.5);NSRect r=TR(195,300+90*(1-p),690,1490);RR(r,55,NSColor.whiteColor,aa);Cover(ims[q[0]],r,1,.5,.06,aa);RR(TR(300,340,480,82),41,INK,aa);Text(q[2],300,360,480,31,NSFontWeightHeavy,NSColor.whiteColor,NSTextAlignmentCenter,aa);}}}
+    CGFloat ea=A(t,24.7,30);if(ea>0){Fill(NSColor.whiteColor,ea);Confetti(t*.6,ea);[[Y colorWithAlphaComponent:ea]setFill];NSRectFill(TR(0,0,W,24));[[B colorWithAlphaComponent:ea]setFill];NSRectFill(TR(0,H-24,W,24));CGFloat p=E((t-25)/.7);[ims[@"logo"]drawInRect:TR(140,440+45*(1-p),800,109) fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:ea*p];Text(@"スマートに借りて、",60,790,960,69,NSFontWeightHeavy,INK,NSTextAlignmentCenter,ea*p);Text(@"自由に走ろう",60,890,960,78,NSFontWeightHeavy,INK,NSTextAlignmentCenter,ea*p);Pill(@"YOUR TRIP. YOUR WAY.",270,1055,540,Y,INK,ea*p);Text(@"SAPPORO CAR DELIVERY SERVICE",60,1270,960,23,NSFontWeightHeavy,[NSColor grayColor],NSTextAlignmentCenter,ea*p);}
+    [can unlockFocus];NSBitmapImageRep*rep=[[NSBitmapImageRep alloc]initWithData:can.TIFFRepresentation];NSData*d=[rep representationUsingType:NSBitmapImageFileTypeJPEG properties:@{NSImageCompressionFactor:@.91}];[d writeToFile:[out stringByAppendingPathComponent:[NSString stringWithFormat:@"frame_%05d.jpg",f]] atomically:YES];if(f%48==0)printf("rendered %d/696\n",f);
+  }}printf("%s\n",out.UTF8String);
+ }return 0;}

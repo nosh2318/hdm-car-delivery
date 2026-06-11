@@ -5,6 +5,19 @@
 iPhone端末フレーム内で動作するシングルページHTMLアプリケーション。
 バニラJS（フレームワークなし）で構成。
 
+## KEYDROP プロモーション動画（2026-06-11）
+- ユーザー提供スクリーンショットは「サービスイメージ・実画面の挿入素材」であり、動画の主役にしない。
+- CM本編はゼロから作る都会的な世界観が主役：人物が場所を指定 → 車両が街を走って到着 → 鍵を受け取る → そのまま出発。
+- 実サービス画面は全体の2〜3割程度に抑え、「実際に使えるサービス」の裏付けとして途中に短く組み込む。
+- コピー軸：`借りに行かない。届く。` / `CAR DELIVERY PLATFORM` / `移動を、もっと自由に。`
+- 制作ファイル：`promo/promo.html`、生成CM素材は `promo/assets/generated/`、フレームは `promo/frames/`。
+- 初回のUI中心案は `promo/promo_ui_first_draft.html` に退避。今後これを本案として復活させない。
+- 完成動画：`promo/KEYDROP_promotion_CM.mp4`（29秒 / 1280x720 / H.264 + AACステレオ）。人物・車・都市のCMカット約80%、実サービス画面約20%。
+- 2026-06-11 修正版：`promo/KEYDROP_promotion_CM_silent.mp4`。音声・音楽を完全削除。最終画面の「日本では〜プラットフォーム」と「借りに行かない。届く。」を削除し、「スマートに借りて、自由に走ろう」へ変更。
+- 2026-06-11 欧米人＋モバイルUI版：`promo/KEYDROP_promotion_western_mobile_silent.mp4`。出演カットを欧米人へ統一。サービス紹介をユーザー提供の `File (4).png`（場所指定）→`File (5).png`（車両選択）→`File (6).png`（予約確認）の3画面へ差し替え。無音。
+- 2026-06-11 日本人＋モバイルUI版：`promo/KEYDROP_promotion_japanese_mobile_silent.mp4`。欧米人版と同じ構成・モバイル3画面・最終コピーで、出演カットのみ日本人へ変更。無音。
+- 2026-06-11 ショート動画版（9:16 / 1080x1920 / 29秒 / 無音）：欧米版=`promo/KEYDROP_short_western_1080x1920_silent.mp4`、日本版=`promo/KEYDROP_short_japanese_1080x1920_silent.mp4`。単純cropではなく縦専用にテロップ・人物・モバイル3画面・最終ロゴを再配置。
+
 ## ファイル構成
 ```
 hdm-car-delivery/
@@ -215,6 +228,7 @@ attachEventListeners() 関数（毎回再バインド）
 - テキスト: `#333`
 
 ## 改修履歴
+- **2026-06-11 若年層向けショートCM**: 20代の友人旅行を軸にした、明るくカジュアルな縦型29秒・無音版を追加。札幌の街、車両受け渡し、ドライブ、郊外旅行と、モバイル版サービス画面3点を「場所→車→予約」の順で構成。制作ソースは `promo/promo_youth_short.html`。確認用動画は `promo/KEYDROP_short_youth_preview.gif`、H.264出力先は `promo/KEYDROP_short_youth_1080x1920_silent.mp4`。
 - **v1 (original.html)**: デリバリーモードのみ（マップベース）
 - **v2 (index.html)**: 来店モード追加（エリア/店舗/クラス選択フロー）
   - モード切替トグル（デリバリー/来店）

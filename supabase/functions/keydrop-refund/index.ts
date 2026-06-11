@@ -1,13 +1,13 @@
 // ============================================================
-// keydrop-refund : SPK運営がキャンセル依頼を「確定」する（★返金は手動・ここでは記録のみ）
-// 2026-06-10 / omni  (Phase B 続き)
+// keydrop-refund : SPK運営がキャンセル依頼を「承認」→ Square自動返金＋キャンセル確定
+// 2026-06-10 / omni  (Phase B) / 2026-06-11 自動返金化（オーナー指示）
 //
-// 方針（オーナー確定 2026-06-10）：自動返金はしない。
-//   ・実際の返金は スタッフが Square Dashboard で手動実行する。
-//   ・SPK画面に「返金に必要な情報（返金額・キャンセル料・Square決済ID等）」を表示し、
-//     スタッフが手動返金 → この関数で「キャンセル確定＋記録」だけ行う（Squareは叩かない）。
-//   ・authenticated（SPKログイン）以外は拒否（anon/未ログインは403）。
-//   ・冪等：既に refunded なら二重処理しない。
+// 方針（2026-06-11 更新）：承認したら自動でSquare返金する。
+//   ・KEYDROPは1予約=1 Square決済（square_payment_id 保持）なので Refunds API で安全に自動返金可能。
+//   ・返金額 = 入金 − キャンセル料（ポリシー）。Square返金が成功した時だけ DBをrefunded/キャンセルに更新。
+//   ・Square失敗時は DB を一切変更せず error 返却＋Slack警告（手動対応へ）。
+//   ・autoRefund:false を渡せば旧挙動（記録のみ＝手動返金前提）。返金0（100%料）はSquare不要。
+//   ・authenticated（SPKログイン）以外は拒否。冪等：refunded済はスキップ＋idempotency_key=kdrefund-予約番号。
 //
 // ポリシー（hdm-car-delivery getCancelFee と一致・表示と記録の根拠）:
 //   出発まで ≥7日=無料(0%) / 6〜3日=20% / 2〜1日=30% / 当日以降=50%
@@ -16,6 +16,8 @@
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SQUARE_TOKEN = Deno.env.get("SQUARE_ACCESS_TOKEN") || "";
+const SQUARE_API = "https://connect.squareup.com";
 
 const ALLOWED = ["https://nosh2318.github.io"];
 function cors(o: string | null) {
@@ -112,16 +114,47 @@ Deno.serve(async (req) => {
   if (refund < 0) refund = 0;
   if (refund > paid) refund = paid;
 
-  // ★Squareは叩かない（返金はスタッフがSquare Dashboardで手動実施済みの前提）。
-  //  この関数は「キャンセル確定＋記録」だけを行う。
-  //  任意：スタッフが実際に返金した額を refundActual で渡せばそれを記録（無ければポリシー値を記録）。
+  //  任意：スタッフが実際の返金額を refundAmount で上書き可（無ければポリシー値）。
   const refundActual = (p.refundAmount !== undefined && p.refundAmount !== null && !isNaN(Number(p.refundAmount)))
     ? Math.max(0, Math.round(Number(p.refundAmount))) : refund;
 
-  // DB確定：台帳refunded・予約キャンセル・配車解放
+  // ★ 自動返金（既定）：Square Refunds API で実返金。失敗したらDBは一切変更しない（手動対応へ）。
+  //   autoRefund:false を渡せば従来の「記録のみ（手動返金前提）」。返金額0（100%キャンセル料）はSquare不要。
+  let squareRefundId: string | null = null;
+  const doAuto = p.autoRefund !== false;
+  if (doAuto && refundActual > 0) {
+    if (!SQUARE_TOKEN) return json({ error: "Square設定が未構成のため自動返金できません（手動返金後にautoRefund:falseで確定してください）" }, 503);
+    if (!pay.square_payment_id) return json({ error: "Square決済IDが無いため自動返金不可。Square Dashboardで手動返金してください" }, 409);
+    try {
+      const r = await fetch(`${SQUARE_API}/v2/refunds`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${SQUARE_TOKEN}`, "content-type": "application/json", "Square-Version": "2024-06-04" },
+        body: JSON.stringify({
+          idempotency_key: `kdrefund-${resId}`,
+          payment_id: pay.square_payment_id,
+          amount_money: { amount: refundActual, currency: "JPY" },
+          reason: `KEYDROP cancel ${rate}%`,
+        }),
+      });
+      const j = await r.json();
+      const rst = j?.refund?.status;
+      if (!r.ok || (rst !== "COMPLETED" && rst !== "PENDING" && rst !== "APPROVED")) {
+        const detail = (j.errors && j.errors[0] && (j.errors[0].detail || j.errors[0].code)) || "返金APIエラー";
+        console.error(`[refund] FAIL ${resId}: ${JSON.stringify(j.errors || j).slice(0, 300)}`);
+        await notifySlack(`⚠️ *KEYDROP 自動返金 失敗* ${resId} / ${rv.name || ""}様\n返金額 ¥${refundActual.toLocaleString()} : ${detail}\n→ DB未変更。Square Dashboardで手動確認してください。`);
+        return json({ error: "Square返金に失敗しました：" + detail + "（DBは変更していません）" }, 402);
+      }
+      squareRefundId = j.refund.id;
+    } catch (e) {
+      console.error("[refund]", e);
+      return json({ error: "返金処理で通信エラーが発生しました（DBは変更していません）" }, 500);
+    }
+  }
+
+  // DB確定：台帳refunded・予約キャンセル・配車解放（Square返金成功 or 返金0 or 手動モードのみ到達）
   const nowIso = new Date().toISOString();
   await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`,
-    { status: "refunded", refund_amount: refundActual, cancel_fee: fee, cancel_rate: rate, refunded_at: nowIso });
+    { status: "refunded", refund_amount: refundActual, cancel_fee: fee, cancel_rate: rate, refunded_at: nowIso, square_refund_id: squareRefundId });
   await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}`, { status: "キャンセル" });
   await sbDelete("fleet", `reservation_id=eq.${encodeURIComponent(resId)}`);
 
@@ -139,13 +172,15 @@ Deno.serve(async (req) => {
     });
   }
 
+  const howRefunded = (doAuto && refundActual > 0) ? `自動返金 完了（Square refund ${squareRefundId}）`
+    : (refundActual === 0 ? "返金なし（キャンセル料100%）" : "記録のみ（手動返金）");
   await notifySlack([
-    `✅ *KEYDROP キャンセル確定*（返金はスタッフが手動実施）`,
+    `✅ *KEYDROP キャンセル確定*`,
     `予約番号: ${resId} / ${rv.name || ""}様（${rv.vehicle || ""}クラス）`,
-    `入金 ¥${paid.toLocaleString()} − キャンセル料 ¥${fee.toLocaleString()}(${rate}%) = 返金目安 ¥${refund.toLocaleString()}`,
-    `記録した返金額: *¥${refundActual.toLocaleString()}*`,
+    `入金 ¥${paid.toLocaleString()} − キャンセル料 ¥${fee.toLocaleString()}(${rate}%) = 返金 ¥${refundActual.toLocaleString()}`,
+    `💳 ${howRefunded}`,
   ].join("\n"));
 
-  console.log(`[cancel-confirm] ${resId} paid=${paid} fee=${fee}(${rate}%) refund_rec=${refundActual}`);
-  return json({ ok: true, rate, fee, refundSuggested: refund, refundRecorded: refundActual, paid });
+  console.log(`[cancel-confirm] ${resId} paid=${paid} fee=${fee}(${rate}%) refund=${refundActual} auto=${doAuto} sq=${squareRefundId}`);
+  return json({ ok: true, rate, fee, refundSuggested: refund, refundRecorded: refundActual, paid, autoRefunded: !!squareRefundId, squareRefundId });
 });

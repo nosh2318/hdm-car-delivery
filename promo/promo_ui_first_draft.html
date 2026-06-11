@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>KEYDROP Promotion</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050505}
+    canvas{display:block;width:1280px;height:720px}
+  </style>
+</head>
+<body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script>
+const W=1280,H=720,Y='#fabe00',BLACK='#111111',WHITE='#ffffff';
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const assets={
+  logo:'../images/logo_header.png',
+  hero1:'../images/top_banner_01.jpg',hero2:'../images/top_banner_02.jpg',
+  hero3:'../images/top_banner_03.jpg',hero5:'../images/top_banner_05.jpg',
+  ui1:'assets/ui_map.png',ui2:'assets/ui_cars.png',ui3:'assets/ui_confirm.png'
+};
+const imgs={};
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const ease=x=>{x=clamp(x);return 1-Math.pow(1-x,3)};
+const smooth=x=>{x=clamp(x);return x*x*(3-2*x)};
+const alpha=(t,a,b,fo=.45)=>clamp((t-a)/fo)*clamp((b-t)/fo);
+function load(){return Promise.all(Object.entries(assets).map(([k,s])=>new Promise((ok,fail)=>{const im=new Image();im.onload=()=>{imgs[k]=im;ok()};im.onerror=fail;im.src=s})));}
+function cover(im,x,y,w,h,zoom=1,ox=.5,oy=.5){
+  const r=Math.max(w/im.width,h/im.height)*zoom,sw=w/r,sh=h/r;
+  const sx=(im.width-sw)*ox,sy=(im.height-sh)*oy;
+  ctx.drawImage(im,sx,sy,sw,sh,x,y,w,h);
+}
+function roundRect(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()}}
+function text(s,x,y,size,weight='700',color=WHITE,align='left',family='-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif'){
+  ctx.save();ctx.font=`${weight} ${size}px ${family}`;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.fillStyle=color;ctx.fillText(s,x,y);ctx.restore();
+}
+function trackingText(s,x,y,size,spacing,color=WHITE,weight='800'){
+  ctx.save();ctx.font=`${weight} ${size}px Arial,sans-serif`;ctx.fillStyle=color;ctx.textBaseline='alphabetic';
+  let px=x;for(const ch of s){ctx.fillText(ch,px,y);px+=ctx.measureText(ch).width+spacing}ctx.restore();
+}
+function shade(a=.45){ctx.fillStyle=`rgba(0,0,0,${a})`;ctx.fillRect(0,0,W,H)}
+function yellowRule(x,y,w){ctx.fillStyle=Y;ctx.fillRect(x,y,w,6)}
+function sceneIntro(t){
+  const a=alpha(t,0,4.2);ctx.globalAlpha=a;ctx.fillStyle=BLACK;ctx.fillRect(0,0,W,H);
+  const p=ease((t-.25)/1.1);ctx.fillStyle=Y;ctx.fillRect(0,0,W*p,9);
+  text('レンタカーは、',92,285,42,'700','#bdbdbd');
+  text('取りに行くもの？',92,365,68,'900',WHITE);
+  const q=ease((t-1.4)/.8);ctx.globalAlpha=a*q;text('その常識を、変える。',96,430,25,'700',Y);
+  ctx.globalAlpha=1;
+}
+function sceneDelivery(t){
+  const a=alpha(t,3.6,8.3);ctx.globalAlpha=a;
+  const z=1+.045*smooth((t-3.6)/4.7);cover(imgs.hero2,0,0,W,H,z,.52,.52);shade(.42);
+  ctx.fillStyle='rgba(0,0,0,.58)';ctx.fillRect(0,0,590,H);
+  const x=74+36*(1-ease((t-3.7)/.8));
+  trackingText('NO PICKUP.',x,272,64,1.5,WHITE,'900');
+  trackingText('JUST DELIVERY.',x,354,64,1.5,Y,'900');
+  text('借りに行かず、届けてもらう時代へ。',x+3,417,28,'700',WHITE);
+  yellowRule(x,458,190*ease((t-4.5)/.8));ctx.globalAlpha=1;
+}
+function sceneMap(t){
+  const a=alpha(t,7.7,13.2);ctx.globalAlpha=a;ctx.fillStyle='#f5f5f5';ctx.fillRect(0,0,W,H);
+  const p=ease((t-7.8)/1);const x=1280-1280*p;
+  cover(imgs.ui1,x,0,1280,720,1.02,.58,.5);
+  ctx.fillStyle='rgba(8,8,8,.82)';ctx.fillRect(0,0,430,H);
+  text('STEP 01',58,152,20,'900',Y);text('場所と時間を',58,227,52,'900',WHITE);text('地図で選ぶ。',58,293,52,'900',WHITE);
+  text('ホテル、住所、現在地。',60,352,23,'600','#dddddd');text('届けてほしい場所を、そのまま指定。',60,390,23,'600','#dddddd');
+  roundRect(58,460,280,54,27,Y);text('MAP BASED BOOKING',198,495,16,'900',BLACK,'center','Arial');ctx.globalAlpha=1;
+}
+function sceneCars(t){
+  const a=alpha(t,12.6,17.9);ctx.globalAlpha=a;ctx.fillStyle=WHITE;ctx.fillRect(0,0,W,H);
+  const z=1+.06*smooth((t-12.6)/5.3);cover(imgs.ui2,0,0,W,H,z,.7,.48);
+  const grad=ctx.createLinearGradient(0,0,700,0);grad.addColorStop(0,'rgba(0,0,0,.94)');grad.addColorStop(.7,'rgba(0,0,0,.65)');grad.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=grad;ctx.fillRect(0,0,760,H);
+  text('STEP 02',64,152,20,'900',Y);text('その場所へ届く',64,228,50,'900',WHITE);text('クルマだけを表示。',64,294,50,'900',WHITE);
+  text('在庫・価格・車種を、ひとつの画面で。',66,359,24,'700','#e7e7e7');
+  const py=436+10*Math.sin((t-12.6)*2);roundRect(64,py,196,56,28,Y);text('SELECT YOUR CAR',162,py+36,16,'900',BLACK,'center','Arial');ctx.globalAlpha=1;
+}
+function sceneConfirm(t){
+  const a=alpha(t,17.3,21.8);ctx.globalAlpha=a;ctx.fillStyle='#f7f7f7';ctx.fillRect(0,0,W,H);
+  const p=ease((t-17.3)/.9);ctx.save();ctx.translate(640,360);ctx.scale(.82+.18*p,.82+.18*p);ctx.translate(-640,-360);cover(imgs.ui3,0,0,W,H,1,.5,.38);ctx.restore();
+  ctx.fillStyle='rgba(0,0,0,.76)';ctx.fillRect(0,0,W,128);text('受け取りも。返却も。もっとスマートに。',640,79,38,'900',WHITE,'center');
+  ctx.fillStyle=Y;ctx.fillRect(0,128,W*ease((t-18)/1.4),5);ctx.globalAlpha=1;
+}
+function sceneFreedom(t){
+  const a=alpha(t,21.2,25.8);ctx.globalAlpha=a;const u=smooth((t-21.2)/4.6);cover(imgs.hero5,0,0,W,H,1+.045*u,.58,.5);shade(.35);
+  ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,670,H);
+  trackingText('ANYTIME.',72,245,61,2,WHITE,'900');trackingText('ANYWHERE.',72,322,61,2,WHITE,'900');trackingText('YOUR CAR.',72,399,61,2,Y,'900');
+  text('必要なときに、必要な場所へ。',77,463,27,'700',WHITE);ctx.globalAlpha=1;
+}
+function sceneEnd(t){
+  const a=alpha(t,25.2,30,.7);ctx.globalAlpha=a;ctx.fillStyle=WHITE;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=BLACK;ctx.fillRect(0,0,W,14);ctx.fillStyle=Y;ctx.fillRect(0,H-14,W,14);
+  const p=ease((t-25.3)/.9);const lw=656*.72,lh=89*.72;ctx.drawImage(imgs.logo,(W-lw)/2,138+(1-p)*30,lw,lh);
+  text('CAR DELIVERY PLATFORM',640,295,24,'900',BLACK,'center','Arial');
+  text('日本では、まだ珍しい。',640,372,34,'700','#666','center');text('新しい移動のスタンダード。',640,424,42,'900',BLACK,'center');
+  roundRect(430,488,420,64,32,Y);text('移動を、もっと自由に。',640,531,23,'900',BLACK,'center');
+  text('SAPPORO  /  JAPAN',640,611,15,'800','#777','center','Arial');ctx.globalAlpha=1;
+}
+function renderAt(t){
+  ctx.clearRect(0,0,W,H);ctx.globalAlpha=1;ctx.fillStyle=BLACK;ctx.fillRect(0,0,W,H);
+  sceneIntro(t);sceneDelivery(t);sceneMap(t);sceneCars(t);sceneConfirm(t);sceneFreedom(t);sceneEnd(t);
+  ctx.globalAlpha=1;
+}
+window.ready=load().then(()=>renderAt(0));window.renderAt=renderAt;
+</script>
+</body>
+</html>

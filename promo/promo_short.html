@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+const Q=new URLSearchParams(location.search),cast=Q.get('cast')||'japanese';
+const W=1080,H=1920,Y='#fabe00',WHITE='#fff',BLACK='#111';
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+const base=cast==='western'?'assets/western/':'assets/generated/';
+const src=cast==='western'?{
+  phone:base+'03_phone.png',arrival:base+'02_arrival.png',handover:base+'01_handover.png',drive:base+'04_drive.png'
+}:{
+  phone:base+'04_phone_map.png',arrival:base+'01_hotel_arrival.png',handover:base+'02_key_handover.png',drive:base+'03_city_drive.png'
+};
+Object.assign(src,{logo:'../images/logo_header.png',m1:'assets/mobile_map.png',m2:'assets/mobile_cars.png',m3:'assets/mobile_confirm.png'});
+const im={};
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const ease=x=>{x=clamp(x);return 1-Math.pow(1-x,3)};
+const smooth=x=>{x=clamp(x);return x*x*(3-2*x)};
+const alpha=(t,a,b,f=.45)=>clamp((t-a)/f)*clamp((b-t)/f);
+function load(){return Promise.all(Object.entries(src).map(([k,s])=>new Promise((ok,fail)=>{const x=new Image;x.onload=()=>{im[k]=x;ok()};x.onerror=fail;x.src=s})));}
+function cover(x,dx,dy,dw,dh,z=1,ox=.5,oy=.5){const r=Math.max(dw/x.width,dh/x.height)*z,sw=dw/r,sh=dh/r;ctx.drawImage(x,(x.width-sw)*ox,(x.height-sh)*oy,sw,sh,dx,dy,dw,dh)}
+function rr(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke()}}
+function txt(s,x,y,n,w='800',col=WHITE,align='left',fam='-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif'){ctx.save();ctx.font=`${w} ${n}px ${fam}`;ctx.fillStyle=col;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.fillText(s,x,y);ctx.restore()}
+function shade(a=.5){ctx.fillStyle=`rgba(0,0,0,${a})`;ctx.fillRect(0,0,W,H)}
+function topGrad(){const g=ctx.createLinearGradient(0,0,0,900);g.addColorStop(0,'rgba(0,0,0,.88)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,950)}
+function sceneIntro(t){let a=alpha(t,0,3.6);ctx.globalAlpha=a;ctx.fillStyle=BLACK;ctx.fillRect(0,0,W,H);ctx.fillStyle=Y;ctx.fillRect(0,0,W*ease(t/1.1),16);txt('クルマを借りるために、',72,700,48,'700','#bbb');txt('移動する。',72,825,100,'900');ctx.globalAlpha=a*ease((t-1.2)/.8);txt('その常識を、終わらせる。',75,920,38,'800',Y);ctx.globalAlpha=1}
+function scenePhone(t){let a=alpha(t,3,7.8),p=smooth((t-3)/4.8);ctx.globalAlpha=a;cover(im.phone,-60*p,0,W+120,H,1.04+.05*p,.55,.5);topGrad();txt('01',70,190,30,'900',Y);txt('場所を選ぶ。',70,290,76,'900');txt('ホテルでも、街でも。',74,365,37,'700');txt('地図で指定した、その場所へ。',74,420,32,'600','#ddd');ctx.fillStyle=Y;ctx.fillRect(74,470,230*ease((t-3.5)/.8),9);ctx.globalAlpha=1}
+function sceneArrival(t){let a=alpha(t,7.1,12.2),p=smooth((t-7.1)/5.1);ctx.globalAlpha=a;cover(im.arrival,0,0,W,H,1.08+.03*p,.59,.5);topGrad();txt('YOUR CAR.',70,260,76,'900',WHITE,'left','Arial');txt('IS COMING.',70,350,76,'900',Y,'left','Arial');txt('クルマが、あなたのもとへ。',72,425,34,'800');ctx.globalAlpha=1}
+function sceneHandover(t){let a=alpha(t,11.5,16.5),p=smooth((t-11.5)/5);ctx.globalAlpha=a;cover(im.handover,-30*p,0,W+60,H,1.08+.03*p,.76,.48);topGrad();txt('02',70,190,30,'900',Y);txt('鍵を受け取る。',70,290,72,'900');txt('店舗へ行かない。',74,365,37,'700');txt('待ち時間も、移動もいらない。',74,420,32,'600','#ddd');ctx.globalAlpha=1}
+function sceneDrive(t){let a=alpha(t,15.8,21.2),p=smooth((t-15.8)/5.4);ctx.globalAlpha=a;cover(im.drive,-45*p,0,W+90,H,1.08+.04*p,.6,.5);topGrad();txt('RENT SMART.',65,270,70,'900',WHITE,'left','Arial');txt('DRIVE FREE.',65,355,70,'900',Y,'left','Arial');txt('届いた瞬間から、旅が始まる。',69,430,34,'800');ctx.globalAlpha=1}
+function sceneMobile(t){let a=alpha(t,20.5,25.6);ctx.globalAlpha=a;ctx.fillStyle='#101010';ctx.fillRect(0,0,W,H);txt('スマホで、すべて完結。',60,135,54,'900');txt('場所指定から予約確認まで。',63,192,31,'800',Y);const cards=[{x:52,im:im.m1,d:20.55,l:'01 場所指定'},{x:379,im:im.m2,d:20.95,l:'02 車両選択'},{x:706,im:im.m3,d:21.35,l:'03 内容確認'}];for(const q of cards){let p=ease((t-q.d)/.65),y=310+90*(1-p),w=292,h=1320;ctx.save();ctx.globalAlpha=a*p;ctx.shadowColor='#000';ctx.shadowBlur=35;rr(q.x,y,w,h,30,'#fff');ctx.shadowBlur=0;ctx.beginPath();ctx.roundRect(q.x,y,w,h,30);ctx.clip();cover(q.im,q.x,y,w,h,1,.5,.1);ctx.restore();ctx.save();ctx.globalAlpha=a*p;rr(q.x+10,y+15,w-20,58,29,'rgba(17,17,17,.92)');txt(q.l,q.x+w/2,y+55,22,'900',WHITE,'center');ctx.restore()}ctx.globalAlpha=1}
+function sceneEnd(t){let a=alpha(t,24.9,30,.7);ctx.globalAlpha=a;ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle=BLACK;ctx.fillRect(0,0,W,20);ctx.fillStyle=Y;ctx.fillRect(0,H-20,W,20);let p=ease((t-25.3)/.9),lw=780,lh=106;ctx.drawImage(im.logo,(W-lw)/2,430+50*(1-p),lw,lh);txt('CAR DELIVERY PLATFORM',W/2,650,32,'900',BLACK,'center','Arial');txt('スマートに借りて、',W/2,860,66,'900',BLACK,'center');txt('自由に走ろう',W/2,950,66,'900',BLACK,'center');rr(245,1080,590,90,45,Y);txt('移動を、もっと自由に。',W/2,1140,31,'900',BLACK,'center');txt('SAPPORO  /  JAPAN',W/2,1300,22,'800','#777','center','Arial');ctx.globalAlpha=1}
+function renderAt(t){ctx.clearRect(0,0,W,H);ctx.fillStyle=BLACK;ctx.fillRect(0,0,W,H);sceneIntro(t);scenePhone(t);sceneArrival(t);sceneHandover(t);sceneDrive(t);sceneMobile(t);sceneEnd(t);ctx.globalAlpha=1}
+window.ready=load().then(()=>renderAt(0));window.renderAt=renderAt;
+</script></body></html>
