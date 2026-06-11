@@ -908,6 +908,9 @@
         naha:    { label: '沖縄（那覇）', api: 'nha', geo: '沖縄 那覇', center: '那覇空港', bbox: [127.40, 25.95, 128.05, 26.60] },
     };
     let KD_STORE = ((new URLSearchParams(location.search).get('area') || '').toLowerCase() === 'naha') ? 'naha' : 'sapporo';
+    // 起動高速化フラグ：エリア未選択（ゲート表示）のときは予約アプリの重い初期化を行わない。
+    //   area/mypage/paid のいずれかがあれば「アプリ文脈」=初期化する。無ければゲートのみ（軽い）。
+    window.__kdAppCtx = (function () { const q = new URLSearchParams(location.search); return !!(q.get('area') || q.get('mypage') || q.get('paid')); })();
     function KD_API_STORE() { return KD_AREAS[KD_STORE].api; }          // 'spk' | 'nha'（Edge Functionへ）
     function KD_GEO_HINT() { return KD_AREAS[KD_STORE].geo; }            // ジオコーディングの地域ヒント
     function KD_BBOX() { return KD_AREAS[KD_STORE].bbox; }               // 検索範囲 [minLon,minLat,maxLon,maxLat]
@@ -956,7 +959,7 @@
     window.kdBackToAreaSelect = kdBackToAreaSelect;
     function kdShowAreaGate() {
         const qs = new URLSearchParams(location.search);
-        if (qs.get('area')) return;
+        if (window.__kdAppCtx) return; // area/mypage/paid あり＝アプリ文脈→ゲート不要
         if (!document.body || document.getElementById('kd-area-gate')) return;
         // ※ 再訪スキップ（30日）は当面 無効化＝素のkeydrop.jpでは常にエリア選択画面を表示する。
         //   将来 有効化する場合は ?remember=1 のときのみ自動遷移するなど条件を限定する。
@@ -4596,9 +4599,13 @@
             }
         } catch (e) { /* noop */ }
     })();
-    render();
-    resetHeroTimer();
-    loadGooglePlaces(); // 検索用Google Placesを非同期ロード（失敗時はNominatim）
+    // エリア未選択（ゲート表示中）は予約アプリの重い初期化を行わない＝立ち上がり高速化。
+    // エリア選択後は ?area= 付きで再読込されるので、その時に初期化される。
+    if (window.__kdAppCtx) {
+        render();
+        resetHeroTimer();
+        loadGooglePlaces(); // 検索用Google Placesを非同期ロード（失敗時はNominatim）
+    }
     </script>
 </body>
 </html>
