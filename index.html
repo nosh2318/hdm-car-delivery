@@ -2657,6 +2657,22 @@
     // ════════════════════════════════════════════
     // ── Complete Screen ──
     // ════════════════════════════════════════════
+    // 予約確定画面 → 自分のマイページへ直接移動（予約番号＋メールで自動ログイン）
+    function goToMypageDirect() {
+        const id = state._lastResId, mail = state._lastMail;
+        state.screen = 'mypage';
+        if (id && mail) {
+            mypageState.email = mail;
+            try { localStorage.setItem('hdm_mypage_email', mail); } catch (e) {}
+            mypageState._autoLookup = { id: id, mail: mail };
+            mypageState.view = 'lookup';
+            render();
+            setTimeout(() => { if (mypageState._autoLookup && mypageState.view !== 'detail') lookupMypage(); }, 300);
+        } else {
+            mypageState.view = 'lookup';
+            render();
+        }
+    }
     function renderCompleteScreen() {
         const v = state.selectedVehicle;
         const cls = VEHICLE_CLASSES[v?.type] || {};
@@ -2712,7 +2728,7 @@
                     </div>
                 </div>
 
-                <button class="btn-primary" onclick="state.screen='mypage'; mypageState.view='lookup'; render();">${t('checkMypage')}</button>
+                <button class="btn-primary" onclick="goToMypageDirect();">📱 マイページに移動する</button>
                 <button class="btn-secondary" onclick="resetAndGoTop();">${t('goTop')}</button>
             </div>
         `;
@@ -3011,6 +3027,7 @@
                 reEnable(); return;
             }
             state._lastResId = data.reservationId;
+            state._lastMail = (state.formData && state.formData.email) || '';
             saveReservationToLocal(data.reservationId);
             state.screen = 'complete';
             render();
@@ -3310,14 +3327,6 @@
                 </button>
                 <div style="font-size:11px;color:#999;margin-top:8px;line-height:1.6;text-align:center;">ご予約時にお送りした予約番号（KD-…）とメールアドレスでご確認いただけます</div>
                 <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;padding:11px;background:#06c755;color:#fff;border-radius:10px;font-size:13px;font-weight:800;text-decoration:none;">💬 予約番号がわからない場合は公式LINEへ</a>
-            </div>
-
-            <div style="background:#f0f7ff;border-radius:12px;padding:16px;margin-top:16px;">
-                <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;">デモ用テストアカウント</div>
-                <div style="font-size:12px;color:#666;margin-bottom:8px;line-height:1.6;">全ステータスのデモを確認できます</div>
-                <button style="width:100%;padding:10px;background:white;border:1.5px solid #1a1a1a;border-radius:8px;font-size:13px;font-weight:700;color:#1a1a1a;cursor:pointer;font-family:inherit;" onclick="document.getElementById('mypageEmail').value='test@hdm-demo.com';document.getElementById('mypageResId').value='DEMO';lookupMypage();">
-                    test@hdm-demo.com でログイン
-                </button>
             </div>
 
             <div style="text-align:center;margin-top:20px;">
