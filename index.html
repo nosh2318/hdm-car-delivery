@@ -1733,17 +1733,9 @@
         var g = guideText(); b.innerHTML = g.msg; b.classList.toggle('dark', g.dark);
     }
     function mountCornerMascot() {
+        // コーナーマスコットは廃止（確定/マイページ画面でコンテンツに被るため）
         var ex = document.getElementById('kdCorner'); if (ex) ex.remove();
-        var msg = null;
-        if (state.screen === 'complete') msg = 'ご予約ありがとう！<br><b>当日お届けに伺います🔑</b>';
-        else if (state.screen === 'mypage') msg = '<b>KEYDROP</b>がサポートします！';
-        if (!msg) return;
-        var c = document.createElement('div');
-        c.id = 'kdCorner'; c.className = 'kd-mascot-corner';
-        c.innerHTML = '<div class="kd-bubble">' + msg + '</div><img src="images/mascot.png" alt="KEYDROP">';
-        document.body.appendChild(c);
-        var img = c.querySelector('img');
-        img.onclick = function(){ img.style.animation = 'kdBounce .7s ease'; setTimeout(function(){ img.style.animation = 'kdFloat 3.4s ease-in-out infinite'; }, 700); };
+        return;
     }
 
     // ════════════════════════════════════════════
