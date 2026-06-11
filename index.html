@@ -953,7 +953,11 @@
             .kdg-h1{font-size:40px;font-weight:900;letter-spacing:.005em;line-height:1.02;margin:0;text-shadow:0 3px 16px rgba(0,0,0,.55);}
             .kdg-h1 .y{color:#FABE00;}
             .kdg-sub{font-size:13.5px;color:#e2e8f0;line-height:1.85;margin:18px 0 0;text-shadow:0 1px 6px rgba(0,0,0,.6);}
-            .kdg-hint{font-size:12.5px;color:#7dd3fc;margin-top:16px;min-height:18px;font-weight:800;letter-spacing:.03em;}
+            .kdg-cta{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:14px 30px;background:#FABE00;color:#111827;border:none;border-radius:999px;font-size:15px;font-weight:900;letter-spacing:.02em;cursor:pointer;box-shadow:0 10px 26px rgba(250,190,0,.38);transition:transform .15s,box-shadow .15s;animation:kdgCtaPulse 2.4s ease-in-out infinite;}
+            .kdg-cta:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(250,190,0,.5);}
+            .kdg-cta:active{transform:translateY(1px);}
+            @keyframes kdgCtaPulse{0%,100%{box-shadow:0 10px 26px rgba(250,190,0,.38);}50%{box-shadow:0 10px 34px rgba(250,190,0,.62);}}
+            .kdg-hint{font-size:12.5px;color:#7dd3fc;margin-top:14px;min-height:18px;font-weight:800;letter-spacing:.03em;}
             .kdg-right{flex:1 1 320px;display:flex;justify-content:center;}
             .kdg-map{position:relative;width:min(440px,90vw);aspect-ratio:3/4;transform:perspective(1100px) rotateX(10deg);}
             .kdg-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
@@ -1016,6 +1020,7 @@
             + '  <div class="kdg-tag">CAR DELIVERY SERVICE</div>'
             + '  <h1 class="kdg-h1">DROP A KEY.<br><span class="y">GET A CAR.</span></h1>'
             + '  <div class="kdg-sub">日本全国どこでも、あなたのもとへクルマを届ける。<br>地図の光るエリアに<b style="color:#FABE00">鍵を落として</b>サービスを起動。</div>'
+            + '  <button class="kdg-cta" id="kdg-cta">🔑 サービスを起動する</button>'
             + '  <div class="kdg-hint" id="kdg-hint">▶ 提供エリア（札幌・沖縄）を選択してください</div>'
             + '</div>'
             + '<div class="kdg-right"><div class="kdg-map" id="kdg-map">'
@@ -1058,6 +1063,12 @@
             map.appendChild(pin);
         });
 
+        g.querySelector('#kdg-cta').onclick = function () {
+            if (busy) return;
+            hint.textContent = '地図の光るエリア（札幌・沖縄）を選んでください';
+            map.querySelectorAll('.kdg-pin.active').forEach(function (p) { p.classList.remove('lit'); void p.offsetWidth; p.classList.add('lit'); });
+            if (window.innerWidth <= 760) map.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
         g.querySelector('#kdg-skip').onclick = function () {
             timers.forEach(clearTimeout);
             let last = null; try { const r = localStorage.getItem('kd_selectedArea'); if (r) last = (JSON.parse(r) || {}).area; } catch (e) {}
