@@ -960,29 +960,45 @@
             document.head.appendChild(st);
         }
         // クリック可能エリア＝札幌・沖縄のみ（画像内のピン位置に透明ホットスポットを重ねる。%はhero_area.jpg基準）
-        const HOT = [
-            { id: 'sapporo', label: '札幌', x: 72.8, y: 8.0 },
-            { id: 'naha',    label: '那覇', x: 24.5, y: 63.0 },
-        ];
+        // PC(横長)/スマホ(縦長)で画像も構図も違う→画像ごとにクリック領域(%)を切替。
+        // 画像が未配置の間は現行 hero_area.jpg に自動フォールバック（壊れない）。
+        const isSP = window.matchMedia('(max-width:768px)').matches;
+        const KD_HERO = { pc: 'images/hero_pc.jpg?v=1', sp: 'images/hero_sp.jpg?v=1', fb: 'images/hero_area.jpg?v=2' };
+        const HOT_SETS = {
+            // PC(横長 hero_pc.jpg / 暫定はhero_area.jpgに一致)
+            pc: [ { id: 'sapporo', label: '札幌', x: 72.8, y: 8.0 }, { id: 'naha', label: '那覇', x: 24.5, y: 63.0 } ],
+            // スマホ(縦長 hero_sp.jpg) ※仮値。実画像配置後に正確に再調整
+            sp: [ { id: 'sapporo', label: '札幌', x: 60, y: 17 }, { id: 'naha', label: '那覇', x: 33, y: 75 } ],
+        };
+        const HOT = isSP ? HOT_SETS.sp : HOT_SETS.pc;
         const g = document.createElement('div');
         g.id = 'kd-area-gate';
         g.innerHTML = '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
-            + '<div class="kdg-stage" id="kdg-stage"><img class="kdg-hero" src="images/hero_area.jpg?v=2" alt="KEYDROP — ご利用エリアを選択（札幌・沖縄）"></div>';
+            + '<div class="kdg-stage" id="kdg-stage"><img class="kdg-hero" id="kdg-hero" src="' + (isSP ? KD_HERO.sp : KD_HERO.pc) + '" alt="KEYDROP — ご利用エリアを選択（札幌・那覇）"></div>';
         document.body.appendChild(g);
+        // 新画像が未配置(404)なら現行画像にフォールバックし、その画像用のPC座標に合わせ直す
+        (function () {
+            const im = g.querySelector('#kdg-hero');
+            im.onerror = function () { im.onerror = null; im.src = KD_HERO.fb; HOT.length = 0; HOT_SETS.pc.forEach(function (h) { HOT.push(h); }); rebuildHotspots && rebuildHotspots(); };
+        })();
         const stage = g.querySelector('#kdg-stage');
         let busy = false;
-        HOT.forEach(function (h) {
-            const b = document.createElement('button');
-            b.className = 'kdg-hot'; b.style.left = h.x + '%'; b.style.top = h.y + '%';
-            b.setAttribute('aria-label', h.label + 'を選択');
-            b.onclick = function () {
-                if (busy) return; busy = true;
-                const f = document.createElement('div'); f.className = 'kdg-flash'; f.style.left = h.x + '%'; f.style.top = h.y + '%'; stage.appendChild(f);
-                const go = document.createElement('div'); go.className = 'kdg-go'; go.style.top = (h.y - 9) + '%'; go.textContent = h.label + ' START'; stage.appendChild(go);
-                setTimeout(function () { kdPickArea(h.id); }, 700);
-            };
-            stage.appendChild(b);
-        });
+        function rebuildHotspots() {
+            stage.querySelectorAll('.kdg-hot').forEach(function (e) { e.remove(); });
+            HOT.forEach(function (h) {
+                const b = document.createElement('button');
+                b.className = 'kdg-hot'; b.style.left = h.x + '%'; b.style.top = h.y + '%';
+                b.setAttribute('aria-label', h.label + 'を選択');
+                b.onclick = function () {
+                    if (busy) return; busy = true;
+                    const f = document.createElement('div'); f.className = 'kdg-flash'; f.style.left = h.x + '%'; f.style.top = h.y + '%'; stage.appendChild(f);
+                    const go = document.createElement('div'); go.className = 'kdg-go'; go.style.top = (h.y - 9) + '%'; go.textContent = h.label + ' START'; stage.appendChild(go);
+                    setTimeout(function () { kdPickArea(h.id); }, 700);
+                };
+                stage.appendChild(b);
+            });
+        }
+        rebuildHotspots();
         g.querySelector('#kdg-skip').onclick = function () {
             let last = null; try { const r = localStorage.getItem('kd_selectedArea'); if (r) last = (JSON.parse(r) || {}).area; } catch (e) {}
             kdPickArea((last === 'sapporo' || last === 'naha') ? last : 'sapporo');
