@@ -833,15 +833,6 @@
                         <button class="menu-user-btn" onclick="closeMenu(); state.screen='mypage'; render();">予約を確認する（マイページ）</button>
                     </div>
                     <div class="menu-section">
-                        <div class="menu-section-title">エリア</div>
-                        <a class="menu-item" id="kd-area-sapporo" href="./">
-                            <span class="menu-item-icon">📍</span>札幌エリア<span class="menu-item-arrow">→</span>
-                        </a>
-                        <a class="menu-item" id="kd-area-naha" href="?area=naha">
-                            <span class="menu-item-icon">📍</span>沖縄（那覇）エリア<span class="menu-item-arrow">→</span>
-                        </a>
-                    </div>
-                    <div class="menu-section">
                         <div class="menu-section-title">サービス</div>
                         <a class="menu-item" href="guide.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">📖</span>ご利用方法<span class="menu-item-arrow">→</span>
@@ -912,20 +903,35 @@
     function KD_GEO_HINT() { return KD_AREAS[KD_STORE].geo; }            // ジオコーディングの地域ヒント
     function kdViewName(t) { return (KD_STORE === 'naha' && /^public_.*_v$/.test(t)) ? t.replace(/_v$/, '_nha_v') : t; }
 
-    // サイト内エリア選択：スライドメニュー内「エリア」セクションの現在エリアをハイライト（浮遊ピルは廃止＝ヘッダー☰と重ならない）。
-    function kdRenderAreaSwitcher() {
-        try {
-            const act = document.getElementById('kd-area-' + (KD_STORE === 'naha' ? 'naha' : 'sapporo'));
-            if (act) {
-                act.style.background = '#FABE00';
-                act.style.fontWeight = '800';
-                const ic = act.querySelector('.menu-item-icon');
-                if (ic) ic.textContent = '✅';
-            }
-        } catch (e) {}
+    // 入口エリア選択スプラッシュ：?area= が無いとき最初に「札幌/沖縄」を選ばせ、選んだエリアのURLへ遷移→該当エリアのマップが出る。
+    function kdPickArea(area) {
+        const sp = new URLSearchParams(location.search);
+        sp.set('area', area);
+        location.search = sp.toString(); // ?area=… を付けて再読込（該当エリアで初期化）
     }
-    if (document.readyState !== 'loading') kdRenderAreaSwitcher();
-    else document.addEventListener('DOMContentLoaded', kdRenderAreaSwitcher);
+    function kdShowAreaGate() {
+        if (new URLSearchParams(location.search).get('area')) return; // URLで指定済みならスキップ
+        if (document.getElementById('kd-area-gate') || !document.body) return;
+        const g = document.createElement('div');
+        g.id = 'kd-area-gate';
+        g.style.cssText = 'position:fixed;inset:0;z-index:100000;background:linear-gradient(160deg,#111827,#1f2937);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;';
+        g.innerHTML =
+            '<img src="images/logo_header.png?v=3" alt="KEYDROP" style="height:30px;width:auto;filter:brightness(0) invert(1)">' +
+            '<div style="color:#fff;font-size:16px;font-weight:800;letter-spacing:.02em">ご利用エリアを選択してください</div>' +
+            '<div style="color:#9ca3af;font-size:12px;margin-top:-12px">Car Delivery Service</div>' +
+            '<div id="kd-gate-btns" style="display:flex;flex-direction:column;gap:14px;width:100%;max-width:340px;margin-top:6px"></div>';
+        const wrap = g.querySelector('#kd-gate-btns');
+        [['sapporo', '札幌', '北海道・札幌市エリア'], ['naha', '沖縄（那覇）', '沖縄本島・那覇エリア']].forEach(function (a) {
+            const b = document.createElement('button');
+            b.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;padding:18px 20px;border:2px solid #FABE00;border-radius:16px;background:#fff;color:#111827;font-size:17px;font-weight:900;cursor:pointer;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25);';
+            b.innerHTML = '<span style="font-size:22px">📍</span><span>' + a[1] + '<br><span style="font-size:11px;font-weight:600;color:#6b7280">' + a[2] + '</span></span>';
+            b.onclick = function () { kdPickArea(a[0]); };
+            wrap.appendChild(b);
+        });
+        document.body.appendChild(g);
+    }
+    if (document.readyState !== 'loading') kdShowAreaGate();
+    else document.addEventListener('DOMContentLoaded', kdShowAreaGate);
 
     async function supabaseGet(table, query = '') {
         const url = `${SUPABASE_URL}/rest/v1/${kdViewName(table)}?${query}&select=*`;
