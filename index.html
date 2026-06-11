@@ -900,12 +900,14 @@
     // ── KEYDROP エリア（店舗）: ?area=naha でNHA、既定=札幌(後方互換) ──
     // 顧客LP1サイトで2地域。公開ビューは店舗別(_v=札幌 / _nha_v=那覇)、予約/マイページはEdge Functionにstore('spk'|'nha')を渡す。
     const KD_AREAS = {
-        sapporo: { label: '札幌', api: 'spk', geo: '札幌', center: '札幌駅' },
-        naha:    { label: '沖縄（那覇）', api: 'nha', geo: '沖縄 那覇', center: '那覇空港' },
+        // bbox=検索を絞る地域範囲 [minLon,minLat,maxLon,maxLat]（他地域＝那覇/東京等を結果に出さない）
+        sapporo: { label: '札幌', api: 'spk', geo: '札幌', center: '札幌駅', bbox: [140.85, 42.65, 141.85, 43.45] },
+        naha:    { label: '沖縄（那覇）', api: 'nha', geo: '沖縄 那覇', center: '那覇空港', bbox: [127.40, 25.95, 128.05, 26.60] },
     };
     let KD_STORE = ((new URLSearchParams(location.search).get('area') || '').toLowerCase() === 'naha') ? 'naha' : 'sapporo';
     function KD_API_STORE() { return KD_AREAS[KD_STORE].api; }          // 'spk' | 'nha'（Edge Functionへ）
     function KD_GEO_HINT() { return KD_AREAS[KD_STORE].geo; }            // ジオコーディングの地域ヒント
+    function KD_BBOX() { return KD_AREAS[KD_STORE].bbox; }               // 検索範囲 [minLon,minLat,maxLon,maxLat]
     function kdViewName(t) { return (KD_STORE === 'naha' && /^public_.*_v$/.test(t)) ? t.replace(/_v$/, '_nha_v') : t; }
 
     // ═══════════════════════════════════════════════════════════
@@ -2893,10 +2895,12 @@
     function gSearch(query) {
         const box = document.getElementById('addressSuggestions');
         if (!box || !gAuto) { photonSearch(query); return; }
+        const _bb = KD_BBOX();
         gAuto.getPlacePredictions({
             input: query, sessionToken: gToken, language: 'ja',
             componentRestrictions: { country: 'jp' },
-            location: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG), radius: 40000,
+            bounds: new google.maps.LatLngBounds({ lat: _bb[1], lng: _bb[0] }, { lat: _bb[3], lng: _bb[2] }),
+            strictBounds: true, // 選択エリア外（那覇/東京等）は候補に出さない
         }, function (preds, status) {
             if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { photonSearch(query); return; }
             _markEngine('google');
@@ -2944,7 +2948,8 @@
         const box=document.getElementById('addressSuggestions');
         if(!box)return;
         try{
-            const res=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(query)+'&lat='+DEFAULT_LAT+'&lon='+DEFAULT_LNG+'&limit=8');
+            const _bb=KD_BBOX();
+            const res=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(query)+'&lat='+DEFAULT_LAT+'&lon='+DEFAULT_LNG+'&bbox='+_bb.join(',')+'&limit=8');
             const d=await res.json();
             const feats=((d&&d.features)||[]).filter(f=>{const p=(f&&f.properties)||{};return (!p.countrycode||p.countrycode==='JP')&&f.geometry&&f.geometry.coordinates;});
             if(!feats.length){gsiSearch(query);return;}
@@ -2966,7 +2971,11 @@
             const res = await fetch('https://msearch.gsi.go.jp/address-search/AddressSearch?q=' + encodeURIComponent(query));
             const arr = await res.json();
             if (!Array.isArray(arr) || !arr.length) { nominatimSearch(query); return; }
-            const html = arr.slice(0, 6).map(r => {
+            // GSIは全国対象→選択エリアのbbox内の結果だけに絞る（札幌で那覇/東京等を出さない）
+            const _bb = KD_BBOX();
+            const inArea = arr.filter(r => { const c = r.geometry && r.geometry.coordinates; return c && c[0] >= _bb[0] && c[0] <= _bb[2] && c[1] >= _bb[1] && c[1] <= _bb[3]; });
+            if (!inArea.length) { nominatimSearch(query); return; }
+            const html = inArea.slice(0, 6).map(r => {
                 const c = r.geometry && r.geometry.coordinates; // [lng, lat]
                 const title = (r.properties && r.properties.title) || '';
                 if (!c || !title) return '';
@@ -2984,7 +2993,8 @@
         const box = document.getElementById('addressSuggestions');
         if (!box) return;
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' ' + KD_GEO_HINT())}&format=json&limit=5&accept-language=ja&countrycodes=jp`);
+            const _bb = KD_BBOX(); // viewbox=left,top,right,bottom = minLon,maxLat,maxLon,minLat
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' ' + KD_GEO_HINT())}&format=json&limit=5&accept-language=ja&countrycodes=jp&bounded=1&viewbox=${_bb[0]},${_bb[3]},${_bb[2]},${_bb[1]}`);
             const results = await res.json();
             if (!results.length) {
                 box.innerHTML = '<div style="padding:10px;font-size:12px;color:#999;">該当する住所が見つかりません</div>';
