@@ -927,18 +927,9 @@
         const qs = new URLSearchParams(location.search);
         if (qs.get('area')) return;
         if (!document.body || document.getElementById('kd-area-gate')) return;
-        // 再訪（30日以内）：保存済みエリアへ自動遷移。?pick=1 で無視して再表示。
-        if (qs.get('pick') !== '1') {
-            try {
-                const raw = localStorage.getItem('kd_selectedArea');
-                if (raw) {
-                    const o = JSON.parse(raw);
-                    if (o && (o.area === 'sapporo' || o.area === 'naha') && (Date.now() - (o.ts || 0) < KD_AREA_30D)) {
-                        location.replace(location.pathname + '?area=' + o.area); return;
-                    }
-                }
-            } catch (e) {}
-        }
+        // ※ 再訪スキップ（30日）は当面 無効化＝素のkeydrop.jpでは常にエリア選択画面を表示する。
+        //   将来 有効化する場合は ?remember=1 のときのみ自動遷移するなど条件を限定する。
+        // （旧：保存済みエリアがあれば location.replace(?area=) でスキップ → 選択画面が出ない問題のため停止）
         if (!document.getElementById('kd-gate-style')) {
             const st = document.createElement('style'); st.id = 'kd-gate-style';
             st.textContent = `
@@ -965,7 +956,7 @@
         const g = document.createElement('div');
         g.id = 'kd-area-gate';
         g.innerHTML = '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
-            + '<div class="kdg-stage" id="kdg-stage"><img class="kdg-hero" src="images/hero_area.jpg" alt="KEYDROP — ご利用エリアを選択（札幌・沖縄）"></div>';
+            + '<div class="kdg-stage" id="kdg-stage"><img class="kdg-hero" src="images/hero_area.jpg?v=2" alt="KEYDROP — ご利用エリアを選択（札幌・沖縄）"></div>';
         document.body.appendChild(g);
         const stage = g.querySelector('#kdg-stage');
         let busy = false;
