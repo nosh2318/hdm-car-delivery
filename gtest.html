@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><title>gtest</title></head><body><div id="result">loading...</div>
+<script>
+var K='AIzaSyCoX1EyEx-N5A0r4vRzC1KmVp3T29HILbI';
+function out(s){document.getElementById('result').textContent=s;}
+window.gm_authFailure=function(){out('RESULT: GM_AUTH_ERROR');};
+window.gmapsReady=function(){try{var svc=new google.maps.places.AutocompleteService();svc.getPlacePredictions({input:'ベッセル',componentRestrictions:{country:'jp'},language:'ja',location:new google.maps.LatLng(43.0687,141.3508),radius:40000},function(p,st){out('RESULT: status='+st+' | top='+((p&&p[0]&&p[0].description)||'(none)'));});}catch(e){out('RESULT: EX '+e.message);}};
+var s=document.createElement('script');s.src='https://maps.googleapis.com/maps/api/js?key='+K+'&libraries=places&language=ja&callback=gmapsReady';s.onerror=function(){out('RESULT: SCRIPT_ERR');};document.head.appendChild(s);
+setTimeout(function(){if(document.getElementById('result').textContent==='loading...')out('RESULT: TIMEOUT');},8000);
+</script></body></html>
