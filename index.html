@@ -3626,16 +3626,45 @@
     }
     function mpEditPickPlace(which) { mpEdit.mapMode = which; renderMpEdit(); }
     function mpEditBackToForm() { mpEdit.mapMode = null; renderMpEdit(); }
-    // 変更モーダルの地図内検索（ホテル名・住所。Photon＝無料・施設名/部分入力に強い）
+    // 変更モーダルの地図内検索：予約時と同じくGoogle優先（日本語）→Photon(lang=default=日本語名)フォールバック
     let _mpEditSearchTimer = null;
     function mpEditSearch(q) {
         clearTimeout(_mpEditSearchTimer);
         const box = document.getElementById('mpEditSuggest');
         if (!box) return;
         if (!q || q.length < 2) { box.style.display = 'none'; return; }
-        _mpEditSearchTimer = setTimeout(async () => {
+        _mpEditSearchTimer = setTimeout(() => {
+            if (typeof gReady !== 'undefined' && gReady && gAuto) {
+                try {
+                    gAuto.getPlacePredictions({ input: q, sessionToken: gToken, language: 'ja', componentRestrictions: { country: 'jp' }, location: new google.maps.LatLng(43.0687, 141.3508), radius: 40000 }, function (preds, status) {
+                        if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { mpEditPhotonSearch(q); return; }
+                        box.innerHTML = preds.slice(0, 6).map(function (p) {
+                            return '<div style="padding:9px 11px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'#fff\'" onclick="mpEditPickGoogle(\'' + p.place_id + '\')">📍 ' + p.description + '</div>';
+                        }).join('');
+                        box.style.display = 'block';
+                    });
+                    return;
+                } catch (e) { /* fall through */ }
+            }
+            mpEditPhotonSearch(q);
+        }, 400);
+    }
+    function mpEditPickGoogle(placeId) {
+        if (!gPlaces) return;
+        gPlaces.getDetails({ placeId: placeId, fields: ['geometry', 'name', 'formatted_address'], sessionToken: gToken, language: 'ja' }, function (place, status) {
+            try { gToken = new google.maps.places.AutocompleteSessionToken(); } catch (e) {}
+            if (status !== google.maps.places.PlacesServiceStatus.OK || !place || !place.geometry) return;
+            const lat = place.geometry.location.lat(), lng = place.geometry.location.lng();
+            let addr = (place.formatted_address || '').replace(/^日本[、,]\s*/, '').replace(/〒?\s*\d{3}-?\d{4}\s*/, '').trim();
+            const name = place.name ? (place.name + (addr ? ' ' + addr : '')) : addr;
+            mpEditPickResult(lat, lng, name);
+        });
+    }
+    function mpEditPhotonSearch(q) {
+        const box = document.getElementById('mpEditSuggest'); if (!box) return;
+        (async () => {
             try {
-                const res = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lat=43.0687&lon=141.3508&limit=7');
+                const res = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lang=default&lat=43.0687&lon=141.3508&limit=7');
                 const d = await res.json();
                 const feats = ((d && d.features) || []).filter(f => { const p = (f && f.properties) || {}; return (!p.countrycode || p.countrycode === 'JP') && f.geometry && f.geometry.coordinates; });
                 if (!feats.length) { box.innerHTML = '<div style="padding:10px;font-size:12px;color:#999;">該当する場所が見つかりません</div>'; box.style.display = 'block'; return; }
@@ -3648,7 +3677,7 @@
                 }).join('');
                 box.style.display = 'block';
             } catch (e) { box.style.display = 'none'; }
-        }, 400);
+        })();
     }
     function mpEditPickResult(lat, lng, name) {
         const box = document.getElementById('mpEditSuggest'); if (box) box.style.display = 'none';
