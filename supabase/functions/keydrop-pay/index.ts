@@ -18,7 +18,7 @@ const SQUARE_TOKEN = Deno.env.get("SQUARE_ACCESS_TOKEN") || "";
 const SQUARE_LOCATION = Deno.env.get("SQUARE_LOCATION_ID") || "L8N7J9RKPN3WH";
 const SQUARE_API = "https://connect.squareup.com";
 
-const ALLOWED = ["https://nosh2318.github.io"];
+const ALLOWED = ["https://nosh2318.github.io", "https://keydrop.jp"];
 function cors(o: string | null) {
   const allow = o && ALLOWED.includes(o) ? o : ALLOWED[0];
   return { "Access-Control-Allow-Origin": allow, "Access-Control-Allow-Methods": "POST, OPTIONS",

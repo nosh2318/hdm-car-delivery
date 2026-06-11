@@ -31,7 +31,7 @@ const KEYDROP_RETURN_URL = Deno.env.get("KEYDROP_RETURN_URL") ||
 // 許可オリジン（KEYDROP公開元）。独自ドメイン取得時に追記。
 const ALLOWED = [
   "https://nosh2318.github.io",
-  // "https://keydrop.example.com",
+  "https://keydrop.jp", // 独自ドメイン
 ];
 function corsHeaders(origin: string | null) {
   const allow = origin && ALLOWED.includes(origin) ? origin : ALLOWED[0];
