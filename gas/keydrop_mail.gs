@@ -27,7 +27,7 @@ function _mypageLink_(n) {
   if (id && mail) return MYPAGE_URL + '&id=' + encodeURIComponent(id) + '&mail=' + encodeURIComponent(mail);
   return MYPAGE_URL;
 }
-var LINE_URL   = 'https://lin.ee/g6iDNYz';
+var LINE_URL   = 'https://lin.ee/ZxBknUv';
 var LINE_ID    = '@730kyhwl';
 var TEL        = '050-1724-6197';
 
