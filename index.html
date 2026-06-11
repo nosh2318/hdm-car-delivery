@@ -966,23 +966,34 @@
             .kdg-stage{position:relative;z-index:1;display:inline-block;line-height:0;max-width:100vw;max-height:100vh;}
             .kdg-hero{display:block;width:auto;height:auto;max-width:100vw;max-height:100vh;object-fit:contain;}
             .kdg-skip{position:fixed;top:14px;right:16px;z-index:6;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:800;letter-spacing:.1em;padding:7px 16px;border-radius:999px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
-            .kdg-hot{position:absolute;transform:translate(-50%,-50%);width:120px;height:120px;border:none;background:transparent;cursor:pointer;border-radius:50%;padding:0;z-index:4;}
-            .kdg-hot::after{content:"";position:absolute;inset:24px;border-radius:50%;box-shadow:0 0 28px 14px rgba(255,195,0,.7);animation:kdgPulse 1.6s infinite;}
+            .kdg-hot{position:absolute;transform:translate(-50%,-50%);border:none;background:transparent;cursor:pointer;border-radius:14px;padding:0;z-index:4;-webkit-tap-highlight-color:rgba(255,195,0,.25);transition:background .15s;}
+            .kdg-hot:hover{background:rgba(255,255,255,.10);}
+            .kdg-hot:active{background:rgba(255,195,0,.18);}
             .kdg-flash{position:absolute;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;border:3px solid #FABE00;pointer-events:none;z-index:5;animation:kdgRipple .65s ease-out forwards;}
             .kdg-go{position:absolute;transform:translate(-50%,-50%);font-size:14px;font-weight:900;color:#fff;letter-spacing:.18em;text-shadow:0 2px 12px rgba(0,0,0,.75);pointer-events:none;opacity:0;animation:kdgGo .6s ease-out forwards;z-index:5;white-space:nowrap;}
             @keyframes kdgPulse{0%{transform:scale(.8);opacity:.6;}70%{transform:scale(1.35);opacity:0;}100%{opacity:0;}}
             @keyframes kdgRipple{0%{width:10px;height:10px;opacity:1;}100%{width:130px;height:130px;opacity:0;}}
             @keyframes kdgGo{0%{opacity:0;transform:translate(-50%,-30%);}100%{opacity:1;transform:translate(-50%,-60%);}}
-            @media (max-width:768px){.kdg-hot{width:90px;height:90px;}.kdg-hot::after{inset:18px;}}
             `;
             document.head.appendChild(st);
         }
         // 表示は contain（画像全体を表示・切れない／黒帯はぼかし背景で埋める）。
         // 座標は「画像内の%」。PC/SPで画像が違えば座標も違う。SP画像未配置なら hero_pc.jpg にフォールバック。
         const isSP = window.matchMedia('(max-width:768px)').matches;
-        const KD_HERO = { pc: 'images/hero_pc.jpg?v=3', sp: 'images/hero_sp.jpg?v=3' };
-        const HOT_PC = [ { id: 'sapporo', label: '札幌', x: 75, y: 14 }, { id: 'naha', label: '那覇', x: 23.5, y: 83 } ]; // hero_pc.jpg(16:9 DROP YOUR KEY)基準
-        const HOT_SP = [ { id: 'sapporo', label: '札幌', x: 60, y: 32 }, { id: 'naha', label: '那覇', x: 16.5, y: 74 } ];   // hero_sp.jpg(縦長 DROP YOUR KEY)基準
+        const KD_HERO = { pc: 'images/hero_pc.jpg?v=4', sp: 'images/hero_sp.jpg?v=4' };
+        // クリック領域＝「エリア選択カード(札幌/那覇)」＋「マップのピン」。x/y=中心%, w/h=クリック範囲の幅/高さ%。
+        const HOT_PC = [
+            { id: 'sapporo', label: '札幌', x: 16.9, y: 70, w: 16, h: 18 }, // 札幌カード
+            { id: 'naha',    label: '那覇', x: 33,   y: 70, w: 16, h: 18 }, // 那覇カード
+            { id: 'sapporo', label: '札幌', x: 81,   y: 18, w: 9,  h: 13 }, // 札幌ピン
+            { id: 'naha',    label: '那覇', x: 73,   y: 75, w: 9,  h: 13 }, // 那覇ピン
+        ];
+        const HOT_SP = [
+            { id: 'sapporo', label: '札幌', x: 29,   y: 62.7, w: 40, h: 11 }, // 札幌カード
+            { id: 'naha',    label: '那覇', x: 70.8, y: 62.7, w: 40, h: 11 }, // 那覇カード
+            { id: 'sapporo', label: '札幌', x: 78,   y: 14.4, w: 16, h: 8 },  // 札幌ピン
+            { id: 'naha',    label: '那覇', x: 35.7, y: 42.3, w: 16, h: 8 },  // 那覇ピン
+        ];
         let HOT = (isSP ? HOT_SP : HOT_PC).slice();
         const g = document.createElement('div');
         g.id = 'kd-area-gate';
@@ -1004,6 +1015,7 @@
             HOT.forEach(function (h) {
                 const b = document.createElement('button');
                 b.className = 'kdg-hot'; b.style.left = h.x + '%'; b.style.top = h.y + '%';
+                b.style.width = (h.w || 8) + '%'; b.style.height = (h.h || 10) + '%';
                 b.setAttribute('aria-label', h.label + 'を選択');
                 b.onclick = function () {
                     if (busy) return; busy = true;
