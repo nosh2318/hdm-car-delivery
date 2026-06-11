@@ -60,6 +60,7 @@ function sendKeydropNotifications() {
       var mail = (n.type === 'confirm') ? _buildConfirmMail_(n)
                : (n.type === 'cancel_ack') ? _buildCancelAckMail_(n)
                : (n.type === 'cancel_done') ? _buildCancelDoneMail_(n)
+               : (n.type === 'change_done') ? _buildChangeDoneMail_(n)
                : _buildCancelRequestMail_(n);
       if (!n.to_email || n.to_email.indexOf('@') < 0) throw new Error('宛先不正: ' + n.to_email);
       GmailApp.sendEmail(n.to_email, mail.subject, mail.body, { from: FROM_EMAIL, name: FROM_NAME });
@@ -165,6 +166,31 @@ function _buildCancelDoneMail_(n) {
     '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
     '営業時間：9:00〜19:00\n\n' +
     'またのご利用を心よりお待ちしております。\n' +
+    'CARデリバリー KEY-DROP\n';
+  return { subject: subject, body: body };
+}
+
+/** 変更承認・反映メール（顧客向け） */
+function _buildChangeDoneMail_(n) {
+  var p = n.payload || {};
+  var id = n.reservation_id || '';
+  var d = p.del || null, c = p.col || null;
+  var subject = 'CARデリバリー KEY-DROP ご予約内容の変更が確定しました（予約番号 ' + id + '）';
+  var body =
+    (p.name || 'お客様') + ' 様\n\n' +
+    'ご依頼いただいた変更を確認し、反映いたしました。\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '■ 変更後の内容\n' +
+    '予約番号　：' + id + '\n' +
+    (d ? ('お届け　　：' + (d.time || '') + (d.place ? '　' + d.place : '') + '\n') : '') +
+    (c ? ('ご返却　　：' + (c.time || '') + (c.place ? '　' + c.place : '') + '\n') : '') +
+    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '■ ご確認\n' +
+    'マイページで最新の予約内容をご確認いただけます。\n' +
+    MYPAGE_URL + '\n\n' +
+    '■ お問い合わせ\n' +
+    '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
+    '営業時間：9:00〜19:00\n\n' +
     'CARデリバリー KEY-DROP\n';
   return { subject: subject, body: body };
 }

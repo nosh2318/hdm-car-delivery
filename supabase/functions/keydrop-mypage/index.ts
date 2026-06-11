@@ -271,6 +271,55 @@ Deno.serve(async (req) => {
     }, 200, origin);
   }
 
+  // ── 変更リクエストの承認（SPK現場が押す）→ reservations/tasks に反映＋change_reqクリア＋顧客へ反映メール ──
+  if (action === "approve_change") {
+    const pay0 = (await sbGet("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}&select=change_req`).catch(() => []))[0];
+    const cr: any = pay0?.change_req;
+    if (!cr || cr.status !== "pending") return json({ error: "承認対象の変更申請がありません" }, 409, origin);
+    const del = cr.del || null, col = cr.col || null;
+    const rPatch: Record<string, unknown> = {};
+    if (del) { if (del.place) rPatch.del_place = del.place; if (del.time) { rPatch.lend_time = del.time; rPatch.del_time = del.time; } }
+    if (col) { if (col.place) rPatch.col_place = col.place; if (col.time) { rPatch.return_time = col.time; rPatch.col_time = col.time; } }
+    if (Object.keys(rPatch).length) await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}`, rPatch);
+    const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
+    const marker = `✅変更承認(${stamp})`;
+    async function patchTask(taskId: string, patch: Record<string, unknown>) {
+      const cur = await sbGet("tasks", `_id=eq.${encodeURIComponent(taskId)}&select=_id,memo,changed_json`);
+      if (!cur[0]) return;
+      const memo = String(cur[0].memo || "");
+      const newMemo = memo.includes(marker) ? memo : (memo ? memo + " " + marker : marker);
+      let cj: any = {};
+      try { cj = cur[0].changed_json && typeof cur[0].changed_json === "object" ? cur[0].changed_json : (cur[0].changed_json ? JSON.parse(cur[0].changed_json) : {}); } catch { cj = {}; }
+      cj.kd_customer_changed_at = new Date().toISOString();
+      await sbPatch("tasks", `_id=eq.${encodeURIComponent(taskId)}`, { ...patch, memo: newMemo, changed_json: cj });
+    }
+    const dt: Record<string, unknown> = {};
+    if (del?.place) dt.place = del.place;
+    if (del?.time) dt.time = del.time;
+    if (col?.place) dt.col_place = col.place;
+    if (col?.time) dt.return_time = col.time;
+    if (Object.keys(dt).length) await patchTask(`d-${resId}`, dt);
+    const ct: Record<string, unknown> = {};
+    if (col?.place) ct.place = col.place;
+    if (col?.time) ct.time = col.time;
+    if (Object.keys(ct).length) await patchTask(`c-${resId}`, ct);
+    await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: null, change_req_at: null });
+    if (r.mail && String(r.mail).indexOf("@") > 0) {
+      await sbPost("keydrop_notifications", { type: "change_done", reservation_id: resId, to_email: r.mail, payload: {
+        name: r.name || "", del: del || null, col: col || null,
+      } });
+    }
+    await notifySlack(`✅ *KEYDROP 変更を承認・反映* ${resId} / ${r.name || ""}様`);
+    return json({ ok: true, approved: true }, 200, origin);
+  }
+
+  // ── 変更リクエストの差戻し（SPK現場が押す）→ change_reqクリア（反映しない）──
+  if (action === "reject_change") {
+    await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: null, change_req_at: null });
+    await notifySlack(`↩️ *KEYDROP 変更を差戻し* ${resId} / ${r.name || ""}様`);
+    return json({ ok: true, rejected: true }, 200, origin);
+  }
+
   // ── 変更リクエスト（顧客がマイページで申請 → 即反映せず記録＋Slack。現場が承認で反映）──
   //   お届け(貸出)＝出発48時間前まで / 回収(返却)＝返却2時間前まで。締切後は公式LINE。
   if (action === "change_request") {
