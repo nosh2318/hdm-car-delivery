@@ -11,7 +11,8 @@
  *   1) スクリプトプロパティ SUPABASE_SERVICE_KEY に Supabase service_role キー（JWT・legacy）を設定
  *      ※ keydrop_notifications は RLSで anon/authenticated 不可＝service_role 必須
  *   2) Gmail に reserve@rent-handyman.jp の「名前を指定して送信(send-as)」エイリアスが登録済みであること
- *   3) setupKeydropMailTrigger() を1回手動実行して5分トリガーを作成
+ *   3) setupKeydropMailTrigger() を1回手動実行して1分トリガーを作成（送信遅延を最小化）
+ *   ※ 1日の送信上限（GmailApp: 個人Gmail=100通/日 / Workspace=1,500通/日）に注意。超過時は翌日リセットで自動リトライ。
  *
  * 緊急停止: sendKeydropNotifications 冒頭に return; を入れる（関数は残す）。
  */
@@ -270,8 +271,8 @@ function setupKeydropMailTrigger() {
   for (var i = 0; i < triggers.length; i++) {
     if (triggers[i].getHandlerFunction() === 'sendKeydropNotifications') ScriptApp.deleteTrigger(triggers[i]);
   }
-  ScriptApp.newTrigger('sendKeydropNotifications').timeBased().everyMinutes(5).create();
-  Logger.log('keydrop_mail trigger set (5min)');
+  ScriptApp.newTrigger('sendKeydropNotifications').timeBased().everyMinutes(1).create();
+  Logger.log('keydrop_mail trigger set (1min)');
 }
 
 /** 動作確認（手動）：キュー先頭の未送信を1件ドライ表示 */
