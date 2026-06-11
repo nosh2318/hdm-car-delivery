@@ -833,6 +833,15 @@
                         <button class="menu-user-btn" onclick="closeMenu(); state.screen='mypage'; render();">予約を確認する（マイページ）</button>
                     </div>
                     <div class="menu-section">
+                        <div class="menu-section-title">エリア</div>
+                        <a class="menu-item" id="kd-area-sapporo" href="./">
+                            <span class="menu-item-icon">📍</span>札幌エリア<span class="menu-item-arrow">→</span>
+                        </a>
+                        <a class="menu-item" id="kd-area-naha" href="?area=naha">
+                            <span class="menu-item-icon">📍</span>沖縄（那覇）エリア<span class="menu-item-arrow">→</span>
+                        </a>
+                    </div>
+                    <div class="menu-section">
                         <div class="menu-section-title">サービス</div>
                         <a class="menu-item" href="guide.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">📖</span>ご利用方法<span class="menu-item-arrow">→</span>
@@ -865,7 +874,7 @@
                             <span class="menu-item-icon">📋</span>特定商取引法<span class="menu-item-arrow">→</span>
                         </a>
                         <a class="menu-item" href="company.html" target="_blank" rel="noopener">
-                            <span class="menu-item-icon">🏢</span>会社概要<span class="menu-item-arrow">→</span>
+                            <span class="menu-item-icon">🏢</span>運営会社<span class="menu-item-arrow">→</span>
                         </a>
                     </div>
                     <div class="menu-footer">© 2026 KEYDROP</div>
@@ -903,21 +912,17 @@
     function KD_GEO_HINT() { return KD_AREAS[KD_STORE].geo; }            // ジオコーディングの地域ヒント
     function kdViewName(t) { return (KD_STORE === 'naha' && /^public_.*_v$/.test(t)) ? t.replace(/_v$/, '_nha_v') : t; }
 
-    // サイト内エリア選択（右上の非侵襲ピル＋ディープリンク ?area=naha）。切替＝そのエリアURLへ遷移。
+    // サイト内エリア選択：スライドメニュー内「エリア」セクションの現在エリアをハイライト（浮遊ピルは廃止＝ヘッダー☰と重ならない）。
     function kdRenderAreaSwitcher() {
-        if (document.getElementById('kd-area-switch') || !document.body) return;
-        const bar = document.createElement('div');
-        bar.id = 'kd-area-switch';
-        bar.style.cssText = 'position:fixed;top:8px;right:8px;z-index:9000;display:flex;gap:4px;padding:3px;border-radius:999px;background:rgba(17,24,39,.86);box-shadow:0 2px 8px rgba(0,0,0,.25);font:600 12px/1 -apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;';
-        ['sapporo', 'naha'].forEach(function (a) {
-            const on = a === KD_STORE;
-            const el = document.createElement('a');
-            el.textContent = '📍' + KD_AREAS[a].label;
-            el.href = (a === 'naha') ? (location.pathname + '?area=naha') : location.pathname;
-            el.style.cssText = 'padding:6px 12px;border-radius:999px;text-decoration:none;white-space:nowrap;' + (on ? 'background:#22d3ee;color:#06283d;' : 'background:transparent;color:#cbd5e1;');
-            bar.appendChild(el);
-        });
-        document.body.appendChild(bar);
+        try {
+            const act = document.getElementById('kd-area-' + (KD_STORE === 'naha' ? 'naha' : 'sapporo'));
+            if (act) {
+                act.style.background = '#FABE00';
+                act.style.fontWeight = '800';
+                const ic = act.querySelector('.menu-item-icon');
+                if (ic) ic.textContent = '✅';
+            }
+        } catch (e) {}
     }
     if (document.readyState !== 'loading') kdRenderAreaSwitcher();
     else document.addEventListener('DOMContentLoaded', kdRenderAreaSwitcher);
@@ -4180,7 +4185,7 @@
             menuMypage: '予約を確認する（マイページ）',
             menuUsage: 'ご利用方法', menuVehicle: '車両と料金', menuInsurance: '保険プラン一覧',
             menuFaq: 'よくある質問', menuContact: 'お問い合わせ',
-            menuClause: '貸渡約款', menuPrivacy: 'プライバシーポリシー', menuLegal: '特定商取引法', menuCompany: '会社概要',
+            menuClause: '貸渡約款', menuPrivacy: 'プライバシーポリシー', menuLegal: '特定商取引法', menuCompany: '運営会社',
             menuService: 'サービス', menuSupport: 'サポート', menuLegalSection: '法的情報',
             progressDate: '日程', progressPlace: '場所', progressVehicle: '車両',
             dateSetup: '利用期間を設定してください', dateChange: '変更', dateSet: '設定', dateClose: '閉じる',
