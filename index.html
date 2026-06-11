@@ -903,32 +903,140 @@
     function KD_GEO_HINT() { return KD_AREAS[KD_STORE].geo; }            // ジオコーディングの地域ヒント
     function kdViewName(t) { return (KD_STORE === 'naha' && /^public_.*_v$/.test(t)) ? t.replace(/_v$/, '_nha_v') : t; }
 
-    // 入口エリア選択スプラッシュ：?area= が無いとき最初に「札幌/沖縄」を選ばせ、選んだエリアのURLへ遷移→該当エリアのマップが出る。
+    // ═══════════════════════════════════════════════════════════
+    // 入口体験「DROP A KEY. GET A CAR.」：日本列島に鍵を落としてサービス開始
+    //   ?area= 指定で来た人 / 既選択(localStorage)の再訪はスキップ。?pick=1 で強制再表示。
+    //   提供エリア(active:true)＝点滅・選択可 / 未提供＝グレー。config(KD_GATE_AREAS)駆動。
+    // ═══════════════════════════════════════════════════════════
+    const KD_GATE_AREAS = [
+        { id: 'sapporo', label: '札幌',        sub: '北海道', active: true,  x: 70, y: 12 },
+        { id: 'naha',    label: '沖縄（那覇）', sub: '沖縄本島', active: true,  x: 12, y: 92 },
+        { id: 'tokyo',   label: '東京',        sub: 'Coming soon', active: false, x: 64, y: 50 },
+        { id: 'nagoya',  label: '名古屋',      sub: 'Coming soon', active: false, x: 55, y: 56 },
+        { id: 'osaka',   label: '大阪',        sub: 'Coming soon', active: false, x: 46, y: 60 },
+        { id: 'fukuoka', label: '福岡',        sub: 'Coming soon', active: false, x: 24, y: 71 },
+    ];
     function kdPickArea(area) {
+        try { localStorage.setItem('kd_selectedArea', area); } catch (e) {}
         const sp = new URLSearchParams(location.search);
-        sp.set('area', area);
-        location.search = sp.toString(); // ?area=… を付けて再読込（該当エリアで初期化）
+        sp.set('area', area); sp.delete('pick');
+        location.search = sp.toString();
     }
     function kdShowAreaGate() {
-        if (new URLSearchParams(location.search).get('area')) return; // URLで指定済みならスキップ
-        if (document.getElementById('kd-area-gate') || !document.body) return;
+        const qs = new URLSearchParams(location.search);
+        if (qs.get('area')) return;                 // URLで指定済み＝スキップ
+        if (!document.body || document.getElementById('kd-area-gate')) return;
+        // 再訪：保存済みエリアへ自動遷移（?pick=1 のときは無視して選択画面を出す）
+        if (qs.get('pick') !== '1') {
+            let stored = null; try { stored = localStorage.getItem('kd_selectedArea'); } catch (e) {}
+            if (stored === 'sapporo' || stored === 'naha') { location.replace(location.pathname + '?area=' + stored); return; }
+        }
+        if (!document.getElementById('kd-gate-style')) {
+            const st = document.createElement('style'); st.id = 'kd-gate-style';
+            st.textContent = `
+            #kd-area-gate{position:fixed;inset:0;z-index:100000;background:radial-gradient(1200px 800px at 75% 20%,#1b2a4a 0%,#0b1220 55%,#070b14 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;overflow:auto;-webkit-overflow-scrolling:touch;}
+            .kdg-wrap{min-height:100%;display:flex;align-items:center;justify-content:center;gap:24px;padding:28px 20px;flex-wrap:wrap;}
+            .kdg-left{flex:1 1 300px;max-width:440px;}
+            .kdg-logo{height:26px;width:auto;filter:brightness(0) invert(1);margin-bottom:18px;}
+            .kdg-h1{font-size:30px;font-weight:900;letter-spacing:.01em;line-height:1.1;margin:0 0 6px;}
+            .kdg-h1 .y{color:#FABE00;}
+            .kdg-sub{font-size:13.5px;color:#cbd5e1;line-height:1.7;margin:10px 0 22px;}
+            .kdg-cta{display:inline-flex;align-items:center;gap:8px;padding:14px 26px;background:#FABE00;color:#111827;border:none;border-radius:999px;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 8px 24px rgba(250,190,0,.35);}
+            .kdg-cta:active{transform:translateY(1px);}
+            .kdg-hint{font-size:11.5px;color:#FABE00;margin-top:12px;min-height:16px;font-weight:700;}
+            .kdg-right{flex:1 1 300px;display:flex;justify-content:center;}
+            .kdg-map{position:relative;width:min(360px,86vw);aspect-ratio:3/4;transform:perspective(900px) rotateX(8deg);}
+            .kdg-japan{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 18px 24px rgba(0,0,0,.55));}
+            .kdg-pin{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:0;cursor:pointer;}
+            .kdg-dot{width:14px;height:14px;border-radius:50%;border:2px solid #0b1220;}
+            .kdg-pin .kdg-lab{font-size:11px;font-weight:800;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.8);}
+            .kdg-pin .kdg-slab{font-size:8.5px;font-weight:700;opacity:.85;}
+            .kdg-pin.active .kdg-dot{background:#FABE00;box-shadow:0 0 0 0 rgba(250,190,0,.7);animation:kdgBlink 1.6s infinite;}
+            .kdg-pin.active .kdg-lab{color:#fff;} .kdg-pin.active .kdg-slab{color:#FABE00;}
+            .kdg-pin.inactive{cursor:default;} .kdg-pin.inactive .kdg-dot{background:#475569;border-color:#1e293b;}
+            .kdg-pin.inactive .kdg-lab{color:#64748b;} .kdg-pin.inactive .kdg-slab{color:#475569;}
+            .kdg-pin.sel .kdg-dot{background:#fff;transform:scale(1.5);box-shadow:0 0 22px 8px rgba(250,190,0,.9);animation:none;}
+            .kdg-pin.bump{animation:kdgBump .5s;}
+            .kdg-key{position:absolute;left:50%;top:-9%;font-size:30px;transform:translate(-50%,-50%);filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));transition:left 1s cubic-bezier(.5,0,.85,.35),top 1s cubic-bezier(.5,0,.85,.35),transform 1s,opacity .3s;animation:kdgFloat 2s ease-in-out infinite;z-index:5;}
+            .kdg-ripple{position:absolute;width:18px;height:18px;border-radius:50%;border:3px solid #FABE00;transform:translate(-50%,-50%);pointer-events:none;animation:kdgRipple .7s ease-out forwards;}
+            .kdg-start{position:absolute;transform:translate(-50%,-140%);font-size:12px;font-weight:900;color:#FABE00;letter-spacing:.15em;text-shadow:0 2px 6px rgba(0,0,0,.7);white-space:nowrap;opacity:0;animation:kdgStart .5s ease-out forwards;}
+            @keyframes kdgBlink{0%{box-shadow:0 0 0 0 rgba(250,190,0,.7);}70%{box-shadow:0 0 0 12px rgba(250,190,0,0);}100%{box-shadow:0 0 0 0 rgba(250,190,0,0);}}
+            @keyframes kdgFloat{0%,100%{margin-top:0;}50%{margin-top:-5px;}}
+            @keyframes kdgRipple{0%{width:10px;height:10px;opacity:1;}100%{width:120px;height:120px;opacity:0;}}
+            @keyframes kdgStart{0%{opacity:0;transform:translate(-50%,-120%);}100%{opacity:1;transform:translate(-50%,-150%);}}
+            @keyframes kdgBump{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.25);}}
+            @media (max-width:760px){.kdg-h1{font-size:24px;}.kdg-left{text-align:center;flex-basis:100%;}.kdg-cta{width:100%;justify-content:center;}.kdg-map{width:min(320px,82vw);}}
+            `;
+            document.head.appendChild(st);
+        }
         const g = document.createElement('div');
         g.id = 'kd-area-gate';
-        g.style.cssText = 'position:fixed;inset:0;z-index:100000;background:linear-gradient(160deg,#111827,#1f2937);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;';
+        // 簡易・日本列島シルエット（装飾）。viewBox 0..100 = ピンの%座標系と一致。
+        const japan = '<svg class="kdg-japan" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">'
+            + '<defs><linearGradient id="kdgLand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a55"/><stop offset="1" stop-color="#1c2740"/></linearGradient></defs>'
+            + '<g fill="url(#kdgLand)" stroke="#3b4b6b" stroke-width="0.6" stroke-linejoin="round">'
+            + '<path d="M62 5 q10 -2 12 6 q3 7 -3 11 q-7 4 -12 -2 q-4 -6 -1 -11 q1 -3 4 -4 Z"/>' // 北海道
+            + '<path d="M66 22 q4 6 -1 11 q-3 6 -6 10 q-4 6 -9 11 q-4 5 -9 8 q-5 3 -8 -1 q-2 -4 2 -7 q6 -5 10 -11 q4 -6 8 -12 q4 -7 9 -13 q2 -4 3 -6 Z"/>' // 本州
+            + '<ellipse cx="40" cy="62" rx="5" ry="3.4"/>' // 四国
+            + '<path d="M26 66 q6 0 7 6 q1 6 -4 9 q-6 3 -9 -2 q-3 -6 1 -10 q2 -3 5 -3 Z"/>' // 九州
+            + '<ellipse cx="11" cy="89" rx="3" ry="2"/><ellipse cx="15" cy="85" rx="1.6" ry="1.1"/>' // 沖縄
+            + '</g></svg>';
         g.innerHTML =
-            '<img src="images/logo_header.png?v=3" alt="KEYDROP" style="height:30px;width:auto;filter:brightness(0) invert(1)">' +
-            '<div style="color:#fff;font-size:16px;font-weight:800;letter-spacing:.02em">ご利用エリアを選択してください</div>' +
-            '<div style="color:#9ca3af;font-size:12px;margin-top:-12px">Car Delivery Service</div>' +
-            '<div id="kd-gate-btns" style="display:flex;flex-direction:column;gap:14px;width:100%;max-width:340px;margin-top:6px"></div>';
-        const wrap = g.querySelector('#kd-gate-btns');
-        [['sapporo', '札幌', '北海道・札幌市エリア'], ['naha', '沖縄（那覇）', '沖縄本島・那覇エリア']].forEach(function (a) {
-            const b = document.createElement('button');
-            b.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;padding:18px 20px;border:2px solid #FABE00;border-radius:16px;background:#fff;color:#111827;font-size:17px;font-weight:900;cursor:pointer;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25);';
-            b.innerHTML = '<span style="font-size:22px">📍</span><span>' + a[1] + '<br><span style="font-size:11px;font-weight:600;color:#6b7280">' + a[2] + '</span></span>';
-            b.onclick = function () { kdPickArea(a[0]); };
-            wrap.appendChild(b);
-        });
+            '<div class="kdg-wrap">'
+            + '<div class="kdg-left">'
+            + '  <img class="kdg-logo" src="images/logo_header.png?v=3" alt="KEYDROP">'
+            + '  <h1 class="kdg-h1">DROP A KEY.<br><span class="y">GET A CAR.</span></h1>'
+            + '  <div class="kdg-sub">日本全国どこでも、あなたのもとへクルマを届ける。<br>地図のピンに<b style="color:#FABE00">鍵を落として</b>サービスを開始。</div>'
+            + '  <button class="kdg-cta" id="kdg-cta">🔑 サービスを開始する</button>'
+            + '  <div class="kdg-hint" id="kdg-hint"></div>'
+            + '</div>'
+            + '<div class="kdg-right"><div class="kdg-map" id="kdg-map">'
+            + japan
+            + '  <div class="kdg-key" id="kdg-key">🔑</div>'
+            + '</div></div>'
+            + '</div>';
         document.body.appendChild(g);
+
+        const map = g.querySelector('#kdg-map');
+        const keyEl = g.querySelector('#kdg-key');
+        const hint = g.querySelector('#kdg-hint');
+        let busy = false;
+        KD_GATE_AREAS.forEach(function (a) {
+            const pin = document.createElement('button');
+            pin.className = 'kdg-pin ' + (a.active ? 'active' : 'inactive');
+            pin.style.left = a.x + '%'; pin.style.top = a.y + '%';
+            pin.innerHTML = '<span class="kdg-dot"></span><span class="kdg-lab">' + a.label + '</span><span class="kdg-slab">' + a.sub + '</span>';
+            if (a.active) pin.onclick = function () { kdDropKey(a, pin); };
+            else pin.onclick = function () { hint.textContent = a.label + 'は順次対応予定です'; };
+            map.appendChild(pin);
+        });
+        function kdDropKey(a, pin) {
+            if (busy) return; busy = true;
+            hint.textContent = a.label + 'へ鍵を落としています…';
+            pin.classList.add('sel');
+            // STEP2 鍵落下：鍵を選択ピン座標へ移動
+            keyEl.style.animation = 'none';
+            requestAnimationFrame(function () {
+                keyEl.style.left = a.x + '%'; keyEl.style.top = a.y + '%';
+                keyEl.style.transform = 'translate(-50%,-50%) scale(.7)';
+            });
+            // STEP3 着地（波紋）＋STEP4 STARTING
+            setTimeout(function () {
+                keyEl.style.opacity = '0';
+                const rip = document.createElement('div'); rip.className = 'kdg-ripple';
+                rip.style.left = a.x + '%'; rip.style.top = a.y + '%'; map.appendChild(rip);
+                const s = document.createElement('div'); s.className = 'kdg-start'; s.textContent = 'STARTING…';
+                s.style.left = a.x + '%'; s.style.top = a.y + '%'; map.appendChild(s);
+            }, 1000);
+            // STEP5 遷移
+            setTimeout(function () { kdPickArea(a.id); }, 1850);
+        }
+        g.querySelector('#kdg-cta').onclick = function () {
+            hint.textContent = '地図の光るピン（札幌・沖縄）を選んでください';
+            const pins = map.querySelectorAll('.kdg-pin.active');
+            pins.forEach(function (p) { p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); });
+            if (window.innerWidth <= 760) map.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
     }
     if (document.readyState !== 'loading') kdShowAreaGate();
     else document.addEventListener('DOMContentLoaded', kdShowAreaGate);
