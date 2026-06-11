@@ -5,8 +5,8 @@
 -- SPKアプリTOPのトグルがこの値を書き換え、顧客LPは公開ビューから読む。
 -- ============================================================
 insert into public.app_settings (key, value)
-values ('hdm_keydrop_top_pattern', '1')
-on conflict (key) do nothing;  -- 既存があれば尊重（既定=パターン1）
+values ('hdm_keydrop_top_pattern', '2')
+on conflict (key) do nothing;  -- 既存があれば尊重（既定=パターン2）
 
 create or replace view public.public_keydrop_top_v
   with (security_invoker = off) as

@@ -994,18 +994,18 @@
                 hotPc: [ { id: 'sapporo', label: '札幌', x: 15.6, y: 74.1, w: 23, h: 12.7 }, { id: 'naha', label: '那覇', x: 39.8, y: 74.1, w: 23, h: 12.7 } ],
                 hotSp: [ { id: 'sapporo', label: '札幌', x: 51, y: 51.8, w: 86, h: 11.6 }, { id: 'naha', label: '那覇', x: 51, y: 63.9, w: 86, h: 11.6 } ] },
         };
-        // アクティブなパターンをDBから取得（既定1・タイムアウト1.5s・失敗時1）
-        let _pat = '1';
+        // アクティブなパターンをDBから取得（既定2・タイムアウト1.5s・失敗時2）
+        let _pat = '2';
         try {
             const _c = new AbortController(); const _to = setTimeout(function () { _c.abort(); }, 1500);
             const _r = await fetch(SUPABASE_URL + '/rest/v1/public_keydrop_top_v?select=value', { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }, signal: _c.signal });
             clearTimeout(_to);
             const _d = await _r.json();
             const _v = _d && _d[0] && String(_d[0].value).replace(/["'\s]/g, '');
-            if (_v === '2') _pat = '2';
+            if (_v === '1') _pat = '1';
         } catch (e) {}
         if (window.__kdAppCtx || document.getElementById('kd-area-gate')) return; // 取得中に文脈変化/二重生成を防止
-        const PAT = KD_PATTERNS[_pat] || KD_PATTERNS['1'];
+        const PAT = KD_PATTERNS[_pat] || KD_PATTERNS['2'];
         const KD_HERO = { pc: PAT.pc, sp: PAT.sp };
         const HOT_PC = PAT.hotPc, HOT_SP = PAT.hotSp;
         let HOT = (isSP ? HOT_SP : HOT_PC).slice();
