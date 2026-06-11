@@ -944,8 +944,9 @@
         if (!document.getElementById('kd-gate-style')) {
             const st = document.createElement('style'); st.id = 'kd-gate-style';
             st.textContent = `
-            #kd-area-gate{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;overflow:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,#9ec6e8 0%,#5b86ad 46%,#1d4058 100%);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;}
-            .kdg-stage{position:relative;display:inline-block;line-height:0;max-width:100%;max-height:100%;}
+            #kd-area-gate{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;overflow:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,#0e2236 0%,#0a1726 100%);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;}
+            .kdg-bg{position:fixed;inset:0;background-size:cover;background-position:center;filter:blur(30px) brightness(.55) saturate(1.05);transform:scale(1.12);z-index:0;pointer-events:none;}
+            .kdg-stage{position:relative;z-index:1;display:inline-block;line-height:0;max-width:100%;max-height:100%;}
             .kdg-hero{display:block;width:auto;height:auto;max-width:100vw;max-height:100vh;object-fit:contain;}
             .kdg-skip{position:fixed;top:14px;right:16px;z-index:6;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:800;letter-spacing:.1em;padding:7px 16px;border-radius:999px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
             .kdg-hot{position:absolute;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:none;border:none;cursor:pointer;padding:0;z-index:4;}
@@ -973,13 +974,17 @@
         const HOT = isSP ? HOT_SETS.sp : HOT_SETS.pc;
         const g = document.createElement('div');
         g.id = 'kd-area-gate';
-        g.innerHTML = '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
-            + '<div class="kdg-stage" id="kdg-stage"><img class="kdg-hero" id="kdg-hero" src="' + (isSP ? KD_HERO.sp : KD_HERO.pc) + '" alt="KEYDROP — ご利用エリアを選択（札幌・那覇）"></div>';
+        const heroSrc = isSP ? KD_HERO.sp : KD_HERO.pc;
+        g.innerHTML = '<div class="kdg-bg" id="kdg-bg"></div>'
+            + '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
+            + '<div class="kdg-stage" id="kdg-stage"><img class="kdg-hero" id="kdg-hero" src="' + heroSrc + '" alt="KEYDROP — ご利用エリアを選択（札幌・那覇）"></div>';
         document.body.appendChild(g);
+        const bgEl = g.querySelector('#kdg-bg');
+        bgEl.style.backgroundImage = 'url(' + heroSrc + ')'; // レターボックスをぼかし背景で埋める
         // 新画像が未配置(404)なら現行画像にフォールバックし、その画像用のPC座標に合わせ直す
         (function () {
             const im = g.querySelector('#kdg-hero');
-            im.onerror = function () { im.onerror = null; im.src = KD_HERO.fb; HOT.length = 0; HOT_SETS.pc.forEach(function (h) { HOT.push(h); }); rebuildHotspots && rebuildHotspots(); };
+            im.onerror = function () { im.onerror = null; im.src = KD_HERO.fb; bgEl.style.backgroundImage = 'url(' + KD_HERO.fb + ')'; HOT.length = 0; HOT_SETS.pc.forEach(function (h) { HOT.push(h); }); rebuildHotspots && rebuildHotspots(); };
         })();
         const stage = g.querySelector('#kdg-stage');
         let busy = false;
