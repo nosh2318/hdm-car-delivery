@@ -282,7 +282,12 @@ Deno.serve(async (req) => {
     if (col) { if (col.place) rPatch.col_place = col.place; if (col.time) { rPatch.return_time = col.time; rPatch.col_time = col.time; } }
     if (Object.keys(rPatch).length) await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}`, rPatch);
     const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
-    const marker = `✅変更承認(${stamp})`;
+    const apLabels: string[] = [];
+    if (del?.time) apLabels.push("お届け時間");
+    if (del?.place) apLabels.push("お届け場所");
+    if (col?.time) apLabels.push("回収時間");
+    if (col?.place) apLabels.push("回収場所");
+    const marker = `✅変更済(${stamp}):${apLabels.join("・")}`;
     async function patchTask(taskId: string, patch: Record<string, unknown>) {
       const cur = await sbGet("tasks", `_id=eq.${encodeURIComponent(taskId)}&select=_id,memo,changed_json`);
       if (!cur[0]) return;
@@ -303,6 +308,13 @@ Deno.serve(async (req) => {
     if (col?.place) ct.place = col.place;
     if (col?.time) ct.time = col.time;
     if (Object.keys(ct).length) await patchTask(`c-${resId}`, ct);
+    // 「🟡変更申請中」フラグを両タスクから除去（承認＝反映済みなので不要に）
+    for (const tid of [`d-${resId}`, `c-${resId}`]) {
+      const cu = await sbGet("tasks", `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
+      if (!cu[0]) continue;
+      const m2 = String(cu[0].memo || "");
+      if (m2.includes("変更申請中")) await sbPatch("tasks", `_id=eq.${encodeURIComponent(tid)}`, { memo: m2.replace(/🟡変更申請中\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim() });
+    }
     await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: null, change_req_at: null });
     if (r.mail && String(r.mail).indexOf("@") > 0) {
       await sbPost("keydrop_notifications", { type: "change_done", reservation_id: resId, to_email: r.mail, payload: {
@@ -313,9 +325,15 @@ Deno.serve(async (req) => {
     return json({ ok: true, approved: true }, 200, origin);
   }
 
-  // ── 変更リクエストの差戻し（SPK現場が押す）→ change_reqクリア（反映しない）──
+  // ── 変更リクエストの差戻し（SPK現場が押す）→ change_reqクリア（反映しない）＋フラグ除去 ──
   if (action === "reject_change") {
     await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: null, change_req_at: null });
+    for (const tid of [`d-${resId}`, `c-${resId}`]) {
+      const cu = await sbGet("tasks", `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
+      if (!cu[0]) continue;
+      const m2 = String(cu[0].memo || "");
+      if (m2.includes("変更申請中")) await sbPatch("tasks", `_id=eq.${encodeURIComponent(tid)}`, { memo: m2.replace(/🟡変更申請中\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim() });
+    }
     await notifySlack(`↩️ *KEYDROP 変更を差戻し* ${resId} / ${r.name || ""}様`);
     return json({ ok: true, rejected: true }, 200, origin);
   }
@@ -361,6 +379,21 @@ Deno.serve(async (req) => {
     }
 
     await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: req, change_req_at: req.requested_at });
+
+    // OPシート/配車表に「変更申請中」フラグ（d-/c-タスクのmemoに付与）→現場が承認待ち＋何が変わるか分かる
+    const cstamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
+    const reqLabels: string[] = [];
+    if ((req.del as any)?.time) reqLabels.push("お届け時間");
+    if ((req.del as any)?.place) reqLabels.push("お届け場所");
+    if ((req.col as any)?.time) reqLabels.push("回収時間");
+    if ((req.col as any)?.place) reqLabels.push("回収場所");
+    const cmark = `🟡変更申請中(${cstamp}):${reqLabels.join("・")}`;
+    for (const tid of [`d-${resId}`, `c-${resId}`]) {
+      const cur = await sbGet("tasks", `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
+      if (!cur[0]) continue;
+      const memo = String(cur[0].memo || "");
+      if (!memo.includes("変更申請中")) await sbPatch("tasks", `_id=eq.${encodeURIComponent(tid)}`, { memo: memo ? memo + " " + cmark : cmark });
+    }
 
     const lines = [
       `✏️ *KEYDROP 変更リクエスト*（顧客がマイページで申請・要承認）`,
