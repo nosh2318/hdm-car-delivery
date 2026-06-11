@@ -983,19 +983,15 @@
         // 表示は contain（画像全体を表示・切れない／黒帯はぼかし背景で埋める）。
         // 座標は「画像内の%」。PC/SPで画像が違えば座標も違う。SP画像未配置なら hero_pc.jpg にフォールバック。
         const isSP = window.matchMedia('(max-width:768px)').matches;
-        const KD_HERO = { pc: 'images/hero_pc.jpg?v=4', sp: 'images/hero_sp.jpg?v=4' };
-        // クリック領域＝「エリア選択カード(札幌/那覇)」＋「マップのピン」。x/y=中心%, w/h=クリック範囲の幅/高さ%。
+        const KD_HERO = { pc: 'images/hero_pc.jpg?v=5', sp: 'images/hero_sp.jpg?v=5' };
+        // クリック領域＝大きな2カード（札幌/那覇）だけ。x/y=中心%, w/h=クリック範囲の幅/高さ%。
         const HOT_PC = [
-            { id: 'sapporo', label: '札幌', x: 16.4, y: 67, w: 18, h: 18 }, // 札幌カード
-            { id: 'naha',    label: '那覇', x: 33.6, y: 67, w: 18, h: 18 }, // 那覇カード
-            { id: 'sapporo', label: '札幌', x: 87,   y: 18, w: 17, h: 11 }, // 札幌ピン（北海道で受け取る）
-            { id: 'naha',    label: '那覇', x: 79,   y: 73, w: 18, h: 12 }, // 那覇ピン（沖縄で受け取る）
+            { id: 'sapporo', label: '札幌', x: 52,   y: 45, w: 25, h: 56 }, // 札幌カード
+            { id: 'naha',    label: '那覇', x: 81.6, y: 45, w: 26, h: 56 }, // 那覇カード
         ];
         const HOT_SP = [
-            { id: 'sapporo', label: '札幌', x: 29,   y: 62.7, w: 40, h: 11 }, // 札幌カード
-            { id: 'naha',    label: '那覇', x: 70.8, y: 62.7, w: 40, h: 11 }, // 那覇カード
-            { id: 'sapporo', label: '札幌', x: 78,   y: 14.4, w: 16, h: 8 },  // 札幌ピン
-            { id: 'naha',    label: '那覇', x: 35.7, y: 42.3, w: 16, h: 8 },  // 那覇ピン
+            { id: 'sapporo', label: '札幌', x: 26.3, y: 47.3, w: 42, h: 31 }, // 札幌カード
+            { id: 'naha',    label: '那覇', x: 73.4, y: 47.3, w: 42, h: 31 }, // 那覇カード
         ];
         let HOT = (isSP ? HOT_SP : HOT_PC).slice();
         const g = document.createElement('div');
