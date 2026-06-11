@@ -1006,6 +1006,8 @@
 
     if (document.readyState !== 'loading') kdShowAreaGate();
     else document.addEventListener('DOMContentLoaded', kdShowAreaGate);
+    // ブラウザ「戻る/進む」のbfcache復元では前エリアの状態(範囲外ピン等)が残る→必ず作り直す
+    window.addEventListener('pageshow', function (e) { if (e.persisted) location.reload(); });
 
     async function supabaseGet(table, query = '') {
         const url = `${SUPABASE_URL}/rest/v1/${kdViewName(table)}?${query}&select=*`;
@@ -1564,6 +1566,13 @@
                     state.deliveryConfig = Object.assign({}, state.deliveryConfig, c);
                 } catch (e) { console.warn('delivery config parse failed', e); }
             }
+            // エリアの配達範囲が確定したら、既存のお届けピンが範囲外（前エリアの残り等）なら解除し赤アラートを消す
+            try {
+                if (state.deliveryLat != null && state.deliveryLng != null && typeof checkDeliverable === 'function') {
+                    const dd = checkDeliverable(state.deliveryLat, state.deliveryLng, state.deliveryAddr);
+                    if (dd && dd.ok === false && typeof clearDeliveryPin === 'function') clearDeliveryPin();
+                }
+            } catch (e) {}
             state.loading = false;
             fetchAvailableVehicles();
         } catch (e) {
