@@ -908,6 +908,21 @@
     function KD_API_STORE() { return KD_AREAS[KD_STORE].api; }          // 'spk' | 'nha'（Edge Functionへ）
     function KD_GEO_HINT() { return KD_AREAS[KD_STORE].geo; }            // ジオコーディングの地域ヒント
     function KD_BBOX() { return KD_AREAS[KD_STORE].bbox; }               // 検索範囲 [minLon,minLat,maxLon,maxLat]
+    // 地点がどの対象エリア(札幌/那覇)に属するか。どちらでもなければ null（=対応エリア外）。
+    function kdAreaOfPoint(lat, lng) {
+        if (lat == null || lng == null) return null;
+        for (const id in KD_AREAS) { const b = KD_AREAS[id].bbox; if (lng >= b[0] && lng <= b[2] && lat >= b[1] && lat <= b[3]) return id; }
+        return null;
+    }
+    // お届け地点が「もう片方の対象エリア」なら、そのエリア(車・料金)へ自動切替（ピンは引き継ぐ）。切替したら true。
+    function kdMaybeSwitchArea(lat, lng, addr) {
+        const ar = kdAreaOfPoint(lat, lng);
+        if (!ar || ar === KD_STORE) return false; // 同エリア / 対象外(=既存のエリア外アラートに任せる)
+        try { sessionStorage.setItem('kd_pendingPin', JSON.stringify({ lat: lat, lng: lng, addr: addr || '', area: ar })); } catch (e) {}
+        const sp = new URLSearchParams(location.search); sp.set('area', ar); sp.delete('pick');
+        location.search = sp.toString();
+        return true;
+    }
     function kdViewName(t) { return (KD_STORE === 'naha' && /^public_.*_v$/.test(t)) ? t.replace(/_v$/, '_nha_v') : t; }
 
     // ═══════════════════════════════════════════════════════════
@@ -1250,11 +1265,16 @@
             } catch (e) {}
         }
 
-        // Place initial pin at user location
-        setDeliveryPin(lat, lng);
+        // Place initial pin（他エリアから切替えて来た場合は引き継いだ地点を優先）
+        let _pend = null;
+        try { const r = sessionStorage.getItem('kd_pendingPin'); if (r) { const o = JSON.parse(r); if (o && o.area === KD_STORE) { _pend = o; sessionStorage.removeItem('kd_pendingPin'); } } } catch (e) {}
+        if (_pend) setDeliveryPin(_pend.lat, _pend.lng, _pend.addr || '');
+        else setDeliveryPin(lat, lng);
     }
 
     function setDeliveryPin(lat, lng, addr) {
+        // お届け先がもう片方の対象エリアなら、そのエリア(車・料金)へ自動切替して引き継ぐ
+        if (kdMaybeSwitchArea(lat, lng, addr)) return;
         state.deliveryLat = lat;
         state.deliveryLng = lng;
 
@@ -2895,12 +2915,10 @@
     function gSearch(query) {
         const box = document.getElementById('addressSuggestions');
         if (!box || !gAuto) { photonSearch(query); return; }
-        const _bb = KD_BBOX();
         gAuto.getPlacePredictions({
             input: query, sessionToken: gToken, language: 'ja',
             componentRestrictions: { country: 'jp' },
-            bounds: new google.maps.LatLngBounds({ lat: _bb[1], lng: _bb[0] }, { lat: _bb[3], lng: _bb[2] }),
-            strictBounds: true, // 選択エリア外（那覇/東京等）は候補に出さない
+            location: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG), radius: 40000,
         }, function (preds, status) {
             if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { photonSearch(query); return; }
             _markEngine('google');
@@ -2948,8 +2966,7 @@
         const box=document.getElementById('addressSuggestions');
         if(!box)return;
         try{
-            const _bb=KD_BBOX();
-            const res=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(query)+'&lat='+DEFAULT_LAT+'&lon='+DEFAULT_LNG+'&bbox='+_bb.join(',')+'&limit=8');
+            const res=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(query)+'&lat='+DEFAULT_LAT+'&lon='+DEFAULT_LNG+'&limit=8');
             const d=await res.json();
             const feats=((d&&d.features)||[]).filter(f=>{const p=(f&&f.properties)||{};return (!p.countrycode||p.countrycode==='JP')&&f.geometry&&f.geometry.coordinates;});
             if(!feats.length){gsiSearch(query);return;}
@@ -2971,11 +2988,7 @@
             const res = await fetch('https://msearch.gsi.go.jp/address-search/AddressSearch?q=' + encodeURIComponent(query));
             const arr = await res.json();
             if (!Array.isArray(arr) || !arr.length) { nominatimSearch(query); return; }
-            // GSIは全国対象→選択エリアのbbox内の結果だけに絞る（札幌で那覇/東京等を出さない）
-            const _bb = KD_BBOX();
-            const inArea = arr.filter(r => { const c = r.geometry && r.geometry.coordinates; return c && c[0] >= _bb[0] && c[0] <= _bb[2] && c[1] >= _bb[1] && c[1] <= _bb[3]; });
-            if (!inArea.length) { nominatimSearch(query); return; }
-            const html = inArea.slice(0, 6).map(r => {
+            const html = arr.slice(0, 6).map(r => {
                 const c = r.geometry && r.geometry.coordinates; // [lng, lat]
                 const title = (r.properties && r.properties.title) || '';
                 if (!c || !title) return '';
@@ -2993,8 +3006,7 @@
         const box = document.getElementById('addressSuggestions');
         if (!box) return;
         try {
-            const _bb = KD_BBOX(); // viewbox=left,top,right,bottom = minLon,maxLat,maxLon,minLat
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' ' + KD_GEO_HINT())}&format=json&limit=5&accept-language=ja&countrycodes=jp&bounded=1&viewbox=${_bb[0]},${_bb[3]},${_bb[2]},${_bb[1]}`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' ' + KD_GEO_HINT())}&format=json&limit=5&accept-language=ja&countrycodes=jp`);
             const results = await res.json();
             if (!results.length) {
                 box.innerHTML = '<div style="padding:10px;font-size:12px;color:#999;">該当する住所が見つかりません</div>';
