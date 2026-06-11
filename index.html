@@ -929,6 +929,7 @@
 
     // ⚠️ フォールバック価格（SPK価格マスター未作成時の暫定値・正はSPK(DB)→public_class_price_v）
     const CLASS_PRICES = { A: 18000, A2: 16000, B: 10000, B2: 9000, C: 7000, S: 12000, F: 5500, H: 6000 };
+    let CLASS_CFG_LOADED = false; // public_keydrop_classes_v（クラス名/公開可否）を読み込めたか
     // SPKマスター（public_class_price_v）。フラット{A:..}もシーズナル{prices,presets,default}も対応。
     let PRICE_OVERRIDE = {};        // フラット価格（後方互換）
     let PRICE_DATA = null;          // シーズナル構造 {prices:{A:[閑散,通常,繁忙],..}, presets:[{name,start:"MM-DD",end:"MM-DD",tier}], default}
@@ -979,6 +980,32 @@
         } catch (e) {
             // 一時的な取得失敗で片方の端末だけフォールバック価格に取り残されないよう1回だけ再試行
             if (!retry) setTimeout(() => loadClassPrices(true), 1500);
+        }
+    }
+
+    // SPK admin(keydrop-vehicles.html)で編集するクラス設定をDB(public_keydrop_classes_v)から反映。
+    //  label=表示名 / vehicles=車種文言 / show=顧客サイトでの公開可否。icon/img/colorはハードコード固定（画像は固定方針）。
+    async function loadClassConfig(retry) {
+        try {
+            const rows = await supabaseGet('public_keydrop_classes_v', '');
+            let v = rows && rows[0] ? rows[0].value : null;
+            if (typeof v === 'string') v = JSON.parse(v);
+            if (v && v.items) {
+                Object.keys(v.items).forEach(k => {
+                    const it = v.items[k] || {};
+                    if (!VEHICLE_CLASSES[k]) VEHICLE_CLASSES[k] = { icon: '🚗', img: '', color: '#64748b' };
+                    if (it.label) VEHICLE_CLASSES[k].name = it.label;
+                    if (it.vehicles) VEHICLE_CLASSES[k].vehicles = it.vehicles;
+                    if (it.seats != null && it.seats !== '') VEHICLE_CLASSES[k].seatsLabel = it.seats;
+                    VEHICLE_CLASSES[k].show = (it.show !== false); // 既定は公開。show=false のクラスは顧客に出さない
+                });
+                CLASS_CFG_LOADED = true;
+                if (typeof renderPanel === 'function') renderPanel();
+            } else if (!retry) {
+                setTimeout(() => loadClassConfig(true), 1500);
+            }
+        } catch (e) {
+            if (!retry) setTimeout(() => loadClassConfig(true), 1500); // 取得失敗時は1回だけ再試行
         }
     }
 
@@ -1410,6 +1437,7 @@
         try {
             state.loading = true;
             loadClassPrices(); // SPK価格マスター(public_class_price_v)を非同期取得（無ければフォールバック）
+            loadClassConfig(); // SPKクラス設定(public_keydrop_classes_v：表示名/車種/公開可否)を非同期取得
             // 公開ビュー参照（札幌adminと同一DB・基テーブルは閉じたまま）
             const [vehicles, maintenance, cfg] = await Promise.all([
                 supabaseGet('public_vehicles_v', 'select=*'),
@@ -1501,7 +1529,8 @@
 
         // エリア内: 予約・整備で空いており、かつ顧客公開クラス(VEHICLE_CLASSES)に定義のある車両のみ
         // ※マスター(public_vehicles_v)に車両があっても、非公開クラス(A:プレミアム/A2/B2:預かり)は出さない
-        state.availableVehicles = state.vehicles.filter(v => !busyCodes.has(v.code) && VEHICLE_CLASSES[v.type]);
+        // 公開クラスのみ：VEHICLE_CLASSESに定義あり かつ show!==false（SPK adminで非公開にしたクラスは顧客に出さない）
+        state.availableVehicles = state.vehicles.filter(v => !busyCodes.has(v.code) && VEHICLE_CLASSES[v.type] && VEHICLE_CLASSES[v.type].show !== false);
 
         // Apply class filter
         if (state.selectedClass) {
