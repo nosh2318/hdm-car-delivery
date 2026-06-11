@@ -19,7 +19,7 @@
 var SB_URL = 'https://ckrxttbnawkclshczsia.supabase.co';
 var FROM_EMAIL = 'reserve@rent-handyman.jp';
 var FROM_NAME  = 'CARデリバリー KEY-DROP';
-var MYPAGE_URL = 'https://nosh2318.github.io/hdm-car-delivery/?mypage=1';
+var MYPAGE_URL = 'https://keydrop.jp/?mypage=1';
 var LINE_URL   = 'https://lin.ee/g6iDNYz';
 var LINE_ID    = '@730kyhwl';
 var TEL        = '050-1724-6197';

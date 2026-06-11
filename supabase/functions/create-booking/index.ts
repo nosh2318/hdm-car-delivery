@@ -26,7 +26,7 @@ const SQUARE_LOCATION = Deno.env.get("SQUARE_LOCATION_ID") || "L8N7J9RKPN3WH";
 const SQUARE_API = "https://connect.squareup.com";
 // 決済完了後に戻る先（独自ドメイン取得時に env で差し替え）
 const KEYDROP_RETURN_URL = Deno.env.get("KEYDROP_RETURN_URL") ||
-  "https://nosh2318.github.io/hdm-car-delivery/";
+  "https://keydrop.jp/";
 
 // 許可オリジン（KEYDROP公開元）。独自ドメイン取得時に追記。
 const ALLOWED = [
