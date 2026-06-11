@@ -108,15 +108,18 @@ Deno.serve(async (req) => {
   // サーバ側でポリシー再計算
   const base = Number(rv.price || 0);
   const paid = Number(pay.amount || base);
-  const rate = policyRate(rv.lend_date);
-  const fee = Math.ceil(base * rate / 100);
+  //  ★ ノーチャージ（キャンセル料不要・全額返金）：運営判断で料率0%に上書き（航空便欠航等）。
+  const noCharge = p.noCharge === true;
+  const rate = noCharge ? 0 : policyRate(rv.lend_date);
+  const fee = noCharge ? 0 : Math.ceil(base * rate / 100);
   let refund = paid - fee;
   if (refund < 0) refund = 0;
   if (refund > paid) refund = paid;
 
-  //  任意：スタッフが実際の返金額を refundAmount で上書き可（無ければポリシー値）。
-  const refundActual = (p.refundAmount !== undefined && p.refundAmount !== null && !isNaN(Number(p.refundAmount)))
-    ? Math.max(0, Math.round(Number(p.refundAmount))) : refund;
+  //  任意：スタッフが実際の返金額を refundAmount で上書き可（無ければポリシー値）。ノーチャージ時は常に全額。
+  const refundActual = noCharge ? paid
+    : ((p.refundAmount !== undefined && p.refundAmount !== null && !isNaN(Number(p.refundAmount)))
+        ? Math.max(0, Math.round(Number(p.refundAmount))) : refund);
 
   // ★ 自動返金（既定）：Square Refunds API で実返金。失敗したらDBは一切変更しない（手動対応へ）。
   //   autoRefund:false を渡せば従来の「記録のみ（手動返金前提）」。返金額0（100%キャンセル料）はSquare不要。
@@ -175,12 +178,12 @@ Deno.serve(async (req) => {
   const howRefunded = (doAuto && refundActual > 0) ? `自動返金 完了（Square refund ${squareRefundId}）`
     : (refundActual === 0 ? "返金なし（キャンセル料100%）" : "記録のみ（手動返金）");
   await notifySlack([
-    `✅ *KEYDROP キャンセル確定*`,
+    `✅ *KEYDROP キャンセル確定*${noCharge ? "（🆓 ノーチャージ＝キャンセル料不要）" : ""}`,
     `予約番号: ${resId} / ${rv.name || ""}様（${rv.vehicle || ""}クラス）`,
     `入金 ¥${paid.toLocaleString()} − キャンセル料 ¥${fee.toLocaleString()}(${rate}%) = 返金 ¥${refundActual.toLocaleString()}`,
     `💳 ${howRefunded}`,
   ].join("\n"));
 
-  console.log(`[cancel-confirm] ${resId} paid=${paid} fee=${fee}(${rate}%) refund=${refundActual} auto=${doAuto} sq=${squareRefundId}`);
-  return json({ ok: true, rate, fee, refundSuggested: refund, refundRecorded: refundActual, paid, autoRefunded: !!squareRefundId, squareRefundId });
+  console.log(`[cancel-confirm] ${resId} paid=${paid} fee=${fee}(${rate}%) refund=${refundActual} noCharge=${noCharge} auto=${doAuto} sq=${squareRefundId}`);
+  return json({ ok: true, noCharge, rate, fee, refundSuggested: refund, refundRecorded: refundActual, paid, autoRefunded: !!squareRefundId, squareRefundId });
 });
