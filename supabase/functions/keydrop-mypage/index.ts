@@ -100,6 +100,12 @@ function within24h(lendDate: string, lendTime: string): boolean {
   const now = Date.now();
   return now >= dep - 24 * 3600 * 1000;
 }
+// 指定日時(JST)まで何時間あるか（負＝過去）
+function hoursUntil(date: string, time: string): number {
+  const t = (validTime(time) ? time : "10:00");
+  const target = new Date(`${date}T${t}:00+09:00`).getTime();
+  return (target - Date.now()) / 3600000;
+}
 
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
@@ -140,7 +146,8 @@ Deno.serve(async (req) => {
   if (action === "lookup") {
     const fleet = await sbGet("fleet", `reservation_id=eq.${encodeURIComponent(resId)}&select=vehicle_code`);
     // キャンセル依頼マーカー（keydrop_payments.cancel_requested_at）を返す＝再入場でも「申請中」を表示し再依頼を防ぐ
-    const pay = await sbGet("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}&select=cancel_requested_at,cancel_reason`).catch(() => []);
+    const pay = await sbGet("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}&select=cancel_requested_at,cancel_reason,change_req`).catch(() => []);
+    const cr = pay[0]?.change_req || null;
     return json({
       ok: true,
       reservation: {
@@ -151,6 +158,7 @@ Deno.serve(async (req) => {
         kd_status: r.kd_status || null,
         cancel_requested_at: pay[0]?.cancel_requested_at || null,
         cancel_reason: pay[0]?.cancel_reason || null,
+        change_req: (cr && cr.status === "pending") ? cr : null,
         vehicle_code: fleet[0]?.vehicle_code || null,
       },
     }, 200, origin);
@@ -261,6 +269,60 @@ Deno.serve(async (req) => {
         return_time: returnTime !== null ? returnTime : r.return_time,
       },
     }, 200, origin);
+  }
+
+  // ── 変更リクエスト（顧客がマイページで申請 → 即反映せず記録＋Slack。現場が承認で反映）──
+  //   お届け(貸出)＝出発48時間前まで / 回収(返却)＝返却2時間前まで。締切後は公式LINE。
+  if (action === "change_request") {
+    const st = String(r.status || "");
+    if (st === "cancelled" || st === "キャンセル" || st === "cancel") return json({ error: "キャンセル済みの予約は変更できません" }, 409, origin);
+    const pay0 = (await sbGet("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}&select=change_req`).catch(() => []))[0];
+    if (pay0?.change_req && pay0.change_req.status === "pending") return json({ error: "すでに変更申請中です。承認をお待ちください。" }, 409, origin);
+
+    const del = p.del && typeof p.del === "object" ? p.del : null;
+    const col = p.col && typeof p.col === "object" ? p.col : null;
+    if (!del && !col) return json({ error: "変更内容がありません" }, 400, origin);
+
+    const req: Record<string, unknown> = { requested_at: new Date().toISOString(), status: "pending" };
+    if (del) {
+      if (hoursUntil(r.lend_date, r.lend_time || r.del_time || "") < 48) {
+        return json({ error: "お届けの変更はマイページでは出発48時間前まで。締切後は公式LINEへご連絡ください。", line: true }, 409, origin);
+      }
+      const dt = del.time != null ? String(del.time).trim() : "";
+      if (dt && !validTime(dt)) return json({ error: "お届け時間は9:00〜19:00（30分刻み）で指定してください" }, 400, origin);
+      req.del = {
+        time: dt || (r.lend_time || r.del_time || ""),
+        place: del.place != null ? String(del.place).trim() : (r.del_place || ""),
+        lat: del.lat != null ? Number(del.lat) : null,
+        lng: del.lng != null ? Number(del.lng) : null,
+      };
+    }
+    if (col) {
+      if (hoursUntil(r.return_date, r.return_time || r.col_time || "") < 2) {
+        return json({ error: "回収の変更はマイページでは返却2時間前まで。締切後は公式LINEへご連絡ください。", line: true }, 409, origin);
+      }
+      const ct = col.time != null ? String(col.time).trim() : "";
+      if (ct && !validTime(ct)) return json({ error: "回収時間は9:00〜19:00（30分刻み）で指定してください" }, 400, origin);
+      req.col = {
+        time: ct || (r.return_time || r.col_time || ""),
+        place: col.place != null ? String(col.place).trim() : (r.col_place || ""),
+        lat: col.lat != null ? Number(col.lat) : null,
+        lng: col.lng != null ? Number(col.lng) : null,
+      };
+    }
+
+    await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: req, change_req_at: req.requested_at });
+
+    const lines = [
+      `✏️ *KEYDROP 変更リクエスト*（顧客がマイページで申請・要承認）`,
+      `予約番号: ${resId} / ${r.name || ""}様`,
+    ];
+    if (req.del) lines.push(`お届け→ 時間:${(req.del as any).time || "-"} / 場所:${(req.del as any).place || "-"}`);
+    if (req.col) lines.push(`回収→ 時間:${(req.col as any).time || "-"} / 場所:${(req.col as any).place || "-"}`);
+    lines.push(`➡️ SPKアプリ「🚫キャンセル」隣の変更リクエストで確認→承認してください`);
+    await notifySlack(lines.join("\n"));
+
+    return json({ ok: true, requested: true }, 200, origin);
   }
 
   // ── キャンセル依頼（顧客が押す → 即キャンセルせず運営へメール＋Slack。返金判断は運営）──

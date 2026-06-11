@@ -3399,54 +3399,40 @@
             </div>
         `;
 
-        // ── お届け・回収の「場所・時間」の変更：出発24時間前までマイページから可能（車種変更は不可＝LINE/取り直し）。キャンセル申請中は隠す ──
-        if (!isCancelled && !isCompleted && !isCancelRequested) {
-            const ed = canEditMypage(r);
-            if (ed.editable) {
+        // ── ご予約内容の変更：マイページ申請→現場承認→反映（締切後はLINE）。キャンセル申請中は隠す ──
+        if (!isCancelled && !isCancelRequested) {
+            const cr = r.change_req;
+            if (cr && cr.status === 'pending') {
+                const dl = cr.del ? `お届け → ${cr.del.time || ''}　${cr.del.place || ''}` : '';
+                const cl = cr.col ? `回収 → ${cr.col.time || ''}　${cr.col.place || ''}` : '';
                 html += `
-                <div class="mp-detail-section" style="border:1.5px solid #FABE00;">
-                    <div class="mp-detail-header" style="background:#fffbf0;color:#a07c00;">✏️ お届け・回収の変更</div>
+                <div class="mp-detail-section" style="border:1.5px solid #fbbf24;">
+                    <div class="mp-detail-header" style="background:#fffbeb;color:#92400e;">✏️ 変更申請中</div>
                     <div class="mp-detail-body">
-                        <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:10px;"><b>お届け／回収の場所・時間</b>は<b>出発の24時間前まで</b>マイページから変更できます。<br>（車種の変更はできません→公式LINE、またはキャンセルのうえお取り直しください）</div>
-                        <button class="btn-primary" style="margin:0;" onclick="mpEditOpen()">📝 場所・時間を変更する</button>
+                        <div style="font-size:12px;color:#555;line-height:1.7;">変更リクエストを受け付けました。<b>運営の確認・承認後に反映</b>されます。<br>${dl ? `・${dl}<br>` : ''}${cl ? `・${cl}` : ''}</div>
+                        <div style="font-size:11px;color:#888;margin-top:8px;">お急ぎ・取り消しは公式LINEへご連絡ください。</div>
                     </div>
                 </div>`;
             } else {
+                const delOk = !isCompleted && !isActive && !isDelivering && mpDelEligible(r);
+                const colOk = !isCompleted && !isActive && mpColEligible(r);
+                const reqBtn = (delOk || colOk)
+                    ? `<button class="btn-primary" style="margin:10px 0 0;width:100%;" onclick="mpEditOpen()">📝 お届け・回収の変更をリクエスト</button>` : '';
                 html += `
                 <div class="mp-detail-section">
-                    <div class="mp-detail-header">✏️ お届け・回収の変更</div>
+                    <div class="mp-detail-header">🔁 ご予約内容の変更について</div>
                     <div class="mp-detail-body">
-                        <div style="font-size:12px;color:#555;line-height:1.7;">${ed.reason}</div>
-                        <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:12px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:7px 12px;">💬 公式LINEで変更を依頼</a>
+                        <div style="font-size:12px;color:#444;line-height:1.75;">
+                            <div style="margin-bottom:10px;"><div style="font-weight:800;color:#1a1a1a;">🔹 日程・車種の変更</div>料金が変わるため、原則いったんキャンセル→再予約となります。詳細は公式LINEへお問い合わせください。</div>
+                            <div style="margin-bottom:10px;"><div style="font-weight:800;color:#1a1a1a;">🔹 お届け（貸出）の時間・場所</div>${delOk ? 'マイページから<b>出発48時間前まで</b>変更をリクエストできます（運営の承認後に反映）。' : '<span style="color:#b45309;">マイページでの受付は出発48時間前まで。締切後は公式LINEへ。</span>'}</div>
+                            <div style="margin-bottom:10px;"><div style="font-weight:800;color:#1a1a1a;">🔹 回収（返却）の時間・場所</div>${colOk ? 'マイページから<b>返却2時間前まで</b>変更をリクエストできます（運営の承認後に反映）。' : '<span style="color:#b45309;">マイページでの受付は返却2時間前まで。締切後は公式LINEへ。</span>'}</div>
+                            <div><div style="font-weight:800;color:#1a1a1a;">🔹 オプション・補償の変更</div>公式LINEにて承ります（貸出前日19:00まで・※事前決済制）。</div>
+                        </div>
+                        ${reqBtn}
+                        <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:9px 14px;">💬 公式LINEで相談</a>
                     </div>
                 </div>`;
             }
-        }
-
-        // ── ① 予約内容の変更について（独立・折りたたみ・既定で閉）──
-        if (!isCancelled) {
-            html += `
-            <details class="mp-faq" style="margin-top:14px;background:#fff;border:1px solid #eee;border-radius:12px;overflow:hidden;">
-                <summary style="list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;font-size:13.5px;font-weight:800;color:#1a1a1a;">
-                    <span>🔁 予約内容の変更について</span>
-                    <span class="mp-faq-arw" style="font-size:12px;color:#888;transition:transform .2s;">▼</span>
-                </summary>
-                <div style="padding:2px 16px 16px;border-top:1px solid #f3f3f3;">
-                    <div style="font-size:12px;line-height:1.7;color:#444;margin-bottom:10px;">
-                        <div style="font-weight:800;color:#1a1a1a;margin-bottom:2px;">① 車種の変更</div>
-                        マイページからの車種変更はできません。ご希望の場合は公式LINEへご連絡いただくか、いったんキャンセルのうえお取り直しください。
-                    </div>
-                    <div style="font-size:12px;line-height:1.7;color:#444;margin-bottom:10px;">
-                        <div style="font-weight:800;color:#1a1a1a;margin-bottom:2px;">② お届け場所／回収場所の変更</div>
-                        マイページの「✏️ お届け・回収の変更」から、<b>出発の24時間前まで</b>ご自身で変更できます。それ以降は公式LINEへ。
-                    </div>
-                    <div style="font-size:12px;line-height:1.7;color:#444;margin-bottom:8px;">
-                        <div style="font-weight:800;color:#1a1a1a;margin-bottom:2px;">③ お届け時間／回収時間の変更</div>
-                        マイページの「✏️ お届け・回収の変更」から、<b>出発の24時間前まで</b>ご自身で変更できます。それ以降は公式LINEへ。
-                    </div>
-                    <a href="https://lin.ee/g6iDNYz" target="_blank" rel="noopener" style="display:inline-block;font-size:11.5px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:5px 10px;">💬 公式LINEで連絡</a>
-                </div>
-            </details>`;
         }
 
         // ── ② キャンセルについて（独立・折りたたみ）＝ポリシー同意チェック＋送信ボタン ──
@@ -3527,6 +3513,18 @@
         const dep = new Date(`${r.lend_date}T${t}:00+09:00`).getTime();
         return Date.now() >= dep - 24 * 3600 * 1000;
     }
+    // お届け(貸出)変更の受付可否＝出発48時間前まで（Edge Functionと同一）
+    function mpDelEligible(r) {
+        const t = /^\d{2}:\d{2}$/.test(r.lend_time || '') ? r.lend_time : '10:00';
+        const dep = new Date(`${r.lend_date}T${t}:00+09:00`).getTime();
+        return (dep - Date.now()) / 3600000 >= 48;
+    }
+    // 回収(返却)変更の受付可否＝返却2時間前まで
+    function mpColEligible(r) {
+        const t = /^\d{2}:\d{2}$/.test(r.return_time || '') ? r.return_time : '10:00';
+        const ret = new Date(`${r.return_date}T${t}:00+09:00`).getTime();
+        return (ret - Date.now()) / 3600000 >= 2;
+    }
 
     // 変更モーダルの作業用state
     let mpEdit = null;
@@ -3536,6 +3534,8 @@
         mpEdit = {
             lend_time: r.lend_time || '', return_time: r.return_time || '',
             del_place: r.del_place || '', col_place: r.col_place || '',
+            del_lat: null, del_lng: null, col_lat: null, col_lng: null,
+            delOk: mpDelEligible(r), colOk: mpColEligible(r),
             orig: { lend_time: r.lend_time || '', return_time: r.return_time || '', del_place: r.del_place || '', col_place: r.col_place || '' },
             mapMode: null, // null | 'del' | 'col'
             saving: false, error: '',
@@ -3577,9 +3577,10 @@
         const timeOpts = (sel) => generateTimeOptions(sel);
         el.innerHTML = `
             <div style="width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 14px;"></div>
-            <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:4px;">✏️ お届け・回収の変更</div>
-            <div style="font-size:11.5px;color:#888;margin-bottom:14px;">変更できるのは場所・時間のみ・出発24時間前までです。</div>
+            <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:4px;">📝 変更をリクエスト</div>
+            <div style="font-size:11.5px;color:#888;margin-bottom:14px;">場所・時間の変更を申請します。<b>運営の承認後に反映</b>されます（即時反映ではありません）。<br>お届け＝出発48時間前まで／回収＝返却2時間前まで。</div>
 
+            ${mpEdit.delOk ? `
             <div style="font-weight:800;font-size:12.5px;color:#a07c00;margin:6px 0 6px;">📍 お届け</div>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
                 <div style="display:flex;align-items:center;gap:8px;">
@@ -3593,8 +3594,9 @@
                         <button onclick="mpEditPickPlace('del')" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">📍 地図で変更</button>
                     </div>
                 </div>
-            </div>
+            </div>` : `<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#9a3412;margin-bottom:12px;">📍 お届けの変更は出発48時間前まで。締切後は公式LINEへ。</div>`}
 
+            ${mpEdit.colOk ? `
             <div style="font-weight:800;font-size:12.5px;color:#1a1a1a;margin:6px 0 6px;border-top:1px solid #f0f0f0;padding-top:12px;">🏁 回収</div>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
                 <div style="display:flex;align-items:center;gap:8px;">
@@ -3608,12 +3610,12 @@
                         <button onclick="mpEditPickPlace('col')" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">📍 地図で変更</button>
                     </div>
                 </div>
-            </div>
+            </div>` : `<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#9a3412;margin-bottom:12px;">🏁 回収の変更は返却2時間前まで。締切後は公式LINEへ。</div>`}
 
             ${mpEdit.error ? `<div style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;margin-bottom:12px;">${mpEdit.error}</div>` : ''}
             <div style="display:flex;gap:8px;">
                 <button onclick="mpEditClose()" style="flex:none;padding:13px 18px;background:#f1f1f1;color:#444;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">閉じる</button>
-                <button class="btn-primary" style="margin:0;flex:1;" ${mpEdit.saving ? 'disabled' : ''} onclick="mpEditSave()">${mpEdit.saving ? '保存中…' : '変更を保存する'}</button>
+                <button class="btn-primary" style="margin:0;flex:1;" ${mpEdit.saving ? 'disabled' : ''} onclick="mpEditSave()">${mpEdit.saving ? '送信中…' : '変更をリクエスト'}</button>
             </div>
         `;
     }
@@ -3635,7 +3637,7 @@
             if (pe) pe.textContent = '住所を取得中…';
             let addr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
             try { const a = await fetchFullAddress(lat, lng); if (a.addr) addr = a.addr; } catch (e) {}
-            if (isDel) mpEdit.del_place = addr; else mpEdit.col_place = addr;
+            if (isDel) { mpEdit.del_place = addr; mpEdit.del_lat = lat; mpEdit.del_lng = lng; } else { mpEdit.col_place = addr; mpEdit.col_lat = lat; mpEdit.col_lng = lng; }
             if (pe) pe.textContent = addr;
         };
         mpEditMap.on('click', (e) => { mpEditMarker.setLatLng(e.latlng); setFrom(e.latlng.lat, e.latlng.lng); });
@@ -3646,19 +3648,26 @@
         if (!mpEdit || mpEdit.saving) return;
         const r = mypageState.reservation;
         const o = mpEdit.orig;
-        // 変更された項目だけ送る
-        const body = { action: 'update', mail: (mypageState.email || localStorage.getItem('hdm_mypage_email') || ''), resId: r.id };
-        let changed = false;
-        if (mpEdit.lend_time && mpEdit.lend_time !== o.lend_time) { body.lend_time = mpEdit.lend_time; changed = true; }
-        if (mpEdit.return_time && mpEdit.return_time !== o.return_time) { body.return_time = mpEdit.return_time; changed = true; }
-        if (mpEdit.del_place && mpEdit.del_place !== o.del_place) { body.del_place = mpEdit.del_place; changed = true; }
-        if (mpEdit.col_place && mpEdit.col_place !== o.col_place) { body.col_place = mpEdit.col_place; changed = true; }
-        if (!changed) { mpEdit.error = '変更内容がありません。'; renderMpEdit(); return; }
+        // 変更された項目だけ「リクエスト」として送る（即時反映しない・運営承認で反映）
+        const del = {}, col = {};
+        let dchg = false, cchg = false;
+        if (mpEdit.delOk) {
+            if (mpEdit.lend_time && mpEdit.lend_time !== o.lend_time) { del.time = mpEdit.lend_time; dchg = true; }
+            if (mpEdit.del_place && mpEdit.del_place !== o.del_place) { del.place = mpEdit.del_place; del.lat = mpEdit.del_lat; del.lng = mpEdit.del_lng; dchg = true; }
+        }
+        if (mpEdit.colOk) {
+            if (mpEdit.return_time && mpEdit.return_time !== o.return_time) { col.time = mpEdit.return_time; cchg = true; }
+            if (mpEdit.col_place && mpEdit.col_place !== o.col_place) { col.place = mpEdit.col_place; col.lat = mpEdit.col_lat; col.lng = mpEdit.col_lng; cchg = true; }
+        }
+        if (!dchg && !cchg) { mpEdit.error = '変更内容がありません。'; renderMpEdit(); return; }
+        const body = { action: 'change_request', mail: (mypageState.email || localStorage.getItem('hdm_mypage_email') || ''), resId: r.id };
+        if (dchg) body.del = del;
+        if (cchg) body.col = col;
         mpEdit.saving = true; mpEdit.error = ''; renderMpEdit();
 
-        // デモ(mock)はローカルのみ反映
+        // デモ(mock)はローカルのみ（申請中表示）
         if (body.mail === MOCK_EMAIL) {
-            Object.assign(r, { lend_time: mpEdit.lend_time, return_time: mpEdit.return_time, del_place: mpEdit.del_place, col_place: mpEdit.col_place });
+            r.change_req = { status: 'pending', del: dchg ? del : undefined, col: cchg ? col : undefined };
             mpEditClose(); render(); return;
         }
         try {
@@ -3670,16 +3679,15 @@
             const data = await res.json().catch(() => ({}));
             if (!res.ok || !data.ok) {
                 mpEdit.saving = false;
-                mpEdit.error = (data && data.error) || '変更の保存に失敗しました';
+                mpEdit.error = (data && data.error) || '変更リクエストの送信に失敗しました';
                 renderMpEdit();
                 return;
             }
-            // 反映
-            const u = data.updated || {};
-            r.del_place = u.del_place; r.col_place = u.col_place; r.lend_time = u.lend_time; r.return_time = u.return_time;
+            // 申請中に反映（再申請防止・ステータス表示）
+            r.change_req = { status: 'pending', del: dchg ? del : undefined, col: cchg ? col : undefined };
             mpEditClose();
             render();
-            setTimeout(() => alert('変更を保存しました。運営にも通知されました。'), 60);
+            setTimeout(() => alert('変更リクエストを送信しました。運営の確認・承認後に反映されます。'), 60);
         } catch (e) {
             mpEdit.saving = false; mpEdit.error = '通信エラーが発生しました'; renderMpEdit();
         }
