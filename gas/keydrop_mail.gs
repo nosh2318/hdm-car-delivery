@@ -30,7 +30,7 @@ function _mypageLink_(n) {
 }
 var LINE_URL   = 'https://lin.ee/ZxBknUv';
 var LINE_ID    = '@149ahjll';
-var TEL        = '050-1724-6197';
+var TEL        = '050-1785-2711';
 
 function _sbKey_() {
   var k = PropertiesService.getScriptProperties().getProperty('SUPABASE_SERVICE_KEY');
