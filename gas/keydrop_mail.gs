@@ -20,6 +20,13 @@ var SB_URL = 'https://ckrxttbnawkclshczsia.supabase.co';
 var FROM_EMAIL = 'reserve@rent-handyman.jp';
 var FROM_NAME  = 'CARデリバリー KEY-DROP';
 var MYPAGE_URL = 'https://keydrop.jp/?mypage=1';
+// 予約番号＋メールを埋めた「マイページ直リンク」（クリックで自動ログイン・タイピング不要）
+function _mypageLink_(n) {
+  var id = (n && n.reservation_id) || '';
+  var mail = (n && n.to_email) || '';
+  if (id && mail) return MYPAGE_URL + '&id=' + encodeURIComponent(id) + '&mail=' + encodeURIComponent(mail);
+  return MYPAGE_URL;
+}
 var LINE_URL   = 'https://lin.ee/g6iDNYz';
 var LINE_ID    = '@730kyhwl';
 var TEL        = '050-1724-6197';
@@ -97,9 +104,9 @@ function _buildConfirmMail_(n) {
     'お支払い額：' + _yen_(p.price) + '\n' +
     '━━━━━━━━━━━━━━━━━━━━\n\n' +
     '■ ご予約の確認・変更・キャンセル\n' +
-    'マイページからお手続きいただけます（予約番号＋登録メールでログイン）。\n' +
-    MYPAGE_URL + '\n' +
-    '※ご予約内容の変更は公式LINEにて承ります（貸出の時間・場所＝貸出3日前19:00まで／返却＝返却2時間前まで／オプション・補償＝貸出前日19:00まで／日程・車種＝原則お取り直し）。\n' +
+    '下記のマイページから直接ご確認いただけます（ログイン不要）。\n' +
+    _mypageLink_(n) + '\n' +
+    '※お届け／回収の時間・場所の変更は、マイページから変更をリクエストできます（お届け＝出発48時間前まで／回収＝返却2時間前まで・運営の承認後に反映）。締切後・日程・車種・オプションの変更は公式LINEへ。\n' +
     '※キャンセルのご依頼はマイページの「キャンセルをリクエスト」より承ります。\n\n' +
     '■ お問い合わせ\n' +
     '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
@@ -135,7 +142,7 @@ function _buildCancelAckMail_(n) {
     '※航空便欠航時は欠航証明書のご提示でキャンセル料無料。\n\n' +
     '■ ご確認\n' +
     'マイページで現在の状況をご確認いただけます。\n' +
-    MYPAGE_URL + '\n\n' +
+    _mypageLink_(n) + '\n\n' +
     '■ お問い合わせ\n' +
     '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
     '営業時間：9:00〜19:00\n\n' +
@@ -187,7 +194,7 @@ function _buildChangeDoneMail_(n) {
     '━━━━━━━━━━━━━━━━━━━━\n\n' +
     '■ ご確認\n' +
     'マイページで最新の予約内容をご確認いただけます。\n' +
-    MYPAGE_URL + '\n\n' +
+    _mypageLink_(n) + '\n\n' +
     '■ お問い合わせ\n' +
     '公式LINE：' + LINE_URL + '（ID: ' + LINE_ID + '）\n' +
     '営業時間：9:00〜19:00\n\n' +

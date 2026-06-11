@@ -3792,8 +3792,10 @@
     // 予約番号＋メールの両方で本人確認（keydrop-mypage Edge Function・service_role）。
     // ※anonでreservationsを直読みしない（PII漏洩・総当たり防止）。
     async function lookupMypage() {
-        const email = document.getElementById('mypageEmail')?.value?.trim();
-        const resId = document.getElementById('mypageResId')?.value?.trim();
+        const al = mypageState._autoLookup || {};
+        const email = (document.getElementById('mypageEmail')?.value?.trim()) || al.mail || '';
+        const resId = (document.getElementById('mypageResId')?.value?.trim()) || al.id || '';
+        mypageState._autoLookup = null; // 一度きり
         if (!email || !resId) {
             mypageState.error = '予約番号とメールアドレスを入力してください';
             render();
@@ -4364,6 +4366,15 @@
             } else if (sp.get('mypage')) {
                 // メール内リンク（?mypage=1）→ マイページを開く
                 state.screen = 'mypage';
+                // 直リンク：予約番号＋メールが付いていれば自動ログイン（タイピング不要）
+                const _did = sp.get('id') || sp.get('resId');
+                const _dmail = sp.get('mail');
+                if (_did && _dmail) {
+                    mypageState.email = _dmail;
+                    try { localStorage.setItem('hdm_mypage_email', _dmail); } catch (e) {}
+                    mypageState._autoLookup = { id: _did, mail: _dmail };
+                    setTimeout(() => { if (mypageState._autoLookup && mypageState.view !== 'detail') lookupMypage(); }, 350);
+                }
                 if (window.history && window.history.replaceState) {
                     window.history.replaceState({}, '', window.location.pathname);
                 }
