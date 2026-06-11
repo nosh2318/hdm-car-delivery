@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><title>gtest</title></head>
+<body><div id="result">loading...</div>
+<script>
+  var K='AIzaSyCoX1EyEx-N5A0r4vRzC1KmVp3T29HILbI';
+  function out(s){document.getElementById('result').textContent=s;}
+  window.gmErr=function(){out('RESULT: GM_AUTH_ERROR (RefererNotAllowed/ApiNotActivated 等)');};
+  window.gmapsReady=function(){
+    try{
+      var svc=new google.maps.places.AutocompleteService();
+      svc.getPlacePredictions({input:'ベッセル',componentRestrictions:{country:'jp'},language:'ja',location:new google.maps.LatLng(43.0687,141.3508),radius:40000},function(preds,status){
+        out('RESULT: status='+status+' | top='+((preds&&preds[0]&&preds[0].description)||'(none)'));
+      });
+    }catch(e){out('RESULT: EXCEPTION '+e.message);}
+  };
+  // gm_authFailure はグローバル関数名固定
+  window.gm_authFailure=window.gmErr;
+  var s=document.createElement('script');
+  s.src='https://maps.googleapis.com/maps/api/js?key='+K+'&libraries=places&language=ja&region=JP&callback=gmapsReady';
+  s.onerror=function(){out('RESULT: SCRIPT_LOAD_ERROR');};
+  document.head.appendChild(s);
+  setTimeout(function(){var t=document.getElementById('result');if(t.textContent==='loading...')out('RESULT: TIMEOUT (no callback)');},8000);
+</script></body></html>
