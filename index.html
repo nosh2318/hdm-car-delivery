@@ -3570,7 +3570,8 @@
                     <div id="mpEditSuggest" style="display:none;position:absolute;top:44px;left:0;right:0;z-index:1001;background:#fff;border:1px solid #eee;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:200px;overflow-y:auto;"></div>
                 </div>
                 <div id="mpEditMap" style="height:300px;border-radius:12px;overflow:hidden;background:#eaeef2;"></div>
-                <div id="mpEditPicked" style="font-size:12.5px;font-weight:700;color:#1a1a1a;margin:10px 2px 12px;min-height:18px;">${(isDel ? mpEdit.del_place : mpEdit.col_place) || '未選択'}</div>
+                <div id="mpEditPicked" style="font-size:12.5px;font-weight:700;color:#1a1a1a;margin:10px 2px 6px;min-height:18px;">${(isDel ? mpEdit.del_place : mpEdit.col_place) || '未選択'}</div>
+                <div id="mpEditAreaWarn" style="display:${(isDel ? mpEdit.delAreaErr : mpEdit.colAreaErr) ? 'block' : 'none'};background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:8px 11px;font-size:12px;font-weight:700;color:#b91c1c;line-height:1.5;margin-bottom:10px;">${(isDel ? mpEdit.delAreaErr : mpEdit.colAreaErr) ? '🚫 ' + (isDel ? mpEdit.delAreaErr : mpEdit.colAreaErr) : ''}</div>
                 <button class="btn-primary" style="margin:0;" onclick="mpEditBackToForm()">この場所で決定 ›</button>
             `;
             setTimeout(initMpEditMap, 60);
@@ -3656,6 +3657,17 @@
         const pe = document.getElementById('mpEditPicked'); if (pe) pe.textContent = name;
         const si = document.getElementById('mpEditSearchInput'); if (si) si.value = name;
         if (mpEditMap) { try { mpEditMap.setView([lat, lng], 16); if (mpEditMarker) mpEditMarker.setLatLng([lat, lng]); } catch (e) {} }
+        mpEditCheckArea(lat, lng, name);
+    }
+    // 変更モーダルで選んだ場所が配達エリア内か判定（予約時と同じ checkDeliverable）→警告表示＋送信ブロック用にstateへ
+    function mpEditCheckArea(lat, lng, name) {
+        if (!mpEdit) return true;
+        const chk = checkDeliverable(lat, lng, name || '');
+        const key = (mpEdit.mapMode === 'del') ? 'delAreaErr' : 'colAreaErr';
+        mpEdit[key] = chk.ok ? '' : chk.reason;
+        const w = document.getElementById('mpEditAreaWarn');
+        if (w) { if (chk.ok) { w.style.display = 'none'; w.textContent = ''; } else { w.style.display = 'block'; w.textContent = '🚫 ' + chk.reason; } }
+        return chk.ok;
     }
     async function initMpEditMap() {
         const el = document.getElementById('mpEditMap');
@@ -3675,6 +3687,7 @@
             try { const a = await fetchFullAddress(lat, lng); if (a.addr) addr = a.addr; } catch (e) {}
             if (isDel) { mpEdit.del_place = addr; mpEdit.del_lat = lat; mpEdit.del_lng = lng; } else { mpEdit.col_place = addr; mpEdit.col_lat = lat; mpEdit.col_lng = lng; }
             if (pe) pe.textContent = addr;
+            mpEditCheckArea(lat, lng, addr);
         };
         mpEditMap.on('click', (e) => { mpEditMarker.setLatLng(e.latlng); setFrom(e.latlng.lat, e.latlng.lng); });
         mpEditMarker.on('dragend', () => { const ll = mpEditMarker.getLatLng(); setFrom(ll.lat, ll.lng); });
@@ -3696,6 +3709,9 @@
             if (mpEdit.col_place && mpEdit.col_place !== o.col_place) { col.place = mpEdit.col_place; col.lat = mpEdit.col_lat; col.lng = mpEdit.col_lng; cchg = true; }
         }
         if (!dchg && !cchg) { mpEdit.error = '変更内容がありません。'; renderMpEdit(); return; }
+        // 配達エリア外チェック（場所を変更した場合のみ・予約時と同じ判定）
+        if (dchg && del.place && del.lat != null) { const c = checkDeliverable(del.lat, del.lng, del.place); if (!c.ok) { mpEdit.error = '【お届け】' + c.reason; renderMpEdit(); return; } }
+        if (cchg && col.place && col.lat != null) { const c = checkDeliverable(col.lat, col.lng, col.place); if (!c.ok) { mpEdit.error = '【回収】' + c.reason; renderMpEdit(); return; } }
         const body = { action: 'change_request', mail: (mypageState.email || localStorage.getItem('hdm_mypage_email') || ''), resId: r.id };
         if (dchg) body.del = del;
         if (cchg) body.col = col;
