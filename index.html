@@ -3564,7 +3564,11 @@
                     <div style="font-size:15px;font-weight:800;color:#1a1a1a;">${isDel ? '📍 お届け場所' : '🏁 回収場所'}を地図で選ぶ</div>
                     <button onclick="mpEditBackToForm()" style="background:#f1f1f1;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">戻る</button>
                 </div>
-                <div style="font-size:12px;color:#666;margin-bottom:8px;">地図をタップして場所を指定してください。</div>
+                <div style="font-size:12px;color:#666;margin-bottom:8px;">ホテル名・住所で検索、または地図をタップして指定してください。</div>
+                <div style="position:relative;margin-bottom:8px;">
+                    <input id="mpEditSearchInput" type="text" placeholder="🔍 ホテル名・住所で検索" autocomplete="off" oninput="mpEditSearch(this.value)" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;outline:none;">
+                    <div id="mpEditSuggest" style="display:none;position:absolute;top:44px;left:0;right:0;z-index:1001;background:#fff;border:1px solid #eee;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:200px;overflow-y:auto;"></div>
+                </div>
                 <div id="mpEditMap" style="height:300px;border-radius:12px;overflow:hidden;background:#eaeef2;"></div>
                 <div id="mpEditPicked" style="font-size:12.5px;font-weight:700;color:#1a1a1a;margin:10px 2px 12px;min-height:18px;">${(isDel ? mpEdit.del_place : mpEdit.col_place) || '未選択'}</div>
                 <button class="btn-primary" style="margin:0;" onclick="mpEditBackToForm()">この場所で決定 ›</button>
@@ -3621,6 +3625,38 @@
     }
     function mpEditPickPlace(which) { mpEdit.mapMode = which; renderMpEdit(); }
     function mpEditBackToForm() { mpEdit.mapMode = null; renderMpEdit(); }
+    // 変更モーダルの地図内検索（ホテル名・住所。Photon＝無料・施設名/部分入力に強い）
+    let _mpEditSearchTimer = null;
+    function mpEditSearch(q) {
+        clearTimeout(_mpEditSearchTimer);
+        const box = document.getElementById('mpEditSuggest');
+        if (!box) return;
+        if (!q || q.length < 2) { box.style.display = 'none'; return; }
+        _mpEditSearchTimer = setTimeout(async () => {
+            try {
+                const res = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lat=43.0687&lon=141.3508&limit=7');
+                const d = await res.json();
+                const feats = ((d && d.features) || []).filter(f => { const p = (f && f.properties) || {}; return (!p.countrycode || p.countrycode === 'JP') && f.geometry && f.geometry.coordinates; });
+                if (!feats.length) { box.innerHTML = '<div style="padding:10px;font-size:12px;color:#999;">該当する場所が見つかりません</div>'; box.style.display = 'block'; return; }
+                box.innerHTML = feats.slice(0, 7).map(f => {
+                    const p = f.properties || {}, c = f.geometry.coordinates;
+                    const adr = [p.state, p.city, p.district, p.street, p.housenumber].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+                    const label = (p.name && adr) ? (p.name + '（' + adr + '）') : (p.name || adr || '(名称不明)');
+                    const lab = label.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                    return '<div style="padding:9px 11px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'#fff\'" onclick="mpEditPickResult(' + c[1] + ',' + c[0] + ',\'' + lab + '\')">📍 ' + label + '</div>';
+                }).join('');
+                box.style.display = 'block';
+            } catch (e) { box.style.display = 'none'; }
+        }, 400);
+    }
+    function mpEditPickResult(lat, lng, name) {
+        const box = document.getElementById('mpEditSuggest'); if (box) box.style.display = 'none';
+        const isDel = mpEdit.mapMode === 'del';
+        if (isDel) { mpEdit.del_place = name; mpEdit.del_lat = lat; mpEdit.del_lng = lng; } else { mpEdit.col_place = name; mpEdit.col_lat = lat; mpEdit.col_lng = lng; }
+        const pe = document.getElementById('mpEditPicked'); if (pe) pe.textContent = name;
+        const si = document.getElementById('mpEditSearchInput'); if (si) si.value = name;
+        if (mpEditMap) { try { mpEditMap.setView([lat, lng], 16); if (mpEditMarker) mpEditMarker.setLatLng([lat, lng]); } catch (e) {} }
+    }
     async function initMpEditMap() {
         const el = document.getElementById('mpEditMap');
         if (!el || typeof L === 'undefined' || !mpEdit) return;
