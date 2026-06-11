@@ -49,12 +49,27 @@ async function sbPost(t: string, d: unknown) {
     body: JSON.stringify(d) });
   if (!r.ok) console.error(`POST ${t}: ${await r.text()}`);
 }
-async function notifySlack(text: string) {
-  const token = Deno.env.get("SLACK_BOT_TOKEN"); const channel = Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
-  if (!token) return;
+async function notifySlack(text: string, channel?: string) {
+  const token = Deno.env.get("SLACK_BOT_TOKEN");
+  const ch = channel || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
+  if (!token || !ch) return;
   try { await fetch("https://slack.com/api/chat.postMessage", { method: "POST",
     headers: { Authorization: `Bearer ${token}`, "content-type": "application/json; charset=utf-8" },
-    body: JSON.stringify({ channel, text }) }); } catch (e) { console.error("[slack]", e); }
+    body: JSON.stringify({ channel: ch, text }) }); } catch (e) { console.error("[slack]", e); }
+}
+
+// ★ 店舗別テーブル/Slack/列マッピング解決。store指定が無ければ予約番号接頭辞 KDN- で那覇を推論。
+const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; resvSel: string; slackEnv: string }> = {
+  spk: { resv: "reservations", fleet: "fleet", tasks: "tasks",
+    resvSel: "id,ota,status,lend_date,price,name,vehicle,mail", slackEnv: "SLACK_KEYDROP_CHANNEL" },
+  nha: { resv: "nha_reservations", fleet: "nha_fleet", tasks: "nha_tasks",
+    resvSel: "id,ota,status,lend_date:start_date,price,name,vehicle:vehicle_class,mail", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA" },
+};
+function resolveStore(p: any, resId: string) {
+  const s = (p && p.store === "nha") || /^KDN-/i.test(resId) ? "nha" : "spk";
+  const m = STORE_MAP[s];
+  const slack = Deno.env.get(m.slackEnv) || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
+  return { store: s, ...m, slack };
 }
 
 // JWTのrole claimを読む（gatewayが署名検証済み。ここでは認可のためroleだけ見る）
@@ -93,8 +108,10 @@ Deno.serve(async (req) => {
   const resId = String(p.reservationId || p.resId || "").trim();
   if (!resId) return json({ error: "予約番号が必要です" }, 400);
 
-  // 予約（KEYDROPのみ）
-  const rv = (await sbGet("reservations", `id=eq.${encodeURIComponent(resId)}&select=id,ota,status,lend_date,price,name,vehicle,mail`))[0];
+  const M = resolveStore(p, resId); // 店舗解決（spk/nha）
+
+  // 予約（KEYDROPのみ・店舗別テーブル／那覇は列エイリアスで札幌項目名に揃える）
+  const rv = (await sbGet(M.resv, `id=eq.${encodeURIComponent(resId)}&select=${M.resvSel}`))[0];
   if (!rv || rv.ota !== "KEYDROP") return json({ error: "対象のKEYDROP予約が見つかりません" }, 404);
   const st = String(rv.status || "");
   if (st === "cancelled" || st === "キャンセル" || st === "cancel") return json({ ok: true, alreadyCancelled: true });
@@ -158,8 +175,15 @@ Deno.serve(async (req) => {
   const nowIso = new Date().toISOString();
   await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`,
     { status: "refunded", refund_amount: refundActual, cancel_fee: fee, cancel_rate: rate, refunded_at: nowIso, square_refund_id: squareRefundId });
-  await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}`, { status: "キャンセル" });
-  await sbDelete("fleet", `reservation_id=eq.${encodeURIComponent(resId)}`);
+  await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}`, { status: "キャンセル" });
+  await sbDelete(M.fleet, `reservation_id=eq.${encodeURIComponent(resId)}`);
+  // OPシート(配車表)からタスク(d-/c-/w-)を除去＝アプリ通常キャンセルと同挙動。
+  // 札幌tasksはreservation_id列あり / 那覇nha_tasksは無い→_id(d-/c-/w-)で削除。
+  if (M.store === "nha") {
+    await sbDelete(M.tasks, `_id=in.(${["d-", "c-", "w-"].map((pf) => encodeURIComponent(pf + resId)).join(",")})`);
+  } else {
+    await sbDelete(M.tasks, `reservation_id=eq.${encodeURIComponent(resId)}`);
+  }
 
   // 顧客へ「キャンセル確定（返金）」メールをキュー投入（GAS送信ワーカーが reserve@ から送信）
   if (rv.mail && String(rv.mail).indexOf("@") > 0) {
@@ -167,6 +191,7 @@ Deno.serve(async (req) => {
       type: "cancel_done",
       reservation_id: resId,
       to_email: rv.mail,
+      store: M.store,
       payload: {
         name: rv.name || "", vehicleClass: rv.vehicle || "",
         lend_date: rv.lend_date || "",
@@ -178,11 +203,11 @@ Deno.serve(async (req) => {
   const howRefunded = (doAuto && refundActual > 0) ? `自動返金 完了（Square refund ${squareRefundId}）`
     : (refundActual === 0 ? "返金なし（キャンセル料100%）" : "記録のみ（手動返金）");
   await notifySlack([
-    `✅ *KEYDROP キャンセル確定*${noCharge ? "（🆓 ノーチャージ＝キャンセル料不要）" : ""}`,
+    `✅ *KEYDROP キャンセル確定*${M.store === "nha" ? "【那覇】" : ""}${noCharge ? "（🆓 ノーチャージ＝キャンセル料不要）" : ""}`,
     `予約番号: ${resId} / ${rv.name || ""}様（${rv.vehicle || ""}クラス）`,
     `入金 ¥${paid.toLocaleString()} − キャンセル料 ¥${fee.toLocaleString()}(${rate}%) = 返金 ¥${refundActual.toLocaleString()}`,
     `💳 ${howRefunded}`,
-  ].join("\n"));
+  ].join("\n"), M.slack);
 
   console.log(`[cancel-confirm] ${resId} paid=${paid} fee=${fee}(${rate}%) refund=${refundActual} noCharge=${noCharge} auto=${doAuto} sq=${squareRefundId}`);
   return json({ ok: true, noCharge, rate, fee, refundSuggested: refund, refundRecorded: refundActual, paid, autoRefunded: !!squareRefundId, squareRefundId });

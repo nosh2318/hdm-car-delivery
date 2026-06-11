@@ -54,12 +54,31 @@ async function sbRpc(fn: string, args: unknown): Promise<any> {
   if (!r.ok) { console.error(`RPC ${fn}: ${await r.text()}`); return null; }
   return await r.json();
 }
-async function notifySlack(text: string) {
-  const token = Deno.env.get("SLACK_BOT_TOKEN"); const channel = Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
-  if (!token) return;
+async function notifySlack(text: string, channel?: string) {
+  const token = Deno.env.get("SLACK_BOT_TOKEN");
+  const ch = channel || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
+  if (!token || !ch) return;
   try { await fetch("https://slack.com/api/chat.postMessage", { method: "POST",
     headers: { Authorization: `Bearer ${token}`, "content-type": "application/json; charset=utf-8" },
-    body: JSON.stringify({ channel, text }) }); } catch (e) { console.error("[slack]", e); }
+    body: JSON.stringify({ channel: ch, text }) }); } catch (e) { console.error("[slack]", e); }
+}
+
+// ★ 店舗別テーブル/RPC/Slack/列マッピング解決（既定=spk＝後方互換）
+//   nha_reservations は列名が違う(start_date/end_date/start_time/end_time/vehicle_class)ので
+//   confirmメールの select は PostgRESTエイリアス(alias:col)で札幌の項目名に揃える。
+const STORE_MAP: Record<string, { resv: string; fleet: string; rpc: string; resvSel: string; slackEnv: string }> = {
+  spk: { resv: "reservations", fleet: "fleet", rpc: "keydrop_book_v2",
+    resvSel: "name,mail,vehicle,lend_date,return_date,lend_time,return_time,del_place,col_place,price,people,insurance",
+    slackEnv: "SLACK_KEYDROP_CHANNEL" },
+  nha: { resv: "nha_reservations", fleet: "nha_fleet", rpc: "keydrop_book_nha",
+    resvSel: "name,mail,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_place,col_place,price,people,insurance",
+    slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA" },
+};
+function resolveStore(p: any) {
+  const s = p && p.store === "nha" ? "nha" : "spk";
+  const m = STORE_MAP[s];
+  const slack = Deno.env.get(m.slackEnv) || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
+  return { store: s, ...m, slack };
 }
 
 Deno.serve(async (req) => {
@@ -68,6 +87,8 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
   let p: any; try { p = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
+
+  const M = resolveStore(p); // 店舗解決（spk/nha）
 
   // レート制限（IP×時間窓）
   const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
@@ -95,8 +116,8 @@ Deno.serve(async (req) => {
 
   let people = parseInt(String(p.people ?? 1), 10); if (isNaN(people) || people < 1) people = 1; if (people > 8) people = 8;
 
-  // 予約作成＋総額確定（サーバ計算）
-  const rpc = await sbRpc("keydrop_book_v2", { p: {
+  // 予約作成＋総額確定（サーバ計算・店舗別RPC）
+  const rpc = await sbRpc(M.rpc, { p: {
     vehicleClass: cls, vehicleModel: String(p.vehicleModel || ""),
     lend_date: lend, return_date: ret, lend_time: String(p.lend_time || ""), return_time: String(p.return_time || ""),
     name, mail, tel, people,
@@ -135,22 +156,22 @@ Deno.serve(async (req) => {
       return json({ error: "決済に失敗しました：" + detail }, 402);
     }
     const payId = j.payment.id;
-    // 確定
-    await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}&status=eq.pending_payment`, { status: "confirmed" });
-    await sbPost("keydrop_payments", { reservation_id: resId, square_payment_id: payId, amount, status: "paid", paid_at: new Date().toISOString() });
-    // 完了メール投入＋Slack（予約詳細取得）
-    const rv = (await sbGet("reservations", `id=eq.${encodeURIComponent(resId)}&select=name,mail,vehicle,lend_date,return_date,lend_time,return_time,del_place,col_place,price,people,insurance`))[0];
+    // 確定（店舗別テーブル）
+    await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}&status=eq.pending_payment`, { status: "confirmed" });
+    await sbPost("keydrop_payments", { reservation_id: resId, square_payment_id: payId, amount, status: "paid", paid_at: new Date().toISOString(), store: M.store });
+    // 完了メール投入＋Slack（予約詳細取得・那覇は列エイリアスで札幌項目名に揃える）
+    const rv = (await sbGet(M.resv, `id=eq.${encodeURIComponent(resId)}&select=${M.resvSel}`))[0];
     if (rv && rv.mail) {
-      await sbPost("keydrop_notifications", { type: "confirm", reservation_id: resId, to_email: rv.mail, payload: {
+      await sbPost("keydrop_notifications", { type: "confirm", reservation_id: resId, to_email: rv.mail, store: M.store, payload: {
         name: rv.name || "", vehicleClass: rv.vehicle || "", lend_date: rv.lend_date || "", lend_time: rv.lend_time || "",
         return_date: rv.return_date || "", return_time: rv.return_time || "", del_place: rv.del_place || "", col_place: rv.col_place || "",
         price: rv.price || amount, people: rv.people || 1, insurance: rv.insurance || "なし" } });
     }
-    await notifySlack([`🆕 *KEYDROP 新規予約*（カード決済・確定）`,
+    await notifySlack([`🆕 *KEYDROP 新規予約*（カード決済・確定）${M.store === "nha" ? "【那覇】" : ""}`,
       `予約番号: ${resId} / ${rv?.name || ""}様`, `車両: ${rv?.vehicle || ""}クラス`,
       `お届け: ${rv?.lend_date || ""} ${rv?.lend_time || ""}　${rv?.del_place || ""}`,
       `回収: ${rv?.return_date || ""} ${rv?.return_time || ""}　${rv?.col_place || ""}`,
-      `金額: ¥${amount.toLocaleString()}`].join("\n"));
+      `金額: ¥${amount.toLocaleString()}`].join("\n"), M.slack);
     console.log(`[pay] PAID ${resId} ¥${amount} payment=${payId}`);
     return json({ ok: true, reservationId: resId, amount });
   } catch (e) {
@@ -160,8 +181,8 @@ Deno.serve(async (req) => {
 
   async function cancelPending(id: string) {
     try {
-      await sbDelete("fleet", `reservation_id=eq.${encodeURIComponent(id)}`);
-      await sbPatch("reservations", `id=eq.${encodeURIComponent(id)}&status=eq.pending_payment`, { status: "cancelled" });
+      await sbDelete(M.fleet, `reservation_id=eq.${encodeURIComponent(id)}`);
+      await sbPatch(M.resv, `id=eq.${encodeURIComponent(id)}&status=eq.pending_payment`, { status: "cancelled" });
     } catch (_e) { /* TTLが後始末 */ }
   }
 });

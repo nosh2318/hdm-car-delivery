@@ -68,19 +68,35 @@ async function sbPost(table: string, body: unknown): Promise<void> {
 
 // 運営へSlack通知（任意：環境変数が無ければスキップ＝変更自体は成立）
 // SLACK_BOT_TOKEN + SLACK_KEYDROP_CHANNEL（既定 #sapporo_reservation=C08TDTPEB36）
-async function notifySlack(text: string): Promise<void> {
+async function notifySlack(text: string, channel?: string): Promise<void> {
   const token = Deno.env.get("SLACK_BOT_TOKEN");
-  const channel = Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
-  if (!token) { console.log("[notifySlack] no token (skip):", text); return; }
+  const ch = channel || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
+  if (!token || !ch) { console.log("[notifySlack] no token/ch (skip):", text); return; }
   try {
     const r = await fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "content-type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ channel, text }),
+      body: JSON.stringify({ channel: ch, text }),
     });
     const d = await r.json().catch(() => ({}));
     if (!d.ok) console.error("[notifySlack] failed:", JSON.stringify(d));
   } catch (e) { console.error("[notifySlack] error:", String(e)); }
+}
+
+// ★ 店舗別テーブル/タスク/Slack/列マッピング。store指定が無ければ予約番号接頭辞 KDN- で那覇を推論。
+//   SELECTはPostgRESTエイリアス(alias:col)で那覇の列名(start_*/vehicle_class)を札幌の項目名(lend_*/vehicle)へ揃える＝本体ロジック無改修。
+//   時刻PATCHのみ正本列名が違う(lend_time→start_time / return_time→end_time)ので lendTimeCol/returnTimeCol で切替。
+const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; lendTimeCol: string; returnTimeCol: string; slackEnv: string; sel: string }> = {
+  spk: { resv: M.resv, fleet: M.fleet, tasks: M.tasks, lendTimeCol: "lend_time", returnTimeCol: "return_time", slackEnv: "SLACK_KEYDROP_CHANNEL",
+    sel: "id,ota,vehicle,lend_date,return_date,lend_time,return_time,del_time,col_time,name,mail,tel,people,price,status,insurance,del_place,col_place,kd_status" },
+  nha: { resv: "nha_reservations", fleet: "nha_fleet", tasks: "nha_tasks", lendTimeCol: "start_time", returnTimeCol: "end_time", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA",
+    sel: "id,ota,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_time,col_time,name,mail,tel,people,price,status,insurance,del_place,col_place,kd_status" },
+};
+function resolveStore(p: any, resId: string) {
+  const s = (p && p.store === "nha") || /^KDN-/i.test(resId) ? "nha" : "spk";
+  const m = STORE_MAP[s];
+  const slack = Deno.env.get(m.slackEnv) || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
+  return { store: s, ...m, slack };
 }
 
 // 営業時間 9:00〜19:00・30分刻みのみ許可（不正値は弾く）
@@ -132,10 +148,12 @@ Deno.serve(async (req) => {
   if (!mail || mail.indexOf("@") < 0) return json({ error: "メールアドレスが必要です" }, 400, origin);
   if (!resId) return json({ error: "予約番号が必要です" }, 400, origin);
 
-  // 予約を1件だけ取得（id一致 かつ mail一致 のときのみ）
+  const M = resolveStore(p, resId); // 店舗解決（spk/nha）
+
+  // 予約を1件だけ取得（id一致 かつ mail一致 のときのみ・店舗別テーブル／那覇は列エイリアスで札幌項目名に揃える）
   const rows = await sbGet(
-    "reservations",
-    `id=eq.${encodeURIComponent(resId)}&select=id,ota,vehicle,lend_date,return_date,lend_time,return_time,del_time,col_time,name,mail,tel,people,price,status,insurance,del_place,col_place,kd_status`,
+    M.resv,
+    `id=eq.${encodeURIComponent(resId)}&select=${M.sel}`,
   );
   const r = rows[0];
   if (!r || String(r.mail || "").trim().toLowerCase() !== mail) {
@@ -144,7 +162,7 @@ Deno.serve(async (req) => {
   }
 
   if (action === "lookup") {
-    const fleet = await sbGet("fleet", `reservation_id=eq.${encodeURIComponent(resId)}&select=vehicle_code`);
+    const fleet = await sbGet(M.fleet, `reservation_id=eq.${encodeURIComponent(resId)}&select=vehicle_code`);
     // キャンセル依頼マーカー（keydrop_payments.cancel_requested_at）を返す＝再入場でも「申請中」を表示し再依頼を防ぐ
     const pay = await sbGet("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}&select=cancel_requested_at,cancel_reason,change_req`).catch(() => []);
     const cr = pay[0]?.change_req || null;
@@ -174,8 +192,14 @@ Deno.serve(async (req) => {
     if (r.lend_date && r.lend_date < today) {
       return json({ error: "貸出日を過ぎているためオンラインでキャンセルできません" }, 409, origin);
     }
-    await sbDelete("fleet", `reservation_id=eq.${encodeURIComponent(resId)}`);
-    const ok = await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}`, { status: "キャンセル" });
+    await sbDelete(M.fleet, `reservation_id=eq.${encodeURIComponent(resId)}`);
+    // OPシートからタスク(d-/c-/w-)も除去。札幌tasks=reservation_id列 / 那覇nha_tasks=_idで削除。
+    if (M.store === "nha") {
+      await sbDelete(M.tasks, `_id=in.(${["d-", "c-", "w-"].map((pf) => encodeURIComponent(pf + resId)).join(",")})`);
+    } else {
+      await sbDelete(M.tasks, `reservation_id=eq.${encodeURIComponent(resId)}`);
+    }
+    const ok = await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}`, { status: "キャンセル" });
     if (!ok) return json({ error: "キャンセルに失敗しました" }, 500, origin);
     return json({ ok: true, cancelled: true }, 200, origin);
   }
@@ -211,9 +235,9 @@ Deno.serve(async (req) => {
     const rPatch: Record<string, unknown> = {};
     if (delPlace !== null) rPatch.del_place = delPlace;
     if (colPlace !== null) rPatch.col_place = colPlace;
-    if (lendTime !== null) { rPatch.lend_time = lendTime; rPatch.del_time = lendTime; }
-    if (returnTime !== null) { rPatch.return_time = returnTime; rPatch.col_time = returnTime; }
-    const okRes = await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}`, rPatch);
+    if (lendTime !== null) { rPatch[M.lendTimeCol] = lendTime; rPatch.del_time = lendTime; }
+    if (returnTime !== null) { rPatch[M.returnTimeCol] = returnTime; rPatch.col_time = returnTime; }
+    const okRes = await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}`, rPatch);
     if (!okRes) return json({ error: "変更の保存に失敗しました" }, 500, origin);
 
     // 2) 既存タスク（OPシート・配車表のソース）も即時同期＋🔔変更マーカーをmemoに追記
@@ -226,14 +250,14 @@ Deno.serve(async (req) => {
     const marker = `🔔顧客変更(${stamp}):${changedLabels.join("・")}`;
 
     async function patchTask(taskId: string, patch: Record<string, unknown>) {
-      const cur = await sbGet("tasks", `_id=eq.${encodeURIComponent(taskId)}&select=_id,memo,changed_json`);
+      const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(taskId)}&select=_id,memo,changed_json`);
       if (!cur[0]) return; // タスク未生成なら本体が次回reservationsから生成（正本は更新済）
       const memo = String(cur[0].memo || "");
       const newMemo = memo.includes(marker) ? memo : (memo ? memo + " " + marker : marker);
       let cj: any = {};
       try { cj = cur[0].changed_json && typeof cur[0].changed_json === "object" ? cur[0].changed_json : (cur[0].changed_json ? JSON.parse(cur[0].changed_json) : {}); } catch { cj = {}; }
       cj.kd_customer_changed_at = new Date().toISOString();
-      await sbPatch("tasks", `_id=eq.${encodeURIComponent(taskId)}`, { ...patch, memo: newMemo, changed_json: cj });
+      await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(taskId)}`, { ...patch, memo: newMemo, changed_json: cj });
     }
     // DELタスク：place=お届け場所 / time=お届け時間 ＋ 参照(col_place/return_time)
     const delTaskPatch: Record<string, unknown> = {};
@@ -258,7 +282,7 @@ Deno.serve(async (req) => {
       colPlace !== null ? `回収場所 → *${colPlace}*` : null,
       `※配車表/OPシートに反映済み・ご確認ください`,
     ].filter(Boolean);
-    await notifySlack(lines.join("\n"));
+    await notifySlack(lines.join("\n"), M.slack);
 
     return json({
       ok: true,
@@ -278,9 +302,9 @@ Deno.serve(async (req) => {
     if (!cr || cr.status !== "pending") return json({ error: "承認対象の変更申請がありません" }, 409, origin);
     const del = cr.del || null, col = cr.col || null;
     const rPatch: Record<string, unknown> = {};
-    if (del) { if (del.place) rPatch.del_place = del.place; if (del.time) { rPatch.lend_time = del.time; rPatch.del_time = del.time; } }
-    if (col) { if (col.place) rPatch.col_place = col.place; if (col.time) { rPatch.return_time = col.time; rPatch.col_time = col.time; } }
-    if (Object.keys(rPatch).length) await sbPatch("reservations", `id=eq.${encodeURIComponent(resId)}`, rPatch);
+    if (del) { if (del.place) rPatch.del_place = del.place; if (del.time) { rPatch[M.lendTimeCol] = del.time; rPatch.del_time = del.time; } }
+    if (col) { if (col.place) rPatch.col_place = col.place; if (col.time) { rPatch[M.returnTimeCol] = col.time; rPatch.col_time = col.time; } }
+    if (Object.keys(rPatch).length) await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}`, rPatch);
     const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
     const apLabels: string[] = [];
     if (del?.time) apLabels.push("お届け時間");
@@ -289,14 +313,14 @@ Deno.serve(async (req) => {
     if (col?.place) apLabels.push("回収場所");
     const marker = `✅変更済(${stamp}):${apLabels.join("・")}`;
     async function patchTask(taskId: string, patch: Record<string, unknown>) {
-      const cur = await sbGet("tasks", `_id=eq.${encodeURIComponent(taskId)}&select=_id,memo,changed_json`);
+      const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(taskId)}&select=_id,memo,changed_json`);
       if (!cur[0]) return;
       const memo = String(cur[0].memo || "");
       const newMemo = memo.includes(marker) ? memo : (memo ? memo + " " + marker : marker);
       let cj: any = {};
       try { cj = cur[0].changed_json && typeof cur[0].changed_json === "object" ? cur[0].changed_json : (cur[0].changed_json ? JSON.parse(cur[0].changed_json) : {}); } catch { cj = {}; }
       cj.kd_customer_changed_at = new Date().toISOString();
-      await sbPatch("tasks", `_id=eq.${encodeURIComponent(taskId)}`, { ...patch, memo: newMemo, changed_json: cj });
+      await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(taskId)}`, { ...patch, memo: newMemo, changed_json: cj });
     }
     const dt: Record<string, unknown> = {};
     if (del?.place) dt.place = del.place;
@@ -310,18 +334,18 @@ Deno.serve(async (req) => {
     if (Object.keys(ct).length) await patchTask(`c-${resId}`, ct);
     // 「🟡変更申請中」フラグを両タスクから除去（承認＝反映済みなので不要に）
     for (const tid of [`d-${resId}`, `c-${resId}`]) {
-      const cu = await sbGet("tasks", `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
+      const cu = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
       if (!cu[0]) continue;
       const m2 = String(cu[0].memo || "");
-      if (m2.includes("変更申請中")) await sbPatch("tasks", `_id=eq.${encodeURIComponent(tid)}`, { memo: m2.replace(/🟡変更申請中\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim() });
+      if (m2.includes("変更申請中")) await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(tid)}`, { memo: m2.replace(/🟡変更申請中\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim() });
     }
     await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: null, change_req_at: null });
     if (r.mail && String(r.mail).indexOf("@") > 0) {
-      await sbPost("keydrop_notifications", { type: "change_done", reservation_id: resId, to_email: r.mail, payload: {
+      await sbPost("keydrop_notifications", { type: "change_done", reservation_id: resId, to_email: r.mail, store: M.store, payload: {
         name: r.name || "", del: del || null, col: col || null,
       } });
     }
-    await notifySlack(`✅ *KEYDROP 変更を承認・反映* ${resId} / ${r.name || ""}様`);
+    await notifySlack(`✅ *KEYDROP 変更を承認・反映*${M.store === "nha" ? "【那覇】" : ""} ${resId} / ${r.name || ""}様`, M.slack);
     return json({ ok: true, approved: true }, 200, origin);
   }
 
@@ -329,12 +353,12 @@ Deno.serve(async (req) => {
   if (action === "reject_change") {
     await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: null, change_req_at: null });
     for (const tid of [`d-${resId}`, `c-${resId}`]) {
-      const cu = await sbGet("tasks", `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
+      const cu = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
       if (!cu[0]) continue;
       const m2 = String(cu[0].memo || "");
-      if (m2.includes("変更申請中")) await sbPatch("tasks", `_id=eq.${encodeURIComponent(tid)}`, { memo: m2.replace(/🟡変更申請中\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim() });
+      if (m2.includes("変更申請中")) await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(tid)}`, { memo: m2.replace(/🟡変更申請中\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim() });
     }
-    await notifySlack(`↩️ *KEYDROP 変更を差戻し* ${resId} / ${r.name || ""}様`);
+    await notifySlack(`↩️ *KEYDROP 変更を差戻し*${M.store === "nha" ? "【那覇】" : ""} ${resId} / ${r.name || ""}様`, M.slack);
     return json({ ok: true, rejected: true }, 200, origin);
   }
 
@@ -389,10 +413,10 @@ Deno.serve(async (req) => {
     if ((req.col as any)?.place) reqLabels.push("回収場所");
     const cmark = `🟡変更申請中(${cstamp}):${reqLabels.join("・")}`;
     for (const tid of [`d-${resId}`, `c-${resId}`]) {
-      const cur = await sbGet("tasks", `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
+      const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
       if (!cur[0]) continue;
       const memo = String(cur[0].memo || "");
-      if (!memo.includes("変更申請中")) await sbPatch("tasks", `_id=eq.${encodeURIComponent(tid)}`, { memo: memo ? memo + " " + cmark : cmark });
+      if (!memo.includes("変更申請中")) await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(tid)}`, { memo: memo ? memo + " " + cmark : cmark });
     }
 
     const lines = [
@@ -401,8 +425,8 @@ Deno.serve(async (req) => {
     ];
     if (req.del) lines.push(`お届け→ 時間:${(req.del as any).time || "-"} / 場所:${(req.del as any).place || "-"}`);
     if (req.col) lines.push(`回収→ 時間:${(req.col as any).time || "-"} / 場所:${(req.col as any).place || "-"}`);
-    lines.push(`➡️ SPKアプリ「🚫キャンセル」隣の変更リクエストで確認→承認してください`);
-    await notifySlack(lines.join("\n"));
+    lines.push(`➡️ ${M.store === "nha" ? "NHAアプリ" : "SPKアプリ"}「🚫キャンセル」隣の変更リクエストで確認→承認してください`);
+    await notifySlack(lines.join("\n"), M.slack);
 
     return json({ ok: true, requested: true }, 200, origin);
   }
@@ -427,6 +451,7 @@ Deno.serve(async (req) => {
         type: "cancel_ack",
         reservation_id: resId,
         to_email: r.mail,
+        store: M.store,
         payload: {
           name: r.name || "", vehicleClass: r.vehicle || "",
           lend_date: r.lend_date || "", lend_time: r.lend_time || r.del_time || "",
@@ -441,11 +466,11 @@ Deno.serve(async (req) => {
     const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
     const marker = `🔴キャンセル依頼(${stamp})${reason ? "：" + reason : ""}`;
     for (const tid of [`d-${resId}`, `c-${resId}`]) {
-      const cur = await sbGet("tasks", `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
+      const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
       if (!cur[0]) continue;
       const memo = String(cur[0].memo || "");
       if (!memo.includes("キャンセル依頼")) {
-        await sbPatch("tasks", `_id=eq.${encodeURIComponent(tid)}`, { memo: memo ? memo + " " + marker : marker });
+        await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(tid)}`, { memo: memo ? memo + " " + marker : marker });
       }
     }
 
@@ -456,6 +481,7 @@ Deno.serve(async (req) => {
         type: "cancel_request",
         reservation_id: resId,
         to_email: OPS_EMAIL,
+        store: M.store,
         payload: {
           name: r.name || "", mail: r.mail || "", tel: r.tel || "",
           vehicleClass: r.vehicle || "",
@@ -467,15 +493,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 4) 運営へSlack即時通知（主・任意env）
+    // 4) 運営へSlack即時通知（主・任意env・店舗別ch）
     await notifySlack([
-      `🔴 *KEYDROP キャンセル依頼* （顧客がマイページで申請）`,
+      `🔴 *KEYDROP キャンセル依頼*${M.store === "nha" ? "【那覇】" : ""} （顧客がマイページで申請）`,
       `予約番号: ${resId} / ${r.name || ""}様（${r.mail || ""}）`,
       `期間: ${r.lend_date} ${r.lend_time || r.del_time || ""} 〜 ${r.return_date} ${r.return_time || r.col_time || ""}`,
       `クラス: ${r.vehicle || ""} / 金額: ¥${Number(r.price || 0).toLocaleString()}`,
       reason ? `理由: ${reason}` : null,
-      `➡️ *返金判断のうえ SPK adminでキャンセル確定してください*`,
-    ].filter(Boolean).join("\n"));
+      `➡️ *返金判断のうえ ${M.store === "nha" ? "NHA" : "SPK"} adminでキャンセル確定してください*`,
+    ].filter(Boolean).join("\n"), M.slack);
 
     return json({ ok: true, requested: true }, 200, origin);
   }

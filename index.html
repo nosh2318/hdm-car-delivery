@@ -892,8 +892,38 @@
     const SUPABASE_URL = 'https://ckrxttbnawkclshczsia.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
 
+    // ── KEYDROP エリア（店舗）: ?area=naha でNHA、既定=札幌(後方互換) ──
+    // 顧客LP1サイトで2地域。公開ビューは店舗別(_v=札幌 / _nha_v=那覇)、予約/マイページはEdge Functionにstore('spk'|'nha')を渡す。
+    const KD_AREAS = {
+        sapporo: { label: '札幌', api: 'spk', geo: '札幌', center: '札幌駅' },
+        naha:    { label: '沖縄（那覇）', api: 'nha', geo: '沖縄 那覇', center: '那覇空港' },
+    };
+    let KD_STORE = ((new URLSearchParams(location.search).get('area') || '').toLowerCase() === 'naha') ? 'naha' : 'sapporo';
+    function KD_API_STORE() { return KD_AREAS[KD_STORE].api; }          // 'spk' | 'nha'（Edge Functionへ）
+    function KD_GEO_HINT() { return KD_AREAS[KD_STORE].geo; }            // ジオコーディングの地域ヒント
+    function kdViewName(t) { return (KD_STORE === 'naha' && /^public_.*_v$/.test(t)) ? t.replace(/_v$/, '_nha_v') : t; }
+
+    // サイト内エリア選択（右上の非侵襲ピル＋ディープリンク ?area=naha）。切替＝そのエリアURLへ遷移。
+    function kdRenderAreaSwitcher() {
+        if (document.getElementById('kd-area-switch') || !document.body) return;
+        const bar = document.createElement('div');
+        bar.id = 'kd-area-switch';
+        bar.style.cssText = 'position:fixed;top:8px;right:8px;z-index:9000;display:flex;gap:4px;padding:3px;border-radius:999px;background:rgba(17,24,39,.86);box-shadow:0 2px 8px rgba(0,0,0,.25);font:600 12px/1 -apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;';
+        ['sapporo', 'naha'].forEach(function (a) {
+            const on = a === KD_STORE;
+            const el = document.createElement('a');
+            el.textContent = '📍' + KD_AREAS[a].label;
+            el.href = (a === 'naha') ? (location.pathname + '?area=naha') : location.pathname;
+            el.style.cssText = 'padding:6px 12px;border-radius:999px;text-decoration:none;white-space:nowrap;' + (on ? 'background:#22d3ee;color:#06283d;' : 'background:transparent;color:#cbd5e1;');
+            bar.appendChild(el);
+        });
+        document.body.appendChild(bar);
+    }
+    if (document.readyState !== 'loading') kdRenderAreaSwitcher();
+    else document.addEventListener('DOMContentLoaded', kdRenderAreaSwitcher);
+
     async function supabaseGet(table, query = '') {
-        const url = `${SUPABASE_URL}/rest/v1/${table}?${query}&select=*`;
+        const url = `${SUPABASE_URL}/rest/v1/${kdViewName(table)}?${query}&select=*`;
         const res = await fetch(url, {
             headers: {
                 'apikey': SUPABASE_KEY,
@@ -1038,8 +1068,8 @@
     // ── State ──
     // ════════════════════════════════════════════
     // Sapporo Station (service area center)
-    const DEFAULT_LAT = 43.0687;
-    const DEFAULT_LNG = 141.3508;
+    const DEFAULT_LAT = (KD_STORE === 'naha') ? 26.1958 : 43.0687;
+    const DEFAULT_LNG = (KD_STORE === 'naha') ? 127.6489 : 141.3508;
 
     let state = {
         screen: 'top',
@@ -1057,7 +1087,9 @@
         locStep: 'delivery', // 場所フロー: delivery→collection→vehicle
         sameCollection: true,
         // 配達可能範囲（DB public_delivery_config_v＝adminオーナー設定で上書き。既定=札幌駅中心20km/札幌市内）
-        deliveryConfig: { centerLat: 43.0687, centerLng: 141.3508, centerName: '札幌駅', radiusKm: 20, cityFilter: '札幌市' },
+        deliveryConfig: (KD_STORE === 'naha'
+            ? { centerLat: 26.1958, centerLng: 127.6489, centerName: '那覇空港', radiusKm: 30, cityFilter: '' }
+            : { centerLat: 43.0687, centerLng: 141.3508, centerName: '札幌駅', radiusKm: 20, cityFilter: '札幌市' }),
         outOfArea: false,
         mapReady: false,
         // DateTime
@@ -2766,7 +2798,7 @@
         gAuto.getPlacePredictions({
             input: query, sessionToken: gToken, language: 'ja',
             componentRestrictions: { country: 'jp' },
-            location: new google.maps.LatLng(43.0687, 141.3508), radius: 40000,
+            location: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG), radius: 40000,
         }, function (preds, status) {
             if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { photonSearch(query); return; }
             _markEngine('google');
@@ -2814,7 +2846,7 @@
         const box=document.getElementById('addressSuggestions');
         if(!box)return;
         try{
-            const res=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(query)+'&lat=43.0687&lon=141.3508&limit=8');
+            const res=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(query)+'&lat='+DEFAULT_LAT+'&lon='+DEFAULT_LNG+'&limit=8');
             const d=await res.json();
             const feats=((d&&d.features)||[]).filter(f=>{const p=(f&&f.properties)||{};return (!p.countrycode||p.countrycode==='JP')&&f.geometry&&f.geometry.coordinates;});
             if(!feats.length){gsiSearch(query);return;}
@@ -2854,7 +2886,7 @@
         const box = document.getElementById('addressSuggestions');
         if (!box) return;
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 札幌')}&format=json&limit=5&accept-language=ja&countrycodes=jp`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' ' + KD_GEO_HINT())}&format=json&limit=5&accept-language=ja&countrycodes=jp`);
             const results = await res.json();
             if (!results.length) {
                 box.innerHTML = '<div style="padding:10px;font-size:12px;color:#999;">該当する住所が見つかりません</div>';
@@ -2983,6 +3015,7 @@
             const cls = state.selectedClassType || (v && v.type);
             const payload = {
                 token: token,
+                store: KD_API_STORE(), // 店舗振り分け（'spk'|'nha'）
                 vehicleClass: cls, vehicleModel: v ? v.name : '',
                 lend_date: state.datetime.startDate, return_date: state.datetime.endDate,
                 lend_time: state.datetime.startTime, return_time: state.datetime.endTime,
@@ -3636,7 +3669,7 @@
         _mpEditSearchTimer = setTimeout(() => {
             if (typeof gReady !== 'undefined' && gReady && gAuto) {
                 try {
-                    gAuto.getPlacePredictions({ input: q, sessionToken: gToken, language: 'ja', componentRestrictions: { country: 'jp' }, location: new google.maps.LatLng(43.0687, 141.3508), radius: 40000 }, function (preds, status) {
+                    gAuto.getPlacePredictions({ input: q, sessionToken: gToken, language: 'ja', componentRestrictions: { country: 'jp' }, location: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG), radius: 40000 }, function (preds, status) {
                         if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { mpEditPhotonSearch(q); return; }
                         box.innerHTML = preds.slice(0, 6).map(function (p) {
                             return '<div style="padding:9px 11px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'#fff\'" onclick="mpEditPickGoogle(\'' + p.place_id + '\')">📍 ' + p.description + '</div>';
@@ -3664,7 +3697,7 @@
         const box = document.getElementById('mpEditSuggest'); if (!box) return;
         (async () => {
             try {
-                const res = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lang=default&lat=43.0687&lon=141.3508&limit=7');
+                const res = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lang=default&lat=' + DEFAULT_LAT + '&lon=' + DEFAULT_LNG + '&limit=7');
                 const d = await res.json();
                 const feats = ((d && d.features) || []).filter(f => { const p = (f && f.properties) || {}; return (!p.countrycode || p.countrycode === 'JP') && f.geometry && f.geometry.coordinates; });
                 if (!feats.length) { box.innerHTML = '<div style="padding:10px;font-size:12px;color:#999;">該当する場所が見つかりません</div>'; box.style.display = 'block'; return; }
@@ -3741,7 +3774,7 @@
         // 配達エリア外チェック（場所を変更した場合のみ・予約時と同じ判定）
         if (dchg && del.place && del.lat != null) { const c = checkDeliverable(del.lat, del.lng, del.place); if (!c.ok) { mpEdit.error = '【お届け】' + c.reason; renderMpEdit(); return; } }
         if (cchg && col.place && col.lat != null) { const c = checkDeliverable(col.lat, col.lng, col.place); if (!c.ok) { mpEdit.error = '【回収】' + c.reason; renderMpEdit(); return; } }
-        const body = { action: 'change_request', mail: (mypageState.email || localStorage.getItem('hdm_mypage_email') || ''), resId: r.id };
+        const body = { action: 'change_request', store: KD_API_STORE(), mail: (mypageState.email || localStorage.getItem('hdm_mypage_email') || ''), resId: r.id };
         if (dchg) body.del = del;
         if (cchg) body.col = col;
         mpEdit.saving = true; mpEdit.error = ''; renderMpEdit();
@@ -3869,7 +3902,7 @@
             const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
                 method: 'POST',
                 headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'lookup', mail: email, resId }),
+                body: JSON.stringify({ action: 'lookup', store: KD_API_STORE(), mail: email, resId }),
             });
             const data = await res.json();
             if (!res.ok || !data.ok) {
@@ -4059,7 +4092,7 @@
                 const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
                     method: 'POST',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'cancel_request', mail: email, resId, reason }),
+                    body: JSON.stringify({ action: 'cancel_request', store: KD_API_STORE(), mail: email, resId, reason }),
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok || !data.ok) {
@@ -4095,7 +4128,7 @@
                 const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
                     method: 'POST',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'cancel_request', mail: email, resId, reason }),
+                    body: JSON.stringify({ action: 'cancel_request', store: KD_API_STORE(), mail: email, resId, reason }),
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok || !data.ok) {
