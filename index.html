@@ -904,139 +904,231 @@
     function kdViewName(t) { return (KD_STORE === 'naha' && /^public_.*_v$/.test(t)) ? t.replace(/_v$/, '_nha_v') : t; }
 
     // ═══════════════════════════════════════════════════════════
-    // 入口体験「DROP A KEY. GET A CAR.」：日本列島に鍵を落としてサービス開始
-    //   ?area= 指定で来た人 / 既選択(localStorage)の再訪はスキップ。?pick=1 で強制再表示。
-    //   提供エリア(active:true)＝点滅・選択可 / 未提供＝グレー。config(KD_GATE_AREAS)駆動。
+    // KEYDROP TOP EXPERIENCE v1.0 — 「鍵を落としてサービスを起動する」起動シネマ
+    //   提供エリア(札幌/沖縄)へ鍵を投下→配送ネットワーク起動→車出現→遷移。
+    //   ?area=指定 / 30日以内の再訪はスキップ。?pick=1 で再表示。SKIPで即遷移。config駆動。
     // ═══════════════════════════════════════════════════════════
     const KD_GATE_AREAS = [
         { id: 'sapporo', label: '札幌',        sub: '北海道', active: true,  x: 70, y: 12 },
-        { id: 'naha',    label: '沖縄（那覇）', sub: '沖縄本島', active: true,  x: 12, y: 92 },
         { id: 'tokyo',   label: '東京',        sub: 'Coming soon', active: false, x: 64, y: 50 },
         { id: 'nagoya',  label: '名古屋',      sub: 'Coming soon', active: false, x: 55, y: 56 },
         { id: 'osaka',   label: '大阪',        sub: 'Coming soon', active: false, x: 46, y: 60 },
         { id: 'fukuoka', label: '福岡',        sub: 'Coming soon', active: false, x: 24, y: 71 },
+        { id: 'naha',    label: '沖縄（那覇）', sub: '沖縄本島', active: true,  x: 12, y: 92 },
     ];
+    const KD_AREA_30D = 30 * 86400000;
     function kdPickArea(area) {
-        try { localStorage.setItem('kd_selectedArea', area); } catch (e) {}
+        try { localStorage.setItem('kd_selectedArea', JSON.stringify({ area: area, ts: Date.now() })); } catch (e) {}
         const sp = new URLSearchParams(location.search);
         sp.set('area', area); sp.delete('pick');
         location.search = sp.toString();
     }
     function kdShowAreaGate() {
         const qs = new URLSearchParams(location.search);
-        if (qs.get('area')) return;                 // URLで指定済み＝スキップ
+        if (qs.get('area')) return;
         if (!document.body || document.getElementById('kd-area-gate')) return;
-        // 再訪：保存済みエリアへ自動遷移（?pick=1 のときは無視して選択画面を出す）
+        // 再訪（30日以内）：保存済みエリアへ自動遷移。?pick=1 で無視して再表示。
         if (qs.get('pick') !== '1') {
-            let stored = null; try { stored = localStorage.getItem('kd_selectedArea'); } catch (e) {}
-            if (stored === 'sapporo' || stored === 'naha') { location.replace(location.pathname + '?area=' + stored); return; }
+            try {
+                const raw = localStorage.getItem('kd_selectedArea');
+                if (raw) {
+                    const o = JSON.parse(raw);
+                    if (o && (o.area === 'sapporo' || o.area === 'naha') && (Date.now() - (o.ts || 0) < KD_AREA_30D)) {
+                        location.replace(location.pathname + '?area=' + o.area); return;
+                    }
+                }
+            } catch (e) {}
         }
         if (!document.getElementById('kd-gate-style')) {
             const st = document.createElement('style'); st.id = 'kd-gate-style';
             st.textContent = `
-            #kd-area-gate{position:fixed;inset:0;z-index:100000;background:radial-gradient(1200px 800px at 75% 20%,#1b2a4a 0%,#0b1220 55%,#070b14 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;overflow:auto;-webkit-overflow-scrolling:touch;}
-            .kdg-wrap{min-height:100%;display:flex;align-items:center;justify-content:center;gap:24px;padding:28px 20px;flex-wrap:wrap;}
-            .kdg-left{flex:1 1 300px;max-width:440px;}
-            .kdg-logo{height:26px;width:auto;filter:brightness(0) invert(1);margin-bottom:18px;}
-            .kdg-h1{font-size:30px;font-weight:900;letter-spacing:.01em;line-height:1.1;margin:0 0 6px;}
+            #kd-area-gate{position:fixed;inset:0;z-index:100000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;
+              background:radial-gradient(1100px 760px at 72% 26%,#16335c 0%,#0a1426 52%,#060a14 100%);}
+            #kd-area-gate::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(120,170,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(120,170,255,.05) 1px,transparent 1px);background-size:34px 34px;mask:radial-gradient(70% 60% at 70% 35%,#000 0%,transparent 75%);pointer-events:none;}
+            .kdg-skip{position:absolute;top:14px;right:16px;z-index:6;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#cbd5e1;font-size:12px;font-weight:800;letter-spacing:.1em;padding:7px 16px;border-radius:999px;cursor:pointer;backdrop-filter:blur(4px);}
+            .kdg-wrap{flex:1;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:30px 24px 10px;flex-wrap:wrap;position:relative;}
+            .kdg-left{flex:1 1 280px;max-width:470px;}
+            .kdg-logo{height:24px;width:auto;filter:brightness(0) invert(1);}
+            .kdg-tag{font-size:11px;color:#FABE00;font-weight:700;letter-spacing:.14em;margin:7px 0 20px;}
+            .kdg-h1{font-size:40px;font-weight:900;letter-spacing:.005em;line-height:1.02;margin:0;text-shadow:0 3px 16px rgba(0,0,0,.55);}
             .kdg-h1 .y{color:#FABE00;}
-            .kdg-sub{font-size:13.5px;color:#cbd5e1;line-height:1.7;margin:10px 0 22px;}
-            .kdg-cta{display:inline-flex;align-items:center;gap:8px;padding:14px 26px;background:#FABE00;color:#111827;border:none;border-radius:999px;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 8px 24px rgba(250,190,0,.35);}
-            .kdg-cta:active{transform:translateY(1px);}
-            .kdg-hint{font-size:11.5px;color:#FABE00;margin-top:12px;min-height:16px;font-weight:700;}
-            .kdg-right{flex:1 1 300px;display:flex;justify-content:center;}
-            .kdg-map{position:relative;width:min(360px,86vw);aspect-ratio:3/4;transform:perspective(900px) rotateX(8deg);}
-            .kdg-japan{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 18px 24px rgba(0,0,0,.55));}
-            .kdg-pin{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:0;cursor:pointer;}
-            .kdg-dot{width:14px;height:14px;border-radius:50%;border:2px solid #0b1220;}
-            .kdg-pin .kdg-lab{font-size:11px;font-weight:800;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.8);}
-            .kdg-pin .kdg-slab{font-size:8.5px;font-weight:700;opacity:.85;}
-            .kdg-pin.active .kdg-dot{background:#FABE00;box-shadow:0 0 0 0 rgba(250,190,0,.7);animation:kdgBlink 1.6s infinite;}
-            .kdg-pin.active .kdg-lab{color:#fff;} .kdg-pin.active .kdg-slab{color:#FABE00;}
-            .kdg-pin.inactive{cursor:default;} .kdg-pin.inactive .kdg-dot{background:#475569;border-color:#1e293b;}
-            .kdg-pin.inactive .kdg-lab{color:#64748b;} .kdg-pin.inactive .kdg-slab{color:#475569;}
-            .kdg-pin.sel .kdg-dot{background:#fff;transform:scale(1.5);box-shadow:0 0 22px 8px rgba(250,190,0,.9);animation:none;}
-            .kdg-pin.bump{animation:kdgBump .5s;}
-            .kdg-key{position:absolute;left:50%;top:-9%;font-size:30px;transform:translate(-50%,-50%);filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));transition:left 1s cubic-bezier(.5,0,.85,.35),top 1s cubic-bezier(.5,0,.85,.35),transform 1s,opacity .3s;animation:kdgFloat 2s ease-in-out infinite;z-index:5;}
-            .kdg-ripple{position:absolute;width:18px;height:18px;border-radius:50%;border:3px solid #FABE00;transform:translate(-50%,-50%);pointer-events:none;animation:kdgRipple .7s ease-out forwards;}
-            .kdg-start{position:absolute;transform:translate(-50%,-140%);font-size:12px;font-weight:900;color:#FABE00;letter-spacing:.15em;text-shadow:0 2px 6px rgba(0,0,0,.7);white-space:nowrap;opacity:0;animation:kdgStart .5s ease-out forwards;}
-            @keyframes kdgBlink{0%{box-shadow:0 0 0 0 rgba(250,190,0,.7);}70%{box-shadow:0 0 0 12px rgba(250,190,0,0);}100%{box-shadow:0 0 0 0 rgba(250,190,0,0);}}
-            @keyframes kdgFloat{0%,100%{margin-top:0;}50%{margin-top:-5px;}}
-            @keyframes kdgRipple{0%{width:10px;height:10px;opacity:1;}100%{width:120px;height:120px;opacity:0;}}
-            @keyframes kdgStart{0%{opacity:0;transform:translate(-50%,-120%);}100%{opacity:1;transform:translate(-50%,-150%);}}
-            @keyframes kdgBump{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.25);}}
-            @media (max-width:760px){.kdg-h1{font-size:24px;}.kdg-left{text-align:center;flex-basis:100%;}.kdg-cta{width:100%;justify-content:center;}.kdg-map{width:min(320px,82vw);}}
+            .kdg-sub{font-size:13.5px;color:#e2e8f0;line-height:1.85;margin:18px 0 0;text-shadow:0 1px 6px rgba(0,0,0,.6);}
+            .kdg-hint{font-size:12.5px;color:#7dd3fc;margin-top:16px;min-height:18px;font-weight:800;letter-spacing:.03em;}
+            .kdg-right{flex:1 1 320px;display:flex;justify-content:center;}
+            .kdg-map{position:relative;width:min(440px,90vw);aspect-ratio:3/4;transform:perspective(1100px) rotateX(10deg);}
+            .kdg-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+            .kdg-land{fill:#15233f;stroke:#37527f;stroke-width:.55;stroke-linejoin:round;transition:fill .6s,filter .6s;}
+            .kdg-map.activated .kdg-land{fill:#1f7a52;filter:drop-shadow(0 0 6px rgba(74,222,128,.8));animation:kdgGlow 1.2s ease-out;}
+            .kdg-flight{fill:none;stroke:#7dd3fc;stroke-width:1.1;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(125,211,252,.9));}
+            .kdg-pin{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:7px;background:none;border:none;padding:0;cursor:pointer;z-index:4;}
+            .kdg-pin.lab-right{flex-direction:row-reverse;}
+            .kdg-marker{flex:none;width:15px;height:15px;border-radius:50%;position:relative;}
+            .kdg-labbox{display:flex;flex-direction:column;line-height:1.15;white-space:nowrap;text-align:left;}
+            .kdg-pin.lab-right .kdg-labbox{text-align:right;}
+            .kdg-labbox b{font-size:13px;font-weight:900;text-shadow:0 1px 5px rgba(0,0,0,.9);}
+            .kdg-labbox i{font-size:9px;font-weight:700;font-style:normal;opacity:.9;text-shadow:0 1px 5px rgba(0,0,0,.9);}
+            .kdg-pin.active .kdg-marker{background:#FABE00;box-shadow:0 0 0 0 rgba(250,190,0,.6);animation:kdgBreath 2s ease-in-out infinite;}
+            .kdg-pin.active .kdg-labbox b{color:#fff;} .kdg-pin.active .kdg-labbox i{color:#fde68a;}
+            .kdg-pin.inactive{cursor:default;} .kdg-pin.inactive .kdg-marker{background:#475569;}
+            .kdg-pin.inactive .kdg-labbox b{color:#7c8aa3;} .kdg-pin.inactive .kdg-labbox i{color:#566377;}
+            .kdg-pin.sel .kdg-marker{background:#fff;box-shadow:0 0 26px 10px rgba(250,190,0,.95);animation:none;transform:scale(1.4);}
+            .kdg-pin.lit .kdg-marker{animation:kdgPing .6s ease-out;}
+            .kdg-plane{position:absolute;left:-12%;top:6%;font-size:26px;transform:translate(-50%,-50%) rotate(95deg);opacity:0;transition:left 1.1s ease-in-out,top 1.1s ease-in-out,opacity .3s;z-index:5;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6));}
+            .kdg-key{position:absolute;left:50%;top:-9%;font-size:26px;transform:translate(-50%,-50%);opacity:0;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));transition:left .8s cubic-bezier(.5,0,.85,.4),top .8s cubic-bezier(.5,0,.85,.4),transform .8s,opacity .25s;z-index:5;}
+            .kdg-ripple{position:absolute;border-radius:50%;border:3px solid #FABE00;transform:translate(-50%,-50%);pointer-events:none;animation:kdgRipple .7s ease-out forwards;z-index:3;}
+            .kdg-particle{position:absolute;width:5px;height:5px;border-radius:50%;background:#FABE00;transform:translate(-50%,-50%);pointer-events:none;z-index:5;}
+            .kdg-car{position:absolute;width:46%;transform:translate(-50%,-46%) scale(.4);opacity:0;pointer-events:none;z-index:6;filter:drop-shadow(0 8px 14px rgba(0,0,0,.6));transition:transform .5s cubic-bezier(.2,1.4,.4,1),opacity .4s;}
+            .kdg-car.in{transform:translate(-50%,-46%) scale(1);opacity:1;}
+            .kdg-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:7;pointer-events:none;opacity:0;}
+            .kdg-msg.in{opacity:1;transition:opacity .35s;}
+            .kdg-msg .m1{font-size:26px;font-weight:900;letter-spacing:.12em;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.7);}
+            .kdg-msg .m2{font-size:15px;font-weight:900;letter-spacing:.2em;color:#FABE00;}
+            .kdg-bottom{padding:4px 22px 26px;text-align:center;position:relative;}
+            .kdg-pick{font-size:12.5px;color:#9fb3d1;font-weight:700;margin-bottom:12px;letter-spacing:.05em;}
+            .kdg-badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+            .kdg-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:9px 14px;backdrop-filter:blur(4px);}
+            .kdg-badge .bi{font-size:17px;}.kdg-badge b{font-size:12px;font-weight:800;display:block;}.kdg-badge i{font-size:9.5px;font-style:normal;color:#90a2bd;}
+            @keyframes kdgBreath{0%,100%{box-shadow:0 0 0 0 rgba(250,190,0,.55);}50%{box-shadow:0 0 0 12px rgba(250,190,0,0);}}
+            @keyframes kdgPing{0%{box-shadow:0 0 0 0 rgba(74,222,128,.9);}100%{box-shadow:0 0 0 16px rgba(74,222,128,0);}}
+            @keyframes kdgGlow{0%{filter:drop-shadow(0 0 0 rgba(74,222,128,0));}40%{filter:drop-shadow(0 0 12px rgba(74,222,128,1));}100%{filter:drop-shadow(0 0 6px rgba(74,222,128,.8));}}
+            @keyframes kdgRipple{0%{width:10px;height:10px;opacity:1;}100%{width:130px;height:130px;opacity:0;}}
+            @media (max-width:760px){.kdg-wrap{flex-direction:column;justify-content:flex-start;padding-top:34px;}.kdg-h1{font-size:31px;}.kdg-left{text-align:center;flex-basis:auto;}.kdg-map{width:min(370px,86vw);}.kdg-badge i{display:none;}}
+            @media (prefers-reduced-motion:reduce){.kdg-pin.active .kdg-marker{animation:none;}}
             `;
             document.head.appendChild(st);
         }
         const g = document.createElement('div');
         g.id = 'kd-area-gate';
-        // 簡易・日本列島シルエット（装飾）。viewBox 0..100 = ピンの%座標系と一致。
-        const japan = '<svg class="kdg-japan" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">'
-            + '<defs><linearGradient id="kdgLand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b3a55"/><stop offset="1" stop-color="#1c2740"/></linearGradient></defs>'
-            + '<g fill="url(#kdgLand)" stroke="#3b4b6b" stroke-width="0.6" stroke-linejoin="round">'
-            + '<path d="M62 5 q10 -2 12 6 q3 7 -3 11 q-7 4 -12 -2 q-4 -6 -1 -11 q1 -3 4 -4 Z"/>' // 北海道
-            + '<path d="M66 22 q4 6 -1 11 q-3 6 -6 10 q-4 6 -9 11 q-4 5 -9 8 q-5 3 -8 -1 q-2 -4 2 -7 q6 -5 10 -11 q4 -6 8 -12 q4 -7 9 -13 q2 -4 3 -6 Z"/>' // 本州
-            + '<ellipse cx="40" cy="62" rx="5" ry="3.4"/>' // 四国
-            + '<path d="M26 66 q6 0 7 6 q1 6 -4 9 q-6 3 -9 -2 q-3 -6 1 -10 q2 -3 5 -3 Z"/>' // 九州
-            + '<ellipse cx="11" cy="89" rx="3" ry="2"/><ellipse cx="15" cy="85" rx="1.6" ry="1.1"/>' // 沖縄
-            + '</g></svg>';
+        const japan = '<svg class="kdg-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">'
+            + '<g class="kdg-land-g">'
+            + '<path class="kdg-land" d="M62 5 q10 -2 12 6 q3 7 -3 11 q-7 4 -12 -2 q-4 -6 -1 -11 q1 -3 4 -4 Z"/>'
+            + '<path class="kdg-land" d="M66 22 q4 6 -1 11 q-3 6 -6 10 q-4 6 -9 11 q-4 5 -9 8 q-5 3 -8 -1 q-2 -4 2 -7 q6 -5 10 -11 q4 -6 8 -12 q4 -7 9 -13 q2 -4 3 -6 Z"/>'
+            + '<ellipse class="kdg-land" cx="40" cy="62" rx="5" ry="3.4"/>'
+            + '<path class="kdg-land" d="M26 66 q6 0 7 6 q1 6 -4 9 q-6 3 -9 -2 q-3 -6 1 -10 q2 -3 5 -3 Z"/>'
+            + '<ellipse class="kdg-land" cx="11" cy="89" rx="3" ry="2"/><ellipse class="kdg-land" cx="15" cy="85" rx="1.6" ry="1.1"/>'
+            + '</g><path id="kdg-flight" class="kdg-flight" d="" style="opacity:0"/>'
+            + '</svg>';
         g.innerHTML =
-            '<div class="kdg-wrap">'
+            '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
+            + '<div class="kdg-wrap">'
             + '<div class="kdg-left">'
             + '  <img class="kdg-logo" src="images/logo_header.png?v=3" alt="KEYDROP">'
+            + '  <div class="kdg-tag">CAR DELIVERY SERVICE</div>'
             + '  <h1 class="kdg-h1">DROP A KEY.<br><span class="y">GET A CAR.</span></h1>'
-            + '  <div class="kdg-sub">日本全国どこでも、あなたのもとへクルマを届ける。<br>地図のピンに<b style="color:#FABE00">鍵を落として</b>サービスを開始。</div>'
-            + '  <button class="kdg-cta" id="kdg-cta">🔑 サービスを開始する</button>'
-            + '  <div class="kdg-hint" id="kdg-hint"></div>'
+            + '  <div class="kdg-sub">日本全国どこでも、あなたのもとへクルマを届ける。<br>地図の光るエリアに<b style="color:#FABE00">鍵を落として</b>サービスを起動。</div>'
+            + '  <div class="kdg-hint" id="kdg-hint">▶ 提供エリア（札幌・沖縄）を選択してください</div>'
             + '</div>'
             + '<div class="kdg-right"><div class="kdg-map" id="kdg-map">'
             + japan
+            + '  <div class="kdg-plane" id="kdg-plane">✈️</div>'
             + '  <div class="kdg-key" id="kdg-key">🔑</div>'
+            + '  <img class="kdg-car" id="kdg-car" src="images/class_A.png" alt="">'
+            + '  <div class="kdg-msg" id="kdg-msg"><div class="m1" id="kdg-m1"></div><div class="m2" id="kdg-m2"></div></div>'
             + '</div></div>'
+            + '</div>'
+            + '<div class="kdg-bottom">'
+            + '  <div class="kdg-pick">ご利用エリアを選択してください</div>'
+            + '  <div class="kdg-badges">'
+            + '    <div class="kdg-badge"><span class="bi">🚗</span><span><b>全国対応エリア拡大中</b><i>順次エリアを拡大しています</i></span></div>'
+            + '    <div class="kdg-badge"><span class="bi">🕐</span><span><b>24時間いつでも予約可能</b><i>Webから簡単予約</i></span></div>'
+            + '    <div class="kdg-badge"><span class="bi">🛡️</span><span><b>安心のサポート体制</b><i>万一のトラブルも安心</i></span></div>'
+            + '  </div>'
             + '</div>';
         document.body.appendChild(g);
 
         const map = g.querySelector('#kdg-map');
+        const planeEl = g.querySelector('#kdg-plane');
         const keyEl = g.querySelector('#kdg-key');
+        const carEl = g.querySelector('#kdg-car');
+        const flight = g.querySelector('#kdg-flight');
         const hint = g.querySelector('#kdg-hint');
+        const msg = g.querySelector('#kdg-msg');
         let busy = false;
+        const timers = [];
+        const at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
+
         KD_GATE_AREAS.forEach(function (a) {
             const pin = document.createElement('button');
-            pin.className = 'kdg-pin ' + (a.active ? 'active' : 'inactive');
+            pin.className = 'kdg-pin ' + (a.active ? 'active' : 'inactive') + (a.x > 50 ? ' lab-left' : ' lab-right');
             pin.style.left = a.x + '%'; pin.style.top = a.y + '%';
-            pin.innerHTML = '<span class="kdg-dot"></span><span class="kdg-lab">' + a.label + '</span><span class="kdg-slab">' + a.sub + '</span>';
-            if (a.active) pin.onclick = function () { kdDropKey(a, pin); };
-            else pin.onclick = function () { hint.textContent = a.label + 'は順次対応予定です'; };
+            pin.dataset.area = a.id;
+            pin.innerHTML = '<span class="kdg-marker"></span><span class="kdg-labbox"><b>' + a.label + '</b><i>' + a.sub + '</i></span>';
+            if (a.active) pin.onclick = function () { kdLaunch(a, pin); };
+            else pin.onclick = function () { hint.textContent = a.label + ' は順次対応予定です'; };
             map.appendChild(pin);
         });
-        function kdDropKey(a, pin) {
+
+        g.querySelector('#kdg-skip').onclick = function () {
+            timers.forEach(clearTimeout);
+            let last = null; try { const r = localStorage.getItem('kd_selectedArea'); if (r) last = (JSON.parse(r) || {}).area; } catch (e) {}
+            kdPickArea((last === 'sapporo' || last === 'naha') ? last : 'sapporo');
+        };
+
+        // STEP1-10 起動シネマ
+        function kdLaunch(a, pin) {
             if (busy) return; busy = true;
-            hint.textContent = a.label + 'へ鍵を落としています…';
+            hint.textContent = a.label + ' を起動しています…';
+            // STEP2 選択発光
             pin.classList.add('sel');
-            // STEP2 鍵落下：鍵を選択ピン座標へ移動
-            keyEl.style.animation = 'none';
-            requestAnimationFrame(function () {
-                keyEl.style.left = a.x + '%'; keyEl.style.top = a.y + '%';
-                keyEl.style.transform = 'translate(-50%,-50%) scale(.7)';
+            // STEP3 飛行機出現→上空へ
+            at(400, function () {
+                planeEl.style.opacity = '1';
+                planeEl.style.left = a.x + '%'; planeEl.style.top = Math.max(2, a.y - 18) + '%';
+                planeEl.style.transform = 'translate(-50%,-50%) rotate(' + (a.x < 50 ? 135 : 60) + 'deg)';
             });
-            // STEP3 着地（波紋）＋STEP4 STARTING
-            setTimeout(function () {
+            // STEP4 フライトパス（上空入口→対象）を発光描画
+            at(700, function () {
+                const d = 'M 50 -6 Q ' + ((50 + a.x) / 2) + ' ' + (a.y * 0.35) + ' ' + a.x + ' ' + a.y;
+                flight.setAttribute('d', d);
+                const len = flight.getTotalLength ? flight.getTotalLength() : 160;
+                flight.style.transition = 'none';
+                flight.style.strokeDasharray = len; flight.style.strokeDashoffset = len; flight.style.opacity = '1';
+                requestAnimationFrame(function () {
+                    flight.style.transition = 'stroke-dashoffset .8s ease-in-out';
+                    flight.style.strokeDashoffset = '0';
+                });
+            });
+            // STEP5 鍵投下（飛行機位置→ピン）
+            at(1600, function () {
+                keyEl.style.left = a.x + '%'; keyEl.style.top = Math.max(2, a.y - 18) + '%'; keyEl.style.opacity = '1';
+                requestAnimationFrame(function () {
+                    keyEl.style.left = a.x + '%'; keyEl.style.top = a.y + '%';
+                    keyEl.style.transform = 'translate(-50%,-50%) scale(.7)';
+                });
+            });
+            // STEP6 着地（発光・波紋・粒子）
+            at(2450, function () {
                 keyEl.style.opacity = '0';
                 const rip = document.createElement('div'); rip.className = 'kdg-ripple';
-                rip.style.left = a.x + '%'; rip.style.top = a.y + '%'; map.appendChild(rip);
-                const s = document.createElement('div'); s.className = 'kdg-start'; s.textContent = 'STARTING…';
-                s.style.left = a.x + '%'; s.style.top = a.y + '%'; map.appendChild(s);
-            }, 1000);
-            // STEP5 遷移
-            setTimeout(function () { kdPickArea(a.id); }, 1850);
+                rip.style.left = a.x + '%'; rip.style.top = a.y + '%'; rip.style.width = '10px'; rip.style.height = '10px'; map.appendChild(rip);
+                for (let i = 0; i < 10; i++) {
+                    const pt = document.createElement('div'); pt.className = 'kdg-particle';
+                    pt.style.left = a.x + '%'; pt.style.top = a.y + '%'; map.appendChild(pt);
+                    const ang = (Math.PI * 2 * i) / 10, dist = 30 + i % 3 * 8;
+                    pt.animate([{ transform: 'translate(-50%,-50%) translate(0,0)', opacity: 1 },
+                        { transform: 'translate(-50%,-50%) translate(' + Math.cos(ang) * dist + 'px,' + Math.sin(ang) * dist + 'px)', opacity: 0 }],
+                        { duration: 650, easing: 'cubic-bezier(.2,.7,.3,1)' });
+                    timers.push(setTimeout(function () { pt.remove(); }, 700));
+                }
+            });
+            // STEP7 ネットワーク起動（列島発光＋全エリア順次点灯）
+            at(2700, function () {
+                map.classList.add('activated');
+                const pins = Array.prototype.slice.call(map.querySelectorAll('.kdg-pin'));
+                pins.sort(function (p, q) { return parseFloat(p.style.top) - parseFloat(q.style.top); });
+                pins.forEach(function (p, i) { timers.push(setTimeout(function () { p.classList.add('lit'); }, i * 120)); });
+            });
+            // STEP8 車両出現
+            at(3500, function () { carEl.style.left = a.x + '%'; carEl.style.top = a.y + '%'; carEl.classList.add('in'); });
+            // STEP9 メッセージ
+            at(3950, function () {
+                g.querySelector('#kdg-m1').textContent = 'KEY DROPPED.';
+                g.querySelector('#kdg-m2').textContent = (a.id === 'sapporo' ? 'SAPPORO' : 'OKINAWA') + ' ACTIVATED.';
+                msg.classList.add('in');
+            });
+            // STEP10 遷移
+            at(4800, function () { kdPickArea(a.id); });
         }
-        g.querySelector('#kdg-cta').onclick = function () {
-            hint.textContent = '地図の光るピン（札幌・沖縄）を選んでください';
-            const pins = map.querySelectorAll('.kdg-pin.active');
-            pins.forEach(function (p) { p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); });
-            if (window.innerWidth <= 760) map.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        };
     }
     if (document.readyState !== 'loading') kdShowAreaGate();
     else document.addEventListener('DOMContentLoaded', kdShowAreaGate);
