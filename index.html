@@ -942,205 +942,51 @@
         if (!document.getElementById('kd-gate-style')) {
             const st = document.createElement('style'); st.id = 'kd-gate-style';
             st.textContent = `
-            #kd-area-gate{position:fixed;inset:0;z-index:100000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;
-              background:radial-gradient(1100px 760px at 72% 26%,#16335c 0%,#0a1426 52%,#060a14 100%);}
-            #kd-area-gate::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(120,170,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(120,170,255,.05) 1px,transparent 1px);background-size:34px 34px;mask:radial-gradient(70% 60% at 70% 35%,#000 0%,transparent 75%);pointer-events:none;}
-            .kdg-skip{position:absolute;top:14px;right:16px;z-index:6;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#cbd5e1;font-size:12px;font-weight:800;letter-spacing:.1em;padding:7px 16px;border-radius:999px;cursor:pointer;backdrop-filter:blur(4px);}
-            .kdg-wrap{flex:1;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:30px 24px 10px;flex-wrap:wrap;position:relative;}
-            .kdg-left{flex:1 1 280px;max-width:470px;}
-            .kdg-logo{height:24px;width:auto;filter:brightness(0) invert(1);}
-            .kdg-tag{font-size:11px;color:#FABE00;font-weight:700;letter-spacing:.14em;margin:7px 0 20px;}
-            .kdg-h1{font-size:40px;font-weight:900;letter-spacing:.005em;line-height:1.02;margin:0;text-shadow:0 3px 16px rgba(0,0,0,.55);}
-            .kdg-h1 .y{color:#FABE00;}
-            .kdg-sub{font-size:13.5px;color:#e2e8f0;line-height:1.85;margin:18px 0 0;text-shadow:0 1px 6px rgba(0,0,0,.6);}
-            .kdg-cta{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:14px 30px;background:#FABE00;color:#111827;border:none;border-radius:999px;font-size:15px;font-weight:900;letter-spacing:.02em;cursor:pointer;box-shadow:0 10px 26px rgba(250,190,0,.38);transition:transform .15s,box-shadow .15s;animation:kdgCtaPulse 2.4s ease-in-out infinite;}
-            .kdg-cta:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(250,190,0,.5);}
-            .kdg-cta:active{transform:translateY(1px);}
-            @keyframes kdgCtaPulse{0%,100%{box-shadow:0 10px 26px rgba(250,190,0,.38);}50%{box-shadow:0 10px 34px rgba(250,190,0,.62);}}
-            .kdg-hint{font-size:12.5px;color:#7dd3fc;margin-top:14px;min-height:18px;font-weight:800;letter-spacing:.03em;}
-            .kdg-right{flex:1 1 320px;display:flex;justify-content:center;}
-            .kdg-map{position:relative;width:min(440px,90vw);aspect-ratio:3/4;transform:perspective(1100px) rotateX(10deg);}
-            .kdg-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
-            .kdg-land{fill:#15233f;stroke:#37527f;stroke-width:.55;stroke-linejoin:round;transition:fill .6s,filter .6s;}
-            .kdg-map.activated .kdg-land{fill:#1f7a52;filter:drop-shadow(0 0 6px rgba(74,222,128,.8));animation:kdgGlow 1.2s ease-out;}
-            .kdg-flight{fill:none;stroke:#7dd3fc;stroke-width:1.1;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(125,211,252,.9));}
-            .kdg-pin{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:7px;background:none;border:none;padding:0;cursor:pointer;z-index:4;}
-            .kdg-pin.lab-right{flex-direction:row-reverse;}
-            .kdg-marker{flex:none;width:15px;height:15px;border-radius:50%;position:relative;}
-            .kdg-labbox{display:flex;flex-direction:column;line-height:1.15;white-space:nowrap;text-align:left;}
-            .kdg-pin.lab-right .kdg-labbox{text-align:right;}
-            .kdg-labbox b{font-size:13px;font-weight:900;text-shadow:0 1px 5px rgba(0,0,0,.9);}
-            .kdg-labbox i{font-size:9px;font-weight:700;font-style:normal;opacity:.9;text-shadow:0 1px 5px rgba(0,0,0,.9);}
-            .kdg-pin.active .kdg-marker{background:#FABE00;box-shadow:0 0 0 0 rgba(250,190,0,.6);animation:kdgBreath 2s ease-in-out infinite;}
-            .kdg-pin.active .kdg-labbox b{color:#fff;} .kdg-pin.active .kdg-labbox i{color:#fde68a;}
-            .kdg-pin.inactive{cursor:default;} .kdg-pin.inactive .kdg-marker{background:#475569;}
-            .kdg-pin.inactive .kdg-labbox b{color:#7c8aa3;} .kdg-pin.inactive .kdg-labbox i{color:#566377;}
-            .kdg-pin.sel .kdg-marker{background:#fff;box-shadow:0 0 26px 10px rgba(250,190,0,.95);animation:none;transform:scale(1.4);}
-            .kdg-pin.lit .kdg-marker{animation:kdgPing .6s ease-out;}
-            .kdg-plane{position:absolute;left:-12%;top:6%;font-size:26px;transform:translate(-50%,-50%) rotate(95deg);opacity:0;transition:left 1.1s ease-in-out,top 1.1s ease-in-out,opacity .3s;z-index:5;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6));}
-            .kdg-key{position:absolute;left:50%;top:-9%;font-size:26px;transform:translate(-50%,-50%);opacity:0;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));transition:left .8s cubic-bezier(.5,0,.85,.4),top .8s cubic-bezier(.5,0,.85,.4),transform .8s,opacity .25s;z-index:5;}
-            .kdg-ripple{position:absolute;border-radius:50%;border:3px solid #FABE00;transform:translate(-50%,-50%);pointer-events:none;animation:kdgRipple .7s ease-out forwards;z-index:3;}
-            .kdg-particle{position:absolute;width:5px;height:5px;border-radius:50%;background:#FABE00;transform:translate(-50%,-50%);pointer-events:none;z-index:5;}
-            .kdg-car{position:absolute;width:46%;transform:translate(-50%,-46%) scale(.4);opacity:0;pointer-events:none;z-index:6;filter:drop-shadow(0 8px 14px rgba(0,0,0,.6));transition:transform .5s cubic-bezier(.2,1.4,.4,1),opacity .4s;}
-            .kdg-car.in{transform:translate(-50%,-46%) scale(1);opacity:1;}
-            .kdg-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:7;pointer-events:none;opacity:0;}
-            .kdg-msg.in{opacity:1;transition:opacity .35s;}
-            .kdg-msg .m1{font-size:26px;font-weight:900;letter-spacing:.12em;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.7);}
-            .kdg-msg .m2{font-size:15px;font-weight:900;letter-spacing:.2em;color:#FABE00;}
-            .kdg-bottom{padding:4px 22px 26px;text-align:center;position:relative;}
-            .kdg-pick{font-size:12.5px;color:#9fb3d1;font-weight:700;margin-bottom:12px;letter-spacing:.05em;}
-            .kdg-badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-            .kdg-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:9px 14px;backdrop-filter:blur(4px);}
-            .kdg-badge .bi{font-size:17px;}.kdg-badge b{font-size:12px;font-weight:800;display:block;}.kdg-badge i{font-size:9.5px;font-style:normal;color:#90a2bd;}
-            @keyframes kdgBreath{0%,100%{box-shadow:0 0 0 0 rgba(250,190,0,.55);}50%{box-shadow:0 0 0 12px rgba(250,190,0,0);}}
-            @keyframes kdgPing{0%{box-shadow:0 0 0 0 rgba(74,222,128,.9);}100%{box-shadow:0 0 0 16px rgba(74,222,128,0);}}
-            @keyframes kdgGlow{0%{filter:drop-shadow(0 0 0 rgba(74,222,128,0));}40%{filter:drop-shadow(0 0 12px rgba(74,222,128,1));}100%{filter:drop-shadow(0 0 6px rgba(74,222,128,.8));}}
+            #kd-area-gate{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;overflow:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,#9ec6e8 0%,#5b86ad 46%,#1d4058 100%);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;}
+            .kdg-stage{position:relative;display:inline-block;line-height:0;max-width:100%;max-height:100%;}
+            .kdg-hero{display:block;width:auto;height:auto;max-width:100vw;max-height:100vh;object-fit:contain;}
+            .kdg-skip{position:fixed;top:14px;right:16px;z-index:6;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:800;letter-spacing:.1em;padding:7px 16px;border-radius:999px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+            .kdg-hot{position:absolute;transform:translate(-50%,-58%);width:62px;height:62px;border-radius:50%;background:none;border:none;cursor:pointer;padding:0;z-index:4;}
+            .kdg-hot::before{content:"";position:absolute;inset:13px;border-radius:50%;border:2.5px solid #FABE00;animation:kdgPulse 1.8s ease-out infinite;}
+            .kdg-hot:hover::before,.kdg-hot:active::before{border-color:#fff;}
+            .kdg-flash{position:absolute;transform:translate(-50%,-58%);width:10px;height:10px;border-radius:50%;border:3px solid #FABE00;pointer-events:none;z-index:5;animation:kdgRipple .65s ease-out forwards;}
+            .kdg-go{position:absolute;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:900;color:#fff;letter-spacing:.18em;text-shadow:0 2px 10px rgba(0,0,0,.6);pointer-events:none;opacity:0;animation:kdgGo .6s ease-out forwards;z-index:5;white-space:nowrap;}
+            @keyframes kdgPulse{0%{transform:scale(.7);opacity:.95;}100%{transform:scale(1.9);opacity:0;}}
             @keyframes kdgRipple{0%{width:10px;height:10px;opacity:1;}100%{width:130px;height:130px;opacity:0;}}
-            @media (max-width:760px){.kdg-wrap{flex-direction:column;justify-content:flex-start;padding-top:34px;}.kdg-h1{font-size:31px;}.kdg-left{text-align:center;flex-basis:auto;}.kdg-map{width:min(370px,86vw);}.kdg-badge i{display:none;}}
-            @media (prefers-reduced-motion:reduce){.kdg-pin.active .kdg-marker{animation:none;}}
+            @keyframes kdgGo{0%{opacity:0;transform:translate(-50%,-30%);}100%{opacity:1;transform:translate(-50%,-60%);}}
             `;
             document.head.appendChild(st);
         }
+        // クリック可能エリア＝札幌・沖縄のみ（画像内のピン位置に透明ホットスポットを重ねる。%はhero_area.jpg基準）
+        const HOT = [
+            { id: 'sapporo', label: '札幌',        x: 74.0, y: 12.5 },
+            { id: 'naha',    label: '沖縄（那覇）', x: 13.5, y: 90.0 },
+        ];
         const g = document.createElement('div');
         g.id = 'kd-area-gate';
-        const japan = '<svg class="kdg-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">'
-            + '<g class="kdg-land-g">'
-            + '<path class="kdg-land" d="M62 5 q10 -2 12 6 q3 7 -3 11 q-7 4 -12 -2 q-4 -6 -1 -11 q1 -3 4 -4 Z"/>'
-            + '<path class="kdg-land" d="M66 22 q4 6 -1 11 q-3 6 -6 10 q-4 6 -9 11 q-4 5 -9 8 q-5 3 -8 -1 q-2 -4 2 -7 q6 -5 10 -11 q4 -6 8 -12 q4 -7 9 -13 q2 -4 3 -6 Z"/>'
-            + '<ellipse class="kdg-land" cx="40" cy="62" rx="5" ry="3.4"/>'
-            + '<path class="kdg-land" d="M26 66 q6 0 7 6 q1 6 -4 9 q-6 3 -9 -2 q-3 -6 1 -10 q2 -3 5 -3 Z"/>'
-            + '<ellipse class="kdg-land" cx="11" cy="89" rx="3" ry="2"/><ellipse class="kdg-land" cx="15" cy="85" rx="1.6" ry="1.1"/>'
-            + '</g><path id="kdg-flight" class="kdg-flight" d="" style="opacity:0"/>'
-            + '</svg>';
-        g.innerHTML =
-            '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
-            + '<div class="kdg-wrap">'
-            + '<div class="kdg-left">'
-            + '  <img class="kdg-logo" src="images/logo_header.png?v=3" alt="KEYDROP">'
-            + '  <div class="kdg-tag">CAR DELIVERY SERVICE</div>'
-            + '  <h1 class="kdg-h1">DROP A KEY.<br><span class="y">GET A CAR.</span></h1>'
-            + '  <div class="kdg-sub">日本全国どこでも、あなたのもとへクルマを届ける。<br>地図の光るエリアに<b style="color:#FABE00">鍵を落として</b>サービスを起動。</div>'
-            + '  <button class="kdg-cta" id="kdg-cta">🔑 サービスを起動する</button>'
-            + '  <div class="kdg-hint" id="kdg-hint">▶ 提供エリア（札幌・沖縄）を選択してください</div>'
-            + '</div>'
-            + '<div class="kdg-right"><div class="kdg-map" id="kdg-map">'
-            + japan
-            + '  <div class="kdg-plane" id="kdg-plane">✈️</div>'
-            + '  <div class="kdg-key" id="kdg-key">🔑</div>'
-            + '  <img class="kdg-car" id="kdg-car" src="images/class_A.png" alt="">'
-            + '  <div class="kdg-msg" id="kdg-msg"><div class="m1" id="kdg-m1"></div><div class="m2" id="kdg-m2"></div></div>'
-            + '</div></div>'
-            + '</div>'
-            + '<div class="kdg-bottom">'
-            + '  <div class="kdg-pick">ご利用エリアを選択してください</div>'
-            + '  <div class="kdg-badges">'
-            + '    <div class="kdg-badge"><span class="bi">🚗</span><span><b>全国対応エリア拡大中</b><i>順次エリアを拡大しています</i></span></div>'
-            + '    <div class="kdg-badge"><span class="bi">🕐</span><span><b>24時間いつでも予約可能</b><i>Webから簡単予約</i></span></div>'
-            + '    <div class="kdg-badge"><span class="bi">🛡️</span><span><b>安心のサポート体制</b><i>万一のトラブルも安心</i></span></div>'
-            + '  </div>'
-            + '</div>';
+        g.innerHTML = '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
+            + '<div class="kdg-stage" id="kdg-stage"><img class="kdg-hero" src="images/hero_area.jpg" alt="KEYDROP — ご利用エリアを選択（札幌・沖縄）"></div>';
         document.body.appendChild(g);
-
-        const map = g.querySelector('#kdg-map');
-        const planeEl = g.querySelector('#kdg-plane');
-        const keyEl = g.querySelector('#kdg-key');
-        const carEl = g.querySelector('#kdg-car');
-        const flight = g.querySelector('#kdg-flight');
-        const hint = g.querySelector('#kdg-hint');
-        const msg = g.querySelector('#kdg-msg');
+        const stage = g.querySelector('#kdg-stage');
         let busy = false;
-        const timers = [];
-        const at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
-
-        KD_GATE_AREAS.forEach(function (a) {
-            const pin = document.createElement('button');
-            pin.className = 'kdg-pin ' + (a.active ? 'active' : 'inactive') + (a.x > 50 ? ' lab-left' : ' lab-right');
-            pin.style.left = a.x + '%'; pin.style.top = a.y + '%';
-            pin.dataset.area = a.id;
-            pin.innerHTML = '<span class="kdg-marker"></span><span class="kdg-labbox"><b>' + a.label + '</b><i>' + a.sub + '</i></span>';
-            if (a.active) pin.onclick = function () { kdLaunch(a, pin); };
-            else pin.onclick = function () { hint.textContent = a.label + ' は順次対応予定です'; };
-            map.appendChild(pin);
+        HOT.forEach(function (h) {
+            const b = document.createElement('button');
+            b.className = 'kdg-hot'; b.style.left = h.x + '%'; b.style.top = h.y + '%';
+            b.setAttribute('aria-label', h.label + 'を選択');
+            b.onclick = function () {
+                if (busy) return; busy = true;
+                const f = document.createElement('div'); f.className = 'kdg-flash'; f.style.left = h.x + '%'; f.style.top = h.y + '%'; stage.appendChild(f);
+                const go = document.createElement('div'); go.className = 'kdg-go'; go.style.top = (h.y - 9) + '%'; go.textContent = h.label + ' START'; stage.appendChild(go);
+                setTimeout(function () { kdPickArea(h.id); }, 700);
+            };
+            stage.appendChild(b);
         });
-
-        g.querySelector('#kdg-cta').onclick = function () {
-            if (busy) return;
-            hint.textContent = '地図の光るエリア（札幌・沖縄）を選んでください';
-            map.querySelectorAll('.kdg-pin.active').forEach(function (p) { p.classList.remove('lit'); void p.offsetWidth; p.classList.add('lit'); });
-            if (window.innerWidth <= 760) map.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        };
         g.querySelector('#kdg-skip').onclick = function () {
-            timers.forEach(clearTimeout);
             let last = null; try { const r = localStorage.getItem('kd_selectedArea'); if (r) last = (JSON.parse(r) || {}).area; } catch (e) {}
             kdPickArea((last === 'sapporo' || last === 'naha') ? last : 'sapporo');
         };
-
-        // STEP1-10 起動シネマ
-        function kdLaunch(a, pin) {
-            if (busy) return; busy = true;
-            hint.textContent = a.label + ' を起動しています…';
-            // STEP2 選択発光
-            pin.classList.add('sel');
-            // STEP3 飛行機出現→上空へ
-            at(400, function () {
-                planeEl.style.opacity = '1';
-                planeEl.style.left = a.x + '%'; planeEl.style.top = Math.max(2, a.y - 18) + '%';
-                planeEl.style.transform = 'translate(-50%,-50%) rotate(' + (a.x < 50 ? 135 : 60) + 'deg)';
-            });
-            // STEP4 フライトパス（上空入口→対象）を発光描画
-            at(700, function () {
-                const d = 'M 50 -6 Q ' + ((50 + a.x) / 2) + ' ' + (a.y * 0.35) + ' ' + a.x + ' ' + a.y;
-                flight.setAttribute('d', d);
-                const len = flight.getTotalLength ? flight.getTotalLength() : 160;
-                flight.style.transition = 'none';
-                flight.style.strokeDasharray = len; flight.style.strokeDashoffset = len; flight.style.opacity = '1';
-                requestAnimationFrame(function () {
-                    flight.style.transition = 'stroke-dashoffset .8s ease-in-out';
-                    flight.style.strokeDashoffset = '0';
-                });
-            });
-            // STEP5 鍵投下（飛行機位置→ピン）
-            at(1600, function () {
-                keyEl.style.left = a.x + '%'; keyEl.style.top = Math.max(2, a.y - 18) + '%'; keyEl.style.opacity = '1';
-                requestAnimationFrame(function () {
-                    keyEl.style.left = a.x + '%'; keyEl.style.top = a.y + '%';
-                    keyEl.style.transform = 'translate(-50%,-50%) scale(.7)';
-                });
-            });
-            // STEP6 着地（発光・波紋・粒子）
-            at(2450, function () {
-                keyEl.style.opacity = '0';
-                const rip = document.createElement('div'); rip.className = 'kdg-ripple';
-                rip.style.left = a.x + '%'; rip.style.top = a.y + '%'; rip.style.width = '10px'; rip.style.height = '10px'; map.appendChild(rip);
-                for (let i = 0; i < 10; i++) {
-                    const pt = document.createElement('div'); pt.className = 'kdg-particle';
-                    pt.style.left = a.x + '%'; pt.style.top = a.y + '%'; map.appendChild(pt);
-                    const ang = (Math.PI * 2 * i) / 10, dist = 30 + i % 3 * 8;
-                    pt.animate([{ transform: 'translate(-50%,-50%) translate(0,0)', opacity: 1 },
-                        { transform: 'translate(-50%,-50%) translate(' + Math.cos(ang) * dist + 'px,' + Math.sin(ang) * dist + 'px)', opacity: 0 }],
-                        { duration: 650, easing: 'cubic-bezier(.2,.7,.3,1)' });
-                    timers.push(setTimeout(function () { pt.remove(); }, 700));
-                }
-            });
-            // STEP7 ネットワーク起動（列島発光＋全エリア順次点灯）
-            at(2700, function () {
-                map.classList.add('activated');
-                const pins = Array.prototype.slice.call(map.querySelectorAll('.kdg-pin'));
-                pins.sort(function (p, q) { return parseFloat(p.style.top) - parseFloat(q.style.top); });
-                pins.forEach(function (p, i) { timers.push(setTimeout(function () { p.classList.add('lit'); }, i * 120)); });
-            });
-            // STEP8 車両出現
-            at(3500, function () { carEl.style.left = a.x + '%'; carEl.style.top = a.y + '%'; carEl.classList.add('in'); });
-            // STEP9 メッセージ
-            at(3950, function () {
-                g.querySelector('#kdg-m1').textContent = 'KEY DROPPED.';
-                g.querySelector('#kdg-m2').textContent = (a.id === 'sapporo' ? 'SAPPORO' : 'OKINAWA') + ' ACTIVATED.';
-                msg.classList.add('in');
-            });
-            // STEP10 遷移
-            at(4800, function () { kdPickArea(a.id); });
-        }
     }
+
     if (document.readyState !== 'loading') kdShowAreaGate();
     else document.addEventListener('DOMContentLoaded', kdShowAreaGate);
 
