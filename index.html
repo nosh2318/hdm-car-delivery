@@ -3387,9 +3387,10 @@
             <div class="mp-detail-section">
                 <div class="mp-detail-header">📋 予約情報</div>
                 <div class="mp-detail-body">
+                    ${cls.img ? `<div style="text-align:center;padding:4px 0 12px;margin-bottom:10px;border-bottom:1px solid #f3f3f3;"><img src="${cls.img}" alt="${cls.name || r.vehicle}" style="max-width:82%;max-height:130px;object-fit:contain;" loading="lazy"><div style="font-size:11px;color:#888;margin-top:4px;">${cls.vehicles || ''}</div></div>` : ''}
                     <div class="mp-detail-row"><span class="mp-detail-row-label">予約者</span><span class="mp-detail-row-value">${r.name || '-'} 様</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">予約番号</span><span class="mp-detail-row-value" style="font-weight:700;color:#1a1a1a;">${r.id}</span></div>
-                    <div class="mp-detail-row"><span class="mp-detail-row-label">車両クラス</span><span class="mp-detail-row-value">${cls.name || r.vehicle}クラス</span></div>
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">車両クラス</span><span class="mp-detail-row-value">${cls.name ? cls.name : (r.vehicle + 'クラス')}</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">お届け</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.lend_date)} ${r.lend_time || r.del_time || ''}<br><span style="font-size:11px;color:#888;">${r.del_place || '-'}</span></span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">回収</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.return_date)} ${r.return_time || r.col_time || ''}<br><span style="font-size:11px;color:#888;">${r.col_place || '-'}</span></span></div>
                     ${r.people ? `<div class="mp-detail-row"><span class="mp-detail-row-label">ご利用人数</span><span class="mp-detail-row-value">${r.people} 名</span></div>` : ''}
