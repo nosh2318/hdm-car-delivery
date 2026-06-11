@@ -3227,6 +3227,7 @@
 
     function renderMypageLookup(saved) {
         const savedEmail = localStorage.getItem('hdm_mypage_email') || '';
+        const savedResId = localStorage.getItem('hdm_mypage_resid') || '';
         let html = '';
 
         // No reservations found
@@ -3305,9 +3306,13 @@
                 <div style="font-size:18px;font-weight:800;color:#1a1a1a;">マイページ</div>
             </div>
             <div class="mypage-lookup">
-                <div class="form-group" style="margin-bottom:10px;">
+                <div class="form-group" style="margin-bottom:6px;">
                     <label class="form-label">ご予約番号</label>
-                    <input class="form-input" type="text" id="mypageResId" placeholder="KD-0000-0000" autocapitalize="characters" style="font-size:16px;">
+                    <input class="form-input" type="text" id="mypageResId" placeholder="KD-0000-0000" autocapitalize="characters" value="${savedResId}" oninput="document.getElementById('mypageSaveWrap').style.display=this.value.trim()?'flex':'none';" style="font-size:16px;">
+                    <label id="mypageSaveWrap" style="display:${savedResId ? 'flex' : 'none'};align-items:center;gap:7px;margin-top:8px;cursor:pointer;font-size:12.5px;color:#444;user-select:none;">
+                        <input type="checkbox" id="mypageSaveResId" ${savedResId ? 'checked' : ''} style="width:17px;height:17px;accent-color:#FABE00;flex:none;">
+                        <span>💾 この端末に予約番号を保存（次回入力不要）</span>
+                    </label>
                 </div>
                 <div class="form-group" style="margin-bottom:14px;">
                     <label class="form-label">ご予約時のメールアドレス</label>
@@ -3842,6 +3847,8 @@
         const al = mypageState._autoLookup || {};
         const email = (document.getElementById('mypageEmail')?.value?.trim()) || al.mail || '';
         const resId = (document.getElementById('mypageResId')?.value?.trim()) || al.id || '';
+        const saveChk = document.getElementById('mypageSaveResId'); // 保存チェックボックス（あれば）
+        const wantSaveResId = saveChk ? saveChk.checked : null; // null=自動ログイン等でフォーム無し→保存状態を変えない
         mypageState._autoLookup = null; // 一度きり
         if (!email || !resId) {
             mypageState.error = '予約番号とメールアドレスを入力してください';
@@ -3879,6 +3886,9 @@
                 return;
             }
             localStorage.setItem('hdm_mypage_email', email);
+            // 予約番号の保存（チェックON→保存・OFF→削除。自動ログイン等でフォーム無し時は変更しない）
+            if (wantSaveResId === true) localStorage.setItem('hdm_mypage_resid', resId);
+            else if (wantSaveResId === false) localStorage.removeItem('hdm_mypage_resid');
             mypageState.email = email;
             mypageState.reservation = data.reservation;
             // キャンセル依頼済みなら復元（再入場でも「申請中」表示＝再依頼を防ぐ）
