@@ -1361,7 +1361,7 @@
                 <div class="vehicle-card" style="animation:vehicleFadeIn .3s ease ${idx * 0.06}s both;" onclick="selectClass('${type}')">
                     <div class="vc-icon ${type}">${cls.img ? `<img src="${cls.img}" alt="${cls.name}" loading="lazy" decoding="async">` : (cls.icon || '🚗')}</div>
                     <div class="vc-body">
-                        <div class="vc-class-tag ${type}">${cls.name}クラス</div>
+                        <div class="vc-class-tag ${type}">${cls.name || (type + 'クラス')}</div>
                         <div class="vc-name" title="${cls.vehicles}">${cls.vehicles}</div>
                         <div class="vc-specs">
                             <span>👥 ${seats}人乗り</span>
@@ -2287,8 +2287,8 @@
             ${renderBookingProgress(1)}
             <div class="confirm-screen screen-fade">
                 <div class="confirm-vehicle-hero">
-                    <div class="confirm-vehicle-icon">${cls.img ? `<img src="${cls.img}" alt="${cls.name || v.type}クラス">` : (cls.icon || '🚗')}</div>
-                    <div class="confirm-vehicle-name">${cls.name || v.type}クラス</div>
+                    <div class="confirm-vehicle-icon">${cls.img ? `<img src="${cls.img}" alt="${cls.name || (v.type + 'クラス')}">` : (cls.icon || '🚗')}</div>
+                    <div class="confirm-vehicle-name">${cls.name || (v.type + 'クラス')}</div>
                     <div class="confirm-vehicle-class">${cls.vehicles}</div>
                     <div style="margin-top:8px;display:inline-block;background:#f1f1f1;color:#444;font-size:12px;font-weight:700;padding:4px 11px;border-radius:14px;">🏢 提供会社：${providerOf(v)}</div>
                     <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;font-size:11px;opacity:.8;">
@@ -2626,7 +2626,7 @@
                 <!-- 料金明細 -->
                 <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;">
                     <div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
-                        <span>${cls.name || ''}クラス × ${days}日間</span>
+                        <span>${cls.name || (state.selectedClass + 'クラス')} × ${days}日間</span>
                         <span>¥${basePrice.toLocaleString()}</span>
                     </div>
                     ${cdwFee > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
@@ -2682,7 +2682,7 @@
                 <div style="background:#f9f9f9;border-radius:12px;padding:14px;text-align:left;margin-bottom:16px;font-size:12px;line-height:1.8;">
                     <div style="display:flex;justify-content:space-between;">
                         <span style="color:#666;">車両</span>
-                        <span style="font-weight:600;">${cls.name || ''}クラス</span>
+                        <span style="font-weight:600;">${cls.name || (state.selectedClass + 'クラス')}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;">
                         <span style="color:#666;">お届け場所</span>
@@ -3263,7 +3263,7 @@
                         </div>
                         <div class="mp-card-body">
                             <div class="mp-card-top">
-                                <div class="mp-card-vehicle">${vehicleName}クラス</div>
+                                <div class="mp-card-vehicle">${vehicleName || (r.vehicle + 'クラス')}</div>
                                 ${r.price ? `<div class="mp-card-price">¥${Number(r.price).toLocaleString()}</div>` : ''}
                             </div>
                             <div class="mp-card-info">

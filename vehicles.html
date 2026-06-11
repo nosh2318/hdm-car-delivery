@@ -74,7 +74,7 @@ async function load(){
     const it=(cls.items||{})[k]; if(!it||it.show===false)return;
     const img='images/'+(IMG[k]||'class_C')+'.png';
     html+='<div class="card">'
-      +'<div class="img"><span class="tag" style="background:'+(COLORS[k]||'#1a1a1a')+'">'+k+'クラス</span><img src="'+img+'" alt="'+(it.label||'')+'" loading="lazy"></div>'
+      +'<div class="img"><span class="tag" style="background:'+(COLORS[k]||'#1a1a1a')+'">'+k+'</span><img src="'+img+'" alt="'+(it.label||'')+'" loading="lazy"></div>'
       +'<div class="body">'
       +'<h2>'+(it.label||k)+'</h2>'
       +'<div class="veh">'+(it.vehicles||'')+'</div>'
