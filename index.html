@@ -833,6 +833,7 @@
                         <button class="menu-lang-btn active" onclick="switchLang('ja')">日本語</button>
                         <button class="menu-lang-btn" onclick="switchLang('en')">English</button>
                         <button class="menu-lang-btn" onclick="switchLang('zh')">繁體中文</button>
+                        <button class="menu-lang-btn" onclick="switchLang('ko')">한국어</button>
                     </div>
                     <div class="menu-user">
                         <button class="menu-user-btn" onclick="closeMenu(); state.screen='mypage'; render();">予約を確認する（マイページ）</button>
@@ -1298,7 +1299,7 @@
         cdw: 'none',           // 'none' | 'cdw' | 'pack'
         options: { childSeat: 0, juniorSeat: 0 },
         // Language
-        lang: (function(){try{return localStorage.getItem('kd_lang')||'ja';}catch(e){return 'ja';}})(),  // 'ja' | 'en' | 'zh'
+        lang: (function(){try{var s=localStorage.getItem('kd_lang');if(s)return s;var n=(navigator.language||'ja').toLowerCase();if(n.indexOf('ko')===0)return 'ko';if(n.indexOf('zh')===0)return 'zh';if(n.indexOf('en')===0)return 'en';return 'ja';}catch(e){return 'ja';}})(),  // 'ja' | 'en' | 'zh' | 'ko'（未選択時はブラウザ言語で初期化）
     };
 
     // 利用期間はデフォルト空欄（お届け日を選ぶと回収日が同日に自動セット）
@@ -4570,6 +4571,57 @@
             driverNamePh: '佐藤 花子', driverKanaPh: 'サトウ ハナコ',
             confirmProceed: '確認選項／進入預約手續 ›',
         },
+        ko: {
+            menuMypage: '예약 확인 (마이페이지)',
+            menuUsage: '이용 방법', menuVehicle: '차량 및 요금', menuInsurance: '보험 플랜',
+            menuFaq: '자주 묻는 질문', menuContact: '문의하기',
+            menuClause: '대여 약관', menuPrivacy: '개인정보 처리방침', menuLegal: '특정상거래법 표기', menuCompany: '운영 회사',
+            menuService: '서비스', menuSupport: '지원', menuLegalSection: '법적 정보',
+            progressDate: '일정', progressPlace: '장소', progressVehicle: '차량',
+            dateSetup: '이용 기간을 설정해 주세요', dateChange: '변경', dateSet: '설정', dateClose: '닫기',
+            datePeriod: '이용 기간 설정', startDate: '시작일', startTime: '시작 시각', endDate: '종료일', endTime: '종료 시각',
+            searchPlaceholder: '호텔명·주소로 검색', backToSapporo: '삿포로역으로 돌아가기',
+            selectVehicle: '차량 선택', allClasses: '전체',
+            step1: 'STEP1 이용 기간을 설정해 주세요', step2: 'STEP2 지도에서 배달 장소를 지정해 주세요',
+            step1sub: '위 양식에서 일시 선택', step2sub: '지도를 탭하여 핀을 놓기',
+            deliverable: '대 배달 가능', classes: '클래스', noVehicle: '해당하는 차량이 없습니다',
+            noVehicleSub: '일정이나 클래스를 변경해 보세요', searching: '차량 검색 중...',
+            seats: '인승', available: '대 가능', days: '일간', select: '선택', deliveryPlace: '배달 장소',
+            noAddress: '해당하는 주소를 찾을 수 없습니다',
+            confirmTitle: '예약 내용 확인', estimate: '결제 예상 금액', taxIncl: '세금 포함',
+            baseFee: '기본 요금', deliveryFee: '배송료', proceed: '예약 절차로 진행', backToSelect: '차량 선택으로 돌아가기',
+            rental: '대여', returnLabel: '반납',
+            optionsTitle: '옵션 선택', cdwTitle: '면책 보상 제도',
+            cdwName: '면책 보상 (CDW)', cdwDesc1: '차량·대물 사고 면책액이 0원', cdwDesc2: '만일의 사고에도 자기부담 없음',
+            packName: '안심 패키지', packDesc1: '면책 보상(CDW) 전체 내용', packDesc2: 'NOC(휴업 보상)도 전액 보장', packDesc3: '로드 서비스 포함',
+            recommended: '추천', noInsurance: '가입 안 함', insuranceNote: '※「면책 보상」과「안심 패키지」는 동시 가입할 수 없습니다.',
+            childSeatTitle: '카시트', childSeat: '유아용 카시트', juniorSeat: '주니어 시트',
+            optTotal: '옵션 합계', next: '다음으로', back: '돌아가기',
+            formTitle: '운전자 정보', formDesc: '운전하실 분의 정보를 입력해 주세요. 면허증과 일치해야 합니다.',
+            formName: '이름', formKana: '이름(가타카나)', formPhone: '전화번호', formEmail: '이메일', formNotes: '특이사항',
+            formNamePh: 'Taro Yamada', formKanaPh: 'ヤマダ タロウ', formPhonePh: '090-1234-5678', formEmailPh: 'example@mail.com',
+            formNotesPh: '카시트 희망, 도착 시간 상담 등', required: '*필수',
+            formError: ' 입력해 주세요',
+            termsTitle: '대여 약관', termsDesc: '아래 약관·규정을 확인해 주세요',
+            termsClause: '자동차 대여 약관', termsClauseSub: '렌터카 대여에 관한 약관',
+            termsPrivacy: '개인정보 처리방침', termsPrivacySub: '개인정보의 취급에 대하여',
+            termsCancel: '취소 정책', termsCancelSub: '예약 취소·변경에 관한 규정',
+            termsAgree: '위 대여 약관·규정에 동의합니다', termsNext: '결제로 진행',
+            paymentTitle: '결제', paymentSelect: '결제 수단 선택', paymentPay: ' 결제',
+            cardName: '신용카드', cardDesc: 'Visa / Mastercard / JCB / AMEX',
+            appleName: 'Apple Pay', appleDesc: 'Touch ID / Face ID로 간편 결제',
+            paypayName: 'PayPay', paypayDesc: 'PayPay 앱으로 결제',
+            total: '합계 (세금 포함)',
+            completeTitle: '예약이 완료되었습니다!', resNo: '예약 번호',
+            nextStep: '다음 단계', emailSent: '확인 이메일을 보냈습니다', checkMypage: '마이페이지에서 예약 상태 확인',
+            goTop: '처음으로',
+            hdrBooker: '예약자 정보', bookerSection: '👤 예약자 정보',
+            bookerDesc: '예약자분의 정보를 입력해 주세요. 운전하시는 분이 다른 경우 아래에 체크해 주세요.',
+            diffDriver: '예약자와 운전자가 다른 경우', driverSection: '🚗 운전자 정보 (면허증과 일치)',
+            emailLoginNote: '⚠️ 이 이메일 주소는 마이페이지 로그인에 사용됩니다. 예약 확인 메일도 이곳으로 전송됩니다.',
+            driverNamePh: 'Hanako Sato', driverKanaPh: 'サトウ ハナコ',
+            confirmProceed: '옵션 확인／예약 절차로 진행 ›',
+        },
     };
 
     function t(key) { return LANG[state.lang]?.[key] || LANG.ja[key] || key; }
@@ -4579,7 +4631,7 @@
         try{localStorage.setItem('kd_lang',lang);}catch(e){}
         // Update menu lang buttons
         document.querySelectorAll('.menu-lang-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.textContent.trim() === ({ja:'日本語',en:'English',zh:'繁體中文'}[lang]));
+            btn.classList.toggle('active', btn.textContent.trim() === ({ja:'日本語',en:'English',zh:'繁體中文',ko:'한국어'}[lang]));
         });
         // Update menu text
         updateMenuText();
