@@ -1299,7 +1299,7 @@
         cdw: 'none',           // 'none' | 'cdw' | 'pack'
         options: { childSeat: 0, juniorSeat: 0 },
         // Language
-        lang: 'ja',  // 既定は日本語固定。i18n完成までブラウザ言語の自動判定はOFF（混在表示を顧客に出さないため）。手動切替はswitchLangで可。
+        lang: (function(){try{var s=localStorage.getItem('kd_lang');if(s&&['ja','en','zh','ko'].indexOf(s)>=0)return s;var n=(navigator.language||'ja').toLowerCase();if(n.indexOf('ko')===0)return 'ko';if(n.indexOf('zh')===0)return 'zh';if(n.indexOf('en')===0)return 'en';return 'ja';}catch(e){return 'ja';}})(),  // i18n完成→自動言語判定ON（手動選択kd_lang優先→ブラウザ言語→ja）。静ページと共通キー。
     };
 
     // 利用期間はデフォルト空欄（お届け日を選ぶと回収日が同日に自動セット）
