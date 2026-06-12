@@ -14,14 +14,19 @@
   .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
   .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
   .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
-  .hd .back{margin-left:auto;font-size:12px;color:#FABE00;text-decoration:none;font-weight:700}
+  .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:10px;flex:none}
+  .langsw{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .langsw button{font-size:11px;font-weight:800;color:#ccc;background:transparent;border:1px solid #555;border-radius:999px;padding:4px 9px;cursor:pointer}
+  .langsw button.active{color:#1a1a1a;background:#FABE00;border-color:#FABE00}
+  .pane{display:none}.pane.on{display:block}
   .hero{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:#fff;padding:28px 20px 24px;text-align:center}
   .hero h1{font-size:20px;font-weight:900}.hero h1 .y{color:#FABE00}
+  .refnote{max-width:760px;margin:12px auto 0;padding:0 16px;font-size:11.5px;color:#999;text-align:center}
   .wrap{max-width:760px;margin:0 auto;padding:20px 16px}
   .card{background:#fff;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.06);overflow:hidden}
   .row{display:flex;font-size:13.5px;border-bottom:1px solid #f4f4f4}
   .row:last-child{border-bottom:none}
-  .row .k{flex:none;width:130px;background:#fafafa;color:#666;font-weight:700;padding:13px 14px}
+  .row .k{flex:none;width:140px;background:#fafafa;color:#666;font-weight:700;padding:13px 14px}
   .row .v{flex:1;padding:13px 14px;color:#222}
   .row .v a{color:#0369a1}
   .ctbl{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
@@ -33,31 +38,108 @@
 <body>
 <div class="hd">
   <a class="logo" href="./"><span class="mark"><i></i><i></i><i></i></span><b>KEY<span class="y">DROP</span></b></a>
-  <a class="back" href="./">← TOPへ</a>
-</div>
-<div class="hero"><h1>特定商取引法に基づく<span class="y">表記</span></h1></div>
-
-<div class="wrap">
-  <div class="card">
-    <div class="row"><span class="k">運営会社</span><span class="v">株式会社グローバルラインズ（Global Lines Co.,Ltd.）</span></div>
-    <div class="row"><span class="k">所在地</span><span class="v">〒901-0223 沖縄県豊見城市翁長854-1 MEGAドン・キホーテ豊見城店内6F</span></div>
-    <div class="row"><span class="k">代表者・運営責任者</span><span class="v">大下 紀孝</span></div>
-    <div class="row"><span class="k">サービス名</span><span class="v">KEYDROP（札幌カーデリバリーサービス）</span></div>
-    <div class="row"><span class="k">問い合わせ窓口</span><span class="v">TEL：050-1785-2711 ／ LINE公式：<a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">@149ahjll</a>（24時間受付）</span></div>
-    <div class="row"><span class="k">受付時間</span><span class="v">9:00 〜 19:00（年中無休）</span></div>
-    <div class="row"><span class="k">対価</span><span class="v">レンタルサービス利用の対価として、取引毎に当社がホームページに表示する利用料金をいただきます。</span></div>
-    <div class="row"><span class="k">その他の必要料金</span><span class="v">なし</span></div>
-    <div class="row"><span class="k">支払方法・時期</span><span class="v">クレジットカード決済：予約時</span></div>
-    <div class="row"><span class="k">注文方法</span><span class="v">当社の運営するホームページ上でインターネット経由でのみ受付可能でございます。</span></div>
-    <div class="row"><span class="k">申込の有効期限</span><span class="v">レンタル車両返却時まで</span></div>
-    <div class="row"><span class="k">引渡方法・時期</span><span class="v">予約時に入力いただいた引き渡し場所（デリバリー）にてお引渡し</span></div>
-    <div class="row"><span class="k">キャンセル<br>について</span><span class="v">
-        キャンセルは、マイページの「キャンセルをリクエスト」または公式LINEよりご連絡ください。リクエスト送信後、運営が返金可否・キャンセル料を確認のうえ確定いたします。
-        <table class="ctbl"><tr><th>乗車日の7日前</th><td>無料</td></tr><tr><th>乗車日の6〜3日前</th><td>代金の20%</td></tr><tr><th>乗車日の2〜1日前</th><td>代金の30%</td></tr><tr><th>乗車日および乗車日を過ぎた場合</th><td>代金の50%</td></tr></table>
-    </span></div>
-    <div class="row"><span class="k">その他販売条件</span><span class="v">サービスFAQにてご確認をお願いいたします。</span></div>
+  <div class="langsw" id="langsw">
+    <button data-l="ja">日本語</button><button data-l="en">EN</button><button data-l="zh">繁中</button><button data-l="ko">한국어</button>
   </div>
-  <a class="cta" href="./">🚗 レンタカーを予約する</a>
+  <a class="back" href="./">← TOP</a>
 </div>
+
+<!-- ja -->
+<div class="pane" data-lang="ja">
+<div class="hero"><h1>特定商取引法に基づく<span class="y">表記</span></h1></div>
+<div class="wrap"><div class="card">
+  <div class="row"><span class="k">運営会社</span><span class="v">株式会社グローバルラインズ（Global Lines Co.,Ltd.）</span></div>
+  <div class="row"><span class="k">所在地</span><span class="v">〒901-0223 沖縄県豊見城市翁長854-1 MEGAドン・キホーテ豊見城店内6F</span></div>
+  <div class="row"><span class="k">代表者・運営責任者</span><span class="v">大下 紀孝</span></div>
+  <div class="row"><span class="k">サービス名</span><span class="v">KEYDROP（カーデリバリーサービス）</span></div>
+  <div class="row"><span class="k">問い合わせ窓口</span><span class="v">TEL：050-1785-2711 ／ LINE公式：<a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">@149ahjll</a>（24時間受付）</span></div>
+  <div class="row"><span class="k">受付時間</span><span class="v">9:00 〜 19:00（年中無休）</span></div>
+  <div class="row"><span class="k">対価</span><span class="v">レンタルサービス利用の対価として、取引毎に当社がホームページに表示する利用料金をいただきます。</span></div>
+  <div class="row"><span class="k">その他の必要料金</span><span class="v">なし</span></div>
+  <div class="row"><span class="k">支払方法・時期</span><span class="v">クレジットカード決済：予約時</span></div>
+  <div class="row"><span class="k">注文方法</span><span class="v">当社の運営するホームページ上でインターネット経由でのみ受付可能でございます。</span></div>
+  <div class="row"><span class="k">申込の有効期限</span><span class="v">レンタル車両返却時まで</span></div>
+  <div class="row"><span class="k">引渡方法・時期</span><span class="v">予約時に入力いただいた引き渡し場所（デリバリー）にてお引渡し</span></div>
+  <div class="row"><span class="k">キャンセルについて</span><span class="v">キャンセルは、マイページの「キャンセルをリクエスト」または公式LINEよりご連絡ください。リクエスト送信後、運営が返金可否・キャンセル料を確認のうえ確定いたします。<table class="ctbl"><tr><th>乗車日の7日前</th><td>無料</td></tr><tr><th>乗車日の6〜3日前</th><td>代金の20%</td></tr><tr><th>乗車日の2〜1日前</th><td>代金の30%</td></tr><tr><th>乗車日および乗車日を過ぎた場合</th><td>代金の50%</td></tr></table></span></div>
+  <div class="row"><span class="k">その他販売条件</span><span class="v">サービスFAQにてご確認をお願いいたします。</span></div>
+</div><a class="cta" href="./">🚗 レンタカーを予約する</a></div>
+</div>
+
+<!-- en -->
+<div class="pane" data-lang="en">
+<div class="hero"><h1>Commercial <span class="y">Transactions</span> Act Notice</h1></div>
+<div class="refnote">※ Reference translation. The Japanese version is authoritative.</div>
+<div class="wrap"><div class="card">
+  <div class="row"><span class="k">Operator</span><span class="v">Global Lines Co.,Ltd.（株式会社グローバルラインズ）</span></div>
+  <div class="row"><span class="k">Address</span><span class="v">854-1 Onaga, Tomigusuku, Okinawa 901-0223 (6F MEGA Don Quijote Tomigusuku)</span></div>
+  <div class="row"><span class="k">Representative</span><span class="v">Noritaka Oshita</span></div>
+  <div class="row"><span class="k">Service name</span><span class="v">KEYDROP (Car Delivery Service)</span></div>
+  <div class="row"><span class="k">Contact</span><span class="v">TEL: 050-1785-2711 ／ Official LINE: <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">@149ahjll</a> (24h reception)</span></div>
+  <div class="row"><span class="k">Hours</span><span class="v">9:00–19:00 (year-round)</span></div>
+  <div class="row"><span class="k">Price</span><span class="v">As consideration for the rental service, the usage fee displayed on our website for each transaction applies.</span></div>
+  <div class="row"><span class="k">Other fees</span><span class="v">None</span></div>
+  <div class="row"><span class="k">Payment method / timing</span><span class="v">Credit card: at the time of booking</span></div>
+  <div class="row"><span class="k">How to order</span><span class="v">Accepted only via the internet on our website.</span></div>
+  <div class="row"><span class="k">Validity of application</span><span class="v">Until the rental vehicle is returned</span></div>
+  <div class="row"><span class="k">Delivery method / timing</span><span class="v">Handover at the delivery location you entered at booking</span></div>
+  <div class="row"><span class="k">Cancellation</span><span class="v">Cancel via "Request cancellation" on My Page or Official LINE. After submission, staff confirm refund eligibility and the cancellation fee before finalizing.<table class="ctbl"><tr><th>7 days before the use date</th><td>Free</td></tr><tr><th>6–3 days before</th><td>20% of the price</td></tr><tr><th>2–1 days before</th><td>30% of the price</td></tr><tr><th>On the use date or later</th><td>50% of the price</td></tr></table></span></div>
+  <div class="row"><span class="k">Other sales terms</span><span class="v">Please refer to the service FAQ.</span></div>
+</div><a class="cta" href="./">🚗 Book a Rental Car</a></div>
+</div>
+
+<!-- zh -->
+<div class="pane" data-lang="zh">
+<div class="hero"><h1>特定商業交易法<span class="y">標示</span></h1></div>
+<div class="refnote">※ 參考翻譯。正確內容以日文版為準。</div>
+<div class="wrap"><div class="card">
+  <div class="row"><span class="k">營運公司</span><span class="v">Global Lines 株式會社（株式会社グローバルラインズ）</span></div>
+  <div class="row"><span class="k">所在地</span><span class="v">〒901-0223 沖縄県豊見城市翁長854-1 MEGAドン・キホーテ豊見城店内6F</span></div>
+  <div class="row"><span class="k">代表人・營運負責人</span><span class="v">大下 紀孝</span></div>
+  <div class="row"><span class="k">服務名稱</span><span class="v">KEYDROP（汽車外送服務）</span></div>
+  <div class="row"><span class="k">聯絡窗口</span><span class="v">TEL：050-1785-2711 ／ 官方LINE：<a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">@149ahjll</a>（24小時受理）</span></div>
+  <div class="row"><span class="k">受理時間</span><span class="v">9:00 〜 19:00（全年無休）</span></div>
+  <div class="row"><span class="k">對價</span><span class="v">作為租賃服務的對價，依各筆交易收取本公司於網站上顯示的使用費用。</span></div>
+  <div class="row"><span class="k">其他必要費用</span><span class="v">無</span></div>
+  <div class="row"><span class="k">付款方式・時間</span><span class="v">信用卡付款：預約時</span></div>
+  <div class="row"><span class="k">訂購方式</span><span class="v">僅可透過本公司網站經由網路受理。</span></div>
+  <div class="row"><span class="k">申請有效期限</span><span class="v">至租賃車輛返還時</span></div>
+  <div class="row"><span class="k">交付方式・時間</span><span class="v">於預約時輸入的交付地點（外送）交車</span></div>
+  <div class="row"><span class="k">關於取消</span><span class="v">取消請透過我的頁面「申請取消」或官方LINE聯絡。送出後由經營方確認可否退款・取消費用後確定。<table class="ctbl"><tr><th>乘車日7天前</th><td>免費</td></tr><tr><th>乘車日6〜3天前</th><td>費用的20%</td></tr><tr><th>乘車日2〜1天前</th><td>費用的30%</td></tr><tr><th>乘車日當天及之後</th><td>費用的50%</td></tr></table></span></div>
+  <div class="row"><span class="k">其他販售條件</span><span class="v">請參閱服務FAQ。</span></div>
+</div><a class="cta" href="./">🚗 預約租車</a></div>
+</div>
+
+<!-- ko -->
+<div class="pane" data-lang="ko">
+<div class="hero"><h1>특정상거래법에 따른 <span class="y">표기</span></h1></div>
+<div class="refnote">※ 참고 번역입니다. 정확한 내용은 일본어 버전이 정본입니다.</div>
+<div class="wrap"><div class="card">
+  <div class="row"><span class="k">운영 회사</span><span class="v">주식회사 글로벌라인즈（Global Lines Co.,Ltd.）</span></div>
+  <div class="row"><span class="k">소재지</span><span class="v">〒901-0223 沖縄県豊見城市翁長854-1 MEGAドン・キホーテ豊見城店内6F</span></div>
+  <div class="row"><span class="k">대표자・운영 책임자</span><span class="v">大下 紀孝 (오시타 노리타카)</span></div>
+  <div class="row"><span class="k">서비스명</span><span class="v">KEYDROP（카 딜리버리 서비스）</span></div>
+  <div class="row"><span class="k">문의 창구</span><span class="v">TEL: 050-1785-2711 ／ 공식 LINE: <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">@149ahjll</a>（24시간 접수）</span></div>
+  <div class="row"><span class="k">접수 시간</span><span class="v">9:00 ~ 19:00（연중무휴）</span></div>
+  <div class="row"><span class="k">대가</span><span class="v">렌탈 서비스 이용의 대가로, 거래마다 당사가 홈페이지에 표시하는 이용 요금을 받습니다.</span></div>
+  <div class="row"><span class="k">기타 필요 요금</span><span class="v">없음</span></div>
+  <div class="row"><span class="k">결제 방법・시기</span><span class="v">신용카드 결제: 예약 시</span></div>
+  <div class="row"><span class="k">주문 방법</span><span class="v">당사가 운영하는 홈페이지에서 인터넷을 통해서만 접수 가능합니다.</span></div>
+  <div class="row"><span class="k">신청 유효기간</span><span class="v">렌탈 차량 반납 시까지</span></div>
+  <div class="row"><span class="k">인도 방법・시기</span><span class="v">예약 시 입력하신 인도 장소(배달)에서 인도</span></div>
+  <div class="row"><span class="k">취소에 대하여</span><span class="v">취소는 마이페이지의 「취소 요청」 또는 공식 LINE으로 연락 주세요. 전송 후 운영진이 환불 여부・취소 수수료를 확인한 뒤 확정합니다.<table class="ctbl"><tr><th>승차일 7일 전</th><td>무료</td></tr><tr><th>승차일 6~3일 전</th><td>요금의 20%</td></tr><tr><th>승차일 2~1일 전</th><td>요금의 30%</td></tr><tr><th>승차일 당일 및 경과 시</th><td>요금의 50%</td></tr></table></span></div>
+  <div class="row"><span class="k">기타 판매 조건</span><span class="v">서비스 FAQ에서 확인해 주세요.</span></div>
+</div><a class="cta" href="./">🚗 렌터카 예약하기</a></div>
+</div>
+
+<script>
+(function(){
+  var KEY='kd_lang', LS=['ja','en','zh','ko'];
+  var T={ja:'特定商取引法に基づく表記｜KEYDROP',en:'Commercial Transactions Act Notice｜KEYDROP',zh:'特定商業交易法標示｜KEYDROP',ko:'특정상거래법 표기｜KEYDROP'};
+  function detect(){try{var s=localStorage.getItem(KEY);if(s&&LS.indexOf(s)>=0)return s;}catch(e){}var n=(navigator.language||'ja').toLowerCase();return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja';}
+  function apply(l){if(LS.indexOf(l)<0)l='ja';document.documentElement.lang=l;document.title=T[l]||T.ja;document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-lang')===l);});document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});try{localStorage.setItem(KEY,l);}catch(e){}}
+  document.querySelectorAll('#langsw button').forEach(function(b){b.onclick=function(){apply(b.getAttribute('data-l'));};});
+  apply(detect());
+})();
+</script>
 </body>
 </html>
