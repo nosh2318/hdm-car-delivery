@@ -3699,29 +3699,29 @@
         const canCancel = !isCancelled && !isCompleted && !isActive && !isDelivering;
         if (canCancel) {
             const cancelInner = r._cancelRequested
-                ? `<div style="text-align:center;padding:14px;background:#fff7ed;border:1px solid #fdba74;border-radius:10px;color:#9a3412;font-size:12.5px;line-height:1.7;">✅ キャンセル依頼を受け付けました。<br>運営より折り返しご連絡いたします（返金可否・キャンセル料を含む）。</div>`
+                ? `<div style="text-align:center;padding:14px;background:#fff7ed;border:1px solid #fdba74;border-radius:10px;color:#9a3412;font-size:12.5px;line-height:1.7;">${t('cancelReceivedBody')}</div>`
                 : `
-                    <p style="font-size:12px;line-height:1.7;color:#444;margin:0 0 8px;">キャンセルをご希望の場合は、下記ポリシーをご確認のうえ「キャンセルリクエストを送信」してください。<b>この場では確定されません。</b>運営が内容を確認し、返金可否・キャンセル料をご案内のうえ確定いたします。</p>
+                    <p style="font-size:12px;line-height:1.7;color:#444;margin:0 0 8px;">${t('cancelIntro')}</p>
                     <div style="background:#f9f9f9;border-radius:10px;padding:10px 12px;font-size:12px;color:#555;line-height:1.9;margin-bottom:10px;">
-                        <div style="font-weight:800;color:#1a1a1a;margin-bottom:4px;">📄 キャンセルポリシー（キャンセル料）</div>
-                        <div style="display:flex;justify-content:space-between;"><span>7日前まで</span><span style="font-weight:700;">無料</span></div>
-                        <div style="display:flex;justify-content:space-between;"><span>6〜3日前</span><span>基本料金の20%</span></div>
-                        <div style="display:flex;justify-content:space-between;"><span>2〜1日前</span><span>基本料金の30%</span></div>
-                        <div style="display:flex;justify-content:space-between;"><span>当日以降</span><span>基本料金の50%</span></div>
-                        <div style="font-size:10.5px;color:#888;margin-top:6px;">※航空便欠航時は欠航証明書のご提示でキャンセル料無料。</div>
+                        <div style="font-weight:800;color:#1a1a1a;margin-bottom:4px;">${t('cancelPolicyHdr')}</div>
+                        <div style="display:flex;justify-content:space-between;"><span>${t('cp7days')}</span><span style="font-weight:700;">${t('cpFree')}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>${t('cp63')}</span><span>${t('cp20')}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>${t('cp21')}</span><span>${t('cp30')}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>${t('cpDay')}</span><span>${t('cp50')}</span></div>
+                        <div style="font-size:10.5px;color:#888;margin-top:6px;">${t('cpFlightNote')}</div>
                     </div>
-                    <label class="form-label" style="display:block;font-size:11.5px;color:#444;font-weight:700;margin-bottom:4px;">キャンセル理由（任意）</label>
-                    <textarea id="kdCancelReason" rows="2" placeholder="例：予定が変わったため" style="width:100%;box-sizing:border-box;padding:9px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;margin-bottom:10px;"></textarea>
+                    <label class="form-label" style="display:block;font-size:11.5px;color:#444;font-weight:700;margin-bottom:4px;">${t('cancelReasonLabel')}</label>
+                    <textarea id="kdCancelReason" rows="2" placeholder="${t('cancelReasonPh')}" style="width:100%;box-sizing:border-box;padding:9px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;margin-bottom:10px;"></textarea>
                     <label style="display:flex;align-items:flex-start;gap:9px;font-size:12.5px;font-weight:700;color:#1a1a1a;cursor:pointer;margin-bottom:10px;line-height:1.5;">
                         <input type="checkbox" id="kdCancelAgree" onchange="document.getElementById('kdCancelBtn').disabled=!this.checked;" style="width:18px;height:18px;flex:none;accent-color:#dc2626;margin-top:1px;">
-                        上記キャンセルポリシーを確認し、同意します
+                        ${t('cancelAgree')}
                     </label>
-                    <button id="kdCancelBtn" disabled onclick="submitCancelRequestInline('${r.id}')" style="width:100%;padding:13px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;opacity:1;">キャンセルリクエストを送信</button>
-                    <div style="text-align:center;margin-top:8px;"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:800;color:#06c755;text-decoration:none;">お急ぎの場合は公式LINEへ 💬</a></div>`;
+                    <button id="kdCancelBtn" disabled onclick="submitCancelRequestInline('${r.id}')" style="width:100%;padding:13px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;opacity:1;">${t('cancelSubmitBtn')}</button>
+                    <div style="text-align:center;margin-top:8px;"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener" style="font-size:11.5px;font-weight:800;color:#06c755;text-decoration:none;">${t('urgentLineShort')}</a></div>`;
             html += `
             <details class="mp-faq" style="margin-top:10px;background:#fff;border:1px solid #fecaca;border-radius:12px;overflow:hidden;">
                 <summary style="list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;font-size:13.5px;font-weight:800;color:#dc2626;">
-                    <span>❌ キャンセルについて</span>
+                    <span>${t('cancelAboutSummary')}</span>
                     <span class="mp-faq-arw" style="font-size:12px;color:#888;transition:transform .2s;">▼</span>
                 </summary>
                 <div style="padding:2px 16px 16px;border-top:1px solid #fde8e8;">${cancelInner}</div>
@@ -4278,9 +4278,9 @@
                 <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;">${t('termsCancel')}</div>
                 <div style="font-size:12px;line-height:1.8;color:#555;">
                     <div style="display:flex;justify-content:space-between;"><span>7日前まで</span><span style="font-weight:600;">無料</span></div>
-                    <div style="display:flex;justify-content:space-between;${cancel.rate === 20 ? 'color:#1a1a1a;font-weight:700;' : ''}"><span>6〜3日前</span><span>基本料金の20%</span></div>
-                    <div style="display:flex;justify-content:space-between;${cancel.rate === 30 ? 'color:#1a1a1a;font-weight:700;' : ''}"><span>2〜1日前</span><span>基本料金の30%</span></div>
-                    <div style="display:flex;justify-content:space-between;${cancel.rate === 50 ? 'color:#1a1a1a;font-weight:700;' : ''}"><span>当日以降</span><span>基本料金の50%</span></div>
+                    <div style="display:flex;justify-content:space-between;${cancel.rate === 20 ? 'color:#1a1a1a;font-weight:700;' : ''}"><span>${t('cp63')}</span><span>${t('cp20')}</span></div>
+                    <div style="display:flex;justify-content:space-between;${cancel.rate === 30 ? 'color:#1a1a1a;font-weight:700;' : ''}"><span>${t('cp21')}</span><span>${t('cp30')}</span></div>
+                    <div style="display:flex;justify-content:space-between;${cancel.rate === 50 ? 'color:#1a1a1a;font-weight:700;' : ''}"><span>${t('cpDay')}</span><span>${t('cp50')}</span></div>
                 </div>
                 <div style="font-size:11px;color:#888;margin-top:8px;line-height:1.5;">※航空便が欠航した場合、欠航証明書のご提示でキャンセル料は無料となります。</div>
             </div>
@@ -4295,7 +4295,7 @@
 
             <div style="margin-bottom:14px;">
                 <label style="display:block;font-size:12px;font-weight:700;color:#444;margin-bottom:6px;">キャンセル理由（任意）</label>
-                <textarea id="cancelReason" rows="2" placeholder="例：予定が変わったため" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;"></textarea>
+                <textarea id="cancelReason" rows="2" placeholder="${t('cancelReasonPh')}" style="width:100%;box-sizing:border-box;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;"></textarea>
             </div>
 
             <div style="display:flex;gap:8px;">
@@ -4509,6 +4509,11 @@
             changeDelTitle: '🔹 お届け（貸出）の時間・場所', changeDelOk: 'マイページから<b>出発48時間前まで</b>変更をリクエストできます（運営の承認後に反映）。', changeDelClosed: 'マイページでの受付は出発48時間前まで。締切後は公式LINEへ。',
             changeColTitle: '🔹 回収（返却）の時間・場所', changeColOk: 'マイページから<b>返却2時間前まで</b>変更をリクエストできます（運営の承認後に反映）。', changeColClosed: 'マイページでの受付は返却2時間前まで。締切後は公式LINEへ。',
             changeOptTitle: '🔹 オプション・補償の変更', changeOptBody: '公式LINEにて承ります（貸出前日19:00まで・※事前決済制）。', reqChangeBtn: '📝 お届け・回収の変更をリクエスト', lineConsult: '💬 公式LINEで相談',
+            cancelAboutSummary: '❌ キャンセルについて', cancelReceivedBody: '✅ キャンセル依頼を受け付けました。<br>運営より折り返しご連絡いたします（返金可否・キャンセル料を含む）。',
+            cancelIntro: 'キャンセルをご希望の場合は、下記ポリシーをご確認のうえ「キャンセルリクエストを送信」してください。<b>この場では確定されません。</b>運営が内容を確認し、返金可否・キャンセル料をご案内のうえ確定いたします。',
+            cancelPolicyHdr: '📄 キャンセルポリシー（キャンセル料）', cp7days: '7日前まで', cpFree: '無料', cp63: '6〜3日前', cp20: '基本料金の20%', cp21: '2〜1日前', cp30: '基本料金の30%', cpDay: '当日以降', cp50: '基本料金の50%',
+            cpFlightNote: '※航空便欠航時は欠航証明書のご提示でキャンセル料無料。', cancelReasonLabel: 'キャンセル理由（任意）', cancelReasonPh: '例：予定が変わったため',
+            cancelAgree: '上記キャンセルポリシーを確認し、同意します', cancelSubmitBtn: 'キャンセルリクエストを送信', urgentLineShort: 'お急ぎの場合は公式LINEへ 💬',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -4601,6 +4606,11 @@
             changeDelTitle: '🔹 Delivery (pickup) time & place', changeDelOk: 'You can request a change from My Page <b>up to 48 hours before departure</b> (applied after staff approval).', changeDelClosed: 'My Page requests accepted up to 48 hours before departure. After that, contact Official LINE.',
             changeColTitle: '🔹 Return time & place', changeColOk: 'You can request a change from My Page <b>up to 2 hours before return</b> (applied after staff approval).', changeColClosed: 'My Page requests accepted up to 2 hours before return. After that, contact Official LINE.',
             changeOptTitle: '🔹 Change options / insurance', changeOptBody: 'Handled via Official LINE (by 19:00 the day before pickup; prepayment required).', reqChangeBtn: '📝 Request a delivery/return change', lineConsult: '💬 Consult on Official LINE',
+            cancelAboutSummary: '❌ About cancellation', cancelReceivedBody: '✅ Your cancellation request has been received.<br>We will get back to you (including refund eligibility and any cancellation fee).',
+            cancelIntro: 'If you wish to cancel, please review the policy below and tap "Send cancellation request." <b>This does not finalize the cancellation.</b> Our staff will review it and confirm after advising you of refund eligibility and any cancellation fee.',
+            cancelPolicyHdr: '📄 Cancellation Policy (fees)', cp7days: 'Up to 7 days before', cpFree: 'Free', cp63: '6–3 days before', cp20: '20% of base fee', cp21: '2–1 days before', cp30: '30% of base fee', cpDay: 'Same day or later', cp50: '50% of base fee',
+            cpFlightNote: '* If your flight is cancelled, the cancellation fee is waived with proof of cancellation.', cancelReasonLabel: 'Reason for cancellation (optional)', cancelReasonPh: 'e.g. Plans changed',
+            cancelAgree: 'I have read and agree to the cancellation policy above', cancelSubmitBtn: 'Send cancellation request', urgentLineShort: 'In a hurry? Contact us on Official LINE 💬',
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
@@ -4693,6 +4703,11 @@
             changeDelTitle: '🔹 送達（取車）的時間・地點', changeDelOk: '可於我的頁面在<b>出發48小時前</b>提出變更請求（經核准後生效）。', changeDelClosed: '我的頁面受理至出發48小時前。截止後請洽官方LINE。',
             changeColTitle: '🔹 回收（還車）的時間・地點', changeColOk: '可於我的頁面在<b>還車2小時前</b>提出變更請求（經核准後生效）。', changeColClosed: '我的頁面受理至還車2小時前。截止後請洽官方LINE。',
             changeOptTitle: '🔹 變更選項・補償', changeOptBody: '透過官方LINE受理（取車前一天19:00前・※採事前付款制）。', reqChangeBtn: '📝 申請變更送達・回收', lineConsult: '💬 透過官方LINE諮詢',
+            cancelAboutSummary: '❌ 關於取消', cancelReceivedBody: '✅ 已收到您的取消請求。<br>經營方將回覆您（包含可否退款・取消費用）。',
+            cancelIntro: '如欲取消，請確認以下政策後點擊「送出取消請求」。<b>此處尚未確定。</b>經營方將確認內容，並於告知可否退款・取消費用後確定。',
+            cancelPolicyHdr: '📄 取消政策（取消費用）', cp7days: '7天前', cpFree: '免費', cp63: '6〜3天前', cp20: '基本費用的20%', cp21: '2〜1天前', cp30: '基本費用的30%', cpDay: '當天以後', cp50: '基本費用的50%',
+            cpFlightNote: '※航班取消時，出示停飛證明可免取消費用。', cancelReasonLabel: '取消原因（選填）', cancelReasonPh: '例：行程有變',
+            cancelAgree: '我已確認並同意以上取消政策', cancelSubmitBtn: '送出取消請求', urgentLineShort: '如有急需請洽官方LINE 💬',
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
@@ -4785,6 +4800,11 @@
             changeDelTitle: '🔹 배달(대여) 시간·장소', changeDelOk: '마이페이지에서 <b>출발 48시간 전까지</b> 변경을 요청할 수 있습니다 (승인 후 반영).', changeDelClosed: '마이페이지 접수는 출발 48시간 전까지. 마감 후에는 공식 LINE으로.',
             changeColTitle: '🔹 회수(반납) 시간·장소', changeColOk: '마이페이지에서 <b>반납 2시간 전까지</b> 변경을 요청할 수 있습니다 (승인 후 반영).', changeColClosed: '마이페이지 접수는 반납 2시간 전까지. 마감 후에는 공식 LINE으로.',
             changeOptTitle: '🔹 옵션·보상 변경', changeOptBody: '공식 LINE에서 접수합니다 (대여 전날 19:00까지·※사전 결제제).', reqChangeBtn: '📝 배달·회수 변경 요청', lineConsult: '💬 공식 LINE으로 상담',
+            cancelAboutSummary: '❌ 취소 안내', cancelReceivedBody: '✅ 취소 요청을 접수했습니다.<br>운영진이 다시 연락드립니다 (환불 가능 여부·취소 수수료 포함).',
+            cancelIntro: '취소를 원하시면 아래 정책을 확인하신 후 "취소 요청 보내기"를 눌러 주세요. <b>이 자리에서 확정되지 않습니다.</b> 운영진이 내용을 확인하고 환불 가능 여부·취소 수수료를 안내한 뒤 확정합니다.',
+            cancelPolicyHdr: '📄 취소 정책 (취소 수수료)', cp7days: '7일 전까지', cpFree: '무료', cp63: '6~3일 전', cp20: '기본 요금의 20%', cp21: '2~1일 전', cp30: '기본 요금의 30%', cpDay: '당일 이후', cp50: '기본 요금의 50%',
+            cpFlightNote: '※항공편 결항 시 결항 증명서 제시로 취소 수수료 무료.', cancelReasonLabel: '취소 사유 (선택)', cancelReasonPh: '예: 일정이 변경되어',
+            cancelAgree: '위 취소 정책을 확인하고 동의합니다', cancelSubmitBtn: '취소 요청 보내기', urgentLineShort: '급하신 경우 공식 LINE으로 💬',
         },
     };
 
