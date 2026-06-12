@@ -1227,8 +1227,9 @@
     // ── State ──
     // ════════════════════════════════════════════
     // Sapporo Station (service area center)
-    const DEFAULT_LAT = (KD_STORE === 'naha') ? 26.1958 : 43.0687;
-    const DEFAULT_LNG = (KD_STORE === 'naha') ? 127.6489 : 141.3508;
+    // 那覇の初期地点は「那覇市中心(県庁前)」＝配達OKな街中。空港(不可ゾーン)を初期地点にすると開幕で全画面赤になるため。
+    const DEFAULT_LAT = (KD_STORE === 'naha') ? 26.2126 : 43.0687;
+    const DEFAULT_LNG = (KD_STORE === 'naha') ? 127.6792 : 141.3508;
 
     let state = {
         screen: 'top',
