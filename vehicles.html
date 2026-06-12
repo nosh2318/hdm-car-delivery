@@ -77,9 +77,11 @@ async function load(){
   let html='';
   order.forEach(function(k){
     const it=(cls.items||{})[k]; if(!it||it.show===false)return;
-    const img='images/'+(IMG[k]||'class_C')+'.png';
+    const base='images/'+(IMG[k]||'class_C');
+    const img=base+(NHA?'_nha':'')+'.png';   // 那覇は _nha 優先
+    const imgFb=base+'.png';                  // 無ければ共通画像にフォールバック
     html+='<div class="card">'
-      +'<div class="img"><span class="tag" style="background:'+(COLORS[k]||'#1a1a1a')+'">'+k+'</span><img src="'+img+'" alt="'+(it.label||'')+'" loading="lazy"></div>'
+      +'<div class="img"><span class="tag" style="background:'+(COLORS[k]||'#1a1a1a')+'">'+k+'</span><img src="'+img+'" onerror="this.onerror=null;this.src=\''+imgFb+'\'" alt="'+(it.label||'')+'" loading="lazy"></div>'
       +'<div class="body">'
       +'<h2>'+(it.label||k)+'</h2>'
       +'<div class="veh">'+(it.vehicles||'')+'</div>'

@@ -933,6 +933,8 @@
         return true;
     }
     function kdViewName(t) { return (KD_STORE === 'naha' && /^public_.*_v$/.test(t)) ? t.replace(/_v$/, '_nha_v') : t; }
+    // クラス商品画像：那覇は class_X_nha.png を優先（無ければ onerror で共通 class_X.png にフォールバック）。札幌は共通画像のまま。
+    function kdImg(p) { return (KD_STORE === 'naha' && /images\/class_[A-Za-z0-9]+\.png$/.test(p || '')) ? p.replace(/\.png$/, '_nha.png') : p; }
     // 那覇空港＋自衛隊基地の敷地（空港管内）＝お引き渡し不可ゾーン。那覇エリアのみ適用。
     // 細長い敷地に沿ったポリゴン（[lat,lng] 時計回り）。東側の市街地を巻き込まない形。
     // 引き渡し不可ゾーン＝OpenStreetMapの実境界(landuse=military / aeroway=aerodrome)を簡略化。
@@ -1571,7 +1573,7 @@
 
             html += `
                 <div class="vehicle-card" style="animation:vehicleFadeIn .3s ease ${idx * 0.06}s both;" onclick="selectClass('${type}')">
-                    <div class="vc-icon ${type}">${cls.img ? `<img src="${cls.img}" alt="${cls.name}" loading="lazy" decoding="async">` : (cls.icon || '🚗')}</div>
+                    <div class="vc-icon ${type}">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name}" loading="lazy" decoding="async">` : (cls.icon || '🚗')}</div>
                     <div class="vc-body">
                         <div class="vc-class-tag ${type}">${cls.name || (type + 'クラス')}</div>
                         <div class="vc-name" title="${cls.vehicles}">${cls.vehicles}</div>
@@ -2495,7 +2497,7 @@
             ${renderBookingProgress(1)}
             <div class="confirm-screen screen-fade">
                 <div class="confirm-vehicle-hero">
-                    <div class="confirm-vehicle-icon">${cls.img ? `<img src="${cls.img}" alt="${cls.name || (v.type + 'クラス')}">` : (cls.icon || '🚗')}</div>
+                    <div class="confirm-vehicle-icon">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || (v.type + 'クラス')}">` : (cls.icon || '🚗')}</div>
                     <div class="confirm-vehicle-name">${cls.name || (v.type + 'クラス')}</div>
                     <div class="confirm-vehicle-class">${cls.vehicles}</div>
                     <div style="margin-top:8px;display:inline-block;background:#f1f1f1;color:#444;font-size:12px;font-weight:700;padding:4px 11px;border-radius:14px;">🏢 提供会社：${providerOf(v)}</div>
@@ -3611,7 +3613,7 @@
             <div class="mp-detail-section">
                 <div class="mp-detail-header">📋 予約情報</div>
                 <div class="mp-detail-body">
-                    ${cls.img ? `<div style="text-align:center;padding:4px 0 12px;margin-bottom:10px;border-bottom:1px solid #f3f3f3;"><img src="${cls.img}" alt="${cls.name || r.vehicle}" style="max-width:82%;max-height:130px;object-fit:contain;" loading="lazy"><div style="font-size:11px;color:#888;margin-top:4px;">${cls.vehicles || ''}</div></div>` : ''}
+                    ${cls.img ? `<div style="text-align:center;padding:4px 0 12px;margin-bottom:10px;border-bottom:1px solid #f3f3f3;"><img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || r.vehicle}" style="max-width:82%;max-height:130px;object-fit:contain;" loading="lazy"><div style="font-size:11px;color:#888;margin-top:4px;">${cls.vehicles || ''}</div></div>` : ''}
                     <div class="mp-detail-row"><span class="mp-detail-row-label">予約者</span><span class="mp-detail-row-value">${r.name || '-'} 様</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">予約番号</span><span class="mp-detail-row-value" style="font-weight:700;color:#1a1a1a;">${r.id}</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">車両クラス</span><span class="mp-detail-row-value">${cls.name ? cls.name : (r.vehicle + 'クラス')}</span></div>
