@@ -59,16 +59,16 @@ async function notifySlack(text: string, channel?: string) {
 }
 
 // ★ 店舗別テーブル/Slack/列マッピング解決。store指定が無ければ予約番号接頭辞 KDN- で那覇を推論。
-const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; resvSel: string; slackEnv: string }> = {
+const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; resvSel: string; slackEnv: string; slackDefault: string }> = {
   spk: { resv: "reservations", fleet: "fleet", tasks: "tasks",
-    resvSel: "id,ota,status,lend_date,price,name,vehicle,mail", slackEnv: "SLACK_KEYDROP_CHANNEL" },
+    resvSel: "id,ota,status,lend_date,price,name,vehicle,mail", slackEnv: "SLACK_KEYDROP_CHANNEL", slackDefault: "C08TDTPEB36" },
   nha: { resv: "nha_reservations", fleet: "nha_fleet", tasks: "nha_tasks",
-    resvSel: "id,ota,status,lend_date:start_date,price,name,vehicle:vehicle_class,mail", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA" },
+    resvSel: "id,ota,status,lend_date:start_date,price,name,vehicle:vehicle_class,mail", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA", slackDefault: "C06KZ56NTDF" },
 };
 function resolveStore(p: any, resId: string) {
   const s = (p && p.store === "nha") || /^KDN-/i.test(resId) ? "nha" : "spk";
   const m = STORE_MAP[s];
-  const slack = Deno.env.get(m.slackEnv) || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
+  const slack = Deno.env.get(m.slackEnv) || m.slackDefault;
   return { store: s, ...m, slack };
 }
 

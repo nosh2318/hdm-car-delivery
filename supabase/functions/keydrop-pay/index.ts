@@ -66,18 +66,18 @@ async function notifySlack(text: string, channel?: string) {
 // ★ 店舗別テーブル/RPC/Slack/列マッピング解決（既定=spk＝後方互換）
 //   nha_reservations は列名が違う(start_date/end_date/start_time/end_time/vehicle_class)ので
 //   confirmメールの select は PostgRESTエイリアス(alias:col)で札幌の項目名に揃える。
-const STORE_MAP: Record<string, { resv: string; fleet: string; rpc: string; resvSel: string; slackEnv: string }> = {
+const STORE_MAP: Record<string, { resv: string; fleet: string; rpc: string; resvSel: string; slackEnv: string; slackDefault: string }> = {
   spk: { resv: "reservations", fleet: "fleet", rpc: "keydrop_book_v2",
     resvSel: "name,mail,vehicle,lend_date,return_date,lend_time,return_time,del_place,col_place,price,people,insurance",
-    slackEnv: "SLACK_KEYDROP_CHANNEL" },
+    slackEnv: "SLACK_KEYDROP_CHANNEL", slackDefault: "C08TDTPEB36" },
   nha: { resv: "nha_reservations", fleet: "nha_fleet", rpc: "keydrop_book_nha",
     resvSel: "name,mail,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_place,col_place,price,people,insurance",
-    slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA" },
+    slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA", slackDefault: "C06KZ56NTDF" },
 };
 function resolveStore(p: any) {
   const s = p && p.store === "nha" ? "nha" : "spk";
   const m = STORE_MAP[s];
-  const slack = Deno.env.get(m.slackEnv) || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
+  const slack = Deno.env.get(m.slackEnv) || m.slackDefault;
   return { store: s, ...m, slack };
 }
 

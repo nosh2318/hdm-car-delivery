@@ -86,16 +86,16 @@ async function notifySlack(text: string, channel?: string): Promise<void> {
 // ★ 店舗別テーブル/タスク/Slack/列マッピング。store指定が無ければ予約番号接頭辞 KDN- で那覇を推論。
 //   SELECTはPostgRESTエイリアス(alias:col)で那覇の列名(start_*/vehicle_class)を札幌の項目名(lend_*/vehicle)へ揃える＝本体ロジック無改修。
 //   時刻PATCHのみ正本列名が違う(lend_time→start_time / return_time→end_time)ので lendTimeCol/returnTimeCol で切替。
-const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; lendTimeCol: string; returnTimeCol: string; slackEnv: string; sel: string }> = {
-  spk: { resv: M.resv, fleet: M.fleet, tasks: M.tasks, lendTimeCol: "lend_time", returnTimeCol: "return_time", slackEnv: "SLACK_KEYDROP_CHANNEL",
+const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; lendTimeCol: string; returnTimeCol: string; slackEnv: string; slackDefault: string; sel: string }> = {
+  spk: { resv: M.resv, fleet: M.fleet, tasks: M.tasks, lendTimeCol: "lend_time", returnTimeCol: "return_time", slackEnv: "SLACK_KEYDROP_CHANNEL", slackDefault: "C08TDTPEB36",
     sel: "id,ota,vehicle,lend_date,return_date,lend_time,return_time,del_time,col_time,name,mail,tel,people,price,status,insurance,del_place,col_place,kd_status" },
-  nha: { resv: "nha_reservations", fleet: "nha_fleet", tasks: "nha_tasks", lendTimeCol: "start_time", returnTimeCol: "end_time", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA",
+  nha: { resv: "nha_reservations", fleet: "nha_fleet", tasks: "nha_tasks", lendTimeCol: "start_time", returnTimeCol: "end_time", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA", slackDefault: "C06KZ56NTDF",
     sel: "id,ota,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_time,col_time,name,mail,tel,people,price,status,insurance,del_place,col_place,kd_status" },
 };
 function resolveStore(p: any, resId: string) {
   const s = (p && p.store === "nha") || /^KDN-/i.test(resId) ? "nha" : "spk";
   const m = STORE_MAP[s];
-  const slack = Deno.env.get(m.slackEnv) || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
+  const slack = Deno.env.get(m.slackEnv) || m.slackDefault;
   return { store: s, ...m, slack };
 }
 
