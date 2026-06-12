@@ -887,7 +887,7 @@
                 <a href="vehicles.html">車両と料金</a>
                 <a href="insurance.html">保険プラン</a>
                 <a href="faq.html">FAQ</a>
-                <a href="https://lin.ee/ZxBknUv">お問い合わせ</a>
+                <a href="https://lin.ee/ZxBknUv">${t('navContact')}</a>
                 <a href="clause.html">貸渡約款</a>
                 <a href="privacy.html">プライバシー</a>
                 <a href="transaction.html">特定商取引法</a>
@@ -1541,7 +1541,7 @@
         if (!dt.startDate || !dt.startTime || !dt.endDate || !dt.endTime) {
             return `<div style="padding:34px 18px;text-align:center;color:#888;">
                 <div style="font-size:32px;margin-bottom:10px;">📅</div>
-                <div style="font-size:14px;font-weight:700;color:#444;margin-bottom:6px;">利用期間を選択してください</div>
+                <div style="font-size:14px;font-weight:700;color:#444;margin-bottom:6px;">${t('selectPeriodCta')}</div>
                 <div style="font-size:12px;line-height:1.7;">上の「利用期間」からお届け日時・回収日時を選ぶと、予約できる車両が表示されます。</div>
             </div>`;
         }
@@ -1557,7 +1557,7 @@
                 <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:10px;line-height:1.6;">大変申し訳ございませんが<br>該当日に空車がございません</div>
                 <div style="font-size:12.5px;line-height:1.8;margin-bottom:18px;">下のボタンから<b>お届け／回収の日付</b>を変えると<br>空車が見つかる場合があります。</div>
                 <button onclick="state.vehDateOpen=true; render(); var e=document.querySelector('.app-header'); if(e)e.scrollIntoView({behavior:'smooth',block:'start'});" style="background:#FABE00;color:#1a1a1a;border:none;border-radius:11px;padding:14px 26px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(250,190,0,.45);">📅 日付を変更して探す</button>
-                <div style="font-size:11px;line-height:1.8;margin-top:18px;color:#aaa;">別のお届け場所でも空車が出る場合があります。<br>お急ぎは <a href="https://lin.ee/ZxBknUv" target="_blank" style="color:#1a1a1a;font-weight:700;text-decoration:underline;">お問い合わせ</a> ください。</div>
+                <div style="font-size:11px;line-height:1.8;margin-top:18px;color:#aaa;">別のお届け場所でも空車が出る場合があります。<br>お急ぎは <a href="https://lin.ee/ZxBknUv" target="_blank" style="color:#1a1a1a;font-weight:700;text-decoration:underline;">${t('navContact')}</a> ください。</div>
             </div>`;
         if (!state.availableVehicles.length) return apologyHtml;
 
@@ -1609,7 +1609,7 @@
                     </div>
                     <div class="vc-right">
                         <div class="vc-price">¥${totalPrice.toLocaleString()}</div>
-                        <div class="vc-price-unit">${days}日間</div>
+                        <div class="vc-price-unit">${days}${t('daysSuffix')}</div>
                         <button class="vc-select-btn" onclick="event.stopPropagation(); selectClass('${type}')">選択</button>
                     </div>
                 </div>`;
@@ -1797,7 +1797,7 @@
     }
     function generateDateOptions(selected) {
         // 検索可能日：最短48時間後（＝2日後）〜4ヶ月後まで。デフォルト空欄
-        let html = `<option value="" ${!selected ? 'selected' : ''}>日付を選択</option>`;
+        let html = `<option value="" ${!selected ? 'selected' : ''}>${t('selDate')}</option>`;
         const today = new Date(); today.setHours(0,0,0,0);
         const start = new Date(today); start.setDate(start.getDate() + 2); // 最短予約 = 48時間後
         const limit = new Date(today); limit.setMonth(limit.getMonth() + 4);
@@ -1811,7 +1811,7 @@
 
     function generateTimeOptions(selected) {
         // 営業時間 9:00〜19:00（30分刻み・19:00まで）。デフォルト空欄
-        let html = `<option value="" ${!selected ? 'selected' : ''}>時間を選択</option>`;
+        let html = `<option value="" ${!selected ? 'selected' : ''}>${t('selTime')}</option>`;
         for (let h = 9; h <= 19; h++) {
             for (const m of ['00', '30']) {
                 if (h === 19 && m === '30') continue; // 19:00 が最終
@@ -1957,8 +1957,8 @@
 
     // ── KEYDROP マスコット 案内帯（ヘッダー直下に1体・喋る） ──
     function guideText() {
-        if (state.locStep === 'collection') return { msg: '<b>STEP2</b>：CARデリバリーの<b>回収日時</b>と<b>場所</b>を決めてね🏁', dark: true };
-        return { msg: '<b>STEP1</b>：CARデリバリーの<b>お届け日時</b>と<b>場所</b>を決めよう！🔑', dark: false };
+        if (state.locStep === 'collection') return { msg: t('guideStep2'), dark: true };
+        return { msg: t('guideStep1'), dark: false };
     }
     function mountHeaderMascot() {
         // 旧: ロゴ横の装飾マスコットは撤去（うるさいので案内帯に統合）
@@ -1998,14 +1998,14 @@
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
-                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}（変更）</a>
-                        <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
-                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
-                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">車両・料金</a>
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
+                        <a href="#" onclick="state.screen='top'; render(); return false;">${t('navBook')}</a>
+                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">${t('navVehicleP')}</a>
                         <a href="faq.html" target="_blank">FAQ</a>
-                        <a href="https://lin.ee/ZxBknUv" target="_blank">お問い合わせ</a>
+                        <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="エリアを選び直す">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
@@ -2034,13 +2034,13 @@
                         <div class="map-search-bar">
                             <div class="map-search-icon">🔍</div>
                             <input type="text" id="addressSearch" class="map-search-input"
-                                placeholder="ホテル名・住所で検索"
+                                placeholder="${t('searchPlaceholder')}"
                                 oninput="onAddressInput(this.value)"
                                 onfocus="this.select()">
-                            <button class="map-search-clear" onclick="clearAddressSearch()" title="クリア">✕</button>
+                            <button class="map-search-clear" onclick="clearAddressSearch()" title="${t('clearBtn')}">✕</button>
                         </div>
                         <div id="addressSuggestions" style="display:none;position:absolute;top:44px;left:8px;right:44px;z-index:1001;background:white;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:150px;overflow-y:auto;"></div>
-                        <button class="geolocate-btn" onclick="geolocateUser()" title="札幌駅に戻る">📍</button>
+                        <button class="geolocate-btn" onclick="geolocateUser()" title="${t('backToCenter')}">📍</button>
                     </div>
                     <div id="locPanel">${renderLocationStepPanel()}</div>
                 </div>
@@ -2059,14 +2059,14 @@
                 // 未選択＝デフォルト空欄（事前入力で混乱させない）
                 return `<div onclick="expandDateBar()" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fffbf0;border-bottom:1.5px solid #FABE00;">
                     <span style="font-size:16px;">📅</span>
-                    <div style="flex:1;min-width:0;font-size:13px;font-weight:800;color:#1a1a1a;">利用期間を選択してください</div>
-                    <span style="font-size:12px;color:#a07c00;font-weight:800;flex:none;">選ぶ ▾</span>
+                    <div style="flex:1;min-width:0;font-size:13px;font-weight:800;color:#1a1a1a;">${t('selectPeriodCta')}</div>
+                    <span style="font-size:12px;color:#a07c00;font-weight:800;flex:none;">${t('choose')} ▾</span>
                 </div>`;
             }
             return `<div onclick="expandDateBar()" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 16px;background:#fff;border-bottom:1px solid #eee;">
                 <span style="font-size:16px;">📅</span>
-                <div style="flex:1;min-width:0;font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sL} ${state.datetime.startTime} 〜 ${eL} ${state.datetime.endTime}<span style="color:#888;font-weight:600;"> ・${days}日間</span></div>
-                <span style="font-size:12px;color:#a07c00;font-weight:800;flex:none;">変更 ▾</span>
+                <div style="flex:1;min-width:0;font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sL} ${state.datetime.startTime} 〜 ${eL} ${state.datetime.endTime}<span style="color:#888;font-weight:600;"> ・${days}${t('daysSuffix')}</span></div>
+                <span style="font-size:12px;color:#a07c00;font-weight:800;flex:none;">${t('edit')} ▾</span>
             </div>`;
         }
         return `<div style="padding:9px 16px 11px;background:#fff;border-bottom:1px solid #eee;">
@@ -2075,10 +2075,10 @@
                 <button onclick="collapseDateBar()" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:5px 13px;font-size:12px;font-weight:700;cursor:pointer;">閉じる ▴</button>
             </div>
             <div class="datetime-grid" style="gap:10px;">
-                <div class="dt-group"><label>お届け日</label><select onchange="onDeliveryDate(this.value)">${generateDateOptions(state.datetime.startDate)}</select></div>
-                <div class="dt-group"><label>お届け時間</label><select onchange="state.datetime.startTime=this.value; fetchAvailableVehicles();">${generateTimeOptions(state.datetime.startTime)}</select></div>
-                <div class="dt-group"><label>回収日</label><select onchange="state.datetime.endDate=this.value; fetchAvailableVehicles();">${generateDateOptions(state.datetime.endDate)}</select></div>
-                <div class="dt-group"><label>回収時間</label><select onchange="state.datetime.endTime=this.value; fetchAvailableVehicles();">${generateTimeOptions(state.datetime.endTime)}</select></div>
+                <div class="dt-group"><label>${t('delDate')}</label><select onchange="onDeliveryDate(this.value)">${generateDateOptions(state.datetime.startDate)}</select></div>
+                <div class="dt-group"><label>${t('delTime')}</label><select onchange="state.datetime.startTime=this.value; fetchAvailableVehicles();">${generateTimeOptions(state.datetime.startTime)}</select></div>
+                <div class="dt-group"><label>${t('colDate')}</label><select onchange="state.datetime.endDate=this.value; fetchAvailableVehicles();">${generateDateOptions(state.datetime.endDate)}</select></div>
+                <div class="dt-group"><label>${t('colTime')}</label><select onchange="state.datetime.endTime=this.value; fetchAvailableVehicles();">${generateTimeOptions(state.datetime.endTime)}</select></div>
             </div>
         </div>`;
     }
@@ -2108,14 +2108,14 @@
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
-                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}（変更）</a>
-                        <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
-                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
-                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">車両・料金</a>
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
+                        <a href="#" onclick="state.screen='top'; render(); return false;">${t('navBook')}</a>
+                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">${t('navVehicleP')}</a>
                         <a href="faq.html" target="_blank">FAQ</a>
-                        <a href="https://lin.ee/ZxBknUv" target="_blank">お問い合わせ</a>
+                        <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="エリアを選び直す">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
@@ -2129,13 +2129,13 @@
                         <div class="map-search-bar">
                             <div class="map-search-icon">🔍</div>
                             <input type="text" id="addressSearch" class="map-search-input"
-                                placeholder="ホテル名・住所で検索"
+                                placeholder="${t('searchPlaceholder')}"
                                 oninput="onAddressInput(this.value)"
                                 onfocus="this.select()">
-                            <button class="map-search-clear" onclick="clearAddressSearch()" title="クリア">✕</button>
+                            <button class="map-search-clear" onclick="clearAddressSearch()" title="${t('clearBtn')}">✕</button>
                         </div>
                         <div id="addressSuggestions" style="display:none;position:absolute;top:44px;left:8px;right:44px;z-index:1001;background:white;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:150px;overflow-y:auto;"></div>
-                        <button class="geolocate-btn" onclick="geolocateUser()" title="札幌駅に戻る">📍</button>
+                        <button class="geolocate-btn" onclick="geolocateUser()" title="${t('backToCenter')}">📍</button>
                     </div>
                 </div>
 
@@ -2143,28 +2143,28 @@
                 <div style="width:420px;background:white;border-left:1px solid #eee;display:flex;flex-direction:column;overflow-y:auto;">
                     <!-- Date Section -->
                     <div style="padding:20px;border-bottom:1px solid #eee;">
-                        <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:12px;">📅 利用期間</div>
+                        <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:12px;">📅 ${t('periodLabel')}</div>
                         <div class="datetime-grid" style="gap:10px;">
                             <div class="dt-group">
-                                <label>お届け日</label>
+                                <label>${t('delDate')}</label>
                                 <select onchange="state.datetime.startDate=this.value; fetchAvailableVehicles();">
                                     ${generateDateOptions(state.datetime.startDate)}
                                 </select>
                             </div>
                             <div class="dt-group">
-                                <label>お届け時間</label>
+                                <label>${t('delTime')}</label>
                                 <select onchange="state.datetime.startTime=this.value; fetchAvailableVehicles();">
                                     ${generateTimeOptions(state.datetime.startTime)}
                                 </select>
                             </div>
                             <div class="dt-group">
-                                <label>回収日</label>
+                                <label>${t('colDate')}</label>
                                 <select onchange="state.datetime.endDate=this.value; fetchAvailableVehicles();">
                                     ${generateDateOptions(state.datetime.endDate)}
                                 </select>
                             </div>
                             <div class="dt-group">
-                                <label>回収時間</label>
+                                <label>${t('colTime')}</label>
                                 <select onchange="state.datetime.endTime=this.value; fetchAvailableVehicles();">
                                     ${generateTimeOptions(state.datetime.endTime)}
                                 </select>
@@ -2172,7 +2172,7 @@
                         </div>
                         <div style="background:#fffbf0;border:1px solid #FABE00;border-radius:8px;padding:8px;margin-top:10px;text-align:center;font-size:12px;">
                             <span style="font-weight:700;color:#1a1a1a;">${startLabel} ${state.datetime.startTime} 〜 ${endLabel} ${state.datetime.endTime}</span>
-                            <span style="color:#888;margin-left:6px;">${days}日間</span>
+                            <span style="color:#888;margin-left:6px;">${days}${t('daysSuffix')}</span>
                         </div>
                     </div>
 
@@ -2185,7 +2185,7 @@
                         </div>
                     ` : `
                         <div style="padding:14px 20px;background:#f8fafc;border-bottom:1px solid #eee;text-align:center;font-size:13px;color:#999;">
-                            📍 マップをクリックしてお届け場所を指定
+                            ${t('clickMapDeliver')}
                         </div>
                     `}
 
@@ -2194,8 +2194,8 @@
                         ${hasLocation ? renderVehiclePanel() : `
                             <div class="empty-state" style="margin-top:20px;">
                                 <div class="empty-state-icon">🚗</div>
-                                <div class="empty-state-title">お届け場所を選択すると</div>
-                                <div class="empty-state-desc">デリバリー可能な車両が表示されます</div>
+                                <div class="empty-state-title">${t('emptyVehTitle')}</div>
+                                <div class="empty-state-desc">${t('emptyVehDesc')}</div>
                             </div>
                         `}
                     </div>
@@ -2218,14 +2218,14 @@
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
-                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}（変更）</a>
-                        <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
-                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
-                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">車両・料金</a>
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
+                        <a href="#" onclick="state.screen='top'; render(); return false;">${t('navBook')}</a>
+                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">${t('navVehicleP')}</a>
                         <a href="faq.html" target="_blank">FAQ</a>
-                        <a href="https://lin.ee/ZxBknUv" target="_blank">お問い合わせ</a>
+                        <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="エリアを選び直す">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
@@ -2239,13 +2239,13 @@
                         <div class="map-search-bar">
                             <div class="map-search-icon">🔍</div>
                             <input type="text" id="addressSearch" class="map-search-input"
-                                placeholder="ホテル名・住所で検索"
+                                placeholder="${t('searchPlaceholder')}"
                                 oninput="onAddressInput(this.value)"
                                 onfocus="this.select()">
-                            <button class="map-search-clear" onclick="clearAddressSearch()" title="クリア">✕</button>
+                            <button class="map-search-clear" onclick="clearAddressSearch()" title="${t('clearBtn')}">✕</button>
                         </div>
                         <div id="addressSuggestions" style="display:none;position:absolute;top:44px;left:8px;right:44px;z-index:1001;background:white;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:150px;overflow-y:auto;"></div>
-                        <button class="geolocate-btn" onclick="geolocateUser()" title="札幌駅に戻る">📍</button>
+                        <button class="geolocate-btn" onclick="geolocateUser()" title="${t('backToCenter')}">📍</button>
                     </div>
                 </div>
 
@@ -2411,14 +2411,14 @@
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
-                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}（変更）</a>
-                        <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
-                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
-                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">車両・料金</a>
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
+                        <a href="#" onclick="state.screen='top'; render(); return false;">${t('navBook')}</a>
+                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">${t('navVehicleP')}</a>
                         <a href="faq.html" target="_blank">FAQ</a>
-                        <a href="https://lin.ee/ZxBknUv" target="_blank">お問い合わせ</a>
+                        <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="エリアを選び直す">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
                 </div>
             </div>
             <div class="screen-fade" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
@@ -2432,10 +2432,10 @@
                     ${state.vehDateOpen ? `<div style="background:#fafafa;border:1px solid #eee;border-radius:10px;padding:10px;margin-bottom:8px;">
                         <div style="font-size:11px;color:#a07c00;font-weight:800;margin-bottom:8px;">📅 日付・時間を変更して「この日程で検索する」を押してください</div>
                         <div class="datetime-grid" style="gap:8px;">
-                            <div class="dt-group"><label>お届け日</label><select class="kd-need" onchange="onVehDateChange('startDate',this.value)">${generateDateOptions(state.datetime.startDate)}</select></div>
-                            <div class="dt-group"><label>お届け時間</label><select class="kd-need" onchange="onVehDateChange('startTime',this.value)">${generateTimeOptions(state.datetime.startTime)}</select></div>
-                            <div class="dt-group"><label>回収日</label><select class="kd-need" onchange="onVehDateChange('endDate',this.value)">${generateDateOptions(state.datetime.endDate)}</select></div>
-                            <div class="dt-group"><label>回収時間</label><select class="kd-need" onchange="onVehDateChange('endTime',this.value)">${generateTimeOptions(state.datetime.endTime)}</select></div>
+                            <div class="dt-group"><label>${t('delDate')}</label><select class="kd-need" onchange="onVehDateChange('startDate',this.value)">${generateDateOptions(state.datetime.startDate)}</select></div>
+                            <div class="dt-group"><label>${t('delTime')}</label><select class="kd-need" onchange="onVehDateChange('startTime',this.value)">${generateTimeOptions(state.datetime.startTime)}</select></div>
+                            <div class="dt-group"><label>${t('colDate')}</label><select class="kd-need" onchange="onVehDateChange('endDate',this.value)">${generateDateOptions(state.datetime.endDate)}</select></div>
+                            <div class="dt-group"><label>${t('colTime')}</label><select class="kd-need" onchange="onVehDateChange('endTime',this.value)">${generateTimeOptions(state.datetime.endTime)}</select></div>
                         </div>
                         <button onclick="applyVehDateSearch()" style="width:100%;margin-top:10px;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;">🔍 この日程で検索する</button>
                     </div>` : ''}
@@ -2550,7 +2550,7 @@
                 </div>
 
                 <div class="confirm-total">
-                    <div class="confirm-total-label">基本料金（${days}日間）</div>
+                    <div class="confirm-total-label">基本料金（${days}${t('daysSuffix')}）</div>
                     <div class="confirm-total-price">¥${totalPrice.toLocaleString()}<span style="font-size:12px;font-weight:400;color:#666;">（税込）</span></div>
                 </div>
                 <button class="btn-primary" onclick="state.screen='options'; render();">オプション確認／予約手続きに進む ›</button>
@@ -2683,7 +2683,7 @@
                             <div style="padding:2px 0;">✓ ${t('cdwDesc1')}</div>
                             <div style="padding:2px 0;">✓ ${t('cdwDesc2')}</div>
                         </div>
-                        ${state.cdw === 'cdw' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">合計: ¥${(cdwPrice * days).toLocaleString()}（${days}日間）</div>` : ''}
+                        ${state.cdw === 'cdw' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">合計: ¥${(cdwPrice * days).toLocaleString()}（${days}${t('daysSuffix')}）</div>` : ''}
                     </div>
 
                     <div class="insurance-card ${state.cdw === 'pack' ? 'selected' : ''}" onclick="state.cdw='pack'; render();">
@@ -2702,7 +2702,7 @@
                             <div style="padding:2px 0;">✓ ${t('packDesc2')}</div>
                             <div style="padding:2px 0;">✓ ${t('packDesc3')}</div>
                         </div>
-                        ${state.cdw === 'pack' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">合計: ¥${(packPrice * days).toLocaleString()}（${days}日間）</div>` : ''}
+                        ${state.cdw === 'pack' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">合計: ¥${(packPrice * days).toLocaleString()}（${days}${t('daysSuffix')}）</div>` : ''}
                     </div>
 
                     <div class="insurance-card ${state.cdw === 'none' ? 'selected' : ''}" onclick="state.cdw='none'; render();" style="${state.cdw === 'none' ? 'border-color:#999;background:#f9f9f9;' : ''}">
@@ -2860,7 +2860,7 @@
                 <!-- 料金明細 -->
                 <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;">
                     <div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
-                        <span>${cls.name || (state.selectedClass + 'クラス')} × ${days}日間</span>
+                        <span>${cls.name || (state.selectedClass + 'クラス')} × ${days}${t('daysSuffix')}</span>
                         <span>¥${basePrice.toLocaleString()}</span>
                     </div>
                     ${cdwFee > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
@@ -3452,14 +3452,14 @@
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
-                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}（変更）</a>
-                        <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
-                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
-                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">車両・料金</a>
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
+                        <a href="#" onclick="state.screen='top'; render(); return false;">${t('navBook')}</a>
+                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">${t('navVehicleP')}</a>
                         <a href="faq.html" target="_blank">FAQ</a>
-                        <a href="https://lin.ee/ZxBknUv" target="_blank">お問い合わせ</a>
+                        <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="エリアを選び直す">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
@@ -4468,6 +4468,16 @@
             emailLoginNote: '⚠️ このメールアドレスはマイページのログインに使用します。予約確認メールもこちらに送信されます。',
             driverNamePh: '佐藤 花子', driverKanaPh: 'サトウ ハナコ',
             confirmProceed: 'オプション確認／予約手続きに進む ›',
+            navBook: '予約', navMypage: 'マイページ', navVehicleP: '車両・料金', navContact: 'お問い合わせ', navChange: '（変更）',
+            areaReselect: 'エリアを選び直す',
+            guideStep1: '<b>STEP1</b>：CARデリバリーの<b>お届け日時</b>と<b>場所</b>を決めよう！🔑',
+            guideStep2: '<b>STEP2</b>：CARデリバリーの<b>回収日時</b>と<b>場所</b>を決めてね🏁',
+            periodLabel: '利用期間', delDate: 'お届け日', delTime: 'お届け時間', colDate: '回収日', colTime: '回収時間',
+            selDate: '日付を選択', selTime: '時間を選択', daysSuffix: '日間',
+            emptyVehTitle: 'お届け場所を選択すると', emptyVehDesc: 'デリバリー可能な車両が表示されます',
+            clickMapDeliver: '📍 マップをクリックしてお届け場所を指定',
+            selectPeriodCta: '利用期間を選択してください', choose: '選ぶ', edit: '変更', clearBtn: 'クリア', backToCenter: '中心に戻る',
+            nextCollection: '次へ: 回収場所と時間を決める',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -4519,6 +4529,16 @@
             emailLoginNote: 'This email is used to log in to My Page. Your confirmation email is also sent here.',
             driverNamePh: 'Hanako Sato', driverKanaPh: 'サトウ ハナコ',
             confirmProceed: 'Confirm options / Proceed to booking ›',
+            navBook: 'Book', navMypage: 'My Page', navVehicleP: 'Vehicles', navContact: 'Contact', navChange: '(Change)',
+            areaReselect: 'Change area',
+            guideStep1: '<b>STEP1</b>: Set the <b>delivery date/time</b> and <b>location</b>! 🔑',
+            guideStep2: '<b>STEP2</b>: Set the <b>return date/time</b> and <b>location</b> 🏁',
+            periodLabel: 'Rental Period', delDate: 'Delivery Date', delTime: 'Delivery Time', colDate: 'Return Date', colTime: 'Return Time',
+            selDate: 'Select date', selTime: 'Select time', daysSuffix: ' days',
+            emptyVehTitle: 'Once you set a delivery location', emptyVehDesc: 'available vehicles will appear',
+            clickMapDeliver: '📍 Click the map to set the delivery location',
+            selectPeriodCta: 'Please select your rental period', choose: 'Select', edit: 'Edit', clearBtn: 'Clear', backToCenter: 'Back to center',
+            nextCollection: 'Next: Set return location & time',
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
@@ -4570,6 +4590,16 @@
             emailLoginNote: '⚠️ 此電子郵件用於登入「我的頁面」，確認郵件也會寄送至此。',
             driverNamePh: '佐藤 花子', driverKanaPh: 'サトウ ハナコ',
             confirmProceed: '確認選項／進入預約手續 ›',
+            navBook: '預約', navMypage: '我的頁面', navVehicleP: '車輛・價格', navContact: '聯絡我們', navChange: '（變更）',
+            areaReselect: '重新選擇地區',
+            guideStep1: '<b>STEP1</b>：決定汽車外送的<b>送達日期時間</b>與<b>地點</b>！🔑',
+            guideStep2: '<b>STEP2</b>：決定汽車外送的<b>回收日期時間</b>與<b>地點</b>🏁',
+            periodLabel: '租用期間', delDate: '送達日', delTime: '送達時間', colDate: '回收日', colTime: '回收時間',
+            selDate: '選擇日期', selTime: '選擇時間', daysSuffix: '天',
+            emptyVehTitle: '選擇送達地點後', emptyVehDesc: '即會顯示可外送的車輛',
+            clickMapDeliver: '📍 點擊地圖指定送達地點',
+            selectPeriodCta: '請選擇租用期間', choose: '選擇', edit: '變更', clearBtn: '清除', backToCenter: '回到中心',
+            nextCollection: '下一步：決定回收地點與時間',
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
@@ -4621,6 +4651,16 @@
             emailLoginNote: '⚠️ 이 이메일 주소는 마이페이지 로그인에 사용됩니다. 예약 확인 메일도 이곳으로 전송됩니다.',
             driverNamePh: 'Hanako Sato', driverKanaPh: 'サトウ ハナコ',
             confirmProceed: '옵션 확인／예약 절차로 진행 ›',
+            navBook: '예약', navMypage: '마이페이지', navVehicleP: '차량·요금', navContact: '문의하기', navChange: '(변경)',
+            areaReselect: '지역 다시 선택',
+            guideStep1: '<b>STEP1</b>: 차량 배달의 <b>배달 일시</b>와 <b>장소</b>를 정하세요! 🔑',
+            guideStep2: '<b>STEP2</b>: 차량 회수의 <b>회수 일시</b>와 <b>장소</b>를 정하세요 🏁',
+            periodLabel: '이용 기간', delDate: '배달일', delTime: '배달 시간', colDate: '회수일', colTime: '회수 시간',
+            selDate: '날짜 선택', selTime: '시간 선택', daysSuffix: '일간',
+            emptyVehTitle: '배달 장소를 선택하면', emptyVehDesc: '배달 가능한 차량이 표시됩니다',
+            clickMapDeliver: '📍 지도를 클릭해 배달 장소를 지정',
+            selectPeriodCta: '이용 기간을 선택해 주세요', choose: '선택', edit: '변경', clearBtn: '지우기', backToCenter: '중심으로',
+            nextCollection: '다음: 회수 장소와 시간 정하기',
         },
     };
 
