@@ -2577,25 +2577,25 @@
                 <div id="formError" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#dc2626;"></div>
                 <div style="font-size:12px;font-weight:900;color:#1a1a1a;margin-bottom:8px;">${t('bookerSection')}</div>
                 <div class="form-group">
-                    <label class="form-label">お名前<span class="required">*必須</span></label>
-                    <input class="form-input" type="text" id="formName" oninput="validateForm()" placeholder="山田 太郎" value="${state.formData?.name || ''}">
+                    <label class="form-label">${t('formName')}<span class="required">${t('required')}</span></label>
+                    <input class="form-input" type="text" id="formName" oninput="validateForm()" placeholder="${t('formNamePh')}" value="${state.formData?.name || ''}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">フリガナ<span class="required">*必須</span></label>
-                    <input class="form-input" type="text" id="formKana" oninput="validateForm()" placeholder="ヤマダ タロウ" value="${state.formData?.kana || ''}">
+                    <label class="form-label">${t('formKana')}<span class="required">${t('required')}</span></label>
+                    <input class="form-input" type="text" id="formKana" oninput="validateForm()" placeholder="${t('formKanaPh')}" value="${state.formData?.kana || ''}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">電話番号<span class="required">*必須</span></label>
+                    <label class="form-label">${t('formPhone')}<span class="required">${t('required')}</span></label>
                     <input class="form-input" type="tel" id="formPhone" oninput="validateForm()" placeholder="090-1234-5678" value="${state.formData?.phone || ''}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">メールアドレス<span class="required">*必須</span></label>
+                    <label class="form-label">${t('formEmail')}<span class="required">${t('required')}</span></label>
                     <input class="form-input" type="email" id="formEmail" oninput="validateForm()" placeholder="example@mail.com" value="${state.formData?.email || ''}">
                     <div style="font-size:11px;color:#dc2626;font-weight:700;margin-top:5px;line-height:1.6;">${t('emailLoginNote')}</div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">特記事項</label>
-                    <textarea class="form-input form-textarea" id="formNotes" placeholder="チャイルドシート希望、到着時間の相談 等">${state.formData?.notes || ''}</textarea>
+                    <label class="form-label">${t('formNotes')}</label>
+                    <textarea class="form-input form-textarea" id="formNotes" placeholder="${t('formNotesPh')}">${state.formData?.notes || ''}</textarea>
                 </div>
 
                 <label style="display:flex;align-items:center;gap:9px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;font-size:13px;font-weight:700;color:#1a1a1a;cursor:pointer;margin:6px 0 4px;">
@@ -2605,12 +2605,12 @@
                 <div id="driverSection" style="display:${state.formData?.driverDiffers ? 'block' : 'none'};background:#fffbf0;border:1.5px solid #FABE00;border-radius:12px;padding:14px;margin-bottom:8px;">
                     <div style="font-size:12px;font-weight:900;color:#a07c00;margin-bottom:10px;">${t('driverSection')}</div>
                     <div class="form-group">
-                        <label class="form-label">お名前<span class="required">*必須</span></label>
-                        <input class="form-input" type="text" id="driverName" oninput="validateForm()" placeholder="佐藤 花子" value="${state.formData?.driverName || ''}">
+                        <label class="form-label">${t('formName')}<span class="required">${t('required')}</span></label>
+                        <input class="form-input" type="text" id="driverName" oninput="validateForm()" placeholder="${t('driverNamePh')}" value="${state.formData?.driverName || ''}">
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label">フリガナ<span class="required">*必須</span></label>
-                        <input class="form-input" type="text" id="driverKana" oninput="validateForm()" placeholder="サトウ ハナコ" value="${state.formData?.driverKana || ''}">
+                        <label class="form-label">${t('formKana')}<span class="required">${t('required')}</span></label>
+                        <input class="form-input" type="text" id="driverKana" oninput="validateForm()" placeholder="${t('driverKanaPh')}" value="${state.formData?.driverKana || ''}">
                     </div>
                 </div>
 
@@ -2836,7 +2836,7 @@
         const days = getDayCount();
         const basePrice = classTotal(v?.type);
         const cdwFee = state.cdw === 'cdw' ? 1100 * days : (state.cdw === 'pack' ? 1650 * days : 0);
-        const cdwName = state.cdw === 'pack' ? '安心パック' : (state.cdw === 'cdw' ? '免責補償' : '');
+        const cdwName = state.cdw === 'pack' ? t('packName') : (state.cdw === 'cdw' ? t('cdwShort') : '');
         const seatFee = state.options.childSeat * 1000 + state.options.juniorSeat * 500;
         const totalPrice = basePrice + cdwFee + seatFee;
         state._payTotal = totalPrice;
@@ -2860,19 +2860,19 @@
                 <!-- 料金明細 -->
                 <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;">
                     <div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
-                        <span>${cls.name || (state.selectedClass + 'クラス')} × ${days}${t('daysSuffix')}</span>
+                        <span>${cls.name || (state.selectedClass + t('classSuffix'))} × ${days}${t('daysSuffix')}</span>
                         <span>¥${basePrice.toLocaleString()}</span>
                     </div>
                     ${cdwFee > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
-                        <span>${cdwName} × ${days}日</span>
+                        <span>${cdwName} × ${days}${t('daysShort')}</span>
                         <span>¥${cdwFee.toLocaleString()}</span>
                     </div>` : ''}
                     ${(+state.options.childSeat > 0) ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
-                        <span>チャイルドシート${state.options.childSeat > 1 ? ' ×' + state.options.childSeat : ''}</span>
+                        <span>${t('childSeat')}${state.options.childSeat > 1 ? ' ×' + state.options.childSeat : ''}</span>
                         <span>¥${(state.options.childSeat * 1000).toLocaleString()}</span>
                     </div>` : ''}
                     ${(+state.options.juniorSeat > 0) ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
-                        <span>ジュニアシート${state.options.juniorSeat > 1 ? ' ×' + state.options.juniorSeat : ''}</span>
+                        <span>${t('juniorSeat')}${state.options.juniorSeat > 1 ? ' ×' + state.options.juniorSeat : ''}</span>
                         <span>¥${(state.options.juniorSeat * 500).toLocaleString()}</span>
                     </div>` : ''}
                     <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:6px;border-top:1px solid #ddd;font-weight:800;color:#1a1a1a;font-size:15px;">
@@ -2881,12 +2881,12 @@
                     </div>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#1a1a1a;margin-bottom:10px;">💳 クレジットカード <span style="font-size:11px;color:#888;font-weight:500;">Visa / Mastercard / JCB / AMEX</span></div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#1a1a1a;margin-bottom:10px;">💳 ${t('cardName')} <span style="font-size:11px;color:#888;font-weight:500;">Visa / Mastercard / JCB / AMEX</span></div>
                 <!-- Square Web Payments SDK のカード入力欄がここに描画される -->
                 <div id="card-container" style="min-height:46px;border:1.5px solid #e2e8f0;border-radius:10px;padding:6px 10px;background:#fff;margin-bottom:6px;"></div>
                 <div id="cardError" style="display:none;font-size:11.5px;color:#dc2626;font-weight:700;margin:2px 0 6px;"></div>
-                <div style="font-size:10.5px;color:#94a3b8;margin-bottom:12px;line-height:1.6;">🔒 カード情報はSquare（決済代行）へ直接送信され、当サイトには保存されません（安全決済）。</div>
-                <button class="btn-primary" id="payBtn" style="margin-top:2px;" onclick="payWithCard();">¥${totalPrice.toLocaleString()} を支払う</button>
+                <div style="font-size:10.5px;color:#94a3b8;margin-bottom:12px;line-height:1.6;">${t('cardSafeNote')}</div>
+                <button class="btn-primary" id="payBtn" style="margin-top:2px;" onclick="payWithCard();">¥${totalPrice.toLocaleString()}${t('paymentPay')}</button>
                 <button class="btn-secondary" onclick="state.screen='terms'; render();">${t('back')}</button>
             </div>
         `;
@@ -2927,31 +2927,31 @@
                 <div class="complete-icon" style="font-size:0;"><img src="images/logo_header.png?v=3" alt="KEYDROP" style="width:200px;height:auto;"></div>
                 <div class="complete-title">${t('completeTitle')}</div>
                 <div class="complete-res-id" style="margin-bottom:12px;">
-                    予約番号: <strong>${resId}</strong>
+                    ${t('resNo')}: <strong>${resId}</strong>
                 </div>
                 <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:11px 13px;margin-bottom:16px;font-size:12px;color:#dc2626;font-weight:700;line-height:1.7;text-align:left;">
-                    ⚠️ マイページのログインには<u>予約番号</u>と<u>ご予約時のメールアドレス</u>が必要となります。予約番号は大切に保管してください。
+                    ${t('mypageLoginWarn')}
                 </div>
 
                 <div style="display:flex;align-items:center;gap:12px;background:#f9f9f9;border-radius:12px;padding:12px;margin-bottom:12px;text-align:left;">
                     ${cls.img ? `<div style="width:104px;height:66px;flex:none;border-radius:8px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;"><img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || ''}" style="width:100%;height:100%;object-fit:cover;"></div>` : ''}
                     <div style="min-width:0;flex:1;">
-                        <div style="font-size:11px;color:#999;font-weight:700;">ご予約車両クラス</div>
-                        <div style="font-size:15px;font-weight:800;color:#1a1a1a;">${(v?.type || state.selectedClass) ? (v?.type || state.selectedClass) + 'クラス' + (cls.name ? '（' + cls.name + '）' : '') : (cls.name || '')}</div>
+                        <div style="font-size:11px;color:#999;font-weight:700;">${t('resVehClass')}</div>
+                        <div style="font-size:15px;font-weight:800;color:#1a1a1a;">${(v?.type || state.selectedClass) ? (v?.type || state.selectedClass) + t('classSuffix') + (cls.name ? '（' + cls.name + '）' : '') : (cls.name || '')}</div>
                         <div style="font-size:11px;color:#777;line-height:1.5;margin-top:1px;">${cls.vehicles || ''}</div>
                     </div>
                 </div>
                 <div style="background:#f9f9f9;border-radius:12px;padding:14px;text-align:left;margin-bottom:16px;font-size:12px;line-height:1.8;">
                     <div style="display:flex;justify-content:space-between;">
-                        <span style="color:#666;">お届け場所</span>
+                        <span style="color:#666;">${t('deliveryPlace')}</span>
                         <span style="font-weight:600;text-align:right;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${state.deliveryAddr}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;">
-                        <span style="color:#666;">貸出</span>
+                        <span style="color:#666;">${t('rental')}</span>
                         <span style="font-weight:600;">${startLabel} ${state.datetime.startTime}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;">
-                        <span style="color:#666;">返却</span>
+                        <span style="color:#666;">${t('returnLabel')}</span>
                         <span style="font-weight:600;">${endLabel} ${state.datetime.endTime}</span>
                     </div>
                 </div>
@@ -2970,7 +2970,7 @@
                     </div>
                 </div>
 
-                <button class="btn-primary" onclick="goToMypageDirect();">📱 マイページに移動する</button>
+                <button class="btn-primary" onclick="goToMypageDirect();">${t('goMypage')}</button>
                 <button class="btn-secondary" onclick="resetAndGoTop();">${t('goTop')}</button>
             </div>
         `;
@@ -3648,7 +3648,7 @@
                     ${cls.img ? `<div style="text-align:center;padding:4px 0 12px;margin-bottom:10px;border-bottom:1px solid #f3f3f3;"><img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || r.vehicle}" style="max-width:82%;max-height:130px;object-fit:contain;" loading="lazy"><div style="font-size:11px;color:#888;margin-top:4px;">${cls.vehicles || ''}</div></div>` : ''}
                     <div class="mp-detail-row"><span class="mp-detail-row-label">予約者</span><span class="mp-detail-row-value">${r.name || '-'} 様</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">予約番号</span><span class="mp-detail-row-value" style="font-weight:700;color:#1a1a1a;">${r.id}</span></div>
-                    <div class="mp-detail-row"><span class="mp-detail-row-label">車両クラス</span><span class="mp-detail-row-value">${r.vehicle ? r.vehicle + 'クラス' + (cls.name ? '（' + cls.name + '）' : '') : (cls.name || '-')}</span></div>
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">車両クラス</span><span class="mp-detail-row-value">${r.vehicle ? r.vehicle + t('classSuffix') + (cls.name ? '（' + cls.name + '）' : '') : (cls.name || '-')}</span></div>
                     ${(() => { const o = []; if (r.insurance && String(r.insurance).trim() && r.insurance !== 'なし') o.push('補償：' + r.insurance); if (+r.opt_c > 0) o.push('チャイルドシート×' + (+r.opt_c)); if (+r.opt_b > 0) o.push('ベビーシート×' + (+r.opt_b)); if (+r.opt_j > 0) o.push('ジュニアシート×' + (+r.opt_j)); if (+r.opt_usb > 0) o.push('USBケーブル'); return o.length ? `<div class="mp-detail-row"><span class="mp-detail-row-label">オプション</span><span class="mp-detail-row-value" style="text-align:right;">${o.join('<br>')}</span></div>` : ''; })()}
                     <div class="mp-detail-row"><span class="mp-detail-row-label">お届け</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.lend_date)} ${r.lend_time || r.del_time || ''}<br>${r.del_place ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.del_place)}" target="_blank" rel="noopener" style="font-size:11px;color:#2563eb;text-decoration:underline;">📍 ${r.del_place}</a>` : `<span style="font-size:11px;color:#888;">-</span>`}</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">回収</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.return_date)} ${r.return_time || r.col_time || ''}<br>${r.col_place ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.col_place)}" target="_blank" rel="noopener" style="font-size:11px;color:#2563eb;text-decoration:underline;">📍 ${r.col_place}</a>` : `<span style="font-size:11px;color:#888;">-</span>`}</span></div>
@@ -4624,6 +4624,9 @@
             age1_4: '1～4歲', age4_10: '4～10歲', backToVehSel: '‹ 返回車輛選擇',
             vehDateChange: '變更日期時間', vehDateHint: '📅 變更日期時間後請按「以此日程搜尋」',
             collectionCTA: '以此回收地點查看車輛', sameAsDeliveryBtn: '與送達相同', deliveryDest: '送達地點', tapToChange: '點擊變更',
+            daysShort: '天', resVehClass: '預約車輛車型', goMypage: '📱 前往我的頁面',
+            cardSafeNote: '🔒 卡片資訊將直接傳送至Square（金流代理），本網站不會保存（安全付款）。',
+            mypageLoginWarn: '⚠️ 登入「我的頁面」需要<u>預約編號</u>與<u>預約時的電子郵件</u>。請妥善保管預約編號。',
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
@@ -4691,6 +4694,9 @@
             age1_4: '1~4세', age4_10: '4~10세', backToVehSel: '‹ 차량 선택으로',
             vehDateChange: '날짜·시간 변경', vehDateHint: '📅 날짜·시간을 변경한 뒤 "이 일정으로 검색"을 눌러 주세요',
             collectionCTA: '이 회수 장소로 차량 보기', sameAsDeliveryBtn: '배달과 동일', deliveryDest: '배달지', tapToChange: '탭하여 변경',
+            daysShort: '일', resVehClass: '예약 차량 클래스', goMypage: '📱 마이페이지로 이동',
+            cardSafeNote: '🔒 카드 정보는 Square(결제 대행)로 직접 전송되며 본 사이트에는 저장되지 않습니다 (안전 결제).',
+            mypageLoginWarn: '⚠️ 마이페이지 로그인에는 <u>예약 번호</u>와 <u>예약 시 이메일 주소</u>가 필요합니다. 예약 번호를 소중히 보관해 주세요.',
         },
     };
 
