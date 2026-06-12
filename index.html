@@ -973,7 +973,7 @@
             .kdg-hero{display:block;width:100%;height:auto;}
             .kdg-skip{position:fixed;top:14px;right:16px;z-index:6;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:800;letter-spacing:.1em;padding:7px 16px;border-radius:999px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
             .kdg-hot{position:absolute;transform:translate(-50%,-50%);border:none;background:transparent;cursor:pointer;border-radius:14px;padding:0;z-index:4;-webkit-tap-highlight-color:rgba(255,195,0,.25);}
-            .kdg-hot::after{content:"";position:absolute;inset:0;border-radius:14px;border:2.5px solid #FABE00;animation:kdgPulse 1.5s ease-in-out infinite;pointer-events:none;}
+            .kdg-hot::after{content:"";position:absolute;inset:0;border-radius:14px;border:3px solid #FABE00;filter:drop-shadow(0 0 2px rgba(0,0,0,.9));animation:kdgPulse 1.5s ease-in-out infinite;pointer-events:none;}
             .kdg-hot:hover::after{opacity:1!important;animation:none;border-color:#fff;box-shadow:0 0 24px 6px rgba(250,190,0,.9);}
             .kdg-flash{position:absolute;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;border:3px solid #FABE00;pointer-events:none;z-index:5;animation:kdgRipple .65s ease-out forwards;}
             .kdg-go{position:absolute;transform:translate(-50%,-50%);font-size:14px;font-weight:900;color:#fff;letter-spacing:.18em;text-shadow:0 2px 12px rgba(0,0,0,.75);pointer-events:none;opacity:0;animation:kdgGo .6s ease-out forwards;z-index:5;white-space:nowrap;}
