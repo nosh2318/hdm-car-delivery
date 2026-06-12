@@ -1299,7 +1299,7 @@
         cdw: 'none',           // 'none' | 'cdw' | 'pack'
         options: { childSeat: 0, juniorSeat: 0 },
         // Language
-        lang: (function(){try{var s=localStorage.getItem('kd_lang');if(s)return s;var n=(navigator.language||'ja').toLowerCase();if(n.indexOf('ko')===0)return 'ko';if(n.indexOf('zh')===0)return 'zh';if(n.indexOf('en')===0)return 'en';return 'ja';}catch(e){return 'ja';}})(),  // 'ja' | 'en' | 'zh' | 'ko'（未選択時はブラウザ言語で初期化）
+        lang: 'ja',  // 既定は日本語固定。i18n完成までブラウザ言語の自動判定はOFF（混在表示を顧客に出さないため）。手動切替はswitchLangで可。
     };
 
     // 利用期間はデフォルト空欄（お届け日を選ぶと回収日が同日に自動セット）
@@ -4484,6 +4484,9 @@
             age1_4: '1〜4歳', age4_10: '4〜10歳', backToVehSel: '‹ 車両選択へ戻る',
             vehDateChange: '日付・時間を変更', vehDateHint: '📅 日付・時間を変更して「この日程で検索する」を押してください',
             collectionCTA: 'この回収場所で決めて車両を見る', sameAsDeliveryBtn: 'お届けと同じ', deliveryDest: 'お届け先', tapToChange: 'タップで変更',
+            daysShort: '日', resVehClass: 'ご予約車両クラス', goMypage: '📱 マイページに移動する',
+            cardSafeNote: '🔒 カード情報はSquare（決済代行）へ直接送信され、当サイトには保存されません（安全決済）。',
+            mypageLoginWarn: '⚠️ マイページのログインには<u>予約番号</u>と<u>ご予約時のメールアドレス</u>が必要となります。予約番号は大切に保管してください。',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -4551,6 +4554,9 @@
             age1_4: '1–4 yrs', age4_10: '4–10 yrs', backToVehSel: '‹ Back to vehicles',
             vehDateChange: 'Change date/time', vehDateHint: '📅 Change the date/time, then tap "Search this period"',
             collectionCTA: 'Set this return spot & view cars', sameAsDeliveryBtn: 'Same as delivery', deliveryDest: 'Delivery to', tapToChange: 'tap to change',
+            daysShort: ' days', resVehClass: 'Reserved Vehicle Class', goMypage: '📱 Go to My Page',
+            cardSafeNote: '🔒 Card details are sent directly to Square (payment processor) and are not stored on this site (secure payment).',
+            mypageLoginWarn: '⚠️ Logging in to My Page requires your <u>reservation number</u> and the <u>email used for booking</u>. Please keep your reservation number safe.',
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
