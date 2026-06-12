@@ -909,6 +909,8 @@
         naha:    { label: '沖縄（那覇）', api: 'nha', geo: '沖縄 那覇', center: '那覇空港', bbox: [127.40, 25.95, 128.05, 26.60] },
     };
     let KD_STORE = ((new URLSearchParams(location.search).get('area') || '').toLowerCase() === 'naha') ? 'naha' : 'sapporo';
+    // エリアに入った時点で必ず保存（別ページ vehicles.html 等が同一オリジンのlocalStorageでエリアを判定できるように）
+    try { if (new URLSearchParams(location.search).get('area')) localStorage.setItem('kd_selectedArea', JSON.stringify({ area: KD_STORE, ts: Date.now() })); } catch (e) {}
     // 起動高速化フラグ：エリア未選択（ゲート表示）のときは予約アプリの重い初期化を行わない。
     //   area/mypage/paid のいずれかがあれば「アプリ文脈」=初期化する。無ければゲートのみ（軽い）。
     window.__kdAppCtx = (function () { const q = new URLSearchParams(location.search); return !!(q.get('area') || q.get('mypage') || q.get('paid')); })();
@@ -1969,7 +1971,7 @@
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}（変更）</a>
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
-                        <a href="vehicles.html" target="_blank">車両・料金</a>
+                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">車両・料金</a>
                         <a href="faq.html" target="_blank">FAQ</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">お問い合わせ</a>
                     </nav>
@@ -2079,7 +2081,7 @@
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}（変更）</a>
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
-                        <a href="vehicles.html" target="_blank">車両・料金</a>
+                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">車両・料金</a>
                         <a href="faq.html" target="_blank">FAQ</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">お問い合わせ</a>
                     </nav>
@@ -2189,7 +2191,7 @@
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}（変更）</a>
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
-                        <a href="vehicles.html" target="_blank">車両・料金</a>
+                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">車両・料金</a>
                         <a href="faq.html" target="_blank">FAQ</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">お問い合わせ</a>
                     </nav>
@@ -2393,7 +2395,7 @@
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}（変更）</a>
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
-                        <a href="vehicles.html" target="_blank">車両・料金</a>
+                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">車両・料金</a>
                         <a href="faq.html" target="_blank">FAQ</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">お問い合わせ</a>
                     </nav>
@@ -3426,7 +3428,7 @@
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}（変更）</a>
                         <a href="#" onclick="state.screen='top'; render(); return false;">予約</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">マイページ</a>
-                        <a href="vehicles.html" target="_blank">車両・料金</a>
+                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">車両・料金</a>
                         <a href="faq.html" target="_blank">FAQ</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">お問い合わせ</a>
                     </nav>
