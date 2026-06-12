@@ -685,6 +685,7 @@
 
         /* ── Leaflet Custom ── */
         .leaflet-container { font-family: inherit; }
+        .kd-nogo-label { background: rgba(220,38,38,.92); color: #fff; font-size: 11px; font-weight: 800; line-height: 1.15; text-align: center; border-radius: 7px; padding: 4px 6px; box-shadow: 0 1px 6px rgba(0,0,0,.35); white-space: nowrap; pointer-events: none; }
         .custom-pin {
             background: none; border: none;
         }
@@ -930,6 +931,14 @@
         return true;
     }
     function kdViewName(t) { return (KD_STORE === 'naha' && /^public_.*_v$/.test(t)) ? t.replace(/_v$/, '_nha_v') : t; }
+    // 那覇空港の敷地内（空港管内）か。那覇エリアのみ適用。空港内はお引き渡し不可。
+    const KD_NAHA_AIRPORT_BBOX = [127.636, 26.179, 127.653, 26.213]; // [minLng,minLat,maxLng,maxLat]
+    function kdInNahaAirport(lat, lng) {
+        if (KD_STORE !== 'naha' || lat == null || lng == null) return false;
+        const b = KD_NAHA_AIRPORT_BBOX;
+        return (lng >= b[0] && lng <= b[2] && lat >= b[1] && lat <= b[3]);
+    }
+    const KD_NAHA_AIRPORT_MSG = '🛫 那覇空港内（空港管内）ではお引き渡しできません。空港外の場所を指定してください。';
 
     // ═══════════════════════════════════════════════════════════
     // KEYDROP TOP EXPERIENCE v1.0 — 「鍵を落としてサービスを起動する」起動シネマ
@@ -1257,6 +1266,25 @@
     let collectionMarker = null;
     let baseMarker = null; // KEYDROP出発拠点（固定）
 
+    // ── マップ上の「対象エリア」可視化：配達範囲の円＋（那覇）空港の引き渡し不可ゾーン ──
+    let kdAreaCircle = null, kdAirportRect = null, kdAirportLabel = null;
+    function drawAreaOverlays() {
+        if (!map || typeof L === 'undefined') return;
+        const cfg = state.deliveryConfig || {};
+        // 対象エリア（配達可能範囲）＝緑の円
+        if (kdAreaCircle) { try { map.removeLayer(kdAreaCircle); } catch (e) {} kdAreaCircle = null; }
+        if (cfg.centerLat != null && cfg.centerLng != null && cfg.radiusKm) {
+            kdAreaCircle = L.circle([cfg.centerLat, cfg.centerLng], { radius: cfg.radiusKm * 1000, color: '#16a34a', weight: 1.5, opacity: .7, fillColor: '#16a34a', fillOpacity: .05, dashArray: '6 5', interactive: false }).addTo(map);
+        }
+        // 那覇空港 引き渡し不可ゾーン＝赤の矩形＋ラベル
+        if (kdAirportRect) { try { map.removeLayer(kdAirportRect); } catch (e) {} kdAirportRect = null; }
+        if (kdAirportLabel) { try { map.removeLayer(kdAirportLabel); } catch (e) {} kdAirportLabel = null; }
+        if (KD_STORE === 'naha') {
+            const b = KD_NAHA_AIRPORT_BBOX; // [minLng,minLat,maxLng,maxLat]
+            kdAirportRect = L.rectangle([[b[1], b[0]], [b[3], b[2]]], { color: '#dc2626', weight: 2, fillColor: '#dc2626', fillOpacity: .28, interactive: false }).addTo(map);
+            kdAirportLabel = L.marker([(b[1] + b[3]) / 2, (b[0] + b[2]) / 2], { interactive: false, keyboard: false, icon: L.divIcon({ className: 'kd-nogo-label', html: '🛫 空港内<br>引き渡し不可', iconSize: [104, 36], iconAnchor: [52, 18] }) }).addTo(map);
+        }
+    }
     function initMap(lat, lng) {
         if (map) return;
         const container = document.getElementById('map');
@@ -1271,6 +1299,7 @@
             attribution: '© OSM',
             maxZoom: 19,
         }).addTo(map);
+        drawAreaOverlays();
 
         // Tap to set pin（locStepで お届け/回収 を振り分け）
         map.on('click', (e) => {
@@ -1616,6 +1645,7 @@
                     state.deliveryConfig = Object.assign({}, state.deliveryConfig, c);
                 } catch (e) { console.warn('delivery config parse failed', e); }
             }
+            if (map) drawAreaOverlays(); // 範囲設定が確定したら対象エリア円＋空港不可ゾーンを再描画
             // エリアの配達範囲が確定したら、既存のお届けピンが範囲外（前エリアの残り等）なら解除し赤アラートを消す
             try {
                 if (state.deliveryLat != null && state.deliveryLng != null && typeof checkDeliverable === 'function') {
@@ -1685,11 +1715,13 @@
         const cfg = state.deliveryConfig;
         const distFromCenter = distanceKm(state.deliveryLat, state.deliveryLng, cfg.centerLat, cfg.centerLng);
         const inCity = !cfg.cityFilter || (state.deliveryAddr || '').includes(cfg.cityFilter);
-        const inArea = (distFromCenter <= cfg.radiusKm) && inCity;
+        const inAirport = kdInNahaAirport(state.deliveryLat, state.deliveryLng); // 那覇空港内=不可
+        const inArea = (distFromCenter <= cfg.radiusKm) && inCity && !inAirport;
 
         if (!inArea) {
-            // 配達エリア外: 車両を出さない
+            // 配達エリア外/空港内: 車両を出さない
             state.outOfArea = true;
+            if (inAirport) state.outOfAreaReason = KD_NAHA_AIRPORT_MSG;
             state.availableVehicles = [];
             renderPanel();
             return;
@@ -2189,6 +2221,7 @@
     function checkDeliverable(lat, lng, addr) {
         const cfg = state.deliveryConfig || {};
         if (lat == null || lng == null) return { ok: true, reason: '' };
+        if (KD_STORE === 'naha' && kdInNahaAirport(lat, lng)) return { ok: false, reason: KD_NAHA_AIRPORT_MSG };
         if (cfg.centerLat == null || cfg.radiusKm == null) return { ok: true, reason: '' };
         const dist = distanceKm(lat, lng, cfg.centerLat, cfg.centerLng);
         if (dist > cfg.radiusKm) return { ok: false, reason: `配達エリア外です（中心から約${Math.round(dist)}km／対応は半径${cfg.radiusKm}km以内）。エリア内の場所を選び直してください。` };
