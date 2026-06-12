@@ -13,9 +13,9 @@
     <!-- 接続先を事前に確立（初回表示の体感速度向上） -->
     <link rel="preconnect" href="https://ckrxttbnawkclshczsia.supabase.co" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
-    <link rel="dns-prefetch" href="https://a.tile.openstreetmap.org">
-    <link rel="dns-prefetch" href="https://b.tile.openstreetmap.org">
-    <link rel="dns-prefetch" href="https://c.tile.openstreetmap.org">
+    <link rel="preconnect" href="https://a.tile.openstreetmap.org" crossorigin>
+    <link rel="preconnect" href="https://b.tile.openstreetmap.org" crossorigin>
+    <link rel="preconnect" href="https://c.tile.openstreetmap.org" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1345,6 +1345,10 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OSM',
             maxZoom: 19,
+            crossOrigin: true,
+            keepBuffer: 4,            // 周辺タイルを多めに保持＝パン時の再取得/チラつきを減らす
+            updateWhenZooming: false, // ズーム中はタイル取得を抑えてカクつき軽減
+            updateWhenIdle: true,     // 操作が止まってからまとめて取得＝起動時の同時リクエスト集中を緩和
         }).addTo(map);
         drawAreaOverlays();
 
