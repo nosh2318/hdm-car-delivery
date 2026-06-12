@@ -2829,9 +2829,13 @@
                         <span>${cdwName} × ${days}日</span>
                         <span>¥${cdwFee.toLocaleString()}</span>
                     </div>` : ''}
-                    ${seatFee > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
-                        <span>チャイルドシート</span>
-                        <span>¥${seatFee.toLocaleString()}</span>
+                    ${(+state.options.childSeat > 0) ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
+                        <span>チャイルドシート${state.options.childSeat > 1 ? ' ×' + state.options.childSeat : ''}</span>
+                        <span>¥${(state.options.childSeat * 1000).toLocaleString()}</span>
+                    </div>` : ''}
+                    ${(+state.options.juniorSeat > 0) ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
+                        <span>ジュニアシート${state.options.juniorSeat > 1 ? ' ×' + state.options.juniorSeat : ''}</span>
+                        <span>¥${(state.options.juniorSeat * 500).toLocaleString()}</span>
                     </div>` : ''}
                     <div style="display:flex;justify-content:space-between;padding:8px 0 0;margin-top:6px;border-top:1px solid #ddd;font-weight:800;color:#1a1a1a;font-size:15px;">
                         <span>${t('total')}</span>
