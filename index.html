@@ -2254,20 +2254,9 @@
         const chk = checkDeliverable(state.deliveryLat, state.deliveryLng, (state.deliveryAddr||'')+' '+(state.deliveryAddrCanon||''));
         state.outOfArea = !chk.ok;
         state.outOfAreaReason = chk.reason || '';
+        // マップ上のオーバーレイ帯は廃止＝パネル側の警告(areaWarn)に一本化（帯の重複を出さない）。
         const mw = document.getElementById('mapWrap');
-        if (!mw) return;
-        let el = mw.querySelector('.kd-area-alert');
-        if (state.outOfArea) {
-            if (!el) {
-                el = document.createElement('div');
-                el.className = 'kd-area-alert';
-                el.style.cssText = 'position:absolute;bottom:8px;left:8px;right:8px;z-index:1002;background:#dc2626;color:#fff;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:700;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.28);display:flex;align-items:flex-start;gap:8px;';
-                el.innerHTML = '<span style="flex:none;font-size:15px;">🚫</span><span class="kd-area-msg" style="flex:1;"></span>';
-                mw.appendChild(el);
-            }
-            el.querySelector('.kd-area-msg').textContent = chk.reason;
-            el.style.display = 'flex';
-        } else if (el) { el.style.display = 'none'; }
+        if (mw) { const el = mw.querySelector('.kd-area-alert'); if (el) el.remove(); }
     }
     function renderLocPanel() {
         const el = document.getElementById('locPanel');
@@ -2373,7 +2362,7 @@
         const card = state.deliveryAddr
             ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:9px 12px;margin-bottom:8px;"><span style="font-size:15px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">お届け場所</div><div style="font-size:12.5px;font-weight:700;color:#1a1a1a;white-space:normal;word-break:break-all;line-height:1.45;">${state.deliveryAddr}</div></div></div>`
             : `<div style="text-align:center;color:#bbb;padding:6px 0 8px;font-size:12px;">📍 地図でお届け場所をタップ</div>`;
-        const areaWarn = (state.deliveryAddr && state.outOfArea)
+        const areaWarn = state.outOfArea
             ? `<div style="display:flex;align-items:flex-start;gap:7px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:9px 12px;margin-bottom:8px;color:#b91c1c;font-size:12px;font-weight:700;line-height:1.5;"><span style="flex:none;font-size:14px;">🚫</span><span>${state.outOfAreaReason || '配達エリア外です。エリア内の場所を選び直してください。'}</span></div>`
             : '';
         return `
