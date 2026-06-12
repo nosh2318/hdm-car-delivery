@@ -76,6 +76,18 @@ const I18N={
   ko:{h1a:'차량 및 ',h1b:'요금',hero:'｜클래스별 차종·요금 목록 (1일당·세금 포함)',loading:'로딩 중...',noVeh:'차량 정보가 없습니다',baseFee:'기본 요금',perDay:'/ 1일 (세금 포함)',equip:'기본 장비: ',cta:'🚗 렌터카 예약하기',area:{sapporo:'삿포로',naha:'오키나와(나하)'},cls:{A:'프리미엄 미니밴',A2:'프리미엄 A2',B:'미니밴',B2:'미니밴 B2',C:'컴팩트 SUV',D:'미니밴',F:'컴팩트',H:'세단/하이브리드',S:'SUV'}}
 };
 const TITLES={ja:'車両と料金｜KEYDROP',en:'Vehicles & Pricing｜KEYDROP',zh:'車輛與價格｜KEYDROP',ko:'차량 및 요금｜KEYDROP'};
+// 車名（DB値=日本語）→国際表記。en/zh/koは共通のラテン表記、末尾「等」のみ言語別。
+const _LATIN={'アルファード':'Alphard','ヴェルファイア':'Vellfire','ベルファイア':'Vellfire','ノア':'Noah','ヴォクシー':'Voxy','セレナ':'Serena','エスクァイア':'Esquire','デリカD5':'Delica D5','デリカ':'Delica','ライズ':'Raize','ヤリスクロス':'Yaris Cross','ロッキー':'Rocky','ハリアー':'Harrier','アクア':'Aqua','ヴィッツ':'Vitz','ノート':'Note','プリウスα':'Prius α','プリウス':'Prius','ソリオ':'Solio','ルーミー':'Roomy','カローラフィールダー':'Corolla Fielder','アクセラ':'Axela','カローラ':'Corolla'};
+function _mk(etc){var m={};for(var k in _LATIN)m[k]=_LATIN[k];m['等']=etc;return m;}
+const MODEL={en:_mk(' etc.'),zh:_mk(' 等'),ko:_mk(' 등')};
+const EQUIP={
+  en:{'ナビ':'Navigation','カーナビ':'Car navigation','Bluetooth':'Bluetooth','ETC車載器':'ETC','ETC':'ETC','スタッドレスタイヤ':'Studless tires','バックカメラ':'Rear camera','ドライブレコーダー':'Dashcam'},
+  zh:{'ナビ':'導航','カーナビ':'車載導航','Bluetooth':'Bluetooth','ETC車載器':'ETC','ETC':'ETC','スタッドレスタイヤ':'雪胎','バックカメラ':'倒車攝影','ドライブレコーダー':'行車記錄器'},
+  ko:{'ナビ':'내비게이션','カーナビ':'내비게이션','Bluetooth':'Bluetooth','ETC車載器':'ETC','ETC':'ETC','スタッドレスタイヤ':'스터드리스 타이어','バックカメラ':'후방 카메라','ドライブレコーダー':'블랙박스'}
+};
+function locTokens(str,map){if(!str||LANG==='ja'||!map)return str;var keys=Object.keys(map).sort(function(a,b){return b.length-a.length;});var s=str;keys.forEach(function(k){s=s.split(k).join(map[k]);});return s;}
+function locVeh(s){return locTokens(s,MODEL[LANG]);}
+function locEquip(e){if(LANG==='ja')return e;var m=EQUIP[LANG];if(!m)return e;return m[e]||locTokens(e,m);}
 let LANG='ja', DATA=null;
 function detectLang(){try{var s=localStorage.getItem('kd_lang');if(s&&LS.indexOf(s)>=0)return s;}catch(e){}var n=(navigator.language||'ja').toLowerCase();return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja';}
 
@@ -95,7 +107,7 @@ function render(){
   try{localStorage.setItem('kd_lang',LANG);}catch(e){}
   if(!DATA){document.getElementById('grid').innerHTML='<div class="loading">'+T.loading+'</div>';return;}
   const cls=DATA, order=cls.order||Object.keys(cls.items||{}), equip=cls.equipment||[];
-  const equipTags=equip.map(function(e){return '<span>'+e+'</span>';}).join('');
+  const equipTags=equip.map(function(e){return '<span>'+locEquip(e)+'</span>';}).join('');
   let html='';
   order.forEach(function(k){
     const it=(cls.items||{})[k]; if(!it||it.show===false)return;
@@ -105,7 +117,7 @@ function render(){
       +'<div class="img"><span class="tag" style="background:'+(COLORS[k]||'#1a1a1a')+'">'+k+'</span><img src="'+img+'" onerror="this.onerror=null;this.src=\''+imgFb+'\'" alt="'+(it.label||'')+'" loading="lazy"></div>'
       +'<div class="body">'
       +'<h2>'+clsLabel(k,it.label)+'</h2>'
-      +'<div class="veh">'+(it.vehicles||'')+'</div>'
+      +'<div class="veh">'+locVeh(it.vehicles||'')+'</div>'
       +'<div class="meta"><span>👥 '+(it.seats||'')+'</span>'+equipTags+'</div>'
       +(it.price?('<div class="price"><div class="main"><span class="unit" style="margin-right:4px">'+T.baseFee+'</span><span class="num">'+yen(it.price)+'</span><span class="unit">'+T.perDay+'</span></div></div>'):'')
       +'</div></div>';
