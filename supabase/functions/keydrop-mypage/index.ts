@@ -522,6 +522,9 @@ Deno.serve(async (req) => {
     // 2) 配車表/OPシートに出るよう d-/c- タスクのmemoに🔴依頼マーカー（存在すれば）
     const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
     const marker = `🔴キャンセル依頼(${stamp})${reason ? "：" + reason : ""}`;
+    if (M.store === "nha") {
+      await nhaPatchTasks(resId, null, null, marker); // 那覇：nha_tasksのメモに🔴キャンセル依頼マーカー
+    } else {
     for (const tid of [`d-${resId}`, `c-${resId}`]) {
       const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
       if (!cur[0]) continue;
@@ -529,6 +532,7 @@ Deno.serve(async (req) => {
       if (!memo.includes("キャンセル依頼")) {
         await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(tid)}`, { memo: memo ? memo + " " + marker : marker });
       }
+    }
     }
 
     // 3) 運営へキャンセル依頼メールをキュー投入（KEYDROP_OPS_EMAIL を設定した時のみ。
