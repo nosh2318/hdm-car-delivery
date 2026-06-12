@@ -1478,15 +1478,24 @@
         renderLocationBadge(); renderLocPanel();
         try {
             const r = await fetchFullAddress(lat, lng);
-            if (r.addr) { state.collectionAddr = r.addr; state.collectionAddrFull = r.full; }
+            if (r.addr) { state.collectionAddr = r.addr; state.collectionAddrFull = r.full; state.collectionAddrCanon = r.canon || r.addr; }
         } catch (e) {}
         renderLocationBadge(); renderLocPanel();
     }
 
     // ピン位置のフル住所を取得（番地・建物まで）。staff/adminがこのまま動く＝最大詳細で。
     async function fetchFullAddress(lat, lng) {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&accept-language=ja&zoom=18&addressdetails=1&namedetails=1`);
+        // 表示言語に合わせて住所言語を切替（座標は不変＝配達精度に影響なし）。非日本語はNominatimの整形済みdisplay_nameを使用。
+        const _lang = (state.lang && state.lang !== 'ja') ? state.lang : 'ja';
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&accept-language=${_lang}&zoom=18&addressdetails=1&namedetails=1`);
         const data = await res.json();
+        if (_lang !== 'ja') {
+            let s = (data.display_name || '').replace(/,?\s*(日本|Japan)\s*$/i, '').replace(/〒?\s*\d{3}-?\d{4}\s*/g, '').replace(/\s*,\s*/g, ', ').trim().replace(/^,\s*/, '');
+            // エリア判定(cityFilter=日本語)用にJP正規住所も取得
+            let canon = '';
+            try { const rj = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&accept-language=ja&zoom=18&addressdetails=1`); const dj = await rj.json(); canon = (dj.display_name || '').replace(/、?\s*日本$/, '').replace(/〒?\s*\d{3}-?\d{4}\s*/g, '').trim(); } catch (e) {}
+            return { addr: s, full: (data.display_name || s).trim(), canon: canon || s };
+        }
         const a = data.address || {};
         const pref = a.province || a.state || '';
         const city = a.city || a.town || a.village || a.municipality || '';
@@ -1502,7 +1511,7 @@
         if (!s) s = (data.display_name || '').replace(/、?\s*日本$/, '').replace(/〒?\s*\d{3}-?\d{4}\s*/g, '').trim();
         if (bld && !s.includes(bld)) s = `${s} ${bld}`;
         s = s.replace(/\s*(direction|yes|entrance)\s*$/i, '').trim(); // 末尾ジャンク除去
-        return { addr: s.trim(), full: (data.display_name || s).trim() };
+        return { addr: s.trim(), full: (data.display_name || s).trim(), canon: s.trim() };
     }
 
     async function reverseGeocode(lat, lng) {
@@ -1511,7 +1520,7 @@
         if (typeof renderLocPanel === 'function') renderLocPanel();
         try {
             const r = await fetchFullAddress(lat, lng);
-            if (r.addr) { state.deliveryAddr = r.addr; state.deliveryAddrFull = r.full; }
+            if (r.addr) { state.deliveryAddr = r.addr; state.deliveryAddrFull = r.full; state.deliveryAddrCanon = r.canon || r.addr; }
         } catch (e) { /* 取得失敗時は座標を保持（ピンlat/lngはDBへ） */ }
         renderLocationBadge();
         updateLocationButton();
