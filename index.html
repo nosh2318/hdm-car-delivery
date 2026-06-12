@@ -1548,7 +1548,7 @@
 
         // 検索中
         if (state.loading) {
-            return `<div style="text-align:center;padding:30px;"><span class="loading-spinner"></span><div style="font-size:12px;color:#999;margin-top:8px;">車両を検索中...</div></div>`;
+            return `<div style="text-align:center;padding:30px;"><span class="loading-spinner"></span><div style="font-size:12px;color:#999;margin-top:8px;">${t('searching')}</div></div>`;
         }
 
         // 空車0：チップ/見出しは出さず謝罪＋日付変更のみ（スッキリ）
@@ -1563,7 +1563,7 @@
 
         // Class filter（空車があるときだけ表示）
         html += `<div class="class-chips">`;
-        html += `<button class="class-chip ${!state.selectedClass ? 'selected' : ''}" onclick="state.selectedClass=null; renderPanel();">すべて</button>`;
+        html += `<button class="class-chip ${!state.selectedClass ? 'selected' : ''}" onclick="state.selectedClass=null; renderPanel();">${t('allClasses')}</button>`;
         for (const [id, cls] of Object.entries(VEHICLE_CLASSES)) {
             html += `<button class="class-chip ${state.selectedClass === id ? 'selected' : ''}" onclick="state.selectedClass='${id}'; renderPanel();">${cls.icon} ${cls.name}</button>`;
         }
@@ -1580,7 +1580,7 @@
         const classOrder = ['A', 'A2', 'B', 'B2', 'C', 'S', 'F', 'H'];
         const filteredClasses = state.selectedClass ? [state.selectedClass] : classOrder;
 
-        html += `<div class="vehicle-count-banner">🚗 この場所へお届けできる車</div>`;
+        html += `<div class="vehicle-count-banner">${t('availableCarBanner')}</div>`;
 
         html += `<div class="vehicle-list">`;
         let idx = 0, shown = 0;
@@ -1599,18 +1599,18 @@
                 <div class="vehicle-card" style="animation:vehicleFadeIn .3s ease ${idx * 0.06}s both;" onclick="selectClass('${type}')">
                     <div class="vc-icon ${type}">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name}" loading="lazy" decoding="async">` : (cls.icon || '🚗')}</div>
                     <div class="vc-body">
-                        <div class="vc-class-tag ${type}">${cls.name || (type + 'クラス')}</div>
+                        <div class="vc-class-tag ${type}">${cls.name || (type + t('classSuffix'))}</div>
                         <div class="vc-name" title="${cls.vehicles}">${cls.vehicles}</div>
                         <div class="vc-specs">
-                            <span>👥 ${seats}人乗り</span>
-                            <span>🚗 ${availCount}台空き</span>
+                            <span>👥 ${seats}${t('seats')}</span>
+                            <span>🚗 ${availCount}${t('available')}</span>
                         </div>
-                        ${providers ? `<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">🏢 提供: ${providers}</div>` : ''}
+                        ${providers ? `<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">🏢 ${t('providedShort')}: ${providers}</div>` : ''}
                     </div>
                     <div class="vc-right">
                         <div class="vc-price">¥${totalPrice.toLocaleString()}</div>
                         <div class="vc-price-unit">${days}${t('daysSuffix')}</div>
-                        <button class="vc-select-btn" onclick="event.stopPropagation(); selectClass('${type}')">選択</button>
+                        <button class="vc-select-btn" onclick="event.stopPropagation(); selectClass('${type}')">${t('select')}</button>
                     </div>
                 </div>`;
             idx++; shown++;
@@ -2379,11 +2379,11 @@
                 <div style="padding:8px 14px 12px;display:flex;flex-direction:column;gap:8px;">
                     ${delRef}
                     <div style="display:flex;gap:8px;">
-                        <button onclick="useSameCollection()" style="flex:1;padding:10px;background:#1a1a1a;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;">🔁 お届けと同じ</button>
+                        <button onclick="useSameCollection()" style="flex:1;padding:10px;background:#1a1a1a;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;">🔁 ${t('sameAsDeliveryBtn')}</button>
                         <button onclick="backToDelivery()" style="flex:none;padding:10px 14px;background:#f1f1f1;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#444;cursor:pointer;">‹ 戻る</button>
                     </div>
                     ${card}
-                    <div class="kd-cta-sticky"><button class="btn-primary" style="margin:0;width:100%;" ${ready ? '' : 'disabled'} onclick="goToVehicleStep()">🏁 この回収場所で決めて車両を見る ›</button></div>
+                    <div class="kd-cta-sticky"><button class="btn-primary" style="margin:0;width:100%;" ${ready ? '' : 'disabled'} onclick="goToVehicleStep()">🏁 ${t('collectionCTA')} ›</button></div>
                 </div>`;
         }
         const ready = !!(dt.startDate && dt.startTime && state.deliveryAddr) && !state.outOfArea;
@@ -2427,10 +2427,10 @@
                     <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
                         <button onclick="state.screen='top'; render();" style="background:#f1f1f1;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex:none;">‹ 戻る</button>
                         <div style="flex:1;"></div>
-                        <button onclick="state.vehDateOpen=!state.vehDateOpen; render();" style="background:${state.vehDateOpen?'#1a1a1a':'#FABE00'};color:${state.vehDateOpen?'#fff':'#1a1a1a'};border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;flex:none;">📅 日付・時間を変更 ${state.vehDateOpen?'▴':'▾'}</button>
+                        <button onclick="state.vehDateOpen=!state.vehDateOpen; render();" style="background:${state.vehDateOpen?'#1a1a1a':'#FABE00'};color:${state.vehDateOpen?'#fff':'#1a1a1a'};border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;flex:none;">📅 ${t('vehDateChange')} ${state.vehDateOpen?'▴':'▾'}</button>
                     </div>
                     ${state.vehDateOpen ? `<div style="background:#fafafa;border:1px solid #eee;border-radius:10px;padding:10px;margin-bottom:8px;">
-                        <div style="font-size:11px;color:#a07c00;font-weight:800;margin-bottom:8px;">📅 日付・時間を変更して「この日程で検索する」を押してください</div>
+                        <div style="font-size:11px;color:#a07c00;font-weight:800;margin-bottom:8px;">${t('vehDateHint')}</div>
                         <div class="datetime-grid" style="gap:8px;">
                             <div class="dt-group"><label>${t('delDate')}</label><select class="kd-need" onchange="onVehDateChange('startDate',this.value)">${generateDateOptions(state.datetime.startDate)}</select></div>
                             <div class="dt-group"><label>${t('delTime')}</label><select class="kd-need" onchange="onVehDateChange('startTime',this.value)">${generateTimeOptions(state.datetime.startTime)}</select></div>
@@ -2516,44 +2516,44 @@
             <div class="screen-header">
                 <button class="screen-header-back" onclick="state.screen='step_vehicle'; render();">←</button>
                 <span class="screen-header-title">${t('confirmTitle')}</span>
-                <button onclick="state.screen='step_vehicle'; render();" style="margin-left:auto;background:#f1f1f1;border:none;border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;">‹ 車両選択へ戻る</button>
+                <button onclick="state.screen='step_vehicle'; render();" style="margin-left:auto;background:#f1f1f1;border:none;border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;">${t('backToVehSel')}</button>
             </div>
             ${renderBookingProgress(1)}
             <div class="confirm-screen screen-fade">
                 <div class="confirm-vehicle-hero">
-                    <div class="confirm-vehicle-icon">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || (v.type + 'クラス')}">` : (cls.icon || '🚗')}</div>
-                    <div class="confirm-vehicle-name">${cls.name || (v.type + 'クラス')}</div>
+                    <div class="confirm-vehicle-icon">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || (v.type + t('classSuffix'))}">` : (cls.icon || '🚗')}</div>
+                    <div class="confirm-vehicle-name">${cls.name || (v.type + t('classSuffix'))}</div>
                     <div class="confirm-vehicle-class">${cls.vehicles}</div>
-                    <div style="margin-top:8px;display:inline-block;background:#f1f1f1;color:#444;font-size:12px;font-weight:700;padding:4px 11px;border-radius:14px;">🏢 提供会社：${providerOf(v)}</div>
+                    <div style="margin-top:8px;display:inline-block;background:#f1f1f1;color:#444;font-size:12px;font-weight:700;padding:4px 11px;border-radius:14px;">🏢 ${t('providerLabel')}：${providerOf(v)}</div>
                     <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;font-size:11px;opacity:.8;">
-                        <span>👥 ${v.seats || 5}人乗り</span>
+                        <span>👥 ${v.seats || 5}${t('seats')}</span>
                     </div>
                 </div>
 
                 <div class="confirm-details">
                     <div class="confirm-row">
-                        <span class="confirm-row-label">📍 お届け場所</span>
+                        <span class="confirm-row-label">📍 ${t('deliveryPlace')}</span>
                         <span class="confirm-row-value">${state.deliveryAddr}</span>
                     </div>
                     <div class="confirm-row">
-                        <span class="confirm-row-label">📍 回収場所</span>
-                        <span class="confirm-row-value">${(state.sameCollection === false && state.collectionAddr) ? state.collectionAddr : (state.deliveryAddr + '（お届け場所と同じ）')}</span>
+                        <span class="confirm-row-label">📍 ${t('collectionPlaceL')}</span>
+                        <span class="confirm-row-value">${(state.sameCollection === false && state.collectionAddr) ? state.collectionAddr : (state.deliveryAddr + t('sameAsDelivery'))}</span>
                     </div>
                     <div class="confirm-row">
-                        <span class="confirm-row-label">📅 貸出</span>
+                        <span class="confirm-row-label">📅 ${t('rental')}</span>
                         <span class="confirm-row-value">${startLabel} ${state.datetime.startTime}</span>
                     </div>
                     <div class="confirm-row">
-                        <span class="confirm-row-label">📅 返却</span>
+                        <span class="confirm-row-label">📅 ${t('returnLabel')}</span>
                         <span class="confirm-row-value">${endLabel} ${state.datetime.endTime}</span>
                     </div>
                 </div>
 
                 <div class="confirm-total">
-                    <div class="confirm-total-label">基本料金（${days}${t('daysSuffix')}）</div>
-                    <div class="confirm-total-price">¥${totalPrice.toLocaleString()}<span style="font-size:12px;font-weight:400;color:#666;">（税込）</span></div>
+                    <div class="confirm-total-label">${t('baseFee')}（${days}${t('daysSuffix')}）</div>
+                    <div class="confirm-total-price">¥${totalPrice.toLocaleString()}<span style="font-size:12px;font-weight:400;color:#666;">（${t('taxIncl')}）</span></div>
                 </div>
-                <button class="btn-primary" onclick="state.screen='options'; render();">オプション確認／予約手続きに進む ›</button>
+                <button class="btn-primary" onclick="state.screen='options'; render();">${t('confirmProceed')}</button>
             </div>
         `;
     }
@@ -2675,7 +2675,7 @@
                         <div class="insurance-card-header">
                             <div style="flex:1;">
                                 <div class="insurance-card-name">${t('cdwName')}</div>
-                                <div class="insurance-card-price">${cdwPrice.toLocaleString()}円 / 1日</div>
+                                <div class="insurance-card-price">${cdwPrice.toLocaleString()}${t('perDay')}</div>
                             </div>
                             <div class="insurance-check">${state.cdw === 'cdw' ? '✓' : ''}</div>
                         </div>
@@ -2683,7 +2683,7 @@
                             <div style="padding:2px 0;">✓ ${t('cdwDesc1')}</div>
                             <div style="padding:2px 0;">✓ ${t('cdwDesc2')}</div>
                         </div>
-                        ${state.cdw === 'cdw' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">合計: ¥${(cdwPrice * days).toLocaleString()}（${days}${t('daysSuffix')}）</div>` : ''}
+                        ${state.cdw === 'cdw' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">${t('subtotalLabel')}: ¥${(cdwPrice * days).toLocaleString()}（${days}${t('daysSuffix')}）</div>` : ''}
                     </div>
 
                     <div class="insurance-card ${state.cdw === 'pack' ? 'selected' : ''}" onclick="state.cdw='pack'; render();">
@@ -2693,7 +2693,7 @@
                                     <div class="insurance-card-name">${t('packName')}</div>
                                     <span style="font-size:9px;background:#1a1a1a;color:#FABE00;padding:2px 6px;border-radius:4px;font-weight:700;">${t('recommended')}</span>
                                 </div>
-                                <div class="insurance-card-price">${packPrice.toLocaleString()}円 / 1日<span style="font-size:10px;color:#888;font-weight:400;">（免責${cdwPrice.toLocaleString()}円+NOC550円）</span></div>
+                                <div class="insurance-card-price">${packPrice.toLocaleString()}${t('perDay')}<span style="font-size:10px;color:#888;font-weight:400;">（${t('cdwShort')}${cdwPrice.toLocaleString()}${t('yenUnit')}+NOC550${t('yenUnit')}）</span></div>
                             </div>
                             <div class="insurance-check">${state.cdw === 'pack' ? '✓' : ''}</div>
                         </div>
@@ -2702,7 +2702,7 @@
                             <div style="padding:2px 0;">✓ ${t('packDesc2')}</div>
                             <div style="padding:2px 0;">✓ ${t('packDesc3')}</div>
                         </div>
-                        ${state.cdw === 'pack' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">合計: ¥${(packPrice * days).toLocaleString()}（${days}${t('daysSuffix')}）</div>` : ''}
+                        ${state.cdw === 'pack' ? `<div style="font-size:11px;color:#1a1a1a;font-weight:600;margin-top:4px;">${t('subtotalLabel')}: ¥${(packPrice * days).toLocaleString()}（${days}${t('daysSuffix')}）</div>` : ''}
                     </div>
 
                     <div class="insurance-card ${state.cdw === 'none' ? 'selected' : ''}" onclick="state.cdw='none'; render();" style="${state.cdw === 'none' ? 'border-color:#999;background:#f9f9f9;' : ''}">
@@ -2722,7 +2722,7 @@
                         <div class="option-item">
                             <div class="option-item-info">
                                 <div class="option-item-name">${t('childSeat')}</div>
-                                <div class="option-item-price">1〜4歳 / ${optPrices.childSeat.toLocaleString()}円</div>
+                                <div class="option-item-price">${t('age1_4')} / ${optPrices.childSeat.toLocaleString()}${t('yenUnit')}</div>
                             </div>
                             <div class="option-counter">
                                 <button class="option-counter-btn ${state.options.childSeat === 0 ? 'disabled' : ''}" onclick="if(state.options.childSeat>0){state.options.childSeat--;render();}">−</button>
@@ -2733,7 +2733,7 @@
                         <div class="option-item">
                             <div class="option-item-info">
                                 <div class="option-item-name">${t('juniorSeat')}</div>
-                                <div class="option-item-price">4〜10歳 / ${optPrices.juniorSeat.toLocaleString()}円</div>
+                                <div class="option-item-price">${t('age4_10')} / ${optPrices.juniorSeat.toLocaleString()}${t('yenUnit')}</div>
                             </div>
                             <div class="option-counter">
                                 <button class="option-counter-btn ${state.options.juniorSeat === 0 ? 'disabled' : ''}" onclick="if(state.options.juniorSeat>0){state.options.juniorSeat--;render();}">−</button>
@@ -2752,7 +2752,7 @@
                         <span>+¥${optionsTotal.toLocaleString()}</span>
                     </div>
                     <div style="color:#888;margin-top:2px;">
-                        ${state.cdw === 'cdw' ? `免責補償 ¥${(cdwPrice * days).toLocaleString()}` : ''}${state.cdw === 'pack' ? `安心パック ¥${(packPrice * days).toLocaleString()}` : ''}${accTotal > 0 ? `${cdwTotal > 0 ? ' + ' : ''}シート ¥${accTotal.toLocaleString()}` : ''}
+                        ${state.cdw === 'cdw' ? `${t('cdwShort')} ¥${(cdwPrice * days).toLocaleString()}` : ''}${state.cdw === 'pack' ? `${t('packName')} ¥${(packPrice * days).toLocaleString()}` : ''}${accTotal > 0 ? `${cdwTotal > 0 ? ' + ' : ''}${t('seatShort')} ¥${accTotal.toLocaleString()}` : ''}
                     </div>
                 </div>
                 ` : ''}
@@ -4478,6 +4478,12 @@
             clickMapDeliver: '📍 マップをクリックしてお届け場所を指定',
             selectPeriodCta: '利用期間を選択してください', choose: '選ぶ', edit: '変更', clearBtn: 'クリア', backToCenter: '中心に戻る',
             nextCollection: '次へ: 回収場所と時間を決める',
+            classSuffix: 'クラス', providerLabel: '提供会社', providedShort: '提供', collectionPlaceL: '回収場所',
+            sameAsDelivery: '（お届け場所と同じ）', availableCarBanner: '🚗 この場所へお届けできる車',
+            perDay: '円 / 1日', subtotalLabel: '合計', yenUnit: '円', cdwShort: '免責', seatShort: 'シート',
+            age1_4: '1〜4歳', age4_10: '4〜10歳', backToVehSel: '‹ 車両選択へ戻る',
+            vehDateChange: '日付・時間を変更', vehDateHint: '${t('vehDateHint')}',
+            collectionCTA: 'この回収場所で決めて車両を見る', sameAsDeliveryBtn: 'お届けと同じ', deliveryDest: 'お届け先', tapToChange: 'タップで変更',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -4539,6 +4545,12 @@
             clickMapDeliver: '📍 Click the map to set the delivery location',
             selectPeriodCta: 'Please select your rental period', choose: 'Select', edit: 'Edit', clearBtn: 'Clear', backToCenter: 'Back to center',
             nextCollection: 'Next: Set return location & time',
+            classSuffix: ' Class', providerLabel: 'Provider', providedShort: 'By', collectionPlaceL: 'Return location',
+            sameAsDelivery: ' (Same as delivery)', availableCarBanner: '🚗 Cars deliverable to this location',
+            perDay: ' yen / day', subtotalLabel: 'Total', yenUnit: ' yen', cdwShort: 'CDW', seatShort: 'Seats',
+            age1_4: '1–4 yrs', age4_10: '4–10 yrs', backToVehSel: '‹ Back to vehicles',
+            vehDateChange: 'Change date/time', vehDateHint: '📅 Change the date/time, then tap "Search this period"',
+            collectionCTA: 'Set this return spot & view cars', sameAsDeliveryBtn: 'Same as delivery', deliveryDest: 'Delivery to', tapToChange: 'tap to change',
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
@@ -4600,6 +4612,12 @@
             clickMapDeliver: '📍 點擊地圖指定送達地點',
             selectPeriodCta: '請選擇租用期間', choose: '選擇', edit: '變更', clearBtn: '清除', backToCenter: '回到中心',
             nextCollection: '下一步：決定回收地點與時間',
+            classSuffix: '車型', providerLabel: '提供公司', providedShort: '提供', collectionPlaceL: '回收地點',
+            sameAsDelivery: '（與送達地點相同）', availableCarBanner: '🚗 可外送至此地點的車輛',
+            perDay: '日圓 / 1天', subtotalLabel: '合計', yenUnit: '日圓', cdwShort: '免責', seatShort: '座椅',
+            age1_4: '1～4歲', age4_10: '4～10歲', backToVehSel: '‹ 返回車輛選擇',
+            vehDateChange: '變更日期時間', vehDateHint: '📅 變更日期時間後請按「以此日程搜尋」',
+            collectionCTA: '以此回收地點查看車輛', sameAsDeliveryBtn: '與送達相同', deliveryDest: '送達地點', tapToChange: '點擊變更',
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
@@ -4661,6 +4679,12 @@
             clickMapDeliver: '📍 지도를 클릭해 배달 장소를 지정',
             selectPeriodCta: '이용 기간을 선택해 주세요', choose: '선택', edit: '변경', clearBtn: '지우기', backToCenter: '중심으로',
             nextCollection: '다음: 회수 장소와 시간 정하기',
+            classSuffix: ' 클래스', providerLabel: '제공 회사', providedShort: '제공', collectionPlaceL: '회수 장소',
+            sameAsDelivery: ' (배달 장소와 동일)', availableCarBanner: '🚗 이 장소로 배달 가능한 차량',
+            perDay: '엔 / 1일', subtotalLabel: '합계', yenUnit: '엔', cdwShort: '면책', seatShort: '시트',
+            age1_4: '1~4세', age4_10: '4~10세', backToVehSel: '‹ 차량 선택으로',
+            vehDateChange: '날짜·시간 변경', vehDateHint: '📅 날짜·시간을 변경한 뒤 "이 일정으로 검색"을 눌러 주세요',
+            collectionCTA: '이 회수 장소로 차량 보기', sameAsDeliveryBtn: '배달과 동일', deliveryDest: '배달지', tapToChange: '탭하여 변경',
         },
     };
 
