@@ -1001,80 +1001,61 @@
             st.textContent = `
             #kd-area-gate{position:fixed;inset:0;z-index:100000;overflow:auto;overscroll-behavior:none;-webkit-overflow-scrolling:touch;display:flex;align-items:center;background:#06213a;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;}
             .kdg-bg{position:fixed;inset:0;background-size:cover;background-position:center;filter:blur(34px) brightness(.5) saturate(1.1);transform:scale(1.15);z-index:0;pointer-events:none;}
-            .kdg-stage{position:relative;z-index:1;display:block;width:100%;max-width:100vw;margin:auto;line-height:0;}
+            .kdg-stage{position:relative;z-index:1;display:block;width:100%;max-width:480px;margin:auto;line-height:0;}
             .kdg-hero{display:block;width:100%;height:auto;}
             .kdg-skip{position:fixed;top:14px;right:16px;z-index:6;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:800;letter-spacing:.1em;padding:7px 16px;border-radius:999px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
-            .kdg-hot{position:absolute;transform:translate(-50%,-50%);border:none;background:transparent;cursor:pointer;border-radius:14px;padding:0;z-index:4;-webkit-tap-highlight-color:rgba(255,195,0,.25);}
-            .kdg-hot::after{content:"";position:absolute;inset:0;border-radius:14px;border:3px solid #FABE00;filter:drop-shadow(0 0 2px rgba(0,0,0,.9));animation:kdgPulse 1.5s ease-in-out infinite;pointer-events:none;}
-            .kdg-hot:hover::after{opacity:1!important;animation:none;border-color:#fff;box-shadow:0 0 24px 6px rgba(250,190,0,.9);}
-            .kdg-flash{position:absolute;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;border:3px solid #FABE00;pointer-events:none;z-index:5;animation:kdgRipple .65s ease-out forwards;}
-            .kdg-go{position:absolute;transform:translate(-50%,-50%);font-size:14px;font-weight:900;color:#fff;letter-spacing:.18em;text-shadow:0 2px 12px rgba(0,0,0,.75);pointer-events:none;opacity:0;animation:kdgGo .6s ease-out forwards;z-index:5;white-space:nowrap;}
-            @keyframes kdgPulse{0%,100%{opacity:.3;box-shadow:0 0 8px 1px rgba(250,190,0,.3);}50%{opacity:1;box-shadow:0 0 22px 7px rgba(250,190,0,.85);}}
-            @keyframes kdgRipple{0%{width:10px;height:10px;opacity:1;}100%{width:130px;height:130px;opacity:0;}}
-            @keyframes kdgGo{0%{opacity:0;transform:translate(-50%,-30%);}100%{opacity:1;transform:translate(-50%,-60%);}}
-            /* SP: 画像は横幅100%で端まで表示（両端を切らない）。縦の“動きすぎ”はバウンド停止(overscroll-behavior:none)で抑制。
-               stage=画像=幅100%なので点滅枠(stage基準%)は画像にぴったり一致する。 */
+            .kdg-areas{line-height:1.3;display:flex;flex-direction:column;gap:11px;padding:14px 16px 26px;}
+            .kdg-area{display:flex;align-items:center;gap:13px;width:100%;padding:15px 17px;border-radius:16px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.22);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;text-align:left;font-family:inherit;box-sizing:border-box;}
+            .kdg-area .pin{font-size:21px;flex:none;line-height:1;}
+            .kdg-area .nm{font-size:21px;font-weight:900;letter-spacing:.02em;}
+            .kdg-area .sb{font-size:11.5px;opacity:.82;font-weight:600;}
+            .kdg-area .chev{margin-left:auto;font-size:24px;font-weight:300;opacity:.9;}
+            .kdg-area .soon{margin-left:auto;font-size:11px;font-weight:800;background:rgba(255,255,255,.22);padding:4px 11px;border-radius:999px;letter-spacing:.06em;}
+            .kdg-area.ready{cursor:pointer;border-color:rgba(250,190,0,.65);animation:kdgGlow 1.7s ease-in-out infinite;}
+            .kdg-area.ready .nm{animation:kdgNm 1.7s ease-in-out infinite;}
+            .kdg-area.ready:active{transform:scale(.985);}
+            .kdg-area.ready:hover{background:rgba(250,190,0,.2);border-color:#FABE00;animation:none;}
+            .kdg-area.soon-area{opacity:.42;}
+            @keyframes kdgGlow{0%,100%{box-shadow:0 0 0 0 rgba(250,190,0,0);border-color:rgba(250,190,0,.5);}50%{box-shadow:0 0 15px 1px rgba(250,190,0,.5);border-color:#FABE00;}}
+            @keyframes kdgNm{0%,100%{color:#fff;}50%{color:#FABE00;}}
             `;
             document.head.appendChild(st);
         }
         const isSP = window.matchMedia('(max-width:768px)').matches;
-        // ── TOPデザイン 2パターン（DBの hdm_keydrop_top_pattern=1/2 で出し分け・SPKアプリのトグルで切替）──
-        //   各パターン: pc/sp画像 と クリック領域(x/y=中心%, w/h=幅/高さ%)。クリック=札幌/那覇の2エリアのみ。
-        const KD_PATTERNS = {
-            '1': { pc: 'images/hero_pc.jpg?v=7', sp: 'images/hero_sp.jpg?v=7',
-                hotPc: [ { id: 'sapporo', label: '札幌', x: 52, y: 50.3, w: 26, h: 50.9 }, { id: 'naha', label: '那覇', x: 81.6, y: 50.3, w: 26, h: 50.9 } ],
-                hotSp: [ { id: 'sapporo', label: '札幌', x: 25.8, y: 48, w: 43, h: 29.1 }, { id: 'naha', label: '那覇', x: 73.7, y: 48, w: 43, h: 29.1 } ] },
-            '2': { pc: 'images/hero2_pc.jpg?v=3', sp: 'images/hero2_sp.jpg?v=3',
-                hotPc: [ { id: 'sapporo', label: '札幌', x: 15.6, y: 69.4, w: 23, h: 15 }, { id: 'naha', label: '那覇', x: 39.8, y: 69.4, w: 23, h: 15 } ],
-                hotSp: [ { id: 'sapporo', label: '札幌', x: 39, y: 44.6, w: 64, h: 10 }, { id: 'naha', label: '那覇', x: 39, y: 58.4, w: 64, h: 10 } ] },
-        };
-        // アクティブなパターンをDBから取得（既定2・タイムアウト1.5s・失敗時2）
-        let _pat = '2';
-        try {
-            const _c = new AbortController(); const _to = setTimeout(function () { _c.abort(); }, 1500);
-            const _r = await fetch(SUPABASE_URL + '/rest/v1/public_keydrop_top_v?select=value', { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }, signal: _c.signal });
-            clearTimeout(_to);
-            const _d = await _r.json();
-            const _v = _d && _d[0] && String(_d[0].value).replace(/["'\s]/g, '');
-            if (_v === '1') _pat = '1';
-        } catch (e) {}
-        if (window.__kdAppCtx || document.getElementById('kd-area-gate')) return; // 取得中に文脈変化/二重生成を防止
-        const PAT = KD_PATTERNS[_pat] || KD_PATTERNS['2'];
-        const KD_HERO = { pc: PAT.pc, sp: PAT.sp };
-        const HOT_PC = PAT.hotPc, HOT_SP = PAT.hotSp;
-        let HOT = (isSP ? HOT_SP : HOT_PC).slice();
+        // ── 受取エリア選択（HTMLボタン4段：札幌/那覇=選択可・点滅／仙台/福岡=準備中）──
+        const HEAD = 'images/hero2_sp_head.jpg';
+        const BG = 'images/hero2_sp.jpg';
+        const KD_GATE_AREAS = [
+            { id: 'sapporo', label: '札幌', sub: '北海道で受け取る', ready: true },
+            { id: 'naha', label: '那覇', sub: '沖縄（那覇）で受け取る', ready: true },
+            { id: 'sendai', label: '仙台', sub: '東北エリア', ready: false },
+            { id: 'fukuoka', label: '福岡', sub: '九州エリア', ready: false },
+        ];
         const g = document.createElement('div');
         g.id = 'kd-area-gate';
-        const heroSrc = isSP ? KD_HERO.sp : KD_HERO.pc;
         g.innerHTML = '<div class="kdg-bg" id="kdg-bg"></div>'
             + '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
-            + '<div class="kdg-stage" id="kdg-stage"><img class="kdg-hero" id="kdg-hero" src="' + heroSrc + '" alt="KEYDROP — ご利用エリアを選択（札幌・那覇）"></div>';
+            + '<div class="kdg-stage" id="kdg-stage"><img class="kdg-hero" id="kdg-hero" src="' + HEAD + '" alt="KEYDROP — 受取エリアを選択">'
+            + '<div class="kdg-areas">'
+            + KD_GATE_AREAS.map(function (a) {
+                return a.ready
+                    ? '<button class="kdg-area ready" data-area="' + a.id + '"><span class="pin">📍</span><span style="min-width:0;"><span class="nm">' + a.label + '</span><br><span class="sb">' + a.sub + '</span></span><span class="chev">›</span></button>'
+                    : '<div class="kdg-area soon-area"><span class="pin">📍</span><span style="min-width:0;"><span class="nm">' + a.label + '</span><br><span class="sb">' + a.sub + '</span></span><span class="soon">準備中</span></div>';
+            }).join('')
+            + '</div></div>';
         document.body.appendChild(g);
-        const bgEl = g.querySelector('#kdg-bg'); bgEl.style.backgroundImage = 'url(' + heroSrc + ')';
-        // SP画像が未配置(404)なら hero_pc.jpg にフォールバックし、PC座標で組み直す
-        (function () {
-            const im = g.querySelector('#kdg-hero');
-            im.onerror = function () { im.onerror = null; im.src = KD_HERO.pc; bgEl.style.backgroundImage = 'url(' + KD_HERO.pc + ')'; HOT.length = 0; HOT_PC.forEach(function (h) { HOT.push(h); }); if (typeof rebuildHotspots === 'function') rebuildHotspots(); };
-        })();
+        g.querySelector('#kdg-bg').style.backgroundImage = 'url(' + BG + ')';
         const stage = g.querySelector('#kdg-stage');
         let busy = false;
-        function rebuildHotspots() {
-            stage.querySelectorAll('.kdg-hot').forEach(function (e) { e.remove(); });
-            HOT.forEach(function (h) {
-                const b = document.createElement('button');
-                b.className = 'kdg-hot'; b.style.left = h.x + '%'; b.style.top = h.y + '%';
-                b.style.width = (h.w || 8) + '%'; b.style.height = (h.h || 10) + '%';
-                b.setAttribute('aria-label', h.label + 'を選択');
-                b.onclick = function () {
-                    if (busy) return; busy = true;
-                    const f = document.createElement('div'); f.className = 'kdg-flash'; f.style.left = h.x + '%'; f.style.top = h.y + '%'; stage.appendChild(f);
-                    const go = document.createElement('div'); go.className = 'kdg-go'; go.style.left = h.x + '%'; go.style.top = (h.y - 11) + '%'; go.textContent = h.label + ' START'; stage.appendChild(go);
-                    setTimeout(function () { kdPickArea(h.id); }, 700);
-                };
-                stage.appendChild(b);
-            });
-        }
-        rebuildHotspots();
+        stage.querySelectorAll('.kdg-area.ready').forEach(function (btn) {
+            btn.onclick = function () {
+                if (busy) return; busy = true;
+                stage.querySelectorAll('.kdg-area').forEach(function (e) { if (e !== btn) e.style.opacity = '.3'; });
+                btn.style.borderColor = '#FABE00'; btn.style.background = 'rgba(250,190,0,.25)'; btn.style.animation = 'none';
+                const _nm = btn.querySelector('.nm'); if (_nm) { _nm.style.color = '#FABE00'; _nm.style.animation = 'none'; }
+                setTimeout(function () { kdPickArea(btn.getAttribute('data-area')); }, 420);
+            };
+        });
         g.querySelector('#kdg-skip').onclick = function () {
             let last = null; try { const r = localStorage.getItem('kd_selectedArea'); if (r) last = (JSON.parse(r) || {}).area; } catch (e) {}
             kdPickArea((last === 'sapporo' || last === 'naha') ? last : 'sapporo');
