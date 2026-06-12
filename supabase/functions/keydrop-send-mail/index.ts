@@ -120,6 +120,7 @@ Deno.serve(async (req) => {
       ng++;
       console.error("[send-mail]", n.id, String(e));
     }
+    await new Promise((res) => setTimeout(res, 600)); // ★ Resendの「2通/秒」レート制限(429)を回避＝送信間に600ms間隔。失敗分は次回cronで自動再送。
   }
   console.log(`[send-mail] sent=${ok} failed=${ng}`);
   return new Response(JSON.stringify({ ok: true, sent: ok, failed: ng }), { headers: { "content-type": "application/json" } });

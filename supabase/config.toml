@@ -1,0 +1,7 @@
+project_id = "ckrxttbnawkclshczsia"
+
+# ⚠️ keydrop-send-mail は pg_cron が x-cron-secret のみ(JWT無し)で叩く。
+#    verify_jwt = true だとゲートウェイが 401 で弾き、確定メール(マイページ直リンク入り)が送れなくなる。
+#    → 必ず verify_jwt = false（再デプロイ時もこの設定が効くよう config.toml に固定）。
+[functions.keydrop-send-mail]
+verify_jwt = false
