@@ -58,8 +58,8 @@ async function sbDelete(table: string, query: string): Promise<void> {
   });
 }
 // 那覇OPシート(nha_tasks)は札幌(tasks)と別構造：_id=t番号 / 予約番号で紐付け / 内容(DEL/COL)で識別 / 日本語列(時間・送迎場所・返却)。
-async function nhaPatchTasks(resId: string, del: any, col: any): Promise<void> {
-  const q = encodeURIComponent("予約番号") + "=eq." + encodeURIComponent(resId) + "&select=_id," + encodeURIComponent("内容");
+async function nhaPatchTasks(resId: string, del: any, col: any, marker?: string): Promise<void> {
+  const q = encodeURIComponent("予約番号") + "=eq." + encodeURIComponent(resId) + "&select=_id," + encodeURIComponent("内容") + "," + encodeURIComponent("メモ");
   const tasks = await sbGet("nha_tasks", q);
   for (const t of tasks) {
     const naiyou = String(t["内容"] || "");
@@ -71,6 +71,13 @@ async function nhaPatchTasks(resId: string, del: any, col: any): Promise<void> {
     } else if (naiyou === "COL") {
       if (col?.time) patch["時間"] = col.time;
       if (col?.place) patch["送迎場所"] = col.place;
+    }
+    // OPシート差別化マーカーをメモ列に書く（札幌と同様：🟡変更申請中／✅変更済）
+    if (marker) {
+      let m = String(t["メモ"] || "");
+      if (marker.indexOf("変更済") >= 0) m = m.replace(/🟡変更申請中\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim(); // 承認時は申請中を消す
+      if (!m.includes(marker)) m = m ? m + " " + marker : marker;
+      patch["メモ"] = m;
     }
     if (Object.keys(patch).length) await sbPatch("nha_tasks", "_id=eq." + encodeURIComponent(String(t._id)), patch);
   }
@@ -263,8 +270,14 @@ Deno.serve(async (req) => {
     if (!okRes) return json({ error: "変更の保存に失敗しました" }, 500, origin);
 
     if (M.store === "nha") {
-      // 那覇：OPシート=nha_tasks（予約番号紐付け・日本語列・内容DEL/COL）を更新
-      await nhaPatchTasks(resId, { place: delPlace, time: lendTime }, { place: colPlace, time: returnTime });
+      // 那覇：OPシート=nha_tasks（予約番号紐付け・日本語列・内容DEL/COL）を更新＋差別化マーカー
+      const _st = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
+      const _lbls: string[] = [];
+      if (delPlace !== null) _lbls.push("お届け場所");
+      if (lendTime !== null) _lbls.push("お届け時間");
+      if (colPlace !== null) _lbls.push("回収場所");
+      if (returnTime !== null) _lbls.push("回収時間");
+      await nhaPatchTasks(resId, { place: delPlace, time: lendTime }, { place: colPlace, time: returnTime }, `✅変更済(${_st}):${_lbls.join("・")}`);
     } else {
     // 2) 既存タスク（OPシート・配車表のソース）も即時同期＋🔔変更マーカーをmemoに追記
     const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
@@ -340,8 +353,8 @@ Deno.serve(async (req) => {
     if (col?.place) apLabels.push("回収場所");
     const marker = `✅変更済(${stamp}):${apLabels.join("・")}`;
     if (M.store === "nha") {
-      // 那覇：OPシート=nha_tasks（予約番号紐付け・日本語列・内容DEL/COL）を反映
-      await nhaPatchTasks(resId, del, col);
+      // 那覇：OPシート=nha_tasks（予約番号紐付け・日本語列・内容DEL/COL）を反映＋✅変更済マーカー
+      await nhaPatchTasks(resId, del, col, marker);
     } else {
     async function patchTask(taskId: string, patch: Record<string, unknown>) {
       const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(taskId)}&select=_id,memo,changed_json`);
@@ -384,11 +397,19 @@ Deno.serve(async (req) => {
   // ── 変更リクエストの差戻し（SPK現場が押す）→ change_reqクリア（反映しない）＋フラグ除去 ──
   if (action === "reject_change") {
     await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: null, change_req_at: null });
+    if (M.store === "nha") {
+      const _ts = await sbGet("nha_tasks", encodeURIComponent("予約番号") + "=eq." + encodeURIComponent(resId) + "&select=_id," + encodeURIComponent("メモ"));
+      for (const _t of _ts) {
+        const _m = String(_t["メモ"] || "");
+        if (_m.includes("変更申請中")) await sbPatch("nha_tasks", "_id=eq." + encodeURIComponent(String(_t._id)), { "メモ": _m.replace(/🟡変更申請中\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim() });
+      }
+    } else {
     for (const tid of [`d-${resId}`, `c-${resId}`]) {
       const cu = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
       if (!cu[0]) continue;
       const m2 = String(cu[0].memo || "");
       if (m2.includes("変更申請中")) await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(tid)}`, { memo: m2.replace(/🟡変更申請中\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim() });
+    }
     }
     await notifySlack(`↩️ *KEYDROP 変更を差戻し*${M.store === "nha" ? "【那覇】" : ""} ${resId} / ${r.name || ""}様`, M.slack);
     return json({ ok: true, rejected: true }, 200, origin);
@@ -444,11 +465,15 @@ Deno.serve(async (req) => {
     if ((req.col as any)?.time) reqLabels.push("回収時間");
     if ((req.col as any)?.place) reqLabels.push("回収場所");
     const cmark = `🟡変更申請中(${cstamp}):${reqLabels.join("・")}`;
+    if (M.store === "nha") {
+      await nhaPatchTasks(resId, null, null, cmark); // 那覇：nha_tasksのメモに🟡変更申請中マーカー
+    } else {
     for (const tid of [`d-${resId}`, `c-${resId}`]) {
       const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
       if (!cur[0]) continue;
       const memo = String(cur[0].memo || "");
       if (!memo.includes("変更申請中")) await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(tid)}`, { memo: memo ? memo + " " + cmark : cmark });
+    }
     }
 
     const lines = [
