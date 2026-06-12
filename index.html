@@ -3663,33 +3663,33 @@
         if (!isCancelled && !isCancelRequested) {
             const cr = r.change_req;
             if (cr && cr.status === 'pending') {
-                const dl = cr.del ? `お届け → ${cr.del.time || ''}　${cr.del.place || ''}` : '';
-                const cl = cr.col ? `回収 → ${cr.col.time || ''}　${cr.col.place || ''}` : '';
+                const dl = cr.del ? `${t('changeDelArrow')}${cr.del.time || ''}　${cr.del.place || ''}` : '';
+                const cl = cr.col ? `${t('changeColArrow')}${cr.col.time || ''}　${cr.col.place || ''}` : '';
                 html += `
                 <div class="mp-detail-section" style="border:1.5px solid #fbbf24;">
-                    <div class="mp-detail-header" style="background:#fffbeb;color:#92400e;">✏️ 変更申請中</div>
+                    <div class="mp-detail-header" style="background:#fffbeb;color:#92400e;">${t('changeApplying')}</div>
                     <div class="mp-detail-body">
-                        <div style="font-size:12px;color:#555;line-height:1.7;">変更リクエストを受け付けました。<b>運営の確認・承認後に反映</b>されます。<br>${dl ? `・${dl}<br>` : ''}${cl ? `・${cl}` : ''}</div>
-                        <div style="font-size:11px;color:#888;margin-top:8px;">お急ぎ・取り消しは公式LINEへご連絡ください。</div>
+                        <div style="font-size:12px;color:#555;line-height:1.7;">${t('changeReceivedBody')}<br>${dl ? `・${dl}<br>` : ''}${cl ? `・${cl}` : ''}</div>
+                        <div style="font-size:11px;color:#888;margin-top:8px;">${t('changeUrgentLine')}</div>
                     </div>
                 </div>`;
             } else {
                 const delOk = !isCompleted && !isActive && !isDelivering && mpDelEligible(r);
                 const colOk = !isCompleted && !isActive && mpColEligible(r);
                 const reqBtn = (delOk || colOk)
-                    ? `<button class="btn-primary" style="margin:10px 0 0;width:100%;" onclick="mpEditOpen()">📝 お届け・回収の変更をリクエスト</button>` : '';
+                    ? `<button class="btn-primary" style="margin:10px 0 0;width:100%;" onclick="mpEditOpen()">${t('reqChangeBtn')}</button>` : '';
                 html += `
                 <div class="mp-detail-section">
-                    <div class="mp-detail-header">🔁 ご予約内容の変更について</div>
+                    <div class="mp-detail-header">${t('changeAboutHdr')}</div>
                     <div class="mp-detail-body">
                         <div style="font-size:12px;color:#444;line-height:1.75;">
-                            <div style="margin-bottom:10px;"><div style="font-weight:800;color:#1a1a1a;">🔹 日程・車種の変更</div>料金が変わるため、原則いったんキャンセル→再予約となります。詳細は公式LINEへお問い合わせください。</div>
-                            <div style="margin-bottom:10px;"><div style="font-weight:800;color:#1a1a1a;">🔹 お届け（貸出）の時間・場所</div>${delOk ? 'マイページから<b>出発48時間前まで</b>変更をリクエストできます（運営の承認後に反映）。' : '<span style="color:#b45309;">マイページでの受付は出発48時間前まで。締切後は公式LINEへ。</span>'}</div>
-                            <div style="margin-bottom:10px;"><div style="font-weight:800;color:#1a1a1a;">🔹 回収（返却）の時間・場所</div>${colOk ? 'マイページから<b>返却2時間前まで</b>変更をリクエストできます（運営の承認後に反映）。' : '<span style="color:#b45309;">マイページでの受付は返却2時間前まで。締切後は公式LINEへ。</span>'}</div>
-                            <div><div style="font-weight:800;color:#1a1a1a;">🔹 オプション・補償の変更</div>公式LINEにて承ります（貸出前日19:00まで・※事前決済制）。</div>
+                            <div style="margin-bottom:10px;"><div style="font-weight:800;color:#1a1a1a;">${t('changeSchedTitle')}</div>${t('changeSchedBody')}</div>
+                            <div style="margin-bottom:10px;"><div style="font-weight:800;color:#1a1a1a;">${t('changeDelTitle')}</div>${delOk ? t('changeDelOk') : '<span style="color:#b45309;">'+t('changeDelClosed')+'</span>'}</div>
+                            <div style="margin-bottom:10px;"><div style="font-weight:800;color:#1a1a1a;">${t('changeColTitle')}</div>${colOk ? t('changeColOk') : '<span style="color:#b45309;">'+t('changeColClosed')+'</span>'}</div>
+                            <div><div style="font-weight:800;color:#1a1a1a;">${t('changeOptTitle')}</div>${t('changeOptBody')}</div>
                         </div>
                         ${reqBtn}
-                        <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:9px 14px;">💬 公式LINEで相談</a>
+                        <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:800;color:#06c755;text-decoration:none;border:1px solid #06c755;border-radius:8px;padding:9px 14px;">${t('lineConsult')}</a>
                     </div>
                 </div>`;
             }
@@ -4503,6 +4503,12 @@
             optCover: '補償：', optBaby: 'ベビーシート×', optUsb: 'USBケーブル', mpPeople: 'ご利用人数', meiSuffix: ' 名',
             mpPayStatus: '決済状況', mpPayAmount: 'お支払い金額', payPaid: '決済済み', payCancelled: 'キャンセル済み', payPending: 'お支払い待ち（未決済）',
             contactLineFull: '💬 確認・お問い合わせ（公式LINE）', resCancelledMsg: 'この予約はキャンセルされました', backToAnotherRes: '← 別の予約を確認する',
+            changeApplying: '✏️ 変更申請中', changeDelArrow: 'お届け → ', changeColArrow: '回収 → ',
+            changeReceivedBody: '変更リクエストを受け付けました。<b>運営の確認・承認後に反映</b>されます。', changeUrgentLine: 'お急ぎ・取り消しは公式LINEへご連絡ください。',
+            changeAboutHdr: '🔁 ご予約内容の変更について', changeSchedTitle: '🔹 日程・車種の変更', changeSchedBody: '料金が変わるため、原則いったんキャンセル→再予約となります。詳細は公式LINEへお問い合わせください。',
+            changeDelTitle: '🔹 お届け（貸出）の時間・場所', changeDelOk: 'マイページから<b>出発48時間前まで</b>変更をリクエストできます（運営の承認後に反映）。', changeDelClosed: 'マイページでの受付は出発48時間前まで。締切後は公式LINEへ。',
+            changeColTitle: '🔹 回収（返却）の時間・場所', changeColOk: 'マイページから<b>返却2時間前まで</b>変更をリクエストできます（運営の承認後に反映）。', changeColClosed: 'マイページでの受付は返却2時間前まで。締切後は公式LINEへ。',
+            changeOptTitle: '🔹 オプション・補償の変更', changeOptBody: '公式LINEにて承ります（貸出前日19:00まで・※事前決済制）。', reqChangeBtn: '📝 お届け・回収の変更をリクエスト', lineConsult: '💬 公式LINEで相談',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -4589,6 +4595,12 @@
             optCover: 'Insurance: ', optBaby: 'Baby seat ×', optUsb: 'USB cable', mpPeople: 'Passengers', meiSuffix: ' ppl',
             mpPayStatus: 'Payment Status', mpPayAmount: 'Amount Paid', payPaid: 'Paid', payCancelled: 'Cancelled', payPending: 'Awaiting payment (unpaid)',
             contactLineFull: '💬 Questions? Contact us (Official LINE)', resCancelledMsg: 'This reservation has been cancelled', backToAnotherRes: '← Check another reservation',
+            changeApplying: '✏️ Change request pending', changeDelArrow: 'Delivery → ', changeColArrow: 'Return → ',
+            changeReceivedBody: 'Your change request has been received. <b>It will apply after staff review/approval.</b>', changeUrgentLine: 'For urgent changes or cancellation, please contact us on Official LINE.',
+            changeAboutHdr: '🔁 About changing your reservation', changeSchedTitle: '🔹 Change dates / vehicle', changeSchedBody: 'Since the price changes, this generally requires cancel then rebook. Please contact us on Official LINE for details.',
+            changeDelTitle: '🔹 Delivery (pickup) time & place', changeDelOk: 'You can request a change from My Page <b>up to 48 hours before departure</b> (applied after staff approval).', changeDelClosed: 'My Page requests accepted up to 48 hours before departure. After that, contact Official LINE.',
+            changeColTitle: '🔹 Return time & place', changeColOk: 'You can request a change from My Page <b>up to 2 hours before return</b> (applied after staff approval).', changeColClosed: 'My Page requests accepted up to 2 hours before return. After that, contact Official LINE.',
+            changeOptTitle: '🔹 Change options / insurance', changeOptBody: 'Handled via Official LINE (by 19:00 the day before pickup; prepayment required).', reqChangeBtn: '📝 Request a delivery/return change', lineConsult: '💬 Consult on Official LINE',
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
@@ -4675,6 +4687,12 @@
             optCover: '補償：', optBaby: '嬰兒座椅×', optUsb: 'USB線', mpPeople: '乘車人數', meiSuffix: ' 人',
             mpPayStatus: '付款狀態', mpPayAmount: '付款金額', payPaid: '已付款', payCancelled: '已取消', payPending: '待付款（未付款）',
             contactLineFull: '💬 確認・洽詢（官方LINE）', resCancelledMsg: '此預約已取消', backToAnotherRes: '← 查看其他預約',
+            changeApplying: '✏️ 變更申請中', changeDelArrow: '送達 → ', changeColArrow: '回收 → ',
+            changeReceivedBody: '已收到您的變更請求。<b>經營方確認・核准後生效。</b>', changeUrgentLine: '如需緊急變更・取消，請洽官方LINE。',
+            changeAboutHdr: '🔁 關於變更預約內容', changeSchedTitle: '🔹 變更日程・車種', changeSchedBody: '因費用會變動，原則上需先取消再重新預約。詳情請洽官方LINE。',
+            changeDelTitle: '🔹 送達（取車）的時間・地點', changeDelOk: '可於我的頁面在<b>出發48小時前</b>提出變更請求（經核准後生效）。', changeDelClosed: '我的頁面受理至出發48小時前。截止後請洽官方LINE。',
+            changeColTitle: '🔹 回收（還車）的時間・地點', changeColOk: '可於我的頁面在<b>還車2小時前</b>提出變更請求（經核准後生效）。', changeColClosed: '我的頁面受理至還車2小時前。截止後請洽官方LINE。',
+            changeOptTitle: '🔹 變更選項・補償', changeOptBody: '透過官方LINE受理（取車前一天19:00前・※採事前付款制）。', reqChangeBtn: '📝 申請變更送達・回收', lineConsult: '💬 透過官方LINE諮詢',
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
@@ -4761,6 +4779,12 @@
             optCover: '보상: ', optBaby: '베이비 시트×', optUsb: 'USB 케이블', mpPeople: '이용 인원', meiSuffix: '명',
             mpPayStatus: '결제 상태', mpPayAmount: '결제 금액', payPaid: '결제 완료', payCancelled: '취소됨', payPending: '결제 대기 (미결제)',
             contactLineFull: '💬 확인・문의 (공식 LINE)', resCancelledMsg: '이 예약은 취소되었습니다', backToAnotherRes: '← 다른 예약 확인',
+            changeApplying: '✏️ 변경 신청 중', changeDelArrow: '배달 → ', changeColArrow: '회수 → ',
+            changeReceivedBody: '변경 요청을 접수했습니다. <b>운영진 확인·승인 후 반영됩니다.</b>', changeUrgentLine: '급한 변경·취소는 공식 LINE으로 연락 주세요.',
+            changeAboutHdr: '🔁 예약 내용 변경 안내', changeSchedTitle: '🔹 일정·차종 변경', changeSchedBody: '요금이 변경되므로 원칙적으로 취소 후 재예약이 됩니다. 자세한 내용은 공식 LINE으로 문의해 주세요.',
+            changeDelTitle: '🔹 배달(대여) 시간·장소', changeDelOk: '마이페이지에서 <b>출발 48시간 전까지</b> 변경을 요청할 수 있습니다 (승인 후 반영).', changeDelClosed: '마이페이지 접수는 출발 48시간 전까지. 마감 후에는 공식 LINE으로.',
+            changeColTitle: '🔹 회수(반납) 시간·장소', changeColOk: '마이페이지에서 <b>반납 2시간 전까지</b> 변경을 요청할 수 있습니다 (승인 후 반영).', changeColClosed: '마이페이지 접수는 반납 2시간 전까지. 마감 후에는 공식 LINE으로.',
+            changeOptTitle: '🔹 옵션·보상 변경', changeOptBody: '공식 LINE에서 접수합니다 (대여 전날 19:00까지·※사전 결제제).', reqChangeBtn: '📝 배달·회수 변경 요청', lineConsult: '💬 공식 LINE으로 상담',
         },
     };
 
