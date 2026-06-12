@@ -68,10 +68,10 @@ async function notifySlack(text: string, channel?: string) {
 //   confirmメールの select は PostgRESTエイリアス(alias:col)で札幌の項目名に揃える。
 const STORE_MAP: Record<string, { resv: string; fleet: string; rpc: string; resvSel: string; slackEnv: string; slackDefault: string }> = {
   spk: { resv: "reservations", fleet: "fleet", rpc: "keydrop_book_v2",
-    resvSel: "name,mail,vehicle,lend_date,return_date,lend_time,return_time,del_place,col_place,price,people,insurance",
+    resvSel: "name,mail,vehicle,lend_date,return_date,lend_time,return_time,del_place,col_place,price,people,insurance,opt_b,opt_c,opt_j,opt_usb",
     slackEnv: "SLACK_KEYDROP_CHANNEL", slackDefault: "C08TDTPEB36" },
   nha: { resv: "nha_reservations", fleet: "nha_fleet", rpc: "keydrop_book_nha",
-    resvSel: "name,mail,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_place,col_place,price,people,insurance",
+    resvSel: "name,mail,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_place,col_place,price,people,insurance,opt_b,opt_c,opt_j,opt_usb",
     slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA", slackDefault: "C06KZ56NTDF" },
 };
 function resolveStore(p: any) {
@@ -165,7 +165,8 @@ Deno.serve(async (req) => {
       await sbPost("keydrop_notifications", { type: "confirm", reservation_id: resId, to_email: rv.mail, store: M.store, payload: {
         name: rv.name || "", vehicleClass: rv.vehicle || "", lend_date: rv.lend_date || "", lend_time: rv.lend_time || "",
         return_date: rv.return_date || "", return_time: rv.return_time || "", del_place: rv.del_place || "", col_place: rv.col_place || "",
-        price: rv.price || amount, people: rv.people || 1, insurance: rv.insurance || "なし" } });
+        price: rv.price || amount, people: rv.people || 1, insurance: rv.insurance || "なし",
+        opt_b: rv.opt_b || 0, opt_c: rv.opt_c || 0, opt_j: rv.opt_j || 0, opt_usb: rv.opt_usb || 0 } });
     }
     await notifySlack([`🆕 *KEYDROP 新規予約*（カード決済・確定）${M.store === "nha" ? "【那覇】" : ""}`,
       `予約番号: ${resId} / ${rv?.name || ""}様`, `車両: ${rv?.vehicle || ""}クラス`,
