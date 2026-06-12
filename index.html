@@ -477,6 +477,7 @@
         .vc-icon.S { background: #fef3c7; }
         .vc-icon.F { background: #fce7f3; }
         .vc-icon.H { background: #f1f5f9; }
+        .vc-icon:has(img) { background: #fff !important; } /* 画像あり時は背景白＝cover時の左端1px線(背景色の透け)を消す */
         .vc-body { flex: 1; min-width: 0; }
         .vc-class-tag { font-size: 11px; font-weight: 700; margin-bottom: 1px; }
         .vc-class-tag.A { color: #7c3aed; }
