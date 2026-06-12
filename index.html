@@ -1003,6 +1003,9 @@
             #kd-area-gate{position:fixed;inset:0;z-index:100000;overflow:auto;overscroll-behavior:none;-webkit-overflow-scrolling:touch;background:#06213a;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;}
             .kdg-bg{position:fixed;inset:0;background-size:cover;background-position:center;filter:blur(34px) brightness(.42) saturate(1.1);transform:scale(1.15);z-index:0;pointer-events:none;}
             .kdg-skip{position:fixed;top:14px;right:16px;z-index:6;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;font-weight:800;letter-spacing:.1em;padding:7px 16px;border-radius:999px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+            .kdg-glang{position:fixed;top:14px;left:16px;z-index:6;display:flex;gap:4px;flex-wrap:wrap;max-width:62%;}
+            .kdg-glang button{font-size:11px;font-weight:800;color:#fff;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:5px 9px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+            .kdg-glang button.on{color:#1a1a1a;background:#FABE00;border-color:#FABE00;}
             .kdg-wrap{position:relative;z-index:1;width:100%;max-width:1040px;margin:0 auto;padding:0 0 38px;box-sizing:border-box;}
             .kdg-hero{position:relative;line-height:0;}
             .kdg-hero img.kdg-hero-img{display:block;width:100%;height:auto;}
@@ -1049,55 +1052,56 @@
         const HEAD = isSP ? 'images/hero2_sp_head.jpg' : 'images/hero2_pc_head.jpg';
         const BG = isSP ? 'images/hero2_sp.jpg' : 'images/hero2_pc.jpg';
         const KD_GATE_AREAS = [
-            { id: 'sapporo', label: '札幌', sub: '北海道で受け取る', ready: true },
-            { id: 'naha', label: '那覇', sub: '沖縄で受け取る', ready: true },
-            { id: 'sendai', label: '仙台', sub: '東北エリア', ready: false },
-            { id: 'fukuoka', label: '福岡', sub: '九州エリア', ready: false },
-        ];
-        const KD_GATE_FEATS = [
-            { ic: '🚗', t: 'どこでも受け取れる', s: '全国の主要エリアで受取可能' },
-            { ic: '🕐', t: 'いつでも予約OK', s: '24時間いつでもカンタン予約' },
-            { ic: '🗓️', t: 'カンタン3ステップ', s: 'エリア選択→日時選択→予約完了' },
-            { ic: '🛡️', t: '安心のサポート', s: 'トラブル時もしっかりサポート' },
+            { id: 'sapporo', ready: true }, { id: 'naha', ready: true },
+            { id: 'sendai', ready: false }, { id: 'fukuoka', ready: false },
         ];
         const g = document.createElement('div');
         g.id = 'kd-area-gate';
-        g.innerHTML = '<div class="kdg-bg" id="kdg-bg"></div>'
-            + '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
-            + '<div class="kdg-wrap">'
-            + '<div class="kdg-hero"><img class="kdg-hero-img" src="' + HEAD + '" alt="KEYDROP — 受取エリアを選択"></div>'
-            + '<div class="kdg-areas">'
-            + KD_GATE_AREAS.map(function (a) {
-                return a.ready
-                    ? '<button class="kdg-area ready ' + a.id + '" data-area="' + a.id + '"><span class="pin">📍</span><span style="min-width:0;"><span class="nm">' + a.label + '</span><br><span class="sb">' + a.sub + '</span></span><span class="chev">›</span></button>'
-                    : '<div class="kdg-area soon-area"><span class="pin">📍</span><span style="min-width:0;"><span class="nm">' + a.label + '</span><br><span class="sb">' + a.sub + '</span></span><span class="soon">準備中</span></div>';
-            }).join('')
-            + '</div>'
-            + '<div class="kdg-feat">'
-            + KD_GATE_FEATS.map(function (f) {
-                return '<div class="fi"><span class="fic">' + f.ic + '</span><span style="min-width:0;"><span class="ft">' + f.t + '</span><div class="fs">' + f.s + '</div></span></div>';
-            }).join('')
-            + '</div>'
-            + '<div class="kdg-cta" id="kdg-cta"><img src="images/mascot.png" alt=""><div style="min-width:0;"><div class="ct1">あなたの旅を、KEYDROPがサポート！</div><div class="ct2">今すぐエリアを選択して、配達予約をはじめよう。</div></div><span class="cta-arrow">›</span></div>'
-            + '</div>';
         document.body.appendChild(g);
-        g.querySelector('#kdg-bg').style.backgroundImage = 'url(' + BG + ')';
         let busy = false;
-        g.querySelectorAll('.kdg-area.ready').forEach(function (btn) {
-            btn.onclick = function () {
-                if (busy) return; busy = true;
-                g.querySelectorAll('.kdg-area').forEach(function (e) { if (e !== btn) e.style.opacity = '.3'; });
-                btn.style.outline = '3px solid #FABE00'; btn.style.animation = 'none';
-                setTimeout(function () { kdPickArea(btn.getAttribute('data-area')); }, 380);
+        const GLABELS = { ja: '日本語', en: 'EN', zh: '繁中', ko: '한국어' };
+        function paintGate() {
+            g.innerHTML = '<div class="kdg-bg" id="kdg-bg"></div>'
+                + '<div class="kdg-glang" id="kdg-glang">' + ['ja', 'en', 'zh', 'ko'].map(function (l) { return '<button data-l="' + l + '"' + (state.lang === l ? ' class="on"' : '') + '>' + GLABELS[l] + '</button>'; }).join('') + '</div>'
+                + '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
+                + '<div class="kdg-wrap">'
+                + '<div class="kdg-hero"><img class="kdg-hero-img" src="' + HEAD + '" alt="KEYDROP"></div>'
+                + '<div class="kdg-areas">'
+                + KD_GATE_AREAS.map(function (a) {
+                    var lbl = t('gLbl_' + a.id), sub = t('gSub_' + a.id);
+                    return a.ready
+                        ? '<button class="kdg-area ready ' + a.id + '" data-area="' + a.id + '"><span class="pin">📍</span><span style="min-width:0;"><span class="nm">' + lbl + '</span><br><span class="sb">' + sub + '</span></span><span class="chev">›</span></button>'
+                        : '<div class="kdg-area soon-area"><span class="pin">📍</span><span style="min-width:0;"><span class="nm">' + lbl + '</span><br><span class="sb">' + sub + '</span></span><span class="soon">' + t('gSoon') + '</span></div>';
+                }).join('')
+                + '</div>'
+                + '<div class="kdg-feat">'
+                + [['🚗', 1], ['🕐', 2], ['🗓️', 3], ['🛡️', 4]].map(function (f) {
+                    return '<div class="fi"><span class="fic">' + f[0] + '</span><span style="min-width:0;"><span class="ft">' + t('gFeat' + f[1] + 't') + '</span><div class="fs">' + t('gFeat' + f[1] + 's') + '</div></span></div>';
+                }).join('')
+                + '</div>'
+                + '<div class="kdg-cta" id="kdg-cta"><img src="images/mascot.png" alt=""><div style="min-width:0;"><div class="ct1">' + t('gCta1') + '</div><div class="ct2">' + t('gCta2') + '</div></div><span class="cta-arrow">›</span></div>'
+                + '</div>';
+            g.querySelector('#kdg-bg').style.backgroundImage = 'url(' + BG + ')';
+            // 言語切替（ゲート上）→state.lang更新＋再描画。アプリ本体・静ページにも kd_lang で連動。
+            g.querySelectorAll('#kdg-glang button').forEach(function (b) {
+                b.onclick = function () { var l = b.getAttribute('data-l'); state.lang = l; try { localStorage.setItem('kd_lang', l); } catch (e) {} try { document.documentElement.lang = l; } catch (e) {} paintGate(); };
+            });
+            g.querySelectorAll('.kdg-area.ready').forEach(function (btn) {
+                btn.onclick = function () {
+                    if (busy) return; busy = true;
+                    g.querySelectorAll('.kdg-area').forEach(function (e) { if (e !== btn) e.style.opacity = '.3'; });
+                    btn.style.outline = '3px solid #FABE00'; btn.style.animation = 'none';
+                    setTimeout(function () { kdPickArea(btn.getAttribute('data-area')); }, 380);
+                };
+            });
+            var _cta = g.querySelector('#kdg-cta');
+            if (_cta) _cta.onclick = function () { var a = g.querySelector('.kdg-areas'); if (a) a.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+            g.querySelector('#kdg-skip').onclick = function () {
+                var last = null; try { var r = localStorage.getItem('kd_selectedArea'); if (r) last = (JSON.parse(r) || {}).area; } catch (e) {}
+                kdPickArea((last === 'sapporo' || last === 'naha') ? last : 'sapporo');
             };
-        });
-        // CTAバナー：エリアカードへスクロールして選択を促す
-        var _cta = g.querySelector('#kdg-cta');
-        if (_cta) _cta.onclick = function () { var a = g.querySelector('.kdg-areas'); if (a) a.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
-        g.querySelector('#kdg-skip').onclick = function () {
-            let last = null; try { const r = localStorage.getItem('kd_selectedArea'); if (r) last = (JSON.parse(r) || {}).area; } catch (e) {}
-            kdPickArea((last === 'sapporo' || last === 'naha') ? last : 'sapporo');
-        };
+        }
+        paintGate();
     }
 
     if (document.readyState !== 'loading') kdShowAreaGate();
@@ -4533,6 +4537,9 @@
             st_completed_l:'返却完了', st_completed_s:'ご利用ありがとうございました', st_cancel_requested_l:'キャンセル申請中', st_cancel_requested_s:'運営が内容（返金可否・キャンセル料）を確認しています',
             st_cancelled_l:'キャンセル', st_cancelled_s:'この予約はキャンセルされました',
             step_confirmed:'予約', step_assigned:'配車', step_preparing:'準備', step_delivering:'お届け', step_active:'利用中', step_completed:'完了',
+            gLbl_sapporo:'札幌', gLbl_naha:'那覇', gLbl_sendai:'仙台', gLbl_fukuoka:'福岡', gSub_sapporo:'北海道で受け取る', gSub_naha:'沖縄で受け取る', gSub_sendai:'東北エリア', gSub_fukuoka:'九州エリア', gSoon:'準備中',
+            gFeat1t:'どこでも受け取れる', gFeat1s:'全国の主要エリアで受取可能', gFeat2t:'いつでも予約OK', gFeat2s:'24時間いつでもカンタン予約', gFeat3t:'カンタン3ステップ', gFeat3s:'エリア選択→日時選択→予約完了', gFeat4t:'安心のサポート', gFeat4s:'トラブル時もしっかりサポート',
+            gCta1:'あなたの旅を、KEYDROPがサポート！', gCta2:'今すぐエリアを選択して、配達予約をはじめよう。',
             procProcessing:'処理中…', procSending:'送信中…', errNetwork:'通信エラーが発生しました', errCancelFail:'キャンセル依頼に失敗しました', errCancelFailLine:'キャンセル依頼に失敗しました。お手数ですが公式LINEよりご連絡ください。', errChangeFail:'変更リクエストの送信に失敗しました', reqChangeBtn2:'変更をリクエスト',
             vehHintFull:'上の「利用期間」からお届け日時・回収日時を選ぶと、予約できる車両が表示されます。', sorryNoVac:'大変申し訳ございませんが<br>該当日に空車がございません', noVacChange:'下のボタンから<b>お届け／回収の日付</b>を変えると<br>空車が見つかる場合があります。', changeDateBtn:'📅 日付を変更して探す', noVacOtherPre:'別のお届け場所でも空車が出る場合があります。<br>お急ぎは ', noVacOtherSuf:' ください。', classNoVacTitle:'このクラスは現在空きがありません', classNoVacBody:'上の<b>「すべて」や他のクラス</b>をお試しください。',
             pickDelOnMap:'📍 お届け場所を地図で選ぶ', pickColOnMap:'🏁 回収場所を地図で選ぶ', mpEditMapHint:'ホテル名・住所で検索、または地図をタップして指定してください。', searchPhIcon:'🔍 ホテル名・住所で検索', notSelected:'未選択', decideThisPlace:'この場所で決定 ›', mpEditFormHint:'場所・時間の変更を申請します。<b>運営の承認後に反映</b>されます（即時反映ではありません）。<br>お届け＝出発48時間前まで／回収＝返却2時間前まで。', timeLabel:'時間', placeLabel:'場所', notSet:'未設定', mapChange:'📍 地図で変更', delChangeClosedNote:'📍 お届けの変更は出発48時間前まで。締切後は公式LINEへ。', colChangeClosedNote:'🏁 回収の変更は返却2時間前まで。締切後は公式LINEへ。',
@@ -4639,6 +4646,9 @@
             st_completed_l:'Returned', st_completed_s:'Thank you for using us', st_cancel_requested_l:'Cancellation pending', st_cancel_requested_s:'Staff is reviewing (refund eligibility & cancellation fee)',
             st_cancelled_l:'Cancelled', st_cancelled_s:'This reservation has been cancelled',
             step_confirmed:'Booked', step_assigned:'Assigned', step_preparing:'Prep', step_delivering:'Delivery', step_active:'In use', step_completed:'Done',
+            gLbl_sapporo:'Sapporo', gLbl_naha:'Naha', gLbl_sendai:'Sendai', gLbl_fukuoka:'Fukuoka', gSub_sapporo:'Pick up in Hokkaido', gSub_naha:'Pick up in Okinawa', gSub_sendai:'Tohoku area', gSub_fukuoka:'Kyushu area', gSoon:'Coming soon',
+            gFeat1t:'Pick up anywhere', gFeat1s:'Available in major areas nationwide', gFeat2t:'Book anytime', gFeat2s:'Easy booking, 24/7', gFeat3t:'3 easy steps', gFeat3s:'Pick area → date → done', gFeat4t:'Reliable support', gFeat4s:'We support you if trouble arises',
+            gCta1:'KEYDROP supports your journey!', gCta2:'Select your area now and start your delivery booking.',
             procProcessing:'Processing…', procSending:'Sending…', errNetwork:'A network error occurred', errCancelFail:'Failed to submit cancellation request', errCancelFailLine:'Failed to submit cancellation request. Please contact us via Official LINE.', errChangeFail:'Failed to send change request', reqChangeBtn2:'Request change',
             vehHintFull:'Select your delivery and return date/time in the “Rental Period” above to see available vehicles.', sorryNoVac:'We are very sorry,<br>no vehicles are available for those dates', noVacChange:'Changing the <b>delivery/return dates</b> with the button below<br>may reveal available vehicles.', changeDateBtn:'📅 Change dates and search', noVacOtherPre:'A different delivery location may also have availability.<br>In a hurry? ', noVacOtherSuf:'.', classNoVacTitle:'This class is currently unavailable', classNoVacBody:'Please try <b>“All” or another class</b> above.',
             pickDelOnMap:'📍 Pick delivery location on map', pickColOnMap:'🏁 Pick return location on map', mpEditMapHint:'Search by hotel/address, or tap the map to set the location.', searchPhIcon:'🔍 Search hotel or address', notSelected:'Not selected', decideThisPlace:'Use this location ›', mpEditFormHint:'Request a change to location/time. <b>It applies after staff approval</b> (not instant).<br>Delivery: up to 48h before departure / Return: up to 2h before return.', timeLabel:'Time', placeLabel:'Place', notSet:'Not set', mapChange:'📍 Change on map', delChangeClosedNote:'📍 Delivery changes accepted up to 48h before departure. After that, use Official LINE.', colChangeClosedNote:'🏁 Return changes accepted up to 2h before return. After that, use Official LINE.',
@@ -4745,6 +4755,9 @@
             st_completed_l:'已還車', st_completed_s:'感謝您的使用', st_cancel_requested_l:'取消申請中', st_cancel_requested_s:'經營方正在確認內容（可否退款・取消費用）',
             st_cancelled_l:'已取消', st_cancelled_s:'此預約已取消',
             step_confirmed:'預約', step_assigned:'配車', step_preparing:'準備', step_delivering:'送達', step_active:'使用中', step_completed:'完成',
+            gLbl_sapporo:'札幌', gLbl_naha:'那霸', gLbl_sendai:'仙台', gLbl_fukuoka:'福岡', gSub_sapporo:'在北海道取車', gSub_naha:'在沖繩取車', gSub_sendai:'東北地區', gSub_fukuoka:'九州地區', gSoon:'準備中',
+            gFeat1t:'隨處取車', gFeat1s:'全國主要地區皆可取車', gFeat2t:'隨時預約', gFeat2s:'24小時隨時輕鬆預約', gFeat3t:'簡單3步驟', gFeat3s:'選地區→選日期→完成', gFeat4t:'安心支援', gFeat4s:'發生問題也有完善支援',
+            gCta1:'KEYDROP 支援您的旅程！', gCta2:'立即選擇地區，開始外送預約。',
             procProcessing:'處理中…', procSending:'傳送中…', errNetwork:'發生通訊錯誤', errCancelFail:'取消請求送出失敗', errCancelFailLine:'取消請求送出失敗。煩請透過官方LINE與我們聯絡。', errChangeFail:'變更請求送出失敗', reqChangeBtn2:'提出變更請求',
             vehHintFull:'在上方「租用期間」選擇送達與回收的日期時間後，即會顯示可預約的車輛。', sorryNoVac:'非常抱歉，<br>該日期沒有可用車輛', noVacChange:'透過下方按鈕更改<b>送達／回收日期</b>，<br>或許能找到可用車輛。', changeDateBtn:'📅 更改日期再搜尋', noVacOtherPre:'其他送達地點也可能有空車。<br>如有急需 ', noVacOtherSuf:'。', classNoVacTitle:'此車型目前無可用車輛', classNoVacBody:'請試試上方的<b>「全部」或其他車型</b>。',
             pickDelOnMap:'📍 在地圖選擇送達地點', pickColOnMap:'🏁 在地圖選擇回收地點', mpEditMapHint:'以飯店名稱・地址搜尋，或點擊地圖指定地點。', searchPhIcon:'🔍 搜尋飯店名稱或地址', notSelected:'未選擇', decideThisPlace:'以此地點決定 ›', mpEditFormHint:'申請變更地點・時間。<b>經核准後生效</b>（非即時）。<br>送達＝出發48小時前／回收＝還車2小時前。', timeLabel:'時間', placeLabel:'地點', notSet:'未設定', mapChange:'📍 在地圖變更', delChangeClosedNote:'📍 送達變更受理至出發48小時前。截止後請洽官方LINE。', colChangeClosedNote:'🏁 回收變更受理至還車2小時前。截止後請洽官方LINE。',
@@ -4851,6 +4864,9 @@
             st_completed_l:'반납 완료', st_completed_s:'이용해 주셔서 감사합니다', st_cancel_requested_l:'취소 신청 중', st_cancel_requested_s:'운영진이 내용(환불 여부·취소 수수료)을 확인 중입니다',
             st_cancelled_l:'취소', st_cancelled_s:'이 예약은 취소되었습니다',
             step_confirmed:'예약', step_assigned:'배차', step_preparing:'준비', step_delivering:'배달', step_active:'이용 중', step_completed:'완료',
+            gLbl_sapporo:'삿포로', gLbl_naha:'나하', gLbl_sendai:'센다이', gLbl_fukuoka:'후쿠오카', gSub_sapporo:'홋카이도에서 받기', gSub_naha:'오키나와에서 받기', gSub_sendai:'도호쿠 지역', gSub_fukuoka:'규슈 지역', gSoon:'준비 중',
+            gFeat1t:'어디서나 받기', gFeat1s:'전국 주요 지역에서 수령 가능', gFeat2t:'언제든 예약', gFeat2s:'24시간 언제든 간편 예약', gFeat3t:'간단 3단계', gFeat3s:'지역 선택→일시 선택→예약 완료', gFeat4t:'안심 서포트', gFeat4s:'문제 발생 시에도 든든한 지원',
+            gCta1:'KEYDROP가 당신의 여행을 서포트!', gCta2:'지금 지역을 선택하고 배달 예약을 시작하세요.',
             procProcessing:'처리 중…', procSending:'전송 중…', errNetwork:'통신 오류가 발생했습니다', errCancelFail:'취소 요청에 실패했습니다', errCancelFailLine:'취소 요청에 실패했습니다. 번거로우시겠지만 공식 LINE으로 연락 주세요.', errChangeFail:'변경 요청 전송에 실패했습니다', reqChangeBtn2:'변경 요청',
             vehHintFull:'위 「이용 기간」에서 배달·회수 일시를 선택하면 예약 가능한 차량이 표시됩니다.', sorryNoVac:'대단히 죄송하지만<br>해당일에 이용 가능한 차량이 없습니다', noVacChange:'아래 버튼에서 <b>배달／회수 날짜</b>를 변경하면<br>이용 가능한 차량이 나올 수 있습니다.', changeDateBtn:'📅 날짜를 변경해 검색', noVacOtherPre:'다른 배달 장소에서도 차량이 나올 수 있습니다.<br>급하시면 ', noVacOtherSuf:' 주세요.', classNoVacTitle:'이 클래스는 현재 이용할 수 없습니다', classNoVacBody:'위의 <b>「전체」나 다른 클래스</b>를 시도해 보세요.',
             pickDelOnMap:'📍 배달 장소를 지도에서 선택', pickColOnMap:'🏁 회수 장소를 지도에서 선택', mpEditMapHint:'호텔명·주소로 검색하거나 지도를 탭하여 지정해 주세요.', searchPhIcon:'🔍 호텔명·주소로 검색', notSelected:'미선택', decideThisPlace:'이 장소로 결정 ›', mpEditFormHint:'장소·시간 변경을 신청합니다. <b>승인 후 반영</b>됩니다 (즉시 아님).<br>배달=출발 48시간 전까지／회수=반납 2시간 전까지.', timeLabel:'시간', placeLabel:'장소', notSet:'미설정', mapChange:'📍 지도에서 변경', delChangeClosedNote:'📍 배달 변경은 출발 48시간 전까지. 마감 후에는 공식 LINE으로.', colChangeClosedNote:'🏁 회수 변경은 반납 2시간 전까지. 마감 후에는 공식 LINE으로.',
