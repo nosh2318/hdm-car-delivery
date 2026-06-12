@@ -3223,7 +3223,7 @@
         const reEnable = () => { if (btn) { btn.disabled = false; btn.textContent = '¥' + (state._payTotal || 0).toLocaleString() + ' を支払う'; } };
         if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
         if (!sqCard) { if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'カードフォームを準備中です。数秒お待ちください。'; } initSquareCard(); return; }
-        if (btn) { btn.disabled = true; btn.textContent = '処理中…'; }
+        if (btn) { btn.disabled = true; btn.textContent = t('procProcessing'); }
         let token;
         try {
             const result = await sqCard.tokenize();
@@ -3322,7 +3322,7 @@
     async function processPayment() {
         if (!state.paymentMethod) return;
         const btn = document.querySelector('.payment-screen .btn-primary');
-        if (btn) { btn.disabled = true; btn.textContent = '処理中…'; }
+        if (btn) { btn.disabled = true; btn.textContent = t('procProcessing'); }
         try {
             // 札幌DBに予約成立（pending_payment・在庫確保）→ Square決済リンクへ遷移
             const data = await createBookingOnServer();
@@ -3520,7 +3520,7 @@
                     <div class="mp-card" onclick="loadReservationDetail('${r.id}')">
                         <div class="mp-card-status ${ds.cardClass}">
                             <span>${ds.icon}</span>
-                            <span>${ds.label}</span>
+                            <span>${dsLabel(status)}</span>
                             ${status === 'delivering' ? '<span style="margin-left:auto;font-size:10px;opacity:.7;">到着まで約15分</span>' : ''}
                         </div>
                         <div class="mp-card-body">
@@ -3615,8 +3615,8 @@
         html += `
             <div class="mp-status-hero ${ds.heroClass}">
                 <div class="mp-status-icon">${ds.icon}</div>
-                <div class="mp-status-label">${ds.label}</div>
-                <div class="mp-status-sub">${ds.sub || ''}</div>
+                <div class="mp-status-label">${dsLabel(status)}</div>
+                <div class="mp-status-sub">${dsSub(status) || ''}</div>
             </div>
         `;
 
@@ -3630,7 +3630,7 @@
                 html += `
                     <div class="mp-prog-step">
                         <div class="mp-prog-icon ${dotClass}">${isDone ? '✓' : step.icon}</div>
-                        <div class="mp-prog-txt ${dotClass}">${step.label}</div>
+                        <div class="mp-prog-txt ${dotClass}">${stepLabel(step.key)}</div>
                     </div>
                 `;
                 if (i < PROGRESS_STEPS.length - 1) {
@@ -3880,7 +3880,7 @@
             ${mpEdit.error ? `<div style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;margin-bottom:12px;">${mpEdit.error}</div>` : ''}
             <div style="display:flex;gap:8px;">
                 <button onclick="mpEditClose()" style="flex:none;padding:13px 18px;background:#f1f1f1;color:#444;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">閉じる</button>
-                <button class="btn-primary" style="margin:0;flex:1;" ${mpEdit.saving ? 'disabled' : ''} onclick="mpEditSave()">${mpEdit.saving ? '送信中…' : '変更をリクエスト'}</button>
+                <button class="btn-primary" style="margin:0;flex:1;" ${mpEdit.saving ? 'disabled' : ''} onclick="mpEditSave()">${mpEdit.saving ? t('procSending') : t('reqChangeBtn2')}</button>
             </div>
         `;
     }
@@ -4020,7 +4020,7 @@
             const data = await res.json().catch(() => ({}));
             if (!res.ok || !data.ok) {
                 mpEdit.saving = false;
-                mpEdit.error = (data && data.error) || '変更リクエストの送信に失敗しました';
+                mpEdit.error = (data && data.error) || t('errChangeFail');
                 renderMpEdit();
                 return;
             }
@@ -4030,7 +4030,7 @@
             render();
             setTimeout(() => alert('変更リクエストを送信しました。運営の確認・承認後に反映されます。'), 60);
         } catch (e) {
-            mpEdit.saving = false; mpEdit.error = '通信エラーが発生しました'; renderMpEdit();
+            mpEdit.saving = false; mpEdit.error = t('errNetwork'); renderMpEdit();
         }
     }
 
@@ -4161,7 +4161,7 @@
             render();
             setTimeout(() => initMypageMap(), 100);
         } catch (e) {
-            mypageState.error = '通信エラーが発生しました';
+            mypageState.error = t('errNetwork');
             mypageState.loading = false;
             render();
         }
@@ -4201,7 +4201,7 @@
                 mypageState.error = '予約が見つかりません';
             }
         } catch (e) {
-            mypageState.error = '通信エラーが発生しました';
+            mypageState.error = t('errNetwork');
         }
         mypageState.loading = false;
         render();
@@ -4321,7 +4321,7 @@
         const reason = reasonEl ? reasonEl.value.trim().slice(0, 500) : '';
         if (!window.confirm('キャンセルリクエストを送信します。よろしいですか？\n※この場では確定されません。運営が返金可否・キャンセル料をご案内します。')) return;
         const btn = document.getElementById('kdCancelBtn');
-        if (btn) { btn.disabled = true; btn.textContent = '送信中…'; }
+        if (btn) { btn.disabled = true; btn.textContent = t('procSending'); }
         try {
             const email = mypageState.email || localStorage.getItem('hdm_mypage_email') || '';
             if (email !== MOCK_EMAIL) {
@@ -4332,7 +4332,7 @@
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok || !data.ok) {
-                    alert((data && data.error) || 'キャンセル依頼に失敗しました');
+                    alert((data && data.error) || t('errCancelFail'));
                     if (btn) { btn.disabled = false; btn.textContent = 'キャンセルリクエストを送信'; }
                     return;
                 }
@@ -4348,7 +4348,7 @@
             }
             render();
         } catch (e) {
-            alert('キャンセル依頼に失敗しました。お手数ですが公式LINEよりご連絡ください。');
+            alert(t('errCancelFailLine'));
             if (btn) { btn.disabled = false; btn.textContent = 'キャンセルリクエストを送信'; }
         }
     }
@@ -4368,7 +4368,7 @@
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok || !data.ok) {
-                    mypageState.error = data.error || 'キャンセル依頼に失敗しました';
+                    mypageState.error = data.error || t('errCancelFail');
                     render();
                     return;
                 }
@@ -4386,7 +4386,7 @@
             }
             render();
         } catch (e) {
-            alert('キャンセル依頼に失敗しました。お手数ですが公式LINEよりご連絡ください。');
+            alert(t('errCancelFailLine'));
         }
     }
 
@@ -4514,6 +4514,13 @@
             cancelPolicyHdr: '📄 キャンセルポリシー（キャンセル料）', cp7days: '7日前まで', cpFree: '無料', cp63: '6〜3日前', cp20: '基本料金の20%', cp21: '2〜1日前', cp30: '基本料金の30%', cpDay: '当日以降', cp50: '基本料金の50%',
             cpFlightNote: '※航空便欠航時は欠航証明書のご提示でキャンセル料無料。', cancelReasonLabel: 'キャンセル理由（任意）', cancelReasonPh: '例：予定が変わったため',
             cancelAgree: '上記キャンセルポリシーを確認し、同意します', cancelSubmitBtn: 'キャンセルリクエストを送信', urgentLineShort: 'お急ぎの場合は公式LINEへ 💬',
+            st_confirmed_l:'予約確定', st_confirmed_s:'ご予約を受け付けました', st_assigned_l:'ご予約確定', st_assigned_s:'お車が決まりました',
+            st_preparing_l:'出発準備中', st_preparing_s:'スタッフが車両を準備しています', st_delivering_l:'お届け中', st_delivering_s:'お届け先に向かっています',
+            st_active_l:'ご利用中', st_active_s:'ドライブをお楽しみください', st_returning_l:'返却手続き中', st_returning_s:'返却を確認しています',
+            st_completed_l:'返却完了', st_completed_s:'ご利用ありがとうございました', st_cancel_requested_l:'キャンセル申請中', st_cancel_requested_s:'運営が内容（返金可否・キャンセル料）を確認しています',
+            st_cancelled_l:'キャンセル', st_cancelled_s:'この予約はキャンセルされました',
+            step_confirmed:'予約', step_assigned:'配車', step_preparing:'準備', step_delivering:'お届け', step_active:'利用中', step_completed:'完了',
+            procProcessing:'処理中…', procSending:'送信中…', errNetwork:'通信エラーが発生しました', errCancelFail:'キャンセル依頼に失敗しました', errCancelFailLine:'キャンセル依頼に失敗しました。お手数ですが公式LINEよりご連絡ください。', errChangeFail:'変更リクエストの送信に失敗しました', reqChangeBtn2:'変更をリクエスト',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -4611,6 +4618,13 @@
             cancelPolicyHdr: '📄 Cancellation Policy (fees)', cp7days: 'Up to 7 days before', cpFree: 'Free', cp63: '6–3 days before', cp20: '20% of base fee', cp21: '2–1 days before', cp30: '30% of base fee', cpDay: 'Same day or later', cp50: '50% of base fee',
             cpFlightNote: '* If your flight is cancelled, the cancellation fee is waived with proof of cancellation.', cancelReasonLabel: 'Reason for cancellation (optional)', cancelReasonPh: 'e.g. Plans changed',
             cancelAgree: 'I have read and agree to the cancellation policy above', cancelSubmitBtn: 'Send cancellation request', urgentLineShort: 'In a hurry? Contact us on Official LINE 💬',
+            st_confirmed_l:'Reservation confirmed', st_confirmed_s:'Your reservation has been received', st_assigned_l:'Reserved', st_assigned_s:'Your car has been assigned',
+            st_preparing_l:'Preparing', st_preparing_s:'Staff is preparing your car', st_delivering_l:'On the way', st_delivering_s:'Heading to your location',
+            st_active_l:'In use', st_active_s:'Enjoy your drive', st_returning_l:'Returning', st_returning_s:'Confirming the return',
+            st_completed_l:'Returned', st_completed_s:'Thank you for using us', st_cancel_requested_l:'Cancellation pending', st_cancel_requested_s:'Staff is reviewing (refund eligibility & cancellation fee)',
+            st_cancelled_l:'Cancelled', st_cancelled_s:'This reservation has been cancelled',
+            step_confirmed:'Booked', step_assigned:'Assigned', step_preparing:'Prep', step_delivering:'Delivery', step_active:'In use', step_completed:'Done',
+            procProcessing:'Processing…', procSending:'Sending…', errNetwork:'A network error occurred', errCancelFail:'Failed to submit cancellation request', errCancelFailLine:'Failed to submit cancellation request. Please contact us via Official LINE.', errChangeFail:'Failed to send change request', reqChangeBtn2:'Request change',
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
@@ -4708,6 +4722,13 @@
             cancelPolicyHdr: '📄 取消政策（取消費用）', cp7days: '7天前', cpFree: '免費', cp63: '6〜3天前', cp20: '基本費用的20%', cp21: '2〜1天前', cp30: '基本費用的30%', cpDay: '當天以後', cp50: '基本費用的50%',
             cpFlightNote: '※航班取消時，出示停飛證明可免取消費用。', cancelReasonLabel: '取消原因（選填）', cancelReasonPh: '例：行程有變',
             cancelAgree: '我已確認並同意以上取消政策', cancelSubmitBtn: '送出取消請求', urgentLineShort: '如有急需請洽官方LINE 💬',
+            st_confirmed_l:'預約確定', st_confirmed_s:'已受理您的預約', st_assigned_l:'預約確定', st_assigned_s:'車輛已確定',
+            st_preparing_l:'準備出發中', st_preparing_s:'工作人員正在準備車輛', st_delivering_l:'外送中', st_delivering_s:'正前往送達地點',
+            st_active_l:'使用中', st_active_s:'祝您旅途愉快', st_returning_l:'還車手續中', st_returning_s:'正在確認還車',
+            st_completed_l:'已還車', st_completed_s:'感謝您的使用', st_cancel_requested_l:'取消申請中', st_cancel_requested_s:'經營方正在確認內容（可否退款・取消費用）',
+            st_cancelled_l:'已取消', st_cancelled_s:'此預約已取消',
+            step_confirmed:'預約', step_assigned:'配車', step_preparing:'準備', step_delivering:'送達', step_active:'使用中', step_completed:'完成',
+            procProcessing:'處理中…', procSending:'傳送中…', errNetwork:'發生通訊錯誤', errCancelFail:'取消請求送出失敗', errCancelFailLine:'取消請求送出失敗。煩請透過官方LINE與我們聯絡。', errChangeFail:'變更請求送出失敗', reqChangeBtn2:'提出變更請求',
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
@@ -4805,12 +4826,23 @@
             cancelPolicyHdr: '📄 취소 정책 (취소 수수료)', cp7days: '7일 전까지', cpFree: '무료', cp63: '6~3일 전', cp20: '기본 요금의 20%', cp21: '2~1일 전', cp30: '기본 요금의 30%', cpDay: '당일 이후', cp50: '기본 요금의 50%',
             cpFlightNote: '※항공편 결항 시 결항 증명서 제시로 취소 수수료 무료.', cancelReasonLabel: '취소 사유 (선택)', cancelReasonPh: '예: 일정이 변경되어',
             cancelAgree: '위 취소 정책을 확인하고 동의합니다', cancelSubmitBtn: '취소 요청 보내기', urgentLineShort: '급하신 경우 공식 LINE으로 💬',
+            st_confirmed_l:'예약 확정', st_confirmed_s:'예약을 접수했습니다', st_assigned_l:'예약 확정', st_assigned_s:'차량이 정해졌습니다',
+            st_preparing_l:'출발 준비 중', st_preparing_s:'스태프가 차량을 준비 중입니다', st_delivering_l:'배달 중', st_delivering_s:'배달지로 가고 있습니다',
+            st_active_l:'이용 중', st_active_s:'드라이브를 즐겨 주세요', st_returning_l:'반납 처리 중', st_returning_s:'반납을 확인 중입니다',
+            st_completed_l:'반납 완료', st_completed_s:'이용해 주셔서 감사합니다', st_cancel_requested_l:'취소 신청 중', st_cancel_requested_s:'운영진이 내용(환불 여부·취소 수수료)을 확인 중입니다',
+            st_cancelled_l:'취소', st_cancelled_s:'이 예약은 취소되었습니다',
+            step_confirmed:'예약', step_assigned:'배차', step_preparing:'준비', step_delivering:'배달', step_active:'이용 중', step_completed:'완료',
+            procProcessing:'처리 중…', procSending:'전송 중…', errNetwork:'통신 오류가 발생했습니다', errCancelFail:'취소 요청에 실패했습니다', errCancelFailLine:'취소 요청에 실패했습니다. 번거로우시겠지만 공식 LINE으로 연락 주세요.', errChangeFail:'변경 요청 전송에 실패했습니다', reqChangeBtn2:'변경 요청',
         },
     };
 
     function t(key) { return LANG[state.lang]?.[key] || LANG.ja[key] || key; }
     // 車両クラス名を選択言語で返す（cls_<type>）。無ければVEHICLE_CLASSESのJP名→type。
     function clsName(type) { if (!type) return ''; const L = LANG[state.lang] || {}; return L['cls_' + type] || LANG.ja['cls_' + type] || (VEHICLE_CLASSES[type] || {}).name || type; }
+    // 配送ステータス／進捗ステップのラベルを選択言語で返す
+    function dsLabel(st) { const L = LANG[state.lang] || {}; return L['st_' + st + '_l'] || LANG.ja['st_' + st + '_l'] || (DELIVERY_STATUSES[st] || {}).label || ''; }
+    function dsSub(st) { const L = LANG[state.lang] || {}; return L['st_' + st + '_s'] || LANG.ja['st_' + st + '_s'] || (DELIVERY_STATUSES[st] || {}).sub || ''; }
+    function stepLabel(k) { const L = LANG[state.lang] || {}; return L['step_' + k] || LANG.ja['step_' + k] || k; }
 
     function switchLang(lang) {
         state.lang = lang;
