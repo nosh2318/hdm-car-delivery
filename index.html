@@ -1542,7 +1542,7 @@
             return `<div style="padding:34px 18px;text-align:center;color:#888;">
                 <div style="font-size:32px;margin-bottom:10px;">📅</div>
                 <div style="font-size:14px;font-weight:700;color:#444;margin-bottom:6px;">${t('selectPeriodCta')}</div>
-                <div style="font-size:12px;line-height:1.7;">上の「利用期間」からお届け日時・回収日時を選ぶと、予約できる車両が表示されます。</div>
+                <div style="font-size:12px;line-height:1.7;">${t('vehHintFull')}</div>
             </div>`;
         }
 
@@ -1554,10 +1554,10 @@
         // 空車0：チップ/見出しは出さず謝罪＋日付変更のみ（スッキリ）
         const apologyHtml = `<div style="padding:30px 18px 24px;text-align:center;color:#888;">
                 <img src="images/mascot_head.png" alt="" style="height:72px;width:auto;margin-bottom:10px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.16));">
-                <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:10px;line-height:1.6;">大変申し訳ございませんが<br>該当日に空車がございません</div>
-                <div style="font-size:12.5px;line-height:1.8;margin-bottom:18px;">下のボタンから<b>お届け／回収の日付</b>を変えると<br>空車が見つかる場合があります。</div>
-                <button onclick="state.vehDateOpen=true; render(); var e=document.querySelector('.app-header'); if(e)e.scrollIntoView({behavior:'smooth',block:'start'});" style="background:#FABE00;color:#1a1a1a;border:none;border-radius:11px;padding:14px 26px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(250,190,0,.45);">📅 日付を変更して探す</button>
-                <div style="font-size:11px;line-height:1.8;margin-top:18px;color:#aaa;">別のお届け場所でも空車が出る場合があります。<br>お急ぎは <a href="https://lin.ee/ZxBknUv" target="_blank" style="color:#1a1a1a;font-weight:700;text-decoration:underline;">${t('navContact')}</a> ください。</div>
+                <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:10px;line-height:1.6;">${t('sorryNoVac')}</div>
+                <div style="font-size:12.5px;line-height:1.8;margin-bottom:18px;">${t('noVacChange')}</div>
+                <button onclick="state.vehDateOpen=true; render(); var e=document.querySelector('.app-header'); if(e)e.scrollIntoView({behavior:'smooth',block:'start'});" style="background:#FABE00;color:#1a1a1a;border:none;border-radius:11px;padding:14px 26px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(250,190,0,.45);">${t('changeDateBtn')}</button>
+                <div style="font-size:11px;line-height:1.8;margin-top:18px;color:#aaa;">${t('noVacOtherPre')}<a href="https://lin.ee/ZxBknUv" target="_blank" style="color:#1a1a1a;font-weight:700;text-decoration:underline;">${t('navContact')}</a>${t('noVacOtherSuf')}</div>
             </div>`;
         if (!state.availableVehicles.length) return apologyHtml;
 
@@ -1619,8 +1619,8 @@
             // 他クラスには空きがある状態（クラス絞り込みで0件）→ 軽い案内
             html += `<div style="padding:22px 18px;text-align:center;color:#888;">
                 <div style="font-size:30px;margin-bottom:8px;">🚗💨</div>
-                <div style="font-size:14px;font-weight:700;color:#444;margin-bottom:6px;">このクラスは現在空きがありません</div>
-                <div style="font-size:12px;line-height:1.7;">上の<b>「すべて」や他のクラス</b>をお試しください。</div>
+                <div style="font-size:14px;font-weight:700;color:#444;margin-bottom:6px;">${t('classNoVacTitle')}</div>
+                <div style="font-size:12px;line-height:1.7;">${t('classNoVacBody')}</div>
             </div>`;
         }
         html += `</div>`;
@@ -3821,18 +3821,18 @@
             const isDel = mpEdit.mapMode === 'del';
             el.innerHTML = `
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <div style="font-size:15px;font-weight:800;color:#1a1a1a;">${isDel ? '📍 お届け場所' : '🏁 回収場所'}を地図で選ぶ</div>
-                    <button onclick="mpEditBackToForm()" style="background:#f1f1f1;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">戻る</button>
+                    <div style="font-size:15px;font-weight:800;color:#1a1a1a;">${isDel ? t('pickDelOnMap') : t('pickColOnMap')}</div>
+                    <button onclick="mpEditBackToForm()" style="background:#f1f1f1;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">${t('back')}</button>
                 </div>
-                <div style="font-size:12px;color:#666;margin-bottom:8px;">ホテル名・住所で検索、または地図をタップして指定してください。</div>
+                <div style="font-size:12px;color:#666;margin-bottom:8px;">${t('mpEditMapHint')}</div>
                 <div style="position:relative;margin-bottom:8px;">
-                    <input id="mpEditSearchInput" type="text" placeholder="🔍 ホテル名・住所で検索" autocomplete="off" oninput="mpEditSearch(this.value)" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;outline:none;">
+                    <input id="mpEditSearchInput" type="text" placeholder="${t('searchPhIcon')}" autocomplete="off" oninput="mpEditSearch(this.value)" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;outline:none;">
                     <div id="mpEditSuggest" style="display:none;position:absolute;top:44px;left:0;right:0;z-index:1001;background:#fff;border:1px solid #eee;border-radius:0 0 10px 10px;box-shadow:0 4px 16px rgba(0,0,0,.18);max-height:200px;overflow-y:auto;"></div>
                 </div>
                 <div id="mpEditMap" style="height:300px;border-radius:12px;overflow:hidden;background:#eaeef2;"></div>
-                <div id="mpEditPicked" style="font-size:12.5px;font-weight:700;color:#1a1a1a;margin:10px 2px 6px;min-height:18px;">${(isDel ? mpEdit.del_place : mpEdit.col_place) || '未選択'}</div>
+                <div id="mpEditPicked" style="font-size:12.5px;font-weight:700;color:#1a1a1a;margin:10px 2px 6px;min-height:18px;">${(isDel ? mpEdit.del_place : mpEdit.col_place) || t('notSelected')}</div>
                 <div id="mpEditAreaWarn" style="display:${(isDel ? mpEdit.delAreaErr : mpEdit.colAreaErr) ? 'block' : 'none'};background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:8px 11px;font-size:12px;font-weight:700;color:#b91c1c;line-height:1.5;margin-bottom:10px;">${(isDel ? mpEdit.delAreaErr : mpEdit.colAreaErr) ? '🚫 ' + (isDel ? mpEdit.delAreaErr : mpEdit.colAreaErr) : ''}</div>
-                <button class="btn-primary" style="margin:0;" onclick="mpEditBackToForm()">この場所で決定 ›</button>
+                <button class="btn-primary" style="margin:0;" onclick="mpEditBackToForm()">${t('decideThisPlace')}</button>
             `;
             setTimeout(initMpEditMap, 60);
             return;
@@ -3842,44 +3842,44 @@
         const timeOpts = (sel) => generateTimeOptions(sel);
         el.innerHTML = `
             <div style="width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 14px;"></div>
-            <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:4px;">📝 変更をリクエスト</div>
-            <div style="font-size:11.5px;color:#888;margin-bottom:14px;">場所・時間の変更を申請します。<b>運営の承認後に反映</b>されます（即時反映ではありません）。<br>お届け＝出発48時間前まで／回収＝返却2時間前まで。</div>
+            <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:4px;">📝 ${t('reqChangeBtn2')}</div>
+            <div style="font-size:11.5px;color:#888;margin-bottom:14px;">${t('mpEditFormHint')}</div>
 
             ${mpEdit.delOk ? `
             <div style="font-weight:800;font-size:12.5px;color:#a07c00;margin:6px 0 6px;">📍 ${t('deliveryShort')}</div>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:12px;color:#666;width:40px;flex:none;">時間</span>
+                    <span style="font-size:12px;color:#666;width:40px;flex:none;">${t('timeLabel')}</span>
                     <select onchange="mpEdit.lend_time=this.value" style="flex:1;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:14px;">${timeOpts(mpEdit.lend_time)}</select>
                 </div>
                 <div style="display:flex;align-items:flex-start;gap:8px;">
-                    <span style="font-size:12px;color:#666;width:40px;flex:none;margin-top:9px;">場所</span>
+                    <span style="font-size:12px;color:#666;width:40px;flex:none;margin-top:9px;">${t('placeLabel')}</span>
                     <div style="flex:1;">
-                        <div style="font-size:13px;font-weight:700;color:#1a1a1a;word-break:break-all;line-height:1.5;margin-bottom:6px;">${mpEdit.del_place || '未設定'}</div>
-                        <button onclick="mpEditPickPlace('del')" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">📍 地図で変更</button>
+                        <div style="font-size:13px;font-weight:700;color:#1a1a1a;word-break:break-all;line-height:1.5;margin-bottom:6px;">${mpEdit.del_place || t('notSet')}</div>
+                        <button onclick="mpEditPickPlace('del')" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">${t('mapChange')}</button>
                     </div>
                 </div>
-            </div>` : `<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#9a3412;margin-bottom:12px;">📍 お届けの変更は出発48時間前まで。締切後は公式LINEへ。</div>`}
+            </div>` : `<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#9a3412;margin-bottom:12px;">${t('delChangeClosedNote')}</div>`}
 
             ${mpEdit.colOk ? `
             <div style="font-weight:800;font-size:12.5px;color:#1a1a1a;margin:6px 0 6px;border-top:1px solid #f0f0f0;padding-top:12px;">🏁 ${t('collectionShort')}</div>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:12px;color:#666;width:40px;flex:none;">時間</span>
+                    <span style="font-size:12px;color:#666;width:40px;flex:none;">${t('timeLabel')}</span>
                     <select onchange="mpEdit.return_time=this.value" style="flex:1;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:14px;">${timeOpts(mpEdit.return_time)}</select>
                 </div>
                 <div style="display:flex;align-items:flex-start;gap:8px;">
-                    <span style="font-size:12px;color:#666;width:40px;flex:none;margin-top:9px;">場所</span>
+                    <span style="font-size:12px;color:#666;width:40px;flex:none;margin-top:9px;">${t('placeLabel')}</span>
                     <div style="flex:1;">
-                        <div style="font-size:13px;font-weight:700;color:#1a1a1a;word-break:break-all;line-height:1.5;margin-bottom:6px;">${mpEdit.col_place || '未設定'}</div>
-                        <button onclick="mpEditPickPlace('col')" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">📍 地図で変更</button>
+                        <div style="font-size:13px;font-weight:700;color:#1a1a1a;word-break:break-all;line-height:1.5;margin-bottom:6px;">${mpEdit.col_place || t('notSet')}</div>
+                        <button onclick="mpEditPickPlace('col')" style="background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">${t('mapChange')}</button>
                     </div>
                 </div>
-            </div>` : `<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#9a3412;margin-bottom:12px;">🏁 回収の変更は返却2時間前まで。締切後は公式LINEへ。</div>`}
+            </div>` : `<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#9a3412;margin-bottom:12px;">${t('colChangeClosedNote')}</div>`}
 
             ${mpEdit.error ? `<div style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;padding:10px;font-size:12px;margin-bottom:12px;">${mpEdit.error}</div>` : ''}
             <div style="display:flex;gap:8px;">
-                <button onclick="mpEditClose()" style="flex:none;padding:13px 18px;background:#f1f1f1;color:#444;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">閉じる</button>
+                <button onclick="mpEditClose()" style="flex:none;padding:13px 18px;background:#f1f1f1;color:#444;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">${t('dateClose')}</button>
                 <button class="btn-primary" style="margin:0;flex:1;" ${mpEdit.saving ? 'disabled' : ''} onclick="mpEditSave()">${mpEdit.saving ? t('procSending') : t('reqChangeBtn2')}</button>
             </div>
         `;
@@ -4521,6 +4521,8 @@
             st_cancelled_l:'キャンセル', st_cancelled_s:'この予約はキャンセルされました',
             step_confirmed:'予約', step_assigned:'配車', step_preparing:'準備', step_delivering:'お届け', step_active:'利用中', step_completed:'完了',
             procProcessing:'処理中…', procSending:'送信中…', errNetwork:'通信エラーが発生しました', errCancelFail:'キャンセル依頼に失敗しました', errCancelFailLine:'キャンセル依頼に失敗しました。お手数ですが公式LINEよりご連絡ください。', errChangeFail:'変更リクエストの送信に失敗しました', reqChangeBtn2:'変更をリクエスト',
+            vehHintFull:'上の「利用期間」からお届け日時・回収日時を選ぶと、予約できる車両が表示されます。', sorryNoVac:'大変申し訳ございませんが<br>該当日に空車がございません', noVacChange:'下のボタンから<b>お届け／回収の日付</b>を変えると<br>空車が見つかる場合があります。', changeDateBtn:'📅 日付を変更して探す', noVacOtherPre:'別のお届け場所でも空車が出る場合があります。<br>お急ぎは ', noVacOtherSuf:' ください。', classNoVacTitle:'このクラスは現在空きがありません', classNoVacBody:'上の<b>「すべて」や他のクラス</b>をお試しください。',
+            pickDelOnMap:'📍 お届け場所を地図で選ぶ', pickColOnMap:'🏁 回収場所を地図で選ぶ', mpEditMapHint:'ホテル名・住所で検索、または地図をタップして指定してください。', searchPhIcon:'🔍 ホテル名・住所で検索', notSelected:'未選択', decideThisPlace:'この場所で決定 ›', mpEditFormHint:'場所・時間の変更を申請します。<b>運営の承認後に反映</b>されます（即時反映ではありません）。<br>お届け＝出発48時間前まで／回収＝返却2時間前まで。', timeLabel:'時間', placeLabel:'場所', notSet:'未設定', mapChange:'📍 地図で変更', delChangeClosedNote:'📍 お届けの変更は出発48時間前まで。締切後は公式LINEへ。', colChangeClosedNote:'🏁 回収の変更は返却2時間前まで。締切後は公式LINEへ。',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -4625,6 +4627,8 @@
             st_cancelled_l:'Cancelled', st_cancelled_s:'This reservation has been cancelled',
             step_confirmed:'Booked', step_assigned:'Assigned', step_preparing:'Prep', step_delivering:'Delivery', step_active:'In use', step_completed:'Done',
             procProcessing:'Processing…', procSending:'Sending…', errNetwork:'A network error occurred', errCancelFail:'Failed to submit cancellation request', errCancelFailLine:'Failed to submit cancellation request. Please contact us via Official LINE.', errChangeFail:'Failed to send change request', reqChangeBtn2:'Request change',
+            vehHintFull:'Select your delivery and return date/time in the “Rental Period” above to see available vehicles.', sorryNoVac:'We are very sorry,<br>no vehicles are available for those dates', noVacChange:'Changing the <b>delivery/return dates</b> with the button below<br>may reveal available vehicles.', changeDateBtn:'📅 Change dates and search', noVacOtherPre:'A different delivery location may also have availability.<br>In a hurry? ', noVacOtherSuf:'.', classNoVacTitle:'This class is currently unavailable', classNoVacBody:'Please try <b>“All” or another class</b> above.',
+            pickDelOnMap:'📍 Pick delivery location on map', pickColOnMap:'🏁 Pick return location on map', mpEditMapHint:'Search by hotel/address, or tap the map to set the location.', searchPhIcon:'🔍 Search hotel or address', notSelected:'Not selected', decideThisPlace:'Use this location ›', mpEditFormHint:'Request a change to location/time. <b>It applies after staff approval</b> (not instant).<br>Delivery: up to 48h before departure / Return: up to 2h before return.', timeLabel:'Time', placeLabel:'Place', notSet:'Not set', mapChange:'📍 Change on map', delChangeClosedNote:'📍 Delivery changes accepted up to 48h before departure. After that, use Official LINE.', colChangeClosedNote:'🏁 Return changes accepted up to 2h before return. After that, use Official LINE.',
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
@@ -4729,6 +4733,8 @@
             st_cancelled_l:'已取消', st_cancelled_s:'此預約已取消',
             step_confirmed:'預約', step_assigned:'配車', step_preparing:'準備', step_delivering:'送達', step_active:'使用中', step_completed:'完成',
             procProcessing:'處理中…', procSending:'傳送中…', errNetwork:'發生通訊錯誤', errCancelFail:'取消請求送出失敗', errCancelFailLine:'取消請求送出失敗。煩請透過官方LINE與我們聯絡。', errChangeFail:'變更請求送出失敗', reqChangeBtn2:'提出變更請求',
+            vehHintFull:'在上方「租用期間」選擇送達與回收的日期時間後，即會顯示可預約的車輛。', sorryNoVac:'非常抱歉，<br>該日期沒有可用車輛', noVacChange:'透過下方按鈕更改<b>送達／回收日期</b>，<br>或許能找到可用車輛。', changeDateBtn:'📅 更改日期再搜尋', noVacOtherPre:'其他送達地點也可能有空車。<br>如有急需 ', noVacOtherSuf:'。', classNoVacTitle:'此車型目前無可用車輛', classNoVacBody:'請試試上方的<b>「全部」或其他車型</b>。',
+            pickDelOnMap:'📍 在地圖選擇送達地點', pickColOnMap:'🏁 在地圖選擇回收地點', mpEditMapHint:'以飯店名稱・地址搜尋，或點擊地圖指定地點。', searchPhIcon:'🔍 搜尋飯店名稱或地址', notSelected:'未選擇', decideThisPlace:'以此地點決定 ›', mpEditFormHint:'申請變更地點・時間。<b>經核准後生效</b>（非即時）。<br>送達＝出發48小時前／回收＝還車2小時前。', timeLabel:'時間', placeLabel:'地點', notSet:'未設定', mapChange:'📍 在地圖變更', delChangeClosedNote:'📍 送達變更受理至出發48小時前。截止後請洽官方LINE。', colChangeClosedNote:'🏁 回收變更受理至還車2小時前。截止後請洽官方LINE。',
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
@@ -4833,6 +4839,8 @@
             st_cancelled_l:'취소', st_cancelled_s:'이 예약은 취소되었습니다',
             step_confirmed:'예약', step_assigned:'배차', step_preparing:'준비', step_delivering:'배달', step_active:'이용 중', step_completed:'완료',
             procProcessing:'처리 중…', procSending:'전송 중…', errNetwork:'통신 오류가 발생했습니다', errCancelFail:'취소 요청에 실패했습니다', errCancelFailLine:'취소 요청에 실패했습니다. 번거로우시겠지만 공식 LINE으로 연락 주세요.', errChangeFail:'변경 요청 전송에 실패했습니다', reqChangeBtn2:'변경 요청',
+            vehHintFull:'위 「이용 기간」에서 배달·회수 일시를 선택하면 예약 가능한 차량이 표시됩니다.', sorryNoVac:'대단히 죄송하지만<br>해당일에 이용 가능한 차량이 없습니다', noVacChange:'아래 버튼에서 <b>배달／회수 날짜</b>를 변경하면<br>이용 가능한 차량이 나올 수 있습니다.', changeDateBtn:'📅 날짜를 변경해 검색', noVacOtherPre:'다른 배달 장소에서도 차량이 나올 수 있습니다.<br>급하시면 ', noVacOtherSuf:' 주세요.', classNoVacTitle:'이 클래스는 현재 이용할 수 없습니다', classNoVacBody:'위의 <b>「전체」나 다른 클래스</b>를 시도해 보세요.',
+            pickDelOnMap:'📍 배달 장소를 지도에서 선택', pickColOnMap:'🏁 회수 장소를 지도에서 선택', mpEditMapHint:'호텔명·주소로 검색하거나 지도를 탭하여 지정해 주세요.', searchPhIcon:'🔍 호텔명·주소로 검색', notSelected:'미선택', decideThisPlace:'이 장소로 결정 ›', mpEditFormHint:'장소·시간 변경을 신청합니다. <b>승인 후 반영</b>됩니다 (즉시 아님).<br>배달=출발 48시간 전까지／회수=반납 2시간 전까지.', timeLabel:'시간', placeLabel:'장소', notSet:'미설정', mapChange:'📍 지도에서 변경', delChangeClosedNote:'📍 배달 변경은 출발 48시간 전까지. 마감 후에는 공식 LINE으로.', colChangeClosedNote:'🏁 회수 변경은 반납 2시간 전까지. 마감 후에는 공식 LINE으로.',
         },
     };
 
