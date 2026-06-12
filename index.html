@@ -2908,11 +2908,15 @@
                     ⚠️ マイページのログインには<u>予約番号</u>と<u>ご予約時のメールアドレス</u>が必要となります。予約番号は大切に保管してください。
                 </div>
 
-                <div style="background:#f9f9f9;border-radius:12px;padding:14px;text-align:left;margin-bottom:16px;font-size:12px;line-height:1.8;">
-                    <div style="display:flex;justify-content:space-between;">
-                        <span style="color:#666;">車両</span>
-                        <span style="font-weight:600;">${cls.name || (state.selectedClass + 'クラス')}</span>
+                <div style="display:flex;align-items:center;gap:12px;background:#f9f9f9;border-radius:12px;padding:12px;margin-bottom:12px;text-align:left;">
+                    ${cls.img ? `<div style="width:104px;height:66px;flex:none;border-radius:8px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;"><img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || ''}" style="width:100%;height:100%;object-fit:cover;"></div>` : ''}
+                    <div style="min-width:0;flex:1;">
+                        <div style="font-size:11px;color:#999;font-weight:700;">ご予約車両クラス</div>
+                        <div style="font-size:15px;font-weight:800;color:#1a1a1a;">${cls.name || ((v?.type || state.selectedClass || '') + 'クラス')}</div>
+                        <div style="font-size:11px;color:#777;line-height:1.5;margin-top:1px;">${cls.vehicles || ''}</div>
                     </div>
+                </div>
+                <div style="background:#f9f9f9;border-radius:12px;padding:14px;text-align:left;margin-bottom:16px;font-size:12px;line-height:1.8;">
                     <div style="display:flex;justify-content:space-between;">
                         <span style="color:#666;">お届け場所</span>
                         <span style="font-weight:600;text-align:right;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${state.deliveryAddr}</span>
