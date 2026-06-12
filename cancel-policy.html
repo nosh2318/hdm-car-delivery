@@ -14,7 +14,11 @@
   .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
   .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
   .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
-  .hd .back{margin-left:auto;font-size:12px;color:#FABE00;text-decoration:none;font-weight:700}
+  .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:10px;flex:none}
+  .langsw{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .langsw button{font-size:11px;font-weight:800;color:#ccc;background:transparent;border:1px solid #555;border-radius:999px;padding:4px 9px;cursor:pointer}
+  .langsw button.active{color:#1a1a1a;background:#FABE00;border-color:#FABE00}
+  .pane{display:none}.pane.on{display:block}
   .hero{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:#fff;padding:28px 20px 24px;text-align:center}
   .hero h1{font-size:20px;font-weight:900}.hero h1 .y{color:#FABE00}
   .wrap{max-width:780px;margin:0 auto;padding:20px 16px}
@@ -36,47 +40,125 @@
 <body>
 <div class="hd">
   <a class="logo" href="./"><span class="mark"><i></i><i></i><i></i></span><b>KEY<span class="y">DROP</span></b></a>
-  <a class="back" href="./">← TOPへ</a>
-</div>
-<div class="hero"><h1>キャンセル<span class="y">ポリシー</span></h1></div>
-
-<div class="wrap">
-  <div class="doc">
-    <div class="art first">キャンセル料</div>
-    <p>ご予約のキャンセルには、貸出予定日までの日数に応じて以下のキャンセル料を申し受けます（基本料金に対する割合）。</p>
-    <table class="fee">
-      <tr><th>キャンセルのタイミング</th><th>キャンセル料</th></tr>
-      <tr><td>貸出7日前まで</td><td class="amt">無料</td></tr>
-      <tr><td>貸出6〜3日前</td><td class="amt">基本料金の20%</td></tr>
-      <tr><td>貸出2〜1日前</td><td class="amt">基本料金の30%</td></tr>
-      <tr><td>貸出当日以降・無連絡不使用</td><td class="amt">基本料金の50%</td></tr>
-    </table>
-    <div class="note">※ 航空便の欠航によりご利用いただけない場合は、欠航証明書のご提示でキャンセル料は無料です。</div>
-
-    <div class="art">キャンセルの方法</div>
-    <p>キャンセルは<b>マイページの「キャンセルをリクエスト」</b>より承ります。</p>
-    <ol>
-      <li>(1) マイページ（予約番号＋ご登録メールでログイン）から「キャンセルをリクエスト」を送信。</li>
-      <li>(2) この時点ではまだ確定しません。運営が内容（返金可否・キャンセル料）を確認します。</li>
-      <li>(3) 確認後にキャンセルを確定し、ご返金がある場合はお手続きいたします。</li>
-    </ol>
-    <p>お急ぎの場合や、各サイトからお手続きできない場合は公式LINEへご連絡ください。</p>
-
-    <div class="art">ご返金について</div>
-    <p>ご返金は、お支払いいただいた決済（クレジットカード）への返金となります。カード会社の処理により、ご返金の反映までお時間をいただく場合がございます。</p>
-
-    <div class="art">ご予約内容の変更について</div>
-    <p>キャンセルではなく内容の変更をご希望の場合：</p>
-    <ol>
-      <li>(1) <b>お届け（貸出）の時間・場所</b>：マイページから<b>出発48時間前まで</b>変更をリクエストできます（運営の承認後に反映）。締切後は公式LINEへ。</li>
-      <li>(2) <b>回収（返却）の時間・場所</b>：マイページから<b>返却2時間前まで</b>変更をリクエストできます（運営の承認後に反映）。締切後は公式LINEへ。</li>
-      <li>(3) <b>オプション・補償</b>：公式LINEにて承ります（貸出前日19:00まで・※事前決済制）。</li>
-      <li>(4) <b>日程・車種</b>：料金が変わるため、原則いったんキャンセル→再予約となります。</li>
-    </ol>
-    <div class="note">運営対応時間：9:00〜19:00。時間外のご連絡は翌営業時間の対応となります。</div>
-
-    <a class="cta" href="./">🚗 レンタカーを予約する</a>
+  <div class="langsw" id="langsw">
+    <button data-l="ja">日本語</button><button data-l="en">EN</button><button data-l="zh">繁中</button><button data-l="ko">한국어</button>
   </div>
+  <a class="back" href="./">← TOP</a>
 </div>
+
+<!-- ja -->
+<div class="pane" data-lang="ja">
+<div class="hero"><h1>キャンセル<span class="y">ポリシー</span></h1></div>
+<div class="wrap"><div class="doc">
+  <div class="art first">キャンセル料</div>
+  <p>ご予約のキャンセルには、貸出予定日までの日数に応じて以下のキャンセル料を申し受けます（基本料金に対する割合）。</p>
+  <table class="fee"><tr><th>キャンセルのタイミング</th><th>キャンセル料</th></tr>
+    <tr><td>貸出7日前まで</td><td class="amt">無料</td></tr>
+    <tr><td>貸出6〜3日前</td><td class="amt">基本料金の20%</td></tr>
+    <tr><td>貸出2〜1日前</td><td class="amt">基本料金の30%</td></tr>
+    <tr><td>貸出当日以降・無連絡不使用</td><td class="amt">基本料金の50%</td></tr></table>
+  <div class="note">※ 航空便の欠航によりご利用いただけない場合は、欠航証明書のご提示でキャンセル料は無料です。</div>
+  <div class="art">キャンセルの方法</div>
+  <p>キャンセルは<b>マイページの「キャンセルをリクエスト」</b>より承ります。</p>
+  <ol><li>(1) マイページ（予約番号＋ご登録メールでログイン）から「キャンセルをリクエスト」を送信。</li><li>(2) この時点ではまだ確定しません。運営が内容（返金可否・キャンセル料）を確認します。</li><li>(3) 確認後にキャンセルを確定し、ご返金がある場合はお手続きいたします。</li></ol>
+  <p>お急ぎの場合や、各サイトからお手続きできない場合は公式LINEへご連絡ください。</p>
+  <div class="art">ご返金について</div>
+  <p>ご返金は、お支払いいただいた決済（クレジットカード）への返金となります。カード会社の処理により、ご返金の反映までお時間をいただく場合がございます。</p>
+  <div class="art">ご予約内容の変更について</div>
+  <p>キャンセルではなく内容の変更をご希望の場合：</p>
+  <ol><li>(1) <b>お届け（貸出）の時間・場所</b>：マイページから<b>出発48時間前まで</b>変更をリクエストできます（運営の承認後に反映）。締切後は公式LINEへ。</li><li>(2) <b>回収（返却）の時間・場所</b>：マイページから<b>返却2時間前まで</b>変更をリクエストできます（運営の承認後に反映）。締切後は公式LINEへ。</li><li>(3) <b>オプション・補償</b>：公式LINEにて承ります（貸出前日19:00まで・※事前決済制）。</li><li>(4) <b>日程・車種</b>：料金が変わるため、原則いったんキャンセル→再予約となります。</li></ol>
+  <div class="note">運営対応時間：9:00〜19:00。時間外のご連絡は翌営業時間の対応となります。</div>
+  <a class="cta" href="./">🚗 レンタカーを予約する</a>
+</div></div>
+</div>
+
+<!-- en -->
+<div class="pane" data-lang="en">
+<div class="hero"><h1>Cancellation <span class="y">Policy</span></h1></div>
+<div class="wrap"><div class="doc">
+  <div class="art first">Cancellation Fees</div>
+  <p>For cancellations, the following fee applies based on the number of days before the scheduled pickup date (as a percentage of the base fee).</p>
+  <table class="fee"><tr><th>Timing</th><th>Fee</th></tr>
+    <tr><td>Up to 7 days before pickup</td><td class="amt">Free</td></tr>
+    <tr><td>6–3 days before</td><td class="amt">20% of base fee</td></tr>
+    <tr><td>2–1 days before</td><td class="amt">30% of base fee</td></tr>
+    <tr><td>Same day or later / no-show</td><td class="amt">50% of base fee</td></tr></table>
+  <div class="note">* If you cannot use the service due to a flight cancellation, the fee is waived upon presenting proof of cancellation.</div>
+  <div class="art">How to Cancel</div>
+  <p>Cancellations are handled via <b>“Request cancellation” on My Page</b>.</p>
+  <ol><li>(1) Log in to My Page (reservation number + registered email) and submit “Request cancellation.”</li><li>(2) This does not finalize it yet. Our staff reviews the details (refund eligibility & cancellation fee).</li><li>(3) After review, we confirm the cancellation and process any refund.</li></ol>
+  <p>If you're in a hurry or cannot complete the process online, please contact us on Official LINE.</p>
+  <div class="art">Refunds</div>
+  <p>Refunds are made to the payment method used (credit card). Depending on the card company's processing, it may take some time to be reflected.</p>
+  <div class="art">Changing Your Reservation</div>
+  <p>If you wish to change details instead of cancelling:</p>
+  <ol><li>(1) <b>Delivery (pickup) time/place</b>: request from My Page <b>up to 48h before departure</b> (applied after staff approval). After that, use Official LINE.</li><li>(2) <b>Return time/place</b>: request from My Page <b>up to 2h before return</b> (applied after staff approval). After that, use Official LINE.</li><li>(3) <b>Options / insurance</b>: handled via Official LINE (by 19:00 the day before pickup; prepayment required).</li><li>(4) <b>Dates / vehicle</b>: as the price changes, this generally requires cancel then rebook.</li></ol>
+  <div class="note">Support hours: 9:00–19:00. Inquiries outside these hours are handled the next business hours.</div>
+  <a class="cta" href="./">🚗 Book a Rental Car</a>
+</div></div>
+</div>
+
+<!-- zh -->
+<div class="pane" data-lang="zh">
+<div class="hero"><h1>取消<span class="y">政策</span></h1></div>
+<div class="wrap"><div class="doc">
+  <div class="art first">取消費用</div>
+  <p>取消預約時，將依距取車預定日的天數收取以下取消費用（以基本費用為基準的比例）。</p>
+  <table class="fee"><tr><th>取消時機</th><th>取消費用</th></tr>
+    <tr><td>取車7天前</td><td class="amt">免費</td></tr>
+    <tr><td>取車6〜3天前</td><td class="amt">基本費用的20%</td></tr>
+    <tr><td>取車2〜1天前</td><td class="amt">基本費用的30%</td></tr>
+    <tr><td>取車當天以後・未聯絡未使用</td><td class="amt">基本費用的50%</td></tr></table>
+  <div class="note">※ 因航班取消而無法使用時，出示停飛證明可免取消費用。</div>
+  <div class="art">取消方法</div>
+  <p>取消請透過<b>我的頁面的「申請取消」</b>辦理。</p>
+  <ol><li>(1) 從我的頁面（以預約編號＋註冊電子郵件登入）送出「申請取消」。</li><li>(2) 此時尚未確定。經營方將確認內容（可否退款・取消費用）。</li><li>(3) 確認後確定取消，如有退款將為您辦理。</li></ol>
+  <p>如有急需，或無法於線上辦理時，請洽官方LINE。</p>
+  <div class="art">關於退款</div>
+  <p>退款將退至您付款的方式（信用卡）。依信用卡公司處理，退款反映可能需要一些時間。</p>
+  <div class="art">關於變更預約內容</div>
+  <p>若想變更內容而非取消：</p>
+  <ol><li>(1) <b>送達（取車）的時間・地點</b>：可於我的頁面<b>出發48小時前</b>提出變更（經核准後生效）。截止後請洽官方LINE。</li><li>(2) <b>回收（還車）的時間・地點</b>：可於我的頁面<b>還車2小時前</b>提出變更（經核准後生效）。截止後請洽官方LINE。</li><li>(3) <b>選項・補償</b>：透過官方LINE辦理（取車前一天19:00前・※事前付款制）。</li><li>(4) <b>日程・車種</b>：因費用變動，原則上需先取消再重新預約。</li></ol>
+  <div class="note">營運受理時間：9:00〜19:00。非營業時間的聯絡將於次一營業時間處理。</div>
+  <a class="cta" href="./">🚗 預約租車</a>
+</div></div>
+</div>
+
+<!-- ko -->
+<div class="pane" data-lang="ko">
+<div class="hero"><h1>취소 <span class="y">정책</span></h1></div>
+<div class="wrap"><div class="doc">
+  <div class="art first">취소 수수료</div>
+  <p>예약 취소 시 대여 예정일까지의 일수에 따라 다음 취소 수수료를 받습니다 (기본 요금에 대한 비율).</p>
+  <table class="fee"><tr><th>취소 시점</th><th>취소 수수료</th></tr>
+    <tr><td>대여 7일 전까지</td><td class="amt">무료</td></tr>
+    <tr><td>대여 6~3일 전</td><td class="amt">기본 요금의 20%</td></tr>
+    <tr><td>대여 2~1일 전</td><td class="amt">기본 요금의 30%</td></tr>
+    <tr><td>대여 당일 이후・무연락 미사용</td><td class="amt">기본 요금의 50%</td></tr></table>
+  <div class="note">※ 항공편 결항으로 이용하지 못하는 경우, 결항 증명서 제시로 취소 수수료가 무료입니다.</div>
+  <div class="art">취소 방법</div>
+  <p>취소는 <b>마이페이지의 「취소 요청」</b>으로 접수합니다.</p>
+  <ol><li>(1) 마이페이지(예약 번호＋등록 이메일로 로그인)에서 「취소 요청」을 전송.</li><li>(2) 이 시점에서는 아직 확정되지 않습니다. 운영진이 내용(환불 여부・취소 수수료)을 확인합니다.</li><li>(3) 확인 후 취소를 확정하고, 환불이 있는 경우 처리해 드립니다.</li></ol>
+  <p>급하시거나 온라인으로 진행할 수 없는 경우 공식 LINE으로 연락 주세요.</p>
+  <div class="art">환불에 대하여</div>
+  <p>환불은 결제하신 수단(신용카드)으로 환불됩니다. 카드사 처리에 따라 환불 반영까지 시간이 걸릴 수 있습니다.</p>
+  <div class="art">예약 내용 변경에 대하여</div>
+  <p>취소가 아닌 내용 변경을 원하시는 경우:</p>
+  <ol><li>(1) <b>배달(대여) 시간・장소</b>: 마이페이지에서 <b>출발 48시간 전까지</b> 변경 요청 가능 (승인 후 반영). 마감 후에는 공식 LINE으로.</li><li>(2) <b>회수(반납) 시간・장소</b>: 마이페이지에서 <b>반납 2시간 전까지</b> 변경 요청 가능 (승인 후 반영). 마감 후에는 공식 LINE으로.</li><li>(3) <b>옵션・보상</b>: 공식 LINE에서 접수 (대여 전날 19:00까지・※사전 결제제).</li><li>(4) <b>일정・차종</b>: 요금이 변경되므로 원칙적으로 취소 후 재예약이 됩니다.</li></ol>
+  <div class="note">운영 대응 시간: 9:00~19:00. 시간 외 연락은 다음 영업시간에 대응합니다.</div>
+  <a class="cta" href="./">🚗 렌터카 예약하기</a>
+</div></div>
+</div>
+
+<script>
+(function(){
+  var KEY='kd_lang', LS=['ja','en','zh','ko'];
+  var T={ja:'キャンセルポリシー｜KEYDROP',en:'Cancellation Policy｜KEYDROP',zh:'取消政策｜KEYDROP',ko:'취소 정책｜KEYDROP'};
+  function detect(){try{var s=localStorage.getItem(KEY);if(s&&LS.indexOf(s)>=0)return s;}catch(e){}var n=(navigator.language||'ja').toLowerCase();return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja';}
+  function apply(l){if(LS.indexOf(l)<0)l='ja';document.documentElement.lang=l;document.title=T[l]||T.ja;document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-lang')===l);});document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});try{localStorage.setItem(KEY,l);}catch(e){}}
+  document.querySelectorAll('#langsw button').forEach(function(b){b.onclick=function(){apply(b.getAttribute('data-l'));};});
+  apply(detect());
+})();
+</script>
 </body>
 </html>
