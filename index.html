@@ -980,12 +980,8 @@
             @keyframes kdgPulse{0%,100%{opacity:.3;box-shadow:0 0 8px 1px rgba(250,190,0,.3);}50%{opacity:1;box-shadow:0 0 22px 7px rgba(250,190,0,.85);}}
             @keyframes kdgRipple{0%{width:10px;height:10px;opacity:1;}100%{width:130px;height:130px;opacity:0;}}
             @keyframes kdgGo{0%{opacity:0;transform:translate(-50%,-30%);}100%{opacity:1;transform:translate(-50%,-60%);}}
-            @media (max-width:768px){
-              /* SP: 画像を画面高にフィット＝縦スクロール/バウンドを止める。
-                 親stageも画像幅に合わせて縮める（枠はstage基準なので画像幅と一致させないとズレる） */
-              .kdg-stage{width:auto;max-width:100vw;max-height:100dvh;}
-              .kdg-hero{display:block;width:auto;height:auto;max-width:100vw;max-height:100dvh;}
-            }
+            /* SP: 画像は横幅100%で端まで表示（両端を切らない）。縦の“動きすぎ”はバウンド停止(overscroll-behavior:none)で抑制。
+               stage=画像=幅100%なので点滅枠(stage基準%)は画像にぴったり一致する。 */
             `;
             document.head.appendChild(st);
         }
