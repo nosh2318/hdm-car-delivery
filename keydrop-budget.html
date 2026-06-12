@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>KEYDROP 地図API 予算モニター</title>
+<style>
+  :root{ --g:#16a34a; --y:#f59e0b; --o:#ea580c; --r:#dc2626; --ink:#1f2937; --mut:#6b7280; --line:#e5e7eb; }
+  *{box-sizing:border-box} body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN",system-ui,sans-serif;background:#f6f7f9;color:var(--ink);padding:16px;max-width:760px;margin:0 auto}
+  h1{font-size:18px;margin:4px 0 2px} .sub{color:var(--mut);font-size:12px;margin-bottom:14px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .big{font-size:30px;font-weight:800;line-height:1.1} .lbl{font-size:12px;color:var(--mut);font-weight:700}
+  .row{display:flex;gap:12px;flex-wrap:wrap} .row>.card{flex:1;min-width:150px;margin-bottom:0}
+  .bar{height:14px;border-radius:8px;background:#eef0f2;overflow:hidden;margin-top:8px}
+  .bar>i{display:block;height:100%;border-radius:8px;transition:width .4s}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800;color:#fff}
+  table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right} th:first-child,td:first-child{text-align:left}
+  .note{font-size:11px;color:var(--mut);line-height:1.6;margin-top:6px}
+  .err{color:var(--r);font-size:13px}
+  .ref{background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+  <h1>📊 KEYDROP 地図API 予算モニター</h1>
+  <div class="sub">Google Maps の「地図を開いた回数」と推定コストを監視（自前カウンター・全店合算）。<button class="ref" onclick="load()">↻ 更新</button></div>
+
+  <div class="row">
+    <div class="card"><div class="lbl">当月 地図起動</div><div class="big" id="loads">—</div><div class="note" id="loadsBy"></div></div>
+    <div class="card"><div class="lbl">推定コスト / 予算</div><div class="big" id="cost">—</div><div class="note" id="budgetTxt"></div></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span class="lbl">無料枠の消費（Google 月10,000回まで¥0）</span>
+      <span class="pill" id="freePill" style="background:var(--g)">—</span>
+    </div>
+    <div class="bar"><i id="freeBar" style="width:0;background:var(--g)"></i></div>
+    <div class="note" id="freeTxt"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span class="lbl">予算の消費（¥<span id="budgetYen">10,000</span>/月）</span>
+      <span class="pill" id="budgetPill" style="background:var(--g)">—</span>
+    </div>
+    <div class="bar"><i id="budgetBar" style="width:0;background:var(--g)"></i></div>
+    <div class="note" id="projTxt"></div>
+  </div>
+
+  <div class="card">
+    <div class="lbl" style="margin-bottom:8px">月別 推移</div>
+    <table><thead><tr><th>月</th><th>札幌</th><th>那覇</th><th>合計</th><th>推定コスト</th></tr></thead>
+    <tbody id="hist"><tr><td colspan="5" style="text-align:center;color:#9ca3af">読込中…</td></tr></tbody></table>
+  </div>
+
+  <div class="card" style="background:#fafbfc">
+    <div class="lbl">仕組み</div>
+    <div class="note">
+      ・地図を1回開くたびに +1 カウント（Googleの「map load」課金単位とほぼ同じ）。<br>
+      ・<b>無料枠＝月10,000回まで¥0</b>。超えた分だけ 1,000回ごとに約¥1,050（$7・概算）。<br>
+      ・閾値（無料80%/超過/予算50%・80%・100%）で <b>Slackに自動通知</b>（keydrop-budget-watch・日次）。<br>
+      ・<b>これは"知らせる"監視</b>。地図は止まりません。確実な上限はGoogle Cloud側のクォータ上限で別途設定。<br>
+      ・単価/予算は <code>keydrop_budget</code> テーブルで変更可。
+    </div>
+    <div class="err" id="err"></div>
+  </div>
+
+<script>
+const SB='https://ckrxttbnawkclshczsia.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+const H={apikey:KEY,Authorization:'Bearer '+KEY};
+const yen=n=>'¥'+Math.round(n).toLocaleString('ja-JP');
+const ymNow=()=>{const d=new Date(Date.now()+9*3600e3);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');};
+function colorFor(p){return p>=100?'var(--r)':p>=80?'var(--o)':p>=50?'var(--y)':'var(--g)';}
+
+async function sbGet(path){const r=await fetch(SB+'/rest/v1/'+path,{headers:H});if(!r.ok)throw new Error(await r.text());return r.json();}
+
+async function load(){
+  document.getElementById('err').textContent='';
+  let cfg={monthly_budget_yen:10000,free_loads:10000,yen_per_1000:1050};
+  try{
+    const c=await sbGet('public_kd_budget_v?select=*');
+    if(c&&c[0])cfg=c[0];
+  }catch(e){/* 設定ビュー未作成でも既定で動く */}
+  const budget=+cfg.monthly_budget_yen||10000, free=+cfg.free_loads||10000, per=+cfg.yen_per_1000||1050;
+  document.getElementById('budgetYen').textContent=budget.toLocaleString();
+
+  let rows=[];
+  try{ rows=await sbGet('public_kd_map_usage_v?select=ym,store,loads&order=ym.desc'); }
+  catch(e){ document.getElementById('err').textContent='データ取得に失敗（テーブル未作成かも）: '+e.message; }
+
+  // 月集計
+  const byYm={};
+  for(const r of rows){ (byYm[r.ym]=byYm[r.ym]||{spk:0,nha:0})[r.store==='nha'?'nha':'spk']+= +r.loads||0; }
+  const cur=ymNow(); const c=byYm[cur]||{spk:0,nha:0}; const loads=c.spk+c.nha;
+  const billable=Math.max(0,loads-free); const cost=billable/1000*per;
+  const budgetPct=budget>0?Math.round(cost/budget*100):0;
+  const freePct=free>0?Math.round(loads/free*100):0;
+
+  // 月末着地
+  const dN=new Date(Date.now()+9*3600e3); const day=dN.getUTCDate();
+  const dim=new Date(dN.getUTCFullYear(),dN.getUTCMonth()+1,0).getUTCDate();
+  const projLoads=day>0?Math.round(loads/day*dim):loads;
+  const projCost=Math.max(0,projLoads-free)/1000*per;
+
+  document.getElementById('loads').textContent=loads.toLocaleString()+'回';
+  document.getElementById('loadsBy').textContent='札幌 '+c.spk.toLocaleString()+' / 那覇 '+c.nha.toLocaleString();
+  document.getElementById('cost').textContent=yen(cost);
+  document.getElementById('budgetTxt').textContent='予算 '+yen(budget)+' に対して '+budgetPct+'%';
+
+  const fb=document.getElementById('freeBar'); fb.style.width=Math.min(100,freePct)+'%'; fb.style.background=colorFor(freePct);
+  const fp=document.getElementById('freePill'); fp.textContent=freePct+'%'; fp.style.background=colorFor(freePct);
+  document.getElementById('freeTxt').textContent=loads.toLocaleString()+' / '+free.toLocaleString()+'回'+(loads<free?'（残 '+(free-loads).toLocaleString()+'回・まだ¥0）':'（無料枠超過・課金中）');
+
+  const bb=document.getElementById('budgetBar'); bb.style.width=Math.min(100,budgetPct)+'%'; bb.style.background=colorFor(budgetPct);
+  const bp=document.getElementById('budgetPill'); bp.textContent=budgetPct+'%'; bp.style.background=colorFor(budgetPct);
+  document.getElementById('projTxt').textContent='月末着地予測: '+projLoads.toLocaleString()+'回 → 推定 '+yen(projCost)+(projCost>budget?'（⚠️予算超過ペース）':'');
+
+  // 履歴
+  const yms=Object.keys(byYm).sort().reverse().slice(0,12);
+  document.getElementById('hist').innerHTML = yms.length? yms.map(y=>{
+    const v=byYm[y], t=v.spk+v.nha, cst=Math.max(0,t-free)/1000*per;
+    return '<tr><td>'+y+'</td><td>'+v.spk.toLocaleString()+'</td><td>'+v.nha.toLocaleString()+'</td><td><b>'+t.toLocaleString()+'</b></td><td>'+yen(cst)+'</td></tr>';
+  }).join('') : '<tr><td colspan="5" style="text-align:center;color:#9ca3af">まだ計測データがありません（Google移行＝カウンター配線後に表示）</td></tr>';
+}
+load();
+</script>
+</body>
+</html>
