@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1a1a1a">
-<title>ご利用方法｜KEYDROP 札幌カーデリバリー</title>
+<title>ご利用方法｜KEYDROP カーデリバリー</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans',sans-serif;background:#f5f6f8;color:#1a1a1a;line-height:1.7;padding-bottom:60px}
@@ -14,7 +14,11 @@
   .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
   .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
   .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
-  .hd .back{margin-left:auto;font-size:12px;color:#FABE00;text-decoration:none;font-weight:700}
+  .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:10px;flex:none}
+  .langsw{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .langsw button{font-size:11px;font-weight:800;color:#ccc;background:transparent;border:1px solid #555;border-radius:999px;padding:4px 9px;cursor:pointer}
+  .langsw button.active{color:#1a1a1a;background:#FABE00;border-color:#FABE00}
+  .pane{display:none}.pane.on{display:block}
   .hero{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:#fff;padding:30px 20px 26px;text-align:center}
   .hero h1{font-size:22px;font-weight:900;margin-bottom:6px}
   .hero h1 .y{color:#FABE00}
@@ -37,10 +41,9 @@
   .linebox .lid{font-size:12px;opacity:.92}
   .info{background:#1a1a1a;color:#fff;border-radius:14px;padding:20px 18px;margin-top:8px}
   .info h2{font-size:16px;font-weight:900;margin-bottom:4px}.info h2 .y{color:#FABE00}
-  .info .sub{font-size:12px;color:#FABE00;font-weight:700;margin-bottom:14px}
   .info .row{display:flex;gap:10px;font-size:13px;padding:7px 0;border-bottom:1px solid #333}
   .info .row:last-child{border-bottom:none}
-  .info .row .k{flex:none;width:78px;color:#9aa;font-weight:700}
+  .info .row .k{flex:none;width:108px;color:#9aa;font-weight:700}
   .info .row .v{color:#fff}
   .info .row .v a{color:#FABE00}
   .cta{display:block;text-align:center;background:#FABE00;color:#1a1a1a;font-weight:900;font-size:15px;padding:15px;border-radius:12px;text-decoration:none;margin-top:20px;box-shadow:0 3px 12px rgba(250,190,0,.4)}
@@ -49,82 +52,81 @@
 <body>
 <div class="hd">
   <a class="logo" href="./"><span class="mark"><i></i><i></i><i></i></span><b>KEY<span class="y">DROP</span></b></a>
-  <a class="back" href="./">← TOPへ</a>
+  <div class="langsw" id="langsw">
+    <button data-l="ja">日本語</button><button data-l="en">EN</button><button data-l="zh">繁中</button><button data-l="ko">한국어</button>
+  </div>
+  <a class="back" href="./">← TOP</a>
 </div>
 
-<div class="hero">
-  <h1>ご利用<span class="y">方法</span></h1>
-  <p>札幌カーデリバリーサービス KEYDROP のご利用の流れ</p>
-</div>
-
+<!-- ja -->
+<div class="pane" data-lang="ja">
+<div class="hero"><h1>ご利用<span class="y">方法</span></h1><p>カーデリバリーサービス KEYDROP のご利用の流れ</p></div>
 <div class="wrap">
   <div class="lead">KEYDROPは<b>無店舗型のデリバリー専門レンタカー</b>です。ご指定の場所まで車をお届け／ご返却場所まで回収にうかがいます。ご利用の流れを以下にご案内します。</div>
-
-  <div class="step">
-    <span class="num">STEP 1 ・ ご予約</span>
-    <h2>サイトでご予約</h2>
-    <p>画面の流れに沿って、ご予約を完了させてください。</p>
-    <ul>
-      <li>① <b>お届け</b>の日時・場所を指定</li>
-      <li>② <b>回収</b>の日時・場所を指定</li>
-      <li>③ <b>車両（クラス）</b>を選ぶ</li>
-      <li>④ <b>オプション</b>を選ぶ</li>
-      <li>⑤ <b>運転者情報</b>を入力</li>
-      <li>⑥ <b>貸渡約款</b>に同意</li>
-      <li>⑦ <b>事前決済</b>でお支払い</li>
-    </ul>
-  </div>
-
-  <div class="step">
-    <span class="num">STEP 2 ・ LINE登録</span>
-    <h2>公式LINE友だち登録</h2>
-    <p>ご連絡は基本的に<b>LINE</b>にて行います。<b>貸出3日前の19:00まで</b>に公式LINEの友だち登録をお願いします。</p>
-    <div class="linebox">
-      <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">📱 LINE公式アカウントを友だち追加</a>
-      <span class="lid">LINE ID：@149ahjll</span>
-    </div>
-    <p style="margin-top:10px;">登録後、ご予約いただいた<b>お名前・予約番号</b>を元に予約情報と照合いたします。</p>
-  </div>
-
-  <div class="step">
-    <span class="num">STEP 3 ・ 貸出（ご出発）</span>
-    <h2>車両をお届け</h2>
-    <p>事前にご指定の<b>時間・場所</b>へデリバリー（お届け）します。到着前後にLINEにて詳細の待ち合わせ場所をご連絡します。</p>
-    <ul>
-      <li><b>時間</b>：9:00〜19:00</li>
-      <li><b>エリア</b>：札幌市内かつ札幌駅を中心に20km圏内</li>
-    </ul>
-    <div class="warn">⚠️ 貸出時間・場所の変更は、貸出3日前の19:00までとなります。</div>
-  </div>
-
-  <div class="step">
-    <span class="num">STEP 4 ・ 受付</span>
-    <h2>免許証のご提示</h2>
-    <p>現地にて、運転される方<b>全員の免許証</b>をご提示ください。</p>
-  </div>
-
-  <div class="step">
-    <span class="num">STEP 5 ・ ご返却</span>
-    <h2>車両を回収</h2>
-    <p>事前にご指定の<b>時間・場所</b>へ回収にうかがいます。<b>燃料を満タンに給油</b>後、ご返却場所に到着しましたらLINEにてご一報ください。</p>
-    <ul>
-      <li><b>時間</b>：9:00〜19:00</li>
-      <li><b>エリア</b>：札幌市内かつ札幌駅を中心に20km圏内</li>
-    </ul>
-    <div class="warn">⚠️ 返却時間・場所の変更は、返却時刻の2時間前までとなります。</div>
-  </div>
-
-  <div class="info">
-    <h2>KEY<span class="y">DROP</span> 基本情報</h2>
-    
-    <div class="row"><span class="k">運営会社</span><span class="v">株式会社グローバルラインズ</span></div>
-    <div class="row"><span class="k">お問い合わせ</span><span class="v"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">公式LINE</a>（ID：@149ahjll）</span></div>
-    <div class="row"><span class="k">TEL</span><span class="v"><a href="tel:05017852711">050-1785-2711</a></span></div>
-    <div class="row"><span class="k">営業日</span><span class="v">年中無休</span></div>
-    <div class="row"><span class="k">営業時間</span><span class="v">9:00〜19:00</span></div>
-  </div>
-
+  <div class="step"><span class="num">STEP 1 ・ ご予約</span><h2>サイトでご予約</h2><p>画面の流れに沿って、ご予約を完了させてください。</p><ul><li>① <b>お届け</b>の日時・場所を指定</li><li>② <b>回収</b>の日時・場所を指定</li><li>③ <b>車両（クラス）</b>を選ぶ</li><li>④ <b>オプション</b>を選ぶ</li><li>⑤ <b>運転者情報</b>を入力</li><li>⑥ <b>貸渡約款</b>に同意</li><li>⑦ <b>事前決済</b>でお支払い</li></ul></div>
+  <div class="step"><span class="num">STEP 2 ・ LINE登録</span><h2>公式LINE友だち登録</h2><p>ご連絡は基本的に<b>LINE</b>にて行います。<b>貸出3日前の19:00まで</b>に公式LINEの友だち登録をお願いします。</p><div class="linebox"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">📱 LINE公式アカウントを友だち追加</a><span class="lid">LINE ID：@149ahjll</span></div><p style="margin-top:10px;">登録後、ご予約いただいた<b>お名前・予約番号</b>を元に予約情報と照合いたします。</p></div>
+  <div class="step"><span class="num">STEP 3 ・ 貸出（ご出発）</span><h2>車両をお届け</h2><p>事前にご指定の<b>時間・場所</b>へデリバリー（お届け）します。到着前後にLINEにて詳細の待ち合わせ場所をご連絡します。</p><ul><li><b>時間</b>：9:00〜19:00</li><li><b>エリア</b>：エリアごとの配達範囲内</li></ul><div class="warn">⚠️ 貸出時間・場所の変更は、貸出3日前の19:00までとなります。</div></div>
+  <div class="step"><span class="num">STEP 4 ・ 受付</span><h2>免許証のご提示</h2><p>現地にて、運転される方<b>全員の免許証</b>をご提示ください。</p></div>
+  <div class="step"><span class="num">STEP 5 ・ ご返却</span><h2>車両を回収</h2><p>事前にご指定の<b>時間・場所</b>へ回収にうかがいます。<b>燃料を満タンに給油</b>後、ご返却場所に到着しましたらLINEにてご一報ください。</p><ul><li><b>時間</b>：9:00〜19:00</li><li><b>エリア</b>：エリアごとの配達範囲内</li></ul><div class="warn">⚠️ 返却時間・場所の変更は、返却時刻の2時間前までとなります。</div></div>
+  <div class="info"><h2>KEY<span class="y">DROP</span> 基本情報</h2><div class="row"><span class="k">運営会社</span><span class="v">株式会社グローバルラインズ</span></div><div class="row"><span class="k">お問い合わせ</span><span class="v"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">公式LINE</a>（ID：@149ahjll）</span></div><div class="row"><span class="k">TEL</span><span class="v"><a href="tel:05017852711">050-1785-2711</a></span></div><div class="row"><span class="k">営業日</span><span class="v">年中無休</span></div><div class="row"><span class="k">営業時間</span><span class="v">9:00〜19:00</span></div></div>
   <a class="cta" href="./">🚗 レンタカーを予約する</a>
 </div>
+</div>
+
+<!-- en -->
+<div class="pane" data-lang="en">
+<div class="hero"><h1>How to <span class="y">Use</span></h1><p>How the KEYDROP car delivery service works</p></div>
+<div class="wrap">
+  <div class="lead">KEYDROP is a <b>storeless, delivery-only rental car service</b>. We deliver the car to your chosen location and pick it up at your chosen return spot. Here is how it works.</div>
+  <div class="step"><span class="num">STEP 1 ・ Booking</span><h2>Book on the website</h2><p>Follow the on-screen steps to complete your booking.</p><ul><li>① Set <b>delivery</b> date/time & place</li><li>② Set <b>return</b> date/time & place</li><li>③ Choose your <b>vehicle (class)</b></li><li>④ Choose <b>options</b></li><li>⑤ Enter <b>driver details</b></li><li>⑥ Agree to the <b>rental agreement</b></li><li>⑦ Pay by <b>prepayment</b></li></ul></div>
+  <div class="step"><span class="num">STEP 2 ・ LINE</span><h2>Add our Official LINE</h2><p>We mainly communicate via <b>LINE</b>. Please add our Official LINE <b>by 19:00, 3 days before pickup</b>.</p><div class="linebox"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">📱 Add our Official LINE account</a><span class="lid">LINE ID: @149ahjll</span></div><p style="margin-top:10px;">After adding, we match your booking using your <b>name and reservation number</b>.</p></div>
+  <div class="step"><span class="num">STEP 3 ・ Pickup (Departure)</span><h2>We deliver the car</h2><p>We deliver to your specified <b>time and place</b>. We'll contact you on LINE around arrival to confirm the exact meeting point.</p><ul><li><b>Hours</b>: 9:00–19:00</li><li><b>Area</b>: within each area's delivery range</li></ul><div class="warn">⚠️ Changes to pickup time/place are accepted up to 19:00, 3 days before pickup.</div></div>
+  <div class="step"><span class="num">STEP 4 ・ Check-in</span><h2>Show your license</h2><p>On site, please show the <b>driver's license of everyone who will drive</b>.</p></div>
+  <div class="step"><span class="num">STEP 5 ・ Return</span><h2>We collect the car</h2><p>We come to collect at your specified <b>time and place</b>. Please <b>refill the fuel tank</b>, and message us on LINE once you arrive at the return spot.</p><ul><li><b>Hours</b>: 9:00–19:00</li><li><b>Area</b>: within each area's delivery range</li></ul><div class="warn">⚠️ Changes to return time/place are accepted up to 2 hours before the return time.</div></div>
+  <div class="info"><h2>KEY<span class="y">DROP</span> Basic Info</h2><div class="row"><span class="k">Company</span><span class="v">Global Lines Inc.</span></div><div class="row"><span class="k">Contact</span><span class="v"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">Official LINE</a> (ID: @149ahjll)</span></div><div class="row"><span class="k">TEL</span><span class="v"><a href="tel:05017852711">050-1785-2711</a></span></div><div class="row"><span class="k">Open</span><span class="v">Year-round</span></div><div class="row"><span class="k">Hours</span><span class="v">9:00–19:00</span></div></div>
+  <a class="cta" href="./">🚗 Book a Rental Car</a>
+</div>
+</div>
+
+<!-- zh -->
+<div class="pane" data-lang="zh">
+<div class="hero"><h1>使用<span class="y">方法</span></h1><p>KEYDROP 汽車外送服務的使用流程</p></div>
+<div class="wrap">
+  <div class="lead">KEYDROP 是<b>無門市的外送專門租車服務</b>。我們將車送到您指定的地點，並於您指定的還車地點回收。以下為使用流程。</div>
+  <div class="step"><span class="num">STEP 1 ・ 預約</span><h2>於網站預約</h2><p>請依畫面流程完成預約。</p><ul><li>① 指定<b>送達</b>的日期時間・地點</li><li>② 指定<b>回收</b>的日期時間・地點</li><li>③ 選擇<b>車輛（車型）</b></li><li>④ 選擇<b>選項</b></li><li>⑤ 輸入<b>駕駛人資訊</b></li><li>⑥ 同意<b>租車條款</b></li><li>⑦ 以<b>事前付款</b>結帳</li></ul></div>
+  <div class="step"><span class="num">STEP 2 ・ LINE</span><h2>加入官方LINE好友</h2><p>聯絡主要透過<b>LINE</b>進行。請於<b>取車3天前19:00前</b>加入官方LINE好友。</p><div class="linebox"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">📱 加入官方LINE帳號好友</a><span class="lid">LINE ID：@149ahjll</span></div><p style="margin-top:10px;">加入後，我們將依您的<b>姓名・預約編號</b>核對預約資訊。</p></div>
+  <div class="step"><span class="num">STEP 3 ・ 取車（出發）</span><h2>送車</h2><p>我們將於您指定的<b>時間・地點</b>外送（送車）。抵達前後會透過LINE聯絡詳細的會合地點。</p><ul><li><b>時間</b>：9:00〜19:00</li><li><b>範圍</b>：各地區的外送範圍內</li></ul><div class="warn">⚠️ 取車時間・地點的變更受理至取車3天前19:00。</div></div>
+  <div class="step"><span class="num">STEP 4 ・ 報到</span><h2>出示駕照</h2><p>請於現場出示<b>所有駕駛人的駕照</b>。</p></div>
+  <div class="step"><span class="num">STEP 5 ・ 還車</span><h2>回收車輛</h2><p>我們將於您指定的<b>時間・地點</b>回收。請<b>加滿油料</b>後，抵達還車地點時以LINE通知我們。</p><ul><li><b>時間</b>：9:00〜19:00</li><li><b>範圍</b>：各地區的外送範圍內</li></ul><div class="warn">⚠️ 還車時間・地點的變更受理至還車時刻2小時前。</div></div>
+  <div class="info"><h2>KEY<span class="y">DROP</span> 基本資訊</h2><div class="row"><span class="k">營運公司</span><span class="v">Global Lines 株式會社</span></div><div class="row"><span class="k">聯絡方式</span><span class="v"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">官方LINE</a>（ID：@149ahjll）</span></div><div class="row"><span class="k">TEL</span><span class="v"><a href="tel:05017852711">050-1785-2711</a></span></div><div class="row"><span class="k">營業日</span><span class="v">全年無休</span></div><div class="row"><span class="k">營業時間</span><span class="v">9:00〜19:00</span></div></div>
+  <a class="cta" href="./">🚗 預約租車</a>
+</div>
+</div>
+
+<!-- ko -->
+<div class="pane" data-lang="ko">
+<div class="hero"><h1>이용 <span class="y">방법</span></h1><p>KEYDROP 카 딜리버리 서비스 이용 흐름</p></div>
+<div class="wrap">
+  <div class="lead">KEYDROP는 <b>무점포형 배달 전문 렌터카</b>입니다. 지정하신 장소로 차량을 배달하고 반납 장소로 회수하러 갑니다. 이용 흐름은 아래와 같습니다.</div>
+  <div class="step"><span class="num">STEP 1 ・ 예약</span><h2>사이트에서 예약</h2><p>화면 흐름에 따라 예약을 완료해 주세요.</p><ul><li>① <b>배달</b> 일시·장소 지정</li><li>② <b>회수</b> 일시·장소 지정</li><li>③ <b>차량(클래스)</b> 선택</li><li>④ <b>옵션</b> 선택</li><li>⑤ <b>운전자 정보</b> 입력</li><li>⑥ <b>대여 약관</b> 동의</li><li>⑦ <b>사전 결제</b>로 결제</li></ul></div>
+  <div class="step"><span class="num">STEP 2 ・ LINE</span><h2>공식 LINE 친구 추가</h2><p>연락은 기본적으로 <b>LINE</b>으로 진행합니다. <b>대여 3일 전 19:00까지</b> 공식 LINE 친구 추가를 부탁드립니다.</p><div class="linebox"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">📱 공식 LINE 계정 친구 추가</a><span class="lid">LINE ID: @149ahjll</span></div><p style="margin-top:10px;">추가 후, 예약하신 <b>이름·예약 번호</b>를 기준으로 예약 정보를 대조합니다.</p></div>
+  <div class="step"><span class="num">STEP 3 ・ 대여(출발)</span><h2>차량 배달</h2><p>사전에 지정하신 <b>시간·장소</b>로 배달합니다. 도착 전후에 LINE으로 자세한 만남 장소를 안내드립니다.</p><ul><li><b>시간</b>: 9:00~19:00</li><li><b>지역</b>: 각 지역의 배달 범위 내</li></ul><div class="warn">⚠️ 대여 시간·장소 변경은 대여 3일 전 19:00까지입니다.</div></div>
+  <div class="step"><span class="num">STEP 4 ・ 접수</span><h2>면허증 제시</h2><p>현장에서 운전하실 <b>모든 분의 면허증</b>을 제시해 주세요.</p></div>
+  <div class="step"><span class="num">STEP 5 ・ 반납</span><h2>차량 회수</h2><p>사전에 지정하신 <b>시간·장소</b>로 회수하러 갑니다. <b>연료를 가득 주유</b>한 뒤 반납 장소에 도착하시면 LINE으로 알려 주세요.</p><ul><li><b>시간</b>: 9:00~19:00</li><li><b>지역</b>: 각 지역의 배달 범위 내</li></ul><div class="warn">⚠️ 반납 시간·장소 변경은 반납 시각 2시간 전까지입니다.</div></div>
+  <div class="info"><h2>KEY<span class="y">DROP</span> 기본 정보</h2><div class="row"><span class="k">운영 회사</span><span class="v">주식회사 글로벌라인즈</span></div><div class="row"><span class="k">문의</span><span class="v"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">공식 LINE</a> (ID: @149ahjll)</span></div><div class="row"><span class="k">TEL</span><span class="v"><a href="tel:05017852711">050-1785-2711</a></span></div><div class="row"><span class="k">영업일</span><span class="v">연중무휴</span></div><div class="row"><span class="k">영업시간</span><span class="v">9:00~19:00</span></div></div>
+  <a class="cta" href="./">🚗 렌터카 예약하기</a>
+</div>
+</div>
+
+<script>
+(function(){
+  var KEY='kd_lang', LS=['ja','en','zh','ko'];
+  var T={ja:'ご利用方法｜KEYDROP',en:'How to Use｜KEYDROP',zh:'使用方法｜KEYDROP',ko:'이용 방법｜KEYDROP'};
+  function detect(){try{var s=localStorage.getItem(KEY);if(s&&LS.indexOf(s)>=0)return s;}catch(e){}var n=(navigator.language||'ja').toLowerCase();return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja';}
+  function apply(l){if(LS.indexOf(l)<0)l='ja';document.documentElement.lang=l;document.title=T[l]||T.ja;document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-lang')===l);});document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});try{localStorage.setItem(KEY,l);}catch(e){}}
+  document.querySelectorAll('#langsw button').forEach(function(b){b.onclick=function(){apply(b.getAttribute('data-l'));};});
+  apply(detect());
+})();
+</script>
 </body>
 </html>
