@@ -1613,7 +1613,7 @@
                     <div class="vc-icon ${type}">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name}" loading="lazy" decoding="async">` : (cls.icon || '🚗')}</div>
                     <div class="vc-body">
                         <div class="vc-class-tag ${type}">${clsName(type) || (type + t('classSuffix'))}</div>
-                        <div class="vc-name" title="${cls.vehicles}">${cls.vehicles}</div>
+                        <div class="vc-name" title="${locModel(cls.vehicles)}">${locModel(cls.vehicles)}</div>
                         <div class="vc-specs">
                             <span>👥 ${seats}${t('seats')}</span>
                             <span>🚗 ${availCount}${t('available')}</span>
@@ -2536,7 +2536,7 @@
                 <div class="confirm-vehicle-hero">
                     <div class="confirm-vehicle-icon">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${clsName(v.type) || (v.type + t('classSuffix'))}">` : (cls.icon || '🚗')}</div>
                     <div class="confirm-vehicle-name">${clsName(v.type) || (v.type + t('classSuffix'))}</div>
-                    <div class="confirm-vehicle-class">${cls.vehicles}</div>
+                    <div class="confirm-vehicle-class">${locModel(cls.vehicles)}</div>
                     <div style="margin-top:8px;display:inline-block;background:#f1f1f1;color:#444;font-size:12px;font-weight:700;padding:4px 11px;border-radius:14px;">🏢 ${t('providerLabel')}：${providerOf(v)}</div>
                     <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;font-size:11px;opacity:.8;">
                         <span>👥 ${v.seats || 5}${t('seats')}</span>
@@ -2951,7 +2951,7 @@
                     <div style="min-width:0;flex:1;">
                         <div style="font-size:11px;color:#999;font-weight:700;">${t('resVehClass')}</div>
                         <div style="font-size:15px;font-weight:800;color:#1a1a1a;">${(v?.type || state.selectedClass) ? (v?.type || state.selectedClass) + t('classSuffix') + (clsName(v?.type || state.selectedClass) ? '（' + clsName(v?.type || state.selectedClass) + '）' : '') : (cls.name || '')}</div>
-                        <div style="font-size:11px;color:#777;line-height:1.5;margin-top:1px;">${cls.vehicles || ''}</div>
+                        <div style="font-size:11px;color:#777;line-height:1.5;margin-top:1px;">${locModel(cls.vehicles || '')}</div>
                     </div>
                 </div>
                 <div style="background:#f9f9f9;border-radius:12px;padding:14px;text-align:left;margin-bottom:16px;font-size:12px;line-height:1.8;">
@@ -3658,7 +3658,7 @@
             <div class="mp-detail-section">
                 <div class="mp-detail-header">📋 ${t('mpResInfo')}</div>
                 <div class="mp-detail-body">
-                    ${cls.img ? `<div style="text-align:center;padding:4px 0 12px;margin-bottom:10px;border-bottom:1px solid #f3f3f3;"><img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || r.vehicle}" style="max-width:82%;max-height:130px;object-fit:contain;" loading="lazy"><div style="font-size:11px;color:#888;margin-top:4px;">${cls.vehicles || ''}</div></div>` : ''}
+                    ${cls.img ? `<div style="text-align:center;padding:4px 0 12px;margin-bottom:10px;border-bottom:1px solid #f3f3f3;"><img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || r.vehicle}" style="max-width:82%;max-height:130px;object-fit:contain;" loading="lazy"><div style="font-size:11px;color:#888;margin-top:4px;">${locModel(cls.vehicles || '')}</div></div>` : ''}
                     <div class="mp-detail-row"><span class="mp-detail-row-label">${t('mpBooker')}</span><span class="mp-detail-row-value">${r.name || '-'}${t('samaSuffix')}</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">${t('resNo')}</span><span class="mp-detail-row-value" style="font-weight:700;color:#1a1a1a;">${r.id}</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">${t('mpVehClass')}</span><span class="mp-detail-row-value">${r.vehicle ? r.vehicle + t('classSuffix') + (clsName(v?.type || state.selectedClass) ? '（' + clsName(v?.type || state.selectedClass) + '）' : '') : (cls.name || '-')}</span></div>
@@ -4860,6 +4860,9 @@
     function t(key) { return LANG[state.lang]?.[key] || LANG.ja[key] || key; }
     // 車両クラス名を選択言語で返す（cls_<type>）。無ければVEHICLE_CLASSESのJP名→type。
     function clsName(type) { if (!type) return ''; const L = LANG[state.lang] || {}; return L['cls_' + type] || LANG.ja['cls_' + type] || (VEHICLE_CLASSES[type] || {}).name || type; }
+    // 車種名（メーカー・モデル）を非日本語時に国際表記へ。座標/予約には無関係＝表示のみ。
+    const KD_MODEL_MAP = {'トヨタ':'Toyota','日産':'Nissan','三菱':'Mitsubishi','スズキ':'Suzuki','マツダ':'Mazda','ダイハツ':'Daihatsu','ホンダ':'Honda','アルファード':'Alphard','ヴェルファイア':'Vellfire','ベルファイア':'Vellfire','ノア':'Noah','ヴォクシー':'Voxy','セレナ':'Serena','エスクァイア':'Esquire','デリカD5':'Delica D5','デリカ':'Delica','ライズ':'Raize','ヤリスクロス':'Yaris Cross','ロッキー':'Rocky','ハリアー':'Harrier','アクア':'Aqua','ヴィッツ':'Vitz','ノート':'Note','プリウスα':'Prius α','プリウス':'Prius','ソリオ':'Solio','ルーミー':'Roomy','カローラフィールダー':'Corolla Fielder','アクセラ':'Axela','カローラ':'Corolla'};
+    function locModel(s) { if (!s || state.lang === 'ja') return s; Object.keys(KD_MODEL_MAP).sort(function(a,b){return b.length-a.length;}).forEach(function(k){ s = s.split(k).join(KD_MODEL_MAP[k]); }); return s; }
     // 配送ステータス／進捗ステップのラベルを選択言語で返す
     function dsLabel(st) { const L = LANG[state.lang] || {}; return L['st_' + st + '_l'] || LANG.ja['st_' + st + '_l'] || (DELIVERY_STATUSES[st] || {}).label || ''; }
     function dsSub(st) { const L = LANG[state.lang] || {}; return L['st_' + st + '_s'] || LANG.ja['st_' + st + '_s'] || (DELIVERY_STATUSES[st] || {}).sub || ''; }
