@@ -3466,7 +3466,7 @@
             </div>
             <div class="screen-header">
                 <button class="screen-header-back" onclick="${mypageState.view === 'detail' ? "mypageState.view='lookup'; render();" : "state.screen='top'; render();"}">←</button>
-                <span class="screen-header-title">マイページ</span>
+                <span class="screen-header-title">${t('mypageTitle')}</span>
             </div>
             <div class="mypage-screen screen-fade">
                 ${mypageState.view === 'detail' && mypageState.reservation
@@ -3487,12 +3487,12 @@
             html += `
                 <div style="text-align:center;padding:40px 0 20px;">
                     <div style="font-size:56px;margin-bottom:16px;">📭</div>
-                    <div style="font-size:18px;font-weight:800;color:#333;margin-bottom:8px;">予約が見つかりません</div>
+                    <div style="font-size:18px;font-weight:800;color:#333;margin-bottom:8px;">${t('noResFound')}</div>
                     <div style="font-size:13px;color:#888;margin-bottom:4px;">${mypageState.email}</div>
-                    <div style="font-size:12px;color:#999;line-height:1.6;margin-top:12px;">このメールアドレスに紐づく予約はありません。<br>予約時に入力したメールアドレスをご確認ください。</div>
+                    <div style="font-size:12px;color:#999;line-height:1.6;margin-top:12px;">${t('noResBody')}</div>
                 </div>
-                <button class="btn-primary" onclick="state.screen='top'; render();">レンタカーを予約する</button>
-                <button class="btn-secondary" style="margin-top:8px;" onclick="mypageState.reservations=null;mypageState.email='';render();">別のメールアドレスで検索</button>
+                <button class="btn-primary" onclick="state.screen='top'; render();">${t('bookRentalCar')}</button>
+                <button class="btn-secondary" style="margin-top:8px;" onclick="mypageState.reservations=null;mypageState.email='';render();">${t('searchAnotherEmail')}</button>
             `;
             return html;
         }
@@ -3502,10 +3502,10 @@
             html += `
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                     <div>
-                        <div style="font-size:16px;font-weight:800;color:#1a1a1a;">ご予約一覧</div>
+                        <div style="font-size:16px;font-weight:800;color:#1a1a1a;">${t('reservationList')}</div>
                         <div style="font-size:11px;color:#888;margin-top:2px;">${mypageState.email}</div>
                     </div>
-                    <div style="font-size:12px;color:#1a1a1a;font-weight:700;">${mypageState.reservations.length}件</div>
+                    <div style="font-size:12px;color:#1a1a1a;font-weight:700;">${mypageState.reservations.length}${t('countSuffix')}</div>
                 </div>
             `;
 
@@ -3514,7 +3514,7 @@
                 const status = getDeliveryStatus(r, fleet);
                 const ds = DELIVERY_STATUSES[status];
                 const cls = VEHICLE_CLASSES[r.vehicle] || {};
-                const vehicleName = cls.name || r.vehicle;
+                const vehicleName = clsName(r.vehicle) || r.vehicle;
 
                 html += `
                     <div class="mp-card" onclick="loadReservationDetail('${r.id}')">
@@ -3525,7 +3525,7 @@
                         </div>
                         <div class="mp-card-body">
                             <div class="mp-card-top">
-                                <div class="mp-card-vehicle">${vehicleName || (r.vehicle + 'クラス')}</div>
+                                <div class="mp-card-vehicle">${vehicleName || (r.vehicle + t('classSuffix'))}</div>
                                 ${r.price ? `<div class="mp-card-price">¥${Number(r.price).toLocaleString()}</div>` : ''}
                             </div>
                             <div class="mp-card-info">
@@ -3539,7 +3539,7 @@
                                 </div>
                             </div>
                             <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:6px;">
-                                <span style="font-size:11px;color:#1a1a1a;font-weight:600;">詳細を見る</span>
+                                <span style="font-size:11px;color:#1a1a1a;font-weight:600;">${t('viewDetail')}</span>
                                 <span class="mp-card-arrow">›</span>
                             </div>
                         </div>
@@ -3547,7 +3547,7 @@
                 `;
             }
 
-            html += `<button class="btn-secondary" style="margin-top:12px;" onclick="mypageState.reservations=null;mypageState.email='';render();">別のメールアドレスで検索</button>`;
+            html += `<button class="btn-secondary" style="margin-top:12px;" onclick="mypageState.reservations=null;mypageState.email='';render();">${t('searchAnotherEmail')}</button>`;
             return html;
         }
 
@@ -3559,28 +3559,28 @@
             </div>
             <div class="mypage-lookup">
                 <div class="form-group" style="margin-bottom:6px;">
-                    <label class="form-label">ご予約番号</label>
+                    <label class="form-label">${t('mpResNoLabel')}</label>
                     <input class="form-input" type="text" id="mypageResId" placeholder="KD-0000-0000" autocapitalize="characters" value="${savedResId}" oninput="document.getElementById('mypageSaveWrap').style.display=this.value.trim()?'flex':'none';" style="font-size:16px;">
                     <label id="mypageSaveWrap" style="display:${savedResId ? 'flex' : 'none'};align-items:center;gap:7px;margin-top:8px;cursor:pointer;font-size:12.5px;color:#444;user-select:none;">
                         <input type="checkbox" id="mypageSaveResId" ${savedResId ? 'checked' : ''} style="width:17px;height:17px;accent-color:#FABE00;flex:none;">
-                        <span>💾 この端末に予約番号を保存（次回入力不要）</span>
+                        <span>${t('saveResIdNote')}</span>
                     </label>
                 </div>
                 <div class="form-group" style="margin-bottom:14px;">
-                    <label class="form-label">ご予約時のメールアドレス</label>
+                    <label class="form-label">${t('bookingEmailLabel')}</label>
                     <input class="form-input" type="email" id="mypageEmail" placeholder="example@mail.com" value="${savedEmail}" style="font-size:16px;">
                 </div>
                 ${mypageState.error ? `<div style="color:#dc2626;font-size:12px;margin-bottom:8px;">${mypageState.error}</div>` : ''}
                 <button class="btn-primary" onclick="lookupMypage();" ${mypageState.loading ? 'disabled' : ''}>
-                    ${mypageState.loading ? '<span class="loading-spinner"></span>' : '予約を確認する'}
+                    ${mypageState.loading ? '<span class="loading-spinner"></span>' : t('checkReservation')}
                 </button>
-                <div style="font-size:11px;color:#999;margin-top:8px;line-height:1.6;text-align:center;">ご予約時にお送りした予約番号（KD-…）とメールアドレスでご確認いただけます</div>
-                <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;padding:11px;background:#06c755;color:#fff;border-radius:10px;font-size:13px;font-weight:800;text-decoration:none;">💬 予約番号がわからない場合は公式LINEへ</a>
+                <div style="font-size:11px;color:#999;margin-top:8px;line-height:1.6;text-align:center;">${t('lookupHint')}</div>
+                <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;padding:11px;background:#06c755;color:#fff;border-radius:10px;font-size:13px;font-weight:800;text-decoration:none;">${t('lineHelpResId')}</a>
             </div>
 
             <div style="text-align:center;margin-top:20px;">
-                <div style="font-size:12px;color:#999;">予約がない場合は</div>
-                <button style="background:none;border:none;font-size:13px;color:#1a1a1a;font-weight:600;cursor:pointer;margin-top:4px;" onclick="state.screen='top'; render();">レンタカーを予約する →</button>
+                <div style="font-size:12px;color:#999;">${t('noReservationQ')}</div>
+                <button style="background:none;border:none;font-size:13px;color:#1a1a1a;font-weight:600;cursor:pointer;margin-top:4px;" onclick="state.screen='top'; render();">${t('bookRentalCar')} →</button>
             </div>
         `;
 
@@ -4493,6 +4493,12 @@
             outOfAreaDefault: '配達エリア外です。エリア内の場所を選び直してください。',
             kv1: 'スマートに借りて、自由に走ろう。', kv2: '借りに行かず、届けてもらう時代へ。', kv3: '移動を、もっと自由に。', kv4: '家族の時間も、もっと自由に。',
             cls_A: 'プレミアム', cls_A2: 'プレミアム A2', cls_B: 'ミニバン', cls_B2: 'ミニバン B2', cls_C: 'コンパクトSUV', cls_D: 'ミニバン', cls_S: 'SUV', cls_F: 'コンパクト', cls_H: 'セダン',
+            mypageTitle: 'マイページ', noResFound: '予約が見つかりません', bookRentalCar: 'レンタカーを予約する', searchAnotherEmail: '別のメールアドレスで検索',
+            noResBody: 'このメールアドレスに紐づく予約はありません。<br>予約時に入力したメールアドレスをご確認ください。',
+            reservationList: 'ご予約一覧', countSuffix: '件', viewDetail: '詳細を見る', mpResNoLabel: 'ご予約番号', bookingEmailLabel: 'ご予約時のメールアドレス',
+            saveResIdNote: '💾 この端末に予約番号を保存（次回入力不要）', checkReservation: '予約を確認する',
+            lookupHint: 'ご予約時にお送りした予約番号（KD-…）とメールアドレスでご確認いただけます',
+            lineHelpResId: '💬 予約番号がわからない場合は公式LINEへ', noReservationQ: '予約がない場合は',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -4569,6 +4575,12 @@
             outOfAreaDefault: 'Outside the delivery area. Please choose a location within the area.',
             kv1: 'Rent smart. Drive free.', kv2: 'No pickup. Just delivery.', kv3: 'Go anywhere, anytime.', kv4: 'More freedom for family time.',
             cls_A: 'Premium', cls_A2: 'Premium A2', cls_B: 'Minivan', cls_B2: 'Minivan B2', cls_C: 'Compact SUV', cls_D: 'Minivan', cls_S: 'SUV', cls_F: 'Compact', cls_H: 'Sedan',
+            mypageTitle: 'My Page', noResFound: 'No reservations found', bookRentalCar: 'Book a rental car', searchAnotherEmail: 'Search with another email',
+            noResBody: 'There are no reservations linked to this email.<br>Please check the email you used when booking.',
+            reservationList: 'Your Reservations', countSuffix: ' booking(s)', viewDetail: 'View details', mpResNoLabel: 'Reservation Number', bookingEmailLabel: 'Email used for booking',
+            saveResIdNote: '💾 Save reservation number on this device (skip next time)', checkReservation: 'Check reservation',
+            lookupHint: 'Use the reservation number (KD-…) and email we sent you when booking.',
+            lineHelpResId: "💬 Don't know your reservation number? Contact us on LINE", noReservationQ: "Don't have a reservation?",
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
@@ -4645,6 +4657,12 @@
             outOfAreaDefault: '超出外送範圍，請重新選擇範圍內的地點。',
             kv1: '聰明租車，自由馳騁。', kv2: '不必取車，直接送達的時代。', kv3: '移動，更加自由。', kv4: '家庭時光，更加自由。',
             cls_A: '豪華', cls_A2: '豪華 A2', cls_B: '廂型車', cls_B2: '廂型車 B2', cls_C: '小型SUV', cls_D: '廂型車', cls_S: 'SUV', cls_F: '小型車', cls_H: '轎車',
+            mypageTitle: '我的頁面', noResFound: '找不到預約', bookRentalCar: '預約租車', searchAnotherEmail: '以其他電子郵件搜尋',
+            noResBody: '沒有與此電子郵件關聯的預約。<br>請確認您預約時輸入的電子郵件。',
+            reservationList: '預約一覽', countSuffix: '件', viewDetail: '查看詳情', mpResNoLabel: '預約編號', bookingEmailLabel: '預約時的電子郵件',
+            saveResIdNote: '💾 在此裝置儲存預約編號（下次免輸入）', checkReservation: '確認預約',
+            lookupHint: '可使用預約時寄送的預約編號（KD-…）與電子郵件查詢。',
+            lineHelpResId: '💬 不知道預約編號？請洽官方LINE', noReservationQ: '還沒有預約嗎？',
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
@@ -4721,6 +4739,12 @@
             outOfAreaDefault: '배달 지역 밖입니다. 지역 내 장소를 다시 선택해 주세요.',
             kv1: '스마트하게 빌려서 자유롭게 달리자.', kv2: '빌리러 가지 않고 받는 시대로.', kv3: '이동을 더 자유롭게.', kv4: '가족과의 시간도 더 자유롭게.',
             cls_A: '프리미엄', cls_A2: '프리미엄 A2', cls_B: '미니밴', cls_B2: '미니밴 B2', cls_C: '컴팩트 SUV', cls_D: '미니밴', cls_S: 'SUV', cls_F: '컴팩트', cls_H: '세단',
+            mypageTitle: '마이페이지', noResFound: '예약을 찾을 수 없습니다', bookRentalCar: '렌터카 예약하기', searchAnotherEmail: '다른 이메일로 검색',
+            noResBody: '이 이메일에 연결된 예약이 없습니다.<br>예약 시 입력한 이메일을 확인해 주세요.',
+            reservationList: '예약 목록', countSuffix: '건', viewDetail: '상세 보기', mpResNoLabel: '예약 번호', bookingEmailLabel: '예약 시 이메일 주소',
+            saveResIdNote: '💾 이 기기에 예약 번호 저장 (다음에 입력 불필요)', checkReservation: '예약 확인',
+            lookupHint: '예약 시 보내드린 예약 번호(KD-…)와 이메일로 확인하실 수 있습니다.',
+            lineHelpResId: '💬 예약 번호를 모르시나요? 공식 LINE으로', noReservationQ: '예약이 없으신가요?',
         },
     };
 
