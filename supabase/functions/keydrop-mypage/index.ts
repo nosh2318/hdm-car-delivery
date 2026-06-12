@@ -57,6 +57,27 @@ async function sbDelete(table: string, query: string): Promise<void> {
     headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
   });
 }
+// 那覇OPシート(nha_tasks)は札幌(tasks)と別構造：_id=t番号 / 予約番号で紐付け / 内容(DEL/COL)で識別 / 日本語列(時間・送迎場所・返却)。
+async function nhaPatchTasks(resId: string, del: any, col: any): Promise<void> {
+  const q = encodeURIComponent("予約番号") + "=eq." + encodeURIComponent(resId) + "&select=_id," + encodeURIComponent("内容");
+  const tasks = await sbGet("nha_tasks", q);
+  for (const t of tasks) {
+    const naiyou = String(t["内容"] || "");
+    const patch: Record<string, unknown> = {};
+    if (naiyou === "DEL") {
+      if (del?.time) patch["時間"] = del.time;
+      if (del?.place) patch["送迎場所"] = del.place;
+      if (col?.time) patch["返却"] = col.time; // DELタスクの返却参照
+    } else if (naiyou === "COL") {
+      if (col?.time) patch["時間"] = col.time;
+      if (col?.place) patch["送迎場所"] = col.place;
+    }
+    if (Object.keys(patch).length) await sbPatch("nha_tasks", "_id=eq." + encodeURIComponent(String(t._id)), patch);
+  }
+}
+async function nhaDeleteTasks(resId: string): Promise<void> {
+  await sbDelete("nha_tasks", encodeURIComponent("予約番号") + "=eq." + encodeURIComponent(resId));
+}
 async function sbPost(table: string, body: unknown): Promise<void> {
   const r = await fetch(`${SB_URL}/rest/v1/${table}`, {
     method: "POST",
@@ -88,9 +109,9 @@ async function notifySlack(text: string, channel?: string): Promise<void> {
 //   時刻PATCHのみ正本列名が違う(lend_time→start_time / return_time→end_time)ので lendTimeCol/returnTimeCol で切替。
 const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; lendTimeCol: string; returnTimeCol: string; slackEnv: string; slackDefault: string; sel: string }> = {
   spk: { resv: "reservations", fleet: "fleet", tasks: "tasks", lendTimeCol: "lend_time", returnTimeCol: "return_time", slackEnv: "SLACK_KEYDROP_CHANNEL", slackDefault: "C08TDTPEB36",
-    sel: "id,ota,vehicle,lend_date,return_date,lend_time,return_time,del_time,col_time,name,mail,tel,people,price,status,insurance,del_place,col_place,kd_status" },
+    sel: "id,ota,vehicle,lend_date,return_date,lend_time,return_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,kd_status" },
   nha: { resv: "nha_reservations", fleet: "nha_fleet", tasks: "nha_tasks", lendTimeCol: "start_time", returnTimeCol: "end_time", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA", slackDefault: "C06KZ56NTDF",
-    sel: "id,ota,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_time,col_time,name,mail,tel,people,price,status,insurance,del_place,col_place,kd_status" },
+    sel: "id,ota,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,kd_status" },
 };
 function resolveStore(p: any, resId: string) {
   const s = (p && p.store === "nha") || /^KDN-/i.test(resId) ? "nha" : "spk";
@@ -173,6 +194,7 @@ Deno.serve(async (req) => {
         lend_time: r.lend_time, return_time: r.return_time, del_time: r.del_time, col_time: r.col_time,
         name: r.name, people: r.people, price: r.price, status: r.status,
         insurance: r.insurance, del_place: r.del_place, col_place: r.col_place,
+        opt_b: r.opt_b || 0, opt_c: r.opt_c || 0, opt_j: r.opt_j || 0, opt_usb: r.opt_usb || 0,
         kd_status: r.kd_status || null,
         cancel_requested_at: pay[0]?.cancel_requested_at || null,
         cancel_reason: pay[0]?.cancel_reason || null,
@@ -195,7 +217,7 @@ Deno.serve(async (req) => {
     await sbDelete(M.fleet, `reservation_id=eq.${encodeURIComponent(resId)}`);
     // OPシートからタスク(d-/c-/w-)も除去。札幌tasks=reservation_id列 / 那覇nha_tasks=_idで削除。
     if (M.store === "nha") {
-      await sbDelete(M.tasks, `_id=in.(${["d-", "c-", "w-"].map((pf) => encodeURIComponent(pf + resId)).join(",")})`);
+      await nhaDeleteTasks(resId); // 那覇nha_tasksは予約番号紐付け(_id=t番号)
     } else {
       await sbDelete(M.tasks, `reservation_id=eq.${encodeURIComponent(resId)}`);
     }
@@ -240,6 +262,10 @@ Deno.serve(async (req) => {
     const okRes = await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}`, rPatch);
     if (!okRes) return json({ error: "変更の保存に失敗しました" }, 500, origin);
 
+    if (M.store === "nha") {
+      // 那覇：OPシート=nha_tasks（予約番号紐付け・日本語列・内容DEL/COL）を更新
+      await nhaPatchTasks(resId, { place: delPlace, time: lendTime }, { place: colPlace, time: returnTime });
+    } else {
     // 2) 既存タスク（OPシート・配車表のソース）も即時同期＋🔔変更マーカーをmemoに追記
     const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
     const changedLabels: string[] = [];
@@ -271,6 +297,7 @@ Deno.serve(async (req) => {
     if (colPlace !== null) colTaskPatch.place = colPlace;
     if (returnTime !== null) colTaskPatch.time = returnTime;
     if (Object.keys(colTaskPatch).length) await patchTask(`c-${resId}`, colTaskPatch);
+    }
 
     // 3) 運営へSlack通知（OPシート連動・任意env）
     const lines = [
@@ -312,6 +339,10 @@ Deno.serve(async (req) => {
     if (col?.time) apLabels.push("回収時間");
     if (col?.place) apLabels.push("回収場所");
     const marker = `✅変更済(${stamp}):${apLabels.join("・")}`;
+    if (M.store === "nha") {
+      // 那覇：OPシート=nha_tasks（予約番号紐付け・日本語列・内容DEL/COL）を反映
+      await nhaPatchTasks(resId, del, col);
+    } else {
     async function patchTask(taskId: string, patch: Record<string, unknown>) {
       const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(taskId)}&select=_id,memo,changed_json`);
       if (!cur[0]) return;
@@ -338,6 +369,7 @@ Deno.serve(async (req) => {
       if (!cu[0]) continue;
       const m2 = String(cu[0].memo || "");
       if (m2.includes("変更申請中")) await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(tid)}`, { memo: m2.replace(/🟡変更申請中\([^)]*\)/g, "").replace(/\s{2,}/g, " ").trim() });
+    }
     }
     await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: null, change_req_at: null });
     if (r.mail && String(r.mail).indexOf("@") > 0) {
