@@ -14,12 +14,17 @@
   .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
   .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
   .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
-  .hd .back{margin-left:auto;font-size:12px;color:#FABE00;text-decoration:none;font-weight:700}
+  .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:10px;flex:none}
+  .langsw{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .langsw button{font-size:11px;font-weight:800;color:#ccc;background:transparent;border:1px solid #555;border-radius:999px;padding:4px 9px;cursor:pointer}
+  .langsw button.active{color:#1a1a1a;background:#FABE00;border-color:#FABE00}
+  .pane{display:none}.pane.on{display:block}
   .hero{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:#fff;padding:28px 20px 24px;text-align:center}
   .hero h1{font-size:20px;font-weight:900}.hero h1 .y{color:#FABE00}
+  .refnote{max-width:780px;margin:12px auto 0;padding:0 16px;font-size:11.5px;color:#b45309;text-align:center;font-weight:700}
   .wrap{max-width:780px;margin:0 auto;padding:20px 16px}
   .doc{background:#fff;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.06);padding:22px 20px}
-  .doc .chap{font-size:15px;font-weight:900;color:#1a1a1a;margin:24px 0 10px;padding:7px 12px;background:#1a1a1a;color:#fff;border-radius:8px;display:inline-block}
+  .doc .chap{font-size:15px;font-weight:900;margin:24px 0 10px;padding:7px 12px;background:#1a1a1a;color:#fff;border-radius:8px;display:inline-block}
   .doc .chap.first{margin-top:0}
   .doc .art{font-size:14px;font-weight:900;margin:16px 0 6px;padding-left:10px;border-left:4px solid #FABE00}
   .doc p{font-size:13px;color:#333;margin-bottom:10px}
@@ -33,73 +38,160 @@
 <body>
 <div class="hd">
   <a class="logo" href="./"><span class="mark"><i></i><i></i><i></i></span><b>KEY<span class="y">DROP</span></b></a>
-  <a class="back" href="./">← TOPへ</a>
-</div>
-<div class="hero"><h1>貸渡<span class="y">約款</span></h1></div>
-
-<div class="wrap">
-  <div class="doc">
-    <div class="art">個人情報のお取り扱いについて</div>
-    <p class="pre">借受人（貸渡契約の申込をしようとする者を含みます。）及び運転者（以下各々「借受人」、「運転者」といいます。）は当社が下記の目的で借受人及び運転者の個人情報を利用することに同意するものとします。</p>
-    <ol>
-      <li>(1) 貸渡証作成等、レンタカーに関する基本通達（自旅第138号 平成7年6月13日、以下「基本通達」といいます。）に基づくレンタカー事業者の義務を履行するため。</li>
-      <li>(2) 借受人又は運転者の本人確認及び審査を行うため。</li>
-      <li>(3) 商品開発等又はお客様満足向上策等を目的として、借受人または運転手に対しアンケート調査実施するため。</li>
-      <li>(4) 個人情報を統計的に集計、分析し、個人を識別、特定できない形態に加工した統計データーを作成するため。</li>
-    </ol>
-    <p>貸出期間に通信型カーナビ及びドライブレコーダーから取得する情報（運行データー、属性情報等）を統計的にデータを集計、分析し個人を識別、特定できない形態に加工した統計データを第三者に提供することに同意するものとします。その際には当該第三者が当該加工データをお客様個人を特定できる状態に戻すことを禁止します。</p>
-
-    <div class="chap first">第1章 総則</div>
-    <div class="art">第1条（約款の適用）</div>
-    <p>当社は、この約款及び細則（以下、約款及び細則を「レンタルガイド記載事項」といいます。）を定めるところにより、貸渡自動車（以下「レンタカー」といいます。）を借受人に貸し渡すものとし、借受人はこれを借り受けるものとします。借受人は、第8条第5項により、借受人と異なる運転者を指定した場合はその運転者にこの約款の運転者に係る部分を周知し、遵守させるものとします。なお、この約款及び細則に定めのない事項については、法令又は一般の慣習によるものとします。</p>
-    <p>当社は、レンタルガイド記載事項、法令、行政通達及び一般の慣習に反しない範囲で特約に応ずることがあります。特約を締結した場合には、その特約がレンタルガイド記載事項に優先するものとします。</p>
-
-    <div class="chap">第2章 予約</div>
-    <div class="art">第2条（予約の申し込み）</div>
-    <p>借受人は、レンタカーを借りるにあたって、この約款、細則及び別に定める当社所定の料金表等に同意のうえ、当社所定の方法により、予め車種クラス、使用目的、借受開始日時、借受場所、借受期間、返還場所、運転者、チャイルドシート等の付属品の要否、その他借受条件（以下「借受条件」といいます。）を明示して予約の申込みを行うことができます。</p>
-    <p>当社は、借受人から予約の申込みがあったときは、第36条第1項の規定に基づき代理貸渡しを行う場合（同項の規定による代理貸渡しを受けた車両を代車として貸し渡す場合を含みます。）を除き、原則として、当社の保有するレンタカーの範囲内で予約に応ずるものとします。この場合は、借受人は、当社が特に認める場合を除き、当社所定の予約申込金を支払うものとします。</p>
-
-    <div class="art">第3条（予約の変更）</div>
-    <p>借受人は、前条第1項の借受条件を変更しようとするときは、あらかじめ当社の承諾を受けなければならないものとします。</p>
-
-    <div class="art">第4条（予約の取り消し等）</div>
-    <ol>
-      <li>借受人は、当社の承諾を得て予約を取消すことができます。</li>
-      <li>借受人が、借受人の都合により、予約した借受開始時刻を1時間以上経過してもレンタカー貸渡契約（以下「貸渡契約」といいます。）の締結手続きに着手しなかったときは、予約が取消されたものとします。</li>
-      <li>前2項の場合、借受人は、別に定めるところにより予約取消手数料を当社に支払うものとし、当社は、この予約手数料の支払いがあったときは、受領済の予約申込金を借受人に返還するものとします。</li>
-      <li>当社の都合により、予約が取り消されたとき、又は貸渡契約が締結されなかったときは、当社は、受領済みの予約申込金を借受人に返還するものとします。</li>
-      <li>事故、盗難、不返還、リコール、天災その他の借受人若しくは当社のいずれの責めにもよらない事由により貸渡契約が締結されなかったときは、予約は取消されたものとします。この場合、当社は受領済の予約申込金を返還するものとします。</li>
-    </ol>
-
-    <div class="art">第5条（代替レンタカー）</div>
-    <p>当社は、借受人から予約のあった車種クラスのレンタカーの貸渡ができないときは、予約と異なる条件のレンタカー（以下「代替レンタカー」といいます。）の貸渡しを申し入れることができるものとします。</p>
-    <p>借受人が前項の申入れを承諾したときは、当社は車種クラスを除き予約時と同一の借受条件で代替レンタカーを貸し渡すものとします。なお代替レンタカーの貸渡料金が予約された車種クラスの貸渡料金より高くなるときは、予約した車種クラスの貸渡料金によるものとし、予約された車種クラスの貸渡料金より低くなるときは、当該代替レンタカーの車種クラスの貸渡料金によるものとします。</p>
-    <p>借受人は、第1項の代替レンタカーの貸渡しの申入れを拒絶し、予約を取り消すことができるものとします。</p>
-    <p>前項の場合において貸渡しをすることができない原因が、当社の責めに帰すべき事由によるときには第4条第4項の予約の取消しとして取り扱い、当社は受領済の予約申込金を返還するものとします。</p>
-    <p>第3項の場合において、第1項の貸渡しをすることができない原因が事故、盗難、不返還、他の借受人によるレンタカーの返却遅延又は天災、その他当社の責めに帰さない事由によるときには、第4条第5項の予約の取消しとして取り扱い、当社は受領済の予約申込金を返還するものとします。</p>
-
-    <div class="art">第6条（免責）</div>
-    <p>当社及び借受人は、予約が取消され、又は貸渡契約が締結されなかったことについては、第4条及び5条に定める措置を除き、相互に何らの請求をしないものとします。</p>
-
-    <div class="art">第7条（予約業務の代行）</div>
-    <p>借受人は、当社に代わって予約業務を取り扱う旅行代理店、提携会社等（以下「代行業者」といいます。）において予約の申込みをすることができます。</p>
-    <p>代行業者に対して前項の申込みを行った借受人は、第3条及び第4条にかかわらず、その代行業者に対してのみ予約の変更又は取消しを申しこむことができるものとします。</p>
-
-    <div class="chap">第3章 貸渡し</div>
-    <div class="art">第8条（貸渡契約の締結）</div>
-    <p>借受人は第2条第1項に定める借受条件を明示し、当社はこの約款、細則、料金表等により貸渡条件を明示して、貸渡契約を締結するものとします。ただし、貸し渡すことができるレンタカーがない場合、又は借受人又は運転者が第9条第1項若しくは第2項各号のいずれかに該当する場合を除きます。</p>
-    <p>貸渡契約を締結した場合、借受人は当社に第11条第1項に定める貸渡料金を支払うものとします。なお、借受人は、割引券、代行業者が発行したクーポン券（以下「クーポン券」といいます。）等を使用する場合は、貸渡契約締結時にこれらを当社に提示又は提出しなければならないものとします。</p>
-    <p>借受人は、当社が設定する免責補償制度及び安心パックに加入する場合は、当社に申し出て貸渡契約締結時に当社所定の免責補償料及び安心パック料を支払うものとします。</p>
-    <p>借受人は、貸渡契約締結後は理由の如何を問わず前項の免責補償制度及び安心パックに加入することができないものとします。</p>
-    <p>借受人は、免責補償制度及び安心パックに加入したときは、貸渡契約締結後は理由の如何を問わず免責補償制度及び安心パックを脱退することができないものとします。</p>
-    <p>当社は、監督官庁のレンタカーに関する基本通達（注1）に基づき、貸渡簿（貸渡原票）及び第14条第1項に規定する貸渡証に運転者の氏名、住所、運転免許の種類及び運転免許証（注2）の番号を記載する義務を有し、又は運転者の運転免許証の写しを添付する必要性があるため、貸渡契約の締結にあたり、借受人に対し、借受人又は借受人の指定する運転者（以下「運転者」といいます。）の運転免許証の提示を求め、及びその写しの提出を求めます。この場合、借受人は、自己が運転者であるときは、自己の運転免許証を提示し、及びその写しを提出するものとし、借受人と運転者が異なるときは、運転者の運転免許証を提示し、及びその写しを提出するものとします。又同様に、貸渡車両がマイクロバスの場合、当社は上記に加え「運行区間又は行先」、「利用人数」及び「使用目的」の告知を求め、借受人及び運転者はこれに従います。</p>
-    <div class="note">（注1）監督官庁の基本通達とは、国土交通省自動車交通局長通達「レンタカーに関する基本通達」（自旅第138号 平成7年6月13日）の2.（10）及び（11）のことをいいます。<br>（注2）運転免許証とは、道路交通法第92条に規定する運転免許証のうち、道路交通法施行規則第19条別記様式第14の書式の運転免許証をいいます。また、道路交通法107条の2に規定する国際運転免許証又は外国運転免許証は、運転免許証に準じます。</div>
-    <p>当社は、貸渡契約の締結にあたり、借受人及び運転者に対し、運転免許証のほかに本人確認ができる書類の提出を求め、及び提出された書類の写しを求めることが出来、その求めがある場合は借受人及び運転者はこれに従うものとします。</p>
-    <p>当社は、貸渡契約の締結にあたり、借受期間中に借受人及び運転者と連絡する為の携帯電話番号等の告知を求めることが出来、その求めがある場合は、借受人及び運転者はこれに従うものとします。当社は、貸渡契約の締結にあたり、借受人に対し、クレジットカード若しくは現金による第2項の支払いを求め、又はその他の支払い方法を指定することができます。</p>
-
-    <div class="note" style="margin-top:18px;">本約款は株式会社グローバルラインズ（KEYDROP）が定める貸渡約款です。第9条以降の条文は別途定めるところによります。</div>
+  <div class="langsw" id="langsw">
+    <button data-l="ja">日本語</button><button data-l="en">EN</button><button data-l="zh">繁中</button><button data-l="ko">한국어</button>
   </div>
-  <a class="cta" href="./">🚗 レンタカーを予約する</a>
+  <a class="back" href="./">← TOP</a>
 </div>
+
+<!-- ja -->
+<div class="pane" data-lang="ja">
+<div class="hero"><h1>貸渡<span class="y">約款</span></h1></div>
+<div class="wrap"><div class="doc">
+  <div class="art">個人情報のお取り扱いについて</div>
+  <p class="pre">借受人（貸渡契約の申込をしようとする者を含みます。）及び運転者（以下各々「借受人」、「運転者」といいます。）は当社が下記の目的で借受人及び運転者の個人情報を利用することに同意するものとします。</p>
+  <ol><li>(1) 貸渡証作成等、レンタカーに関する基本通達（自旅第138号 平成7年6月13日、以下「基本通達」といいます。）に基づくレンタカー事業者の義務を履行するため。</li><li>(2) 借受人又は運転者の本人確認及び審査を行うため。</li><li>(3) 商品開発等又はお客様満足向上策等を目的として、借受人または運転手に対しアンケート調査実施するため。</li><li>(4) 個人情報を統計的に集計、分析し、個人を識別、特定できない形態に加工した統計データーを作成するため。</li></ol>
+  <p>貸出期間に通信型カーナビ及びドライブレコーダーから取得する情報（運行データー、属性情報等）を統計的にデータを集計、分析し個人を識別、特定できない形態に加工した統計データを第三者に提供することに同意するものとします。その際には当該第三者が当該加工データをお客様個人を特定できる状態に戻すことを禁止します。</p>
+  <div class="chap first">第1章 総則</div>
+  <div class="art">第1条（約款の適用）</div>
+  <p>当社は、この約款及び細則（以下、約款及び細則を「レンタルガイド記載事項」といいます。）を定めるところにより、貸渡自動車（以下「レンタカー」といいます。）を借受人に貸し渡すものとし、借受人はこれを借り受けるものとします。借受人は、第8条第5項により、借受人と異なる運転者を指定した場合はその運転者にこの約款の運転者に係る部分を周知し、遵守させるものとします。なお、この約款及び細則に定めのない事項については、法令又は一般の慣習によるものとします。</p>
+  <p>当社は、レンタルガイド記載事項、法令、行政通達及び一般の慣習に反しない範囲で特約に応ずることがあります。特約を締結した場合には、その特約がレンタルガイド記載事項に優先するものとします。</p>
+  <div class="chap">第2章 予約</div>
+  <div class="art">第2条（予約の申し込み）</div>
+  <p>借受人は、レンタカーを借りるにあたって、この約款、細則及び別に定める当社所定の料金表等に同意のうえ、当社所定の方法により、予め車種クラス、使用目的、借受開始日時、借受場所、借受期間、返還場所、運転者、チャイルドシート等の付属品の要否、その他借受条件（以下「借受条件」といいます。）を明示して予約の申込みを行うことができます。</p>
+  <p>当社は、借受人から予約の申込みがあったときは、第36条第1項の規定に基づき代理貸渡しを行う場合を除き、原則として、当社の保有するレンタカーの範囲内で予約に応ずるものとします。この場合は、借受人は、当社が特に認める場合を除き、当社所定の予約申込金を支払うものとします。</p>
+  <div class="art">第3条（予約の変更）</div>
+  <p>借受人は、前条第1項の借受条件を変更しようとするときは、あらかじめ当社の承諾を受けなければならないものとします。</p>
+  <div class="art">第4条（予約の取り消し等）</div>
+  <ol><li>借受人は、当社の承諾を得て予約を取消すことができます。</li><li>借受人が、借受人の都合により、予約した借受開始時刻を1時間以上経過してもレンタカー貸渡契約（以下「貸渡契約」といいます。）の締結手続きに着手しなかったときは、予約が取消されたものとします。</li><li>前2項の場合、借受人は、別に定めるところにより予約取消手数料を当社に支払うものとし、当社は、この予約手数料の支払いがあったときは、受領済の予約申込金を借受人に返還するものとします。</li><li>当社の都合により、予約が取り消されたとき、又は貸渡契約が締結されなかったときは、当社は、受領済みの予約申込金を借受人に返還するものとします。</li><li>事故、盗難、不返還、リコール、天災その他の借受人若しくは当社のいずれの責めにもよらない事由により貸渡契約が締結されなかったときは、予約は取消されたものとします。この場合、当社は受領済の予約申込金を返還するものとします。</li></ol>
+  <div class="art">第5条（代替レンタカー）</div>
+  <p>当社は、借受人から予約のあった車種クラスのレンタカーの貸渡ができないときは、予約と異なる条件のレンタカー（以下「代替レンタカー」といいます。）の貸渡しを申し入れることができるものとします。借受人が承諾したときは、車種クラスを除き予約時と同一の借受条件で代替レンタカーを貸し渡します。代替レンタカーの料金が予約クラスより高くなるときは予約クラスの料金、低くなるときは当該代替レンタカーの料金によります。借受人は申入れを拒絶し予約を取り消すことができます。</p>
+  <div class="art">第6条（免責）</div>
+  <p>当社及び借受人は、予約が取消され、又は貸渡契約が締結されなかったことについては、第4条及び5条に定める措置を除き、相互に何らの請求をしないものとします。</p>
+  <div class="art">第7条（予約業務の代行）</div>
+  <p>借受人は、当社に代わって予約業務を取り扱う旅行代理店、提携会社等（以下「代行業者」といいます。）において予約の申込みをすることができます。代行業者に対して申込みを行った借受人は、第3条及び第4条にかかわらず、その代行業者に対してのみ予約の変更又は取消しを申しこむことができます。</p>
+  <div class="chap">第3章 貸渡し</div>
+  <div class="art">第8条（貸渡契約の締結）</div>
+  <p>借受人は第2条第1項に定める借受条件を明示し、当社はこの約款、細則、料金表等により貸渡条件を明示して、貸渡契約を締結するものとします。貸渡契約を締結した場合、借受人は当社に貸渡料金を支払うものとします。借受人は免責補償制度及び安心パックに加入する場合、貸渡契約締結時に当社所定の料金を支払うものとし、締結後は理由の如何を問わず加入・脱退することができないものとします。</p>
+  <p>当社は、レンタカーに関する基本通達に基づき、貸渡簿及び貸渡証に運転者の氏名、住所、運転免許の種類及び運転免許証の番号を記載する義務を有するため、貸渡契約の締結にあたり、借受人又は運転者の運転免許証の提示及びその写しの提出を求めます。当社は本人確認書類、連絡先（携帯電話番号等）の告知、及びクレジットカード又は現金等による支払いを求めることができ、借受人及び運転者はこれに従うものとします。</p>
+  <div class="note" style="margin-top:18px;">本約款は株式会社グローバルラインズ（KEYDROP）が定める貸渡約款です。第9条以降の条文は別途定めるところによります。</div>
+</div><a class="cta" href="./">🚗 レンタカーを予約する</a></div>
+</div>
+
+<!-- en -->
+<div class="pane" data-lang="en">
+<div class="hero"><h1>Rental <span class="y">Agreement</span></h1></div>
+<div class="refnote">※ Reference translation. The Japanese version is the legally binding original.</div>
+<div class="wrap"><div class="doc">
+  <div class="art">Handling of Personal Information</div>
+  <p class="pre">The renter (including a person intending to apply for a rental contract) and the driver (hereinafter the "renter" and the "driver") consent to our use of their personal information for the following purposes.</p>
+  <ol><li>(1) To fulfill the obligations of a rental car operator under the basic directive on rental cars (Ji-Ryo No. 138, June 13, 1995; the "Basic Directive"), such as preparing rental certificates.</li><li>(2) To verify the identity of, and screen, the renter or driver.</li><li>(3) To conduct surveys of the renter or driver for product development or customer-satisfaction measures.</li><li>(4) To statistically aggregate and analyze personal information and create statistical data processed into a form that cannot identify individuals.</li></ol>
+  <p>You consent to our statistically aggregating and analyzing information obtained during the rental period from connected car navigation and drive recorders (driving data, attribute information, etc.), and providing to third parties statistical data processed so individuals cannot be identified. In such cases, the third party is prohibited from restoring the processed data to a state that can identify a customer.</p>
+  <div class="chap first">Chapter 1 General Provisions</div>
+  <div class="art">Article 1 (Application of the Agreement)</div>
+  <p>We rent out a rental vehicle (the "rental car") to the renter as set out in this agreement and its bylaws (collectively, the "Rental Guide Items"), and the renter rents it. Where the renter designates a driver other than themselves under Article 8(5), the renter shall make the driver aware of, and comply with, the parts of this agreement concerning the driver. Matters not provided for in this agreement and bylaws shall follow laws or general custom.</p>
+  <p>We may accept special agreements to the extent they do not conflict with the Rental Guide Items, laws, administrative directives, or general custom. Where a special agreement is concluded, it shall take precedence over the Rental Guide Items.</p>
+  <div class="chap">Chapter 2 Reservation</div>
+  <div class="art">Article 2 (Reservation Application)</div>
+  <p>To rent a car, the renter may apply for a reservation by our prescribed method, agreeing to this agreement, bylaws, and our separately defined fee schedule, and clearly stating in advance the vehicle class, purpose of use, rental start date/time, rental location, rental period, return location, driver, the need for accessories such as child seats, and other rental conditions (the "rental conditions").</p>
+  <p>Upon a reservation application, except where agency rental is performed under Article 36(1), we will in principle accept the reservation within the range of our available rental cars. In that case, the renter shall pay our prescribed reservation deposit unless we specifically provide otherwise.</p>
+  <div class="art">Article 3 (Change of Reservation)</div>
+  <p>When the renter intends to change the rental conditions under the preceding article, they must obtain our prior consent.</p>
+  <div class="art">Article 4 (Cancellation of Reservation, etc.)</div>
+  <ol><li>The renter may cancel a reservation with our consent.</li><li>If, for the renter's own reasons, the renter does not commence procedures to conclude the rental contract within one hour after the reserved rental start time, the reservation shall be deemed cancelled.</li><li>In the above cases, the renter shall pay us a reservation cancellation fee as separately provided, and upon such payment we shall return any received reservation deposit.</li><li>If the reservation is cancelled for our reasons, or the rental contract is not concluded, we shall return any received reservation deposit.</li><li>If the rental contract is not concluded due to accident, theft, non-return, recall, natural disaster, or other causes not attributable to either the renter or us, the reservation shall be deemed cancelled, and we shall return any received reservation deposit.</li></ol>
+  <div class="art">Article 5 (Substitute Rental Car)</div>
+  <p>If we cannot rent out a rental car of the class reserved by the renter, we may offer a rental car with conditions different from the reservation (the "substitute rental car"). If the renter accepts, we rent out the substitute under the same rental conditions as at reservation, except for the vehicle class. If the substitute's fee is higher than the reserved class, the reserved class fee applies; if lower, the substitute's fee applies. The renter may decline the offer and cancel the reservation.</p>
+  <div class="art">Article 6 (Exemption)</div>
+  <p>Regarding a cancelled reservation or a rental contract that was not concluded, we and the renter shall make no claims against each other, except for the measures set out in Articles 4 and 5.</p>
+  <div class="art">Article 7 (Agency for Reservation Operations)</div>
+  <p>The renter may apply for a reservation at a travel agency or partner company handling reservation operations on our behalf (an "agent"). A renter who applied to an agent may, notwithstanding Articles 3 and 4, apply to change or cancel the reservation only to that agent.</p>
+  <div class="chap">Chapter 3 Rental</div>
+  <div class="art">Article 8 (Conclusion of the Rental Contract)</div>
+  <p>The renter states the rental conditions under Article 2(1), and we state the rental terms per this agreement, bylaws, and fee schedule, and the rental contract is concluded. Upon conclusion, the renter shall pay us the rental fee. If the renter joins the collision damage waiver or the "peace-of-mind pack," they shall pay our prescribed fee at conclusion; after conclusion, they may not join or withdraw for any reason.</p>
+  <p>Under the Basic Directive on rental cars, we are obliged to record the driver's name, address, license type, and license number in the rental register and rental certificate; therefore, at conclusion we require presentation of, and submission of a copy of, the renter's or driver's license. We may require identity-verification documents, contact details (e.g., mobile number), and payment by credit card or cash, and the renter and driver shall comply.</p>
+  <div class="note" style="margin-top:18px;">This is the rental agreement established by Global Lines Co.,Ltd. (KEYDROP). Articles from Article 9 onward are as separately provided.</div>
+</div><a class="cta" href="./">🚗 Book a Rental Car</a></div>
+</div>
+
+<!-- zh -->
+<div class="pane" data-lang="zh">
+<div class="hero"><h1>租車<span class="y">條款</span></h1></div>
+<div class="refnote">※ 參考翻譯。具法律效力之正本以日文版為準。</div>
+<div class="wrap"><div class="doc">
+  <div class="art">關於個人資料的處理</div>
+  <p class="pre">承租人（含意圖申請租賃契約者）及駕駛人（以下分別稱「承租人」「駕駛人」）同意本公司基於下列目的利用其個人資料。</p>
+  <ol><li>(1) 為履行依租車基本通達（自旅第138號 平成7年6月13日，以下稱「基本通達」）所定租車業者之義務，如製作租賃證等。</li><li>(2) 為進行承租人或駕駛人之本人確認及審查。</li><li>(3) 為商品開發或提升客戶滿意度等目的，對承租人或駕駛人實施問卷調查。</li><li>(4) 為將個人資料統計彙整・分析，製作加工為無法識別・特定個人之統計資料。</li></ol>
+  <p>承租人同意本公司將租賃期間自連網型車載導航及行車紀錄器取得之資訊（行駛資料、屬性資訊等）統計彙整・分析，並將加工為無法識別個人之統計資料提供予第三方。屆時禁止該第三方將加工資料還原為可識別客戶個人之狀態。</p>
+  <div class="chap first">第1章 總則</div>
+  <div class="art">第1條（條款之適用）</div>
+  <p>本公司依本條款及細則（以下將條款及細則合稱「租賃指南記載事項」）所定，將租賃車輛（以下稱「租車」）出租予承租人，承租人承租之。承租人依第8條第5項指定本人以外之駕駛人時，應使該駕駛人知悉並遵守本條款中與駕駛人相關之部分。本條款及細則未規定之事項，依法令或一般慣例。</p>
+  <p>本公司於不違反租賃指南記載事項、法令、行政通達及一般慣例之範圍內，得接受特約。締結特約時，該特約優先於租賃指南記載事項。</p>
+  <div class="chap">第2章 預約</div>
+  <div class="art">第2條（預約之申請）</div>
+  <p>承租人租車時，於同意本條款、細則及本公司另定之費用表後，依本公司所定方式，預先明示車型、使用目的、起租日期時間、起租地點、租期、返還地點、駕駛人、兒童座椅等附屬品之需求及其他租賃條件（以下稱「租賃條件」），提出預約申請。</p>
+  <p>本公司於收到預約申請時，除依第36條第1項進行代理出租之情形外，原則上於本公司持有之租車範圍內接受預約。此時，除本公司另有認可外，承租人應支付本公司所定之預約申請金。</p>
+  <div class="art">第3條（預約之變更）</div>
+  <p>承租人欲變更前條第1項之租賃條件時，須事先取得本公司同意。</p>
+  <div class="art">第4條（預約之取消等）</div>
+  <ol><li>承租人經本公司同意得取消預約。</li><li>承租人因己方原因，逾預約起租時刻1小時以上仍未著手締結租賃契約程序時，視為預約已取消。</li><li>前2項情形，承租人應依另定支付預約取消手續費，本公司於收到該手續費後，將已收之預約申請金返還承租人。</li><li>因本公司原因取消預約或未締結租賃契約時，本公司將已收之預約申請金返還承租人。</li><li>因事故、竊盜、未返還、召回、天災或其他非可歸責於承租人或本公司之事由致未締結租賃契約時，視為預約取消，本公司返還已收之預約申請金。</li></ol>
+  <div class="art">第5條（替代租車）</div>
+  <p>本公司無法出租承租人預約車型之租車時，得提議出租條件不同之租車（以下稱「替代租車」）。承租人承諾時，除車型外以與預約相同之租賃條件出租替代租車。替代租車費用較預約車型高時依預約車型費用，較低時依該替代租車費用。承租人得拒絕該提議並取消預約。</p>
+  <div class="art">第6條（免責）</div>
+  <p>就預約取消或未締結租賃契約，除第4條及第5條所定措施外，本公司與承租人不相互為任何請求。</p>
+  <div class="art">第7條（預約業務之代辦）</div>
+  <p>承租人得於代本公司辦理預約業務之旅行社、合作公司等（以下稱「代辦業者」）提出預約申請。向代辦業者申請之承租人，不論第3條及第4條，僅得向該代辦業者申請變更或取消預約。</p>
+  <div class="chap">第3章 出租</div>
+  <div class="art">第8條（租賃契約之締結）</div>
+  <p>承租人明示第2條第1項之租賃條件，本公司依本條款、細則、費用表明示出租條件，締結租賃契約。締結後，承租人應支付本公司租賃費用。承租人加入免責補償制度及安心套餐時，於締結時支付本公司所定費用；締結後不論任何理由皆不得加入或退出。</p>
+  <p>本公司依租車基本通達，有義務於租賃簿及租賃證記載駕駛人之姓名、地址、駕照種類及駕照號碼，故於締結時要求出示承租人或駕駛人之駕照並提交影本。本公司得要求本人確認文件、連絡方式（手機號碼等）之告知，及以信用卡或現金等支付，承租人及駕駛人應配合。</p>
+  <div class="note" style="margin-top:18px;">本條款為 Global Lines 株式會社（KEYDROP）所定之租車條款。第9條以後之條文另行規定。</div>
+</div><a class="cta" href="./">🚗 預約租車</a></div>
+</div>
+
+<!-- ko -->
+<div class="pane" data-lang="ko">
+<div class="hero"><h1>대여 <span class="y">약관</span></h1></div>
+<div class="refnote">※ 참고 번역입니다. 법적 효력을 갖는 정본은 일본어 버전입니다.</div>
+<div class="wrap"><div class="doc">
+  <div class="art">개인정보 취급에 대하여</div>
+  <p class="pre">차주(대여 계약을 신청하려는 자를 포함)와 운전자(이하 각각 「차주」, 「운전자」)는 당사가 아래 목적으로 개인정보를 이용하는 것에 동의합니다.</p>
+  <ol><li>(1) 대여증 작성 등 렌터카에 관한 기본통달(지료 제138호, 1995년 6월 13일, 이하 「기본통달」)에 따른 렌터카 사업자의 의무를 이행하기 위해.</li><li>(2) 차주 또는 운전자의 본인 확인 및 심사를 위해.</li><li>(3) 상품 개발 또는 고객 만족 향상책 등을 목적으로 차주 또는 운전자에게 설문 조사를 실시하기 위해.</li><li>(4) 개인정보를 통계적으로 집계・분석하여 개인을 식별・특정할 수 없는 형태로 가공한 통계 데이터를 작성하기 위해.</li></ol>
+  <p>대여 기간에 통신형 내비게이션 및 드라이브 레코더에서 취득하는 정보(운행 데이터, 속성 정보 등)를 통계적으로 집계・분석하여 개인을 식별할 수 없는 형태로 가공한 통계 데이터를 제3자에게 제공하는 것에 동의합니다. 그때 해당 제3자가 가공 데이터를 고객 개인을 특정할 수 있는 상태로 되돌리는 것을 금지합니다.</p>
+  <div class="chap first">제1장 총칙</div>
+  <div class="art">제1조 (약관의 적용)</div>
+  <p>당사는 본 약관 및 세칙(이하 약관 및 세칙을 「렌탈 가이드 기재 사항」)에 정한 바에 따라 대여 자동차(이하 「렌터카」)를 차주에게 대여하고, 차주는 이를 대여받습니다. 차주는 제8조 제5항에 따라 본인과 다른 운전자를 지정한 경우 그 운전자에게 본 약관의 운전자 관련 부분을 알리고 준수하게 합니다. 본 약관 및 세칙에 정함이 없는 사항은 법령 또는 일반 관습에 따릅니다.</p>
+  <p>당사는 렌탈 가이드 기재 사항, 법령, 행정통달 및 일반 관습에 반하지 않는 범위에서 특약에 응할 수 있습니다. 특약을 체결한 경우 해당 특약이 렌탈 가이드 기재 사항에 우선합니다.</p>
+  <div class="chap">제2장 예약</div>
+  <div class="art">제2조 (예약 신청)</div>
+  <p>차주는 렌터카를 빌릴 때 본 약관, 세칙 및 별도로 정한 당사 소정의 요금표 등에 동의한 후, 당사 소정의 방법으로 미리 차종 클래스, 사용 목적, 대여 시작 일시, 대여 장소, 대여 기간, 반환 장소, 운전자, 카시트 등 부속품의 필요 여부, 기타 대여 조건(이하 「대여 조건」)을 명시하여 예약을 신청할 수 있습니다.</p>
+  <p>당사는 예약 신청이 있을 때 제36조 제1항에 따라 대리 대여를 하는 경우를 제외하고 원칙적으로 당사가 보유한 렌터카 범위 내에서 예약에 응합니다. 이 경우 당사가 특별히 인정하는 경우를 제외하고 차주는 당사 소정의 예약 신청금을 지불합니다.</p>
+  <div class="art">제3조 (예약 변경)</div>
+  <p>차주가 전조 제1항의 대여 조건을 변경하려는 경우 사전에 당사의 승낙을 받아야 합니다.</p>
+  <div class="art">제4조 (예약 취소 등)</div>
+  <ol><li>차주는 당사의 승낙을 얻어 예약을 취소할 수 있습니다.</li><li>차주가 본인 사정으로 예약한 대여 시작 시각을 1시간 이상 경과해도 대여 계약 체결 절차에 착수하지 않은 경우 예약이 취소된 것으로 봅니다.</li><li>전 2항의 경우 차주는 별도로 정한 바에 따라 예약 취소 수수료를 지불하며, 당사는 그 수수료 지불이 있을 때 수령한 예약 신청금을 반환합니다.</li><li>당사 사정으로 예약이 취소되거나 대여 계약이 체결되지 않은 경우 당사는 수령한 예약 신청금을 반환합니다.</li><li>사고, 도난, 미반환, 리콜, 천재 등 차주 또는 당사 어느 쪽의 책임도 아닌 사유로 대여 계약이 체결되지 않은 경우 예약은 취소된 것으로 보며, 당사는 수령한 예약 신청금을 반환합니다.</li></ol>
+  <div class="art">제5조 (대체 렌터카)</div>
+  <p>당사는 차주가 예약한 차종 클래스의 렌터카를 대여할 수 없을 때 예약과 다른 조건의 렌터카(이하 「대체 렌터카」) 대여를 제안할 수 있습니다. 차주가 승낙하면 차종 클래스를 제외하고 예약 시와 동일한 대여 조건으로 대체 렌터카를 대여합니다. 대체 렌터카 요금이 예약 클래스보다 높으면 예약 클래스 요금, 낮으면 해당 대체 렌터카 요금에 따릅니다. 차주는 제안을 거절하고 예약을 취소할 수 있습니다.</p>
+  <div class="art">제6조 (면책)</div>
+  <p>예약 취소 또는 대여 계약 미체결에 대하여 당사와 차주는 제4조 및 제5조에 정한 조치를 제외하고 서로 어떠한 청구도 하지 않습니다.</p>
+  <div class="art">제7조 (예약 업무의 대행)</div>
+  <p>차주는 당사를 대신해 예약 업무를 취급하는 여행사, 제휴사 등(이하 「대행 업자」)에서 예약을 신청할 수 있습니다. 대행 업자에 신청한 차주는 제3조 및 제4조에도 불구하고 해당 대행 업자에게만 예약 변경 또는 취소를 신청할 수 있습니다.</p>
+  <div class="chap">제3장 대여</div>
+  <div class="art">제8조 (대여 계약의 체결)</div>
+  <p>차주는 제2조 제1항의 대여 조건을 명시하고, 당사는 본 약관, 세칙, 요금표 등으로 대여 조건을 명시하여 대여 계약을 체결합니다. 체결 후 차주는 당사에 대여 요금을 지불합니다. 차주가 면책 보상 제도 및 안심 패키지에 가입하는 경우 체결 시 당사 소정의 요금을 지불하며, 체결 후에는 어떠한 이유로도 가입・탈퇴할 수 없습니다.</p>
+  <p>당사는 렌터카 기본통달에 따라 대여부 및 대여증에 운전자의 성명, 주소, 면허 종류 및 면허증 번호를 기재할 의무가 있으므로, 체결 시 차주 또는 운전자의 면허증 제시 및 사본 제출을 요구합니다. 당사는 본인 확인 서류, 연락처(휴대전화 번호 등) 고지 및 신용카드 또는 현금 등에 의한 지불을 요구할 수 있으며, 차주 및 운전자는 이에 따릅니다.</p>
+  <div class="note" style="margin-top:18px;">본 약관은 주식회사 글로벌라인즈(KEYDROP)가 정한 대여 약관입니다. 제9조 이후의 조문은 별도로 정한 바에 따릅니다.</div>
+</div><a class="cta" href="./">🚗 렌터카 예약하기</a></div>
+</div>
+
+<script>
+(function(){
+  var KEY='kd_lang', LS=['ja','en','zh','ko'];
+  var T={ja:'貸渡約款｜KEYDROP',en:'Rental Agreement｜KEYDROP',zh:'租車條款｜KEYDROP',ko:'대여 약관｜KEYDROP'};
+  function detect(){try{var s=localStorage.getItem(KEY);if(s&&LS.indexOf(s)>=0)return s;}catch(e){}var n=(navigator.language||'ja').toLowerCase();return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja';}
+  function apply(l){if(LS.indexOf(l)<0)l='ja';document.documentElement.lang=l;document.title=T[l]||T.ja;document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-lang')===l);});document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});try{localStorage.setItem(KEY,l);}catch(e){}}
+  document.querySelectorAll('#langsw button').forEach(function(b){b.onclick=function(){apply(b.getAttribute('data-l'));};});
+  apply(detect());
+})();
+</script>
 </body>
 </html>
