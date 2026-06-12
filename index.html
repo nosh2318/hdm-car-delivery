@@ -1565,7 +1565,7 @@
         html += `<div class="class-chips">`;
         html += `<button class="class-chip ${!state.selectedClass ? 'selected' : ''}" onclick="state.selectedClass=null; renderPanel();">${t('allClasses')}</button>`;
         for (const [id, cls] of Object.entries(VEHICLE_CLASSES)) {
-            html += `<button class="class-chip ${state.selectedClass === id ? 'selected' : ''}" onclick="state.selectedClass='${id}'; renderPanel();">${cls.icon} ${cls.name}</button>`;
+            html += `<button class="class-chip ${state.selectedClass === id ? 'selected' : ''}" onclick="state.selectedClass='${id}'; renderPanel();">${cls.icon} ${clsName(id)}</button>`;
         }
         html += `</div>`;
 
@@ -1599,7 +1599,7 @@
                 <div class="vehicle-card" style="animation:vehicleFadeIn .3s ease ${idx * 0.06}s both;" onclick="selectClass('${type}')">
                     <div class="vc-icon ${type}">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name}" loading="lazy" decoding="async">` : (cls.icon || '🚗')}</div>
                     <div class="vc-body">
-                        <div class="vc-class-tag ${type}">${cls.name || (type + t('classSuffix'))}</div>
+                        <div class="vc-class-tag ${type}">${clsName(type) || (type + t('classSuffix'))}</div>
                         <div class="vc-name" title="${cls.vehicles}">${cls.vehicles}</div>
                         <div class="vc-specs">
                             <span>👥 ${seats}${t('seats')}</span>
@@ -2013,18 +2013,18 @@
             <div class="top-body">
               <!-- モバイル用キービジュアル帯（PCは非表示・左ビジュアルが担当） -->
               <div class="kv-mobile">
-                  <div class="kv-slide" style="--kvimg:url(images/kv1.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>RENT SMART.</b><b class="y">DRIVE FREE.</b></div><div class="kv-jp">スマートに借りて、自由に走ろう。</div></div></div>
-                  <div class="kv-slide" style="--kvimg:url(images/kv2.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>NO PICKUP.</b><b class="y">JUST DELIVERY.</b></div><div class="kv-jp">借りに行かず、届けてもらう時代へ。</div></div></div>
-                  <div class="kv-slide" style="--kvimg:url(images/kv3.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>GO ANYWHERE.</b><b class="y">ANYTIME.</b></div><div class="kv-jp">移動を、もっと自由に。</div></div></div>
-                  <div class="kv-slide" style="--kvimg:url(images/kv4.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>YOUR TRIP.</b><b class="y">YOUR WAY.</b></div><div class="kv-jp">家族の時間も、もっと自由に。</div></div></div>
+                  <div class="kv-slide" style="--kvimg:url(images/kv1.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>RENT SMART.</b><b class="y">DRIVE FREE.</b></div><div class="kv-jp">${t('kv1')}</div></div></div>
+                  <div class="kv-slide" style="--kvimg:url(images/kv2.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>NO PICKUP.</b><b class="y">JUST DELIVERY.</b></div><div class="kv-jp">${t('kv2')}</div></div></div>
+                  <div class="kv-slide" style="--kvimg:url(images/kv3.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>GO ANYWHERE.</b><b class="y">ANYTIME.</b></div><div class="kv-jp">${t('kv3')}</div></div></div>
+                  <div class="kv-slide" style="--kvimg:url(images/kv4.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>YOUR TRIP.</b><b class="y">YOUR WAY.</b></div><div class="kv-jp">${t('kv4')}</div></div></div>
               </div>
               <div class="top-2col">
                 <!-- 左：キービジュアル（PCのみ・スライドショー。画像はバナーをカバー表示） -->
                 <div class="top-visual">
-                    <div class="kv-slide" style="--kvimg:url(images/kv1.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>RENT SMART.</b><b class="y">DRIVE FREE.</b></div><div class="kv-jp">スマートに借りて、自由に走ろう。</div></div></div>
-                    <div class="kv-slide" style="--kvimg:url(images/kv2.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>NO PICKUP.</b><b class="y">JUST DELIVERY.</b></div><div class="kv-jp">借りに行かず、届けてもらう時代へ。</div></div></div>
-                    <div class="kv-slide" style="--kvimg:url(images/kv3.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>GO ANYWHERE.</b><b class="y">ANYTIME.</b></div><div class="kv-jp">移動を、もっと自由に。</div></div></div>
-                    <div class="kv-slide" style="--kvimg:url(images/kv4.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>YOUR TRIP.</b><b class="y">YOUR WAY.</b></div><div class="kv-jp">家族の時間も、もっと自由に。</div></div></div>
+                    <div class="kv-slide" style="--kvimg:url(images/kv1.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>RENT SMART.</b><b class="y">DRIVE FREE.</b></div><div class="kv-jp">${t('kv1')}</div></div></div>
+                    <div class="kv-slide" style="--kvimg:url(images/kv2.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>NO PICKUP.</b><b class="y">JUST DELIVERY.</b></div><div class="kv-jp">${t('kv2')}</div></div></div>
+                    <div class="kv-slide" style="--kvimg:url(images/kv3.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>GO ANYWHERE.</b><b class="y">ANYTIME.</b></div><div class="kv-jp">${t('kv3')}</div></div></div>
+                    <div class="kv-slide" style="--kvimg:url(images/kv4.jpg)"><div class="kv-cap"><div class="kv-brand"><i class="kv-bars"></i>KEYDROP</div><div class="kv-sub">Car Delivery Service</div><div class="kv-h"><b>YOUR TRIP.</b><b class="y">YOUR WAY.</b></div><div class="kv-jp">${t('kv4')}</div></div></div>
                 </div>
                 <!-- 右：機能（縦フロー：日付/時間→マップ→確定） -->
                 <div class="kd-flow">
@@ -2521,8 +2521,8 @@
             ${renderBookingProgress(1)}
             <div class="confirm-screen screen-fade">
                 <div class="confirm-vehicle-hero">
-                    <div class="confirm-vehicle-icon">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || (v.type + t('classSuffix'))}">` : (cls.icon || '🚗')}</div>
-                    <div class="confirm-vehicle-name">${cls.name || (v.type + t('classSuffix'))}</div>
+                    <div class="confirm-vehicle-icon">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${clsName(v.type) || (v.type + t('classSuffix'))}">` : (cls.icon || '🚗')}</div>
+                    <div class="confirm-vehicle-name">${clsName(v.type) || (v.type + t('classSuffix'))}</div>
                     <div class="confirm-vehicle-class">${cls.vehicles}</div>
                     <div style="margin-top:8px;display:inline-block;background:#f1f1f1;color:#444;font-size:12px;font-weight:700;padding:4px 11px;border-radius:14px;">🏢 ${t('providerLabel')}：${providerOf(v)}</div>
                     <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;font-size:11px;opacity:.8;">
@@ -2860,7 +2860,7 @@
                 <!-- 料金明細 -->
                 <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;">
                     <div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
-                        <span>${cls.name || (state.selectedClass + t('classSuffix'))} × ${days}${t('daysSuffix')}</span>
+                        <span>${clsName(state.selectedClass) || (state.selectedClass + t('classSuffix'))} × ${days}${t('daysSuffix')}</span>
                         <span>¥${basePrice.toLocaleString()}</span>
                     </div>
                     ${cdwFee > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
@@ -2937,7 +2937,7 @@
                     ${cls.img ? `<div style="width:104px;height:66px;flex:none;border-radius:8px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;"><img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || ''}" style="width:100%;height:100%;object-fit:cover;"></div>` : ''}
                     <div style="min-width:0;flex:1;">
                         <div style="font-size:11px;color:#999;font-weight:700;">${t('resVehClass')}</div>
-                        <div style="font-size:15px;font-weight:800;color:#1a1a1a;">${(v?.type || state.selectedClass) ? (v?.type || state.selectedClass) + t('classSuffix') + (cls.name ? '（' + cls.name + '）' : '') : (cls.name || '')}</div>
+                        <div style="font-size:15px;font-weight:800;color:#1a1a1a;">${(v?.type || state.selectedClass) ? (v?.type || state.selectedClass) + t('classSuffix') + (clsName(v?.type || state.selectedClass) ? '（' + clsName(v?.type || state.selectedClass) + '）' : '') : (cls.name || '')}</div>
                         <div style="font-size:11px;color:#777;line-height:1.5;margin-top:1px;">${cls.vehicles || ''}</div>
                     </div>
                 </div>
@@ -3648,7 +3648,7 @@
                     ${cls.img ? `<div style="text-align:center;padding:4px 0 12px;margin-bottom:10px;border-bottom:1px solid #f3f3f3;"><img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name || r.vehicle}" style="max-width:82%;max-height:130px;object-fit:contain;" loading="lazy"><div style="font-size:11px;color:#888;margin-top:4px;">${cls.vehicles || ''}</div></div>` : ''}
                     <div class="mp-detail-row"><span class="mp-detail-row-label">予約者</span><span class="mp-detail-row-value">${r.name || '-'} 様</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">予約番号</span><span class="mp-detail-row-value" style="font-weight:700;color:#1a1a1a;">${r.id}</span></div>
-                    <div class="mp-detail-row"><span class="mp-detail-row-label">車両クラス</span><span class="mp-detail-row-value">${r.vehicle ? r.vehicle + t('classSuffix') + (cls.name ? '（' + cls.name + '）' : '') : (cls.name || '-')}</span></div>
+                    <div class="mp-detail-row"><span class="mp-detail-row-label">車両クラス</span><span class="mp-detail-row-value">${r.vehicle ? r.vehicle + t('classSuffix') + (clsName(v?.type || state.selectedClass) ? '（' + clsName(v?.type || state.selectedClass) + '）' : '') : (cls.name || '-')}</span></div>
                     ${(() => { const o = []; if (r.insurance && String(r.insurance).trim() && r.insurance !== 'なし') o.push('補償：' + r.insurance); if (+r.opt_c > 0) o.push('チャイルドシート×' + (+r.opt_c)); if (+r.opt_b > 0) o.push('ベビーシート×' + (+r.opt_b)); if (+r.opt_j > 0) o.push('ジュニアシート×' + (+r.opt_j)); if (+r.opt_usb > 0) o.push('USBケーブル'); return o.length ? `<div class="mp-detail-row"><span class="mp-detail-row-label">オプション</span><span class="mp-detail-row-value" style="text-align:right;">${o.join('<br>')}</span></div>` : ''; })()}
                     <div class="mp-detail-row"><span class="mp-detail-row-label">お届け</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.lend_date)} ${r.lend_time || r.del_time || ''}<br>${r.del_place ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.del_place)}" target="_blank" rel="noopener" style="font-size:11px;color:#2563eb;text-decoration:underline;">📍 ${r.del_place}</a>` : `<span style="font-size:11px;color:#888;">-</span>`}</span></div>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">回収</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.return_date)} ${r.return_time || r.col_time || ''}<br>${r.col_place ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.col_place)}" target="_blank" rel="noopener" style="font-size:11px;color:#2563eb;text-decoration:underline;">📍 ${r.col_place}</a>` : `<span style="font-size:11px;color:#888;">-</span>`}</span></div>
@@ -4491,6 +4491,8 @@
             mapPickDelivery: '📍 下の地図で<b>お届け場所</b>を選ぶ', mapPickCollection: '🏁 下の地図で<b>回収場所</b>を選ぶ',
             mapTapDelivery: '📍 地図でお届け場所をタップ', mapTapCollection: '🏁 地図で回収場所をタップ／右のボタン',
             outOfAreaDefault: '配達エリア外です。エリア内の場所を選び直してください。',
+            kv1: 'スマートに借りて、自由に走ろう。', kv2: '借りに行かず、届けてもらう時代へ。', kv3: '移動を、もっと自由に。', kv4: '家族の時間も、もっと自由に。',
+            cls_A: 'プレミアム', cls_A2: 'プレミアム A2', cls_B: 'ミニバン', cls_B2: 'ミニバン B2', cls_C: 'コンパクトSUV', cls_D: 'ミニバン', cls_S: 'SUV', cls_F: 'コンパクト', cls_H: 'セダン',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -4565,6 +4567,8 @@
             mapPickDelivery: '📍 Pick your <b>delivery location</b> on the map below', mapPickCollection: '🏁 Pick your <b>return location</b> on the map below',
             mapTapDelivery: '📍 Tap the map to set the delivery location', mapTapCollection: '🏁 Tap the map or use the button',
             outOfAreaDefault: 'Outside the delivery area. Please choose a location within the area.',
+            kv1: 'Rent smart. Drive free.', kv2: 'No pickup. Just delivery.', kv3: 'Go anywhere, anytime.', kv4: 'More freedom for family time.',
+            cls_A: 'Premium', cls_A2: 'Premium A2', cls_B: 'Minivan', cls_B2: 'Minivan B2', cls_C: 'Compact SUV', cls_D: 'Minivan', cls_S: 'SUV', cls_F: 'Compact', cls_H: 'Sedan',
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
@@ -4639,6 +4643,8 @@
             mapPickDelivery: '📍 在下方地圖選擇<b>送達地點</b>', mapPickCollection: '🏁 在下方地圖選擇<b>回收地點</b>',
             mapTapDelivery: '📍 點擊地圖設定送達地點', mapTapCollection: '🏁 點擊地圖或使用右側按鈕',
             outOfAreaDefault: '超出外送範圍，請重新選擇範圍內的地點。',
+            kv1: '聰明租車，自由馳騁。', kv2: '不必取車，直接送達的時代。', kv3: '移動，更加自由。', kv4: '家庭時光，更加自由。',
+            cls_A: '豪華', cls_A2: '豪華 A2', cls_B: '廂型車', cls_B2: '廂型車 B2', cls_C: '小型SUV', cls_D: '廂型車', cls_S: 'SUV', cls_F: '小型車', cls_H: '轎車',
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
@@ -4713,10 +4719,14 @@
             mapPickDelivery: '📍 아래 지도에서 <b>배달 장소</b>를 선택', mapPickCollection: '🏁 아래 지도에서 <b>회수 장소</b>를 선택',
             mapTapDelivery: '📍 지도를 탭하여 배달 장소 지정', mapTapCollection: '🏁 지도를 탭하거나 오른쪽 버튼',
             outOfAreaDefault: '배달 지역 밖입니다. 지역 내 장소를 다시 선택해 주세요.',
+            kv1: '스마트하게 빌려서 자유롭게 달리자.', kv2: '빌리러 가지 않고 받는 시대로.', kv3: '이동을 더 자유롭게.', kv4: '가족과의 시간도 더 자유롭게.',
+            cls_A: '프리미엄', cls_A2: '프리미엄 A2', cls_B: '미니밴', cls_B2: '미니밴 B2', cls_C: '컴팩트 SUV', cls_D: '미니밴', cls_S: 'SUV', cls_F: '컴팩트', cls_H: '세단',
         },
     };
 
     function t(key) { return LANG[state.lang]?.[key] || LANG.ja[key] || key; }
+    // 車両クラス名を選択言語で返す（cls_<type>）。無ければVEHICLE_CLASSESのJP名→type。
+    function clsName(type) { if (!type) return ''; const L = LANG[state.lang] || {}; return L['cls_' + type] || LANG.ja['cls_' + type] || (VEHICLE_CLASSES[type] || {}).name || type; }
 
     function switchLang(lang) {
         state.lang = lang;
