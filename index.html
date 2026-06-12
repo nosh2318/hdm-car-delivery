@@ -1217,6 +1217,8 @@
     // 那覇の初期地点は「那覇市中心(県庁前)」＝配達OKな街中。空港(不可ゾーン)を初期地点にすると開幕で全画面赤になるため。
     const DEFAULT_LAT = (KD_STORE === 'naha') ? 26.2126 : 43.0687;
     const DEFAULT_LNG = (KD_STORE === 'naha') ? 127.6792 : 141.3508;
+    // 現在エリアの中心（KD_STOREは後から那覇に切替わりうる＝const DEFAULTでなくこれを使う）
+    function kdGeoCenter() { return (KD_STORE === 'naha') ? [26.2126, 127.6792] : [43.0687, 141.3508]; }
 
     let state = {
         screen: 'top',
@@ -3852,7 +3854,7 @@
         _mpEditSearchTimer = setTimeout(() => {
             if (typeof gReady !== 'undefined' && gReady && gAuto) {
                 try {
-                    gAuto.getPlacePredictions({ input: q, sessionToken: gToken, language: 'ja', componentRestrictions: { country: 'jp' }, location: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG), radius: 40000 }, function (preds, status) {
+                    gAuto.getPlacePredictions({ input: q, sessionToken: gToken, language: 'ja', componentRestrictions: { country: 'jp' }, location: new google.maps.LatLng(kdGeoCenter()[0], kdGeoCenter()[1]), radius: 40000 }, function (preds, status) {
                         if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { mpEditPhotonSearch(q); return; }
                         box.innerHTML = preds.slice(0, 6).map(function (p) {
                             return '<div style="padding:9px 11px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'#fff\'" onclick="mpEditPickGoogle(\'' + p.place_id + '\')">📍 ' + p.description + '</div>';
@@ -3880,7 +3882,7 @@
         const box = document.getElementById('mpEditSuggest'); if (!box) return;
         (async () => {
             try {
-                const res = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lang=default&lat=' + DEFAULT_LAT + '&lon=' + DEFAULT_LNG + '&limit=7');
+                const res = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lang=default&lat=' + kdGeoCenter()[0] + '&lon=' + kdGeoCenter()[1] + '&limit=7');
                 const d = await res.json();
                 const feats = ((d && d.features) || []).filter(f => { const p = (f && f.properties) || {}; return (!p.countrycode || p.countrycode === 'JP') && f.geometry && f.geometry.coordinates; });
                 if (!feats.length) { box.innerHTML = '<div style="padding:10px;font-size:12px;color:#999;">該当する場所が見つかりません</div>'; box.style.display = 'block'; return; }
@@ -3918,8 +3920,8 @@
         const el = document.getElementById('mpEditMap');
         if (!el || typeof L === 'undefined' || !mpEdit) return;
         const isDel = mpEdit.mapMode === 'del';
-        // 初期中心：現在の住所をジオコード、なければ札幌中心
-        let center = [43.0621, 141.3544];
+        // 初期中心：現在の住所をジオコード、なければ現在エリア中心（那覇予約なら那覇）
+        let center = kdGeoCenter();
         const cur = isDel ? mpEdit.del_place : mpEdit.col_place;
         if (cur) { try { const g = await geocodeJP(cur); if (g) center = g; } catch (e) {} }
         mpEditMap = L.map(el, { zoomControl: true, attributionControl: false }).setView(center, 15);
@@ -4100,6 +4102,15 @@
             else if (wantSaveResId === false) localStorage.removeItem('hdm_mypage_resid');
             mypageState.email = email;
             mypageState.reservation = data.reservation;
+            // 那覇予約(KDN-)なら、以後のエリア判定・地図中心・ジオコードを那覇に切替（マイページは?area無しで開く＝既定札幌のため）
+            try {
+                const _rid = String((data.reservation && data.reservation.id) || resId || '');
+                if (/^KDN-/i.test(_rid) && KD_STORE !== 'naha') {
+                    KD_STORE = 'naha';
+                    state.deliveryConfig = Object.assign({}, state.deliveryConfig, { centerLat: 26.1958, centerLng: 127.6489, centerName: '那覇空港', radiusKm: 30, cityFilter: '' });
+                    try { const _c = await supabaseGet('public_delivery_config_v', ''); if (_c && _c[0] && _c[0].value) { const _cc = typeof _c[0].value === 'string' ? JSON.parse(_c[0].value) : _c[0].value; state.deliveryConfig = Object.assign({}, state.deliveryConfig, _cc); } } catch (e) {}
+                }
+            } catch (e) {}
             // キャンセル依頼済みなら復元（再入場でも「申請中」表示＝再依頼を防ぐ）
             if (data.reservation && data.reservation.cancel_requested_at) data.reservation._cancelRequested = true;
             mypageState.fleet = data.reservation.vehicle_code ? { vehicle_code: data.reservation.vehicle_code } : null;
@@ -4172,7 +4183,7 @@
         const del = decodeURIComponent(mapEl.dataset.del || '');
         const col = decodeURIComponent(mapEl.dataset.col || '');
 
-        const map = L.map(mapEl, { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView([43.0621, 141.3544], 12);
+        const map = L.map(mapEl, { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView(kdGeoCenter(), 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
         const pin = (label, bg, emo) => L.divIcon({
