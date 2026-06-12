@@ -2314,13 +2314,13 @@
             const delRefDt = dt.startDate
                 ? `<div style="display:flex;align-items:center;gap:6px;background:#fffbf0;border:1px solid #FABE00;border-radius:8px;padding:6px 10px;margin-bottom:8px;">
                         <span style="font-size:12px;flex:none;">📍</span>
-                        <span style="font-size:10px;color:#a07c00;font-weight:800;flex:none;">お届け</span>
+                        <span style="font-size:10px;color:#a07c00;font-weight:800;flex:none;">${t('deliveryShort')}</span>
                         <span style="font-size:12px;font-weight:800;color:#1a1a1a;">${formatDateLabel(dt.startDate)}${dt.startTime ? ' '+dt.startTime : ''}〜</span>
                    </div>`
                 : '';
-            return `<div style="padding:10px 16px 10px;">${delRefDt}${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', '回収日', '回収時間')}<div style="font-size:11px;color:#888;font-weight:700;">🏁 下の地図で<b>回収場所</b>を選ぶ</div></div>`;
+            return `<div style="padding:10px 16px 10px;">${delRefDt}${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', t('colDate'), t('colTime'))}<div style="font-size:11px;color:#888;font-weight:700;">${t('mapPickCollection')}</div></div>`;
         }
-        return `<div style="padding:10px 16px 10px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', 'お届け日', 'お届け時間')}<div style="font-size:11px;color:#888;font-weight:700;">📍 下の地図で<b>お届け場所</b>を選ぶ</div></div>`;
+        return `<div style="padding:10px 16px 10px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', t('delDate'), t('delTime'))}<div style="font-size:11px;color:#888;font-weight:700;">${t('mapPickDelivery')}</div></div>`;
     }
     function nextToCollection() { state.locStep='collection'; renderLocPanel(); }
     function backToDelivery() { state.locStep='delivery'; renderLocPanel(); }
@@ -2370,17 +2370,17 @@
             const ready = !!(dt.endDate && dt.endTime && state.collectionAddr);
             // お届け先を参照表示（「どこにしたっけ？」対策。タップでお届けに戻れる）
             const delRef = state.deliveryAddr
-                ? `<div onclick="backToDelivery()" style="cursor:pointer;display:flex;align-items:flex-start;gap:7px;background:#fffbf0;border:1px solid #FABE00;border-radius:9px;padding:7px 11px;"><span style="font-size:13px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:9px;color:#a07c00;font-weight:800;">お届け先（タップで変更）</div><div style="font-size:11.5px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr}</div></div><span style="font-size:10px;color:#a07c00;font-weight:800;flex:none;align-self:center;">変更›</span></div>`
+                ? `<div onclick="backToDelivery()" style="cursor:pointer;display:flex;align-items:flex-start;gap:7px;background:#fffbf0;border:1px solid #FABE00;border-radius:9px;padding:7px 11px;"><span style="font-size:13px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:9px;color:#a07c00;font-weight:800;">${t('deliveryDest')}（${t('tapToChange')}）</div><div style="font-size:11.5px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr}</div></div><span style="font-size:10px;color:#a07c00;font-weight:800;flex:none;align-self:center;">${t('edit')}›</span></div>`
                 : '';
             const card = state.collectionAddr
-                ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#1a1a1a;border-radius:10px;padding:9px 12px;"><span style="font-size:15px;flex:none;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">回収場所</div><div style="font-size:12.5px;font-weight:700;color:#fff;white-space:normal;word-break:break-all;line-height:1.45;">${state.collectionAddr}</div></div></div>`
-                : `<div style="text-align:center;color:#bbb;padding:6px 0;font-size:12px;">🏁 地図で回収場所をタップ／右のボタン</div>`;
+                ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#1a1a1a;border-radius:10px;padding:9px 12px;"><span style="font-size:15px;flex:none;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">${t('collectionPlaceL')}</div><div style="font-size:12.5px;font-weight:700;color:#fff;white-space:normal;word-break:break-all;line-height:1.45;">${state.collectionAddr}</div></div></div>`
+                : `<div style="text-align:center;color:#bbb;padding:6px 0;font-size:12px;">${t('mapTapCollection')}</div>`;
             return `
                 <div style="padding:8px 14px 12px;display:flex;flex-direction:column;gap:8px;">
                     ${delRef}
                     <div style="display:flex;gap:8px;">
                         <button onclick="useSameCollection()" style="flex:1;padding:10px;background:#1a1a1a;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;">🔁 ${t('sameAsDeliveryBtn')}</button>
-                        <button onclick="backToDelivery()" style="flex:none;padding:10px 14px;background:#f1f1f1;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#444;cursor:pointer;">‹ 戻る</button>
+                        <button onclick="backToDelivery()" style="flex:none;padding:10px 14px;background:#f1f1f1;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#444;cursor:pointer;">‹ ${t('back')}</button>
                     </div>
                     ${card}
                     <div class="kd-cta-sticky"><button class="btn-primary" style="margin:0;width:100%;" ${ready ? '' : 'disabled'} onclick="goToVehicleStep()">🏁 ${t('collectionCTA')} ›</button></div>
@@ -2388,16 +2388,16 @@
         }
         const ready = !!(dt.startDate && dt.startTime && state.deliveryAddr) && !state.outOfArea;
         const card = state.deliveryAddr
-            ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:9px 12px;margin-bottom:8px;"><span style="font-size:15px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">お届け場所</div><div style="font-size:12.5px;font-weight:700;color:#1a1a1a;white-space:normal;word-break:break-all;line-height:1.45;">${state.deliveryAddr}</div></div></div>`
-            : `<div style="text-align:center;color:#bbb;padding:6px 0 8px;font-size:12px;">📍 地図でお届け場所をタップ</div>`;
+            ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:9px 12px;margin-bottom:8px;"><span style="font-size:15px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">${t('deliveryPlace')}</div><div style="font-size:12.5px;font-weight:700;color:#1a1a1a;white-space:normal;word-break:break-all;line-height:1.45;">${state.deliveryAddr}</div></div></div>`
+            : `<div style="text-align:center;color:#bbb;padding:6px 0 8px;font-size:12px;">${t('mapTapDelivery')}</div>`;
         const areaWarn = state.outOfArea
-            ? `<div style="display:flex;align-items:flex-start;gap:7px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:9px 12px;margin-bottom:8px;color:#b91c1c;font-size:12px;font-weight:700;line-height:1.5;"><span style="flex:none;font-size:14px;">🚫</span><span>${state.outOfAreaReason || '配達エリア外です。エリア内の場所を選び直してください。'}</span></div>`
+            ? `<div style="display:flex;align-items:flex-start;gap:7px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:9px 12px;margin-bottom:8px;color:#b91c1c;font-size:12px;font-weight:700;line-height:1.5;"><span style="flex:none;font-size:14px;">🚫</span><span>${state.outOfAreaReason || t('outOfAreaDefault')}</span></div>`
             : '';
         return `
             <div style="padding:8px 14px 12px;">
                 ${card}
                 ${areaWarn}
-                <div class="kd-cta-sticky"><button class="btn-primary" style="margin:0;width:100%;" ${ready ? '' : 'disabled'} onclick="nextToCollection()">次へ: 回収場所と時間を決める ›</button></div>
+                <div class="kd-cta-sticky"><button class="btn-primary" style="margin:0;width:100%;" ${ready ? '' : 'disabled'} onclick="nextToCollection()">${t('nextCollection')} ›</button></div>
             </div>`;
     }
 
@@ -2425,7 +2425,7 @@
                 <!-- 検索条件サマリー（固定）：お届け＝黄 / 回収＝黒。日付はここで変更可 -->
                 <div style="background:#fff;border-bottom:1px solid #eee;padding:11px 16px;">
                     <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-                        <button onclick="state.screen='top'; render();" style="background:#f1f1f1;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex:none;">‹ 戻る</button>
+                        <button onclick="state.screen='top'; render();" style="background:#f1f1f1;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex:none;">‹ ${t('back')}</button>
                         <div style="flex:1;"></div>
                         <button onclick="state.vehDateOpen=!state.vehDateOpen; render();" style="background:${state.vehDateOpen?'#1a1a1a':'#FABE00'};color:${state.vehDateOpen?'#fff':'#1a1a1a'};border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;flex:none;">📅 ${t('vehDateChange')} ${state.vehDateOpen?'▴':'▾'}</button>
                     </div>
@@ -2437,17 +2437,17 @@
                             <div class="dt-group"><label>${t('colDate')}</label><select class="kd-need" onchange="onVehDateChange('endDate',this.value)">${generateDateOptions(state.datetime.endDate)}</select></div>
                             <div class="dt-group"><label>${t('colTime')}</label><select class="kd-need" onchange="onVehDateChange('endTime',this.value)">${generateTimeOptions(state.datetime.endTime)}</select></div>
                         </div>
-                        <button onclick="applyVehDateSearch()" style="width:100%;margin-top:10px;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;">🔍 この日程で検索する</button>
+                        <button onclick="applyVehDateSearch()" style="width:100%;margin-top:10px;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;">${t('searchThisPeriod')}</button>
                     </div>` : ''}
                     <div style="display:flex;gap:8px;">
                         <div style="flex:1;min-width:0;background:#fffbf0;border:1.5px solid #FABE00;border-radius:9px;padding:7px 10px;">
-                            <div style="font-size:10px;color:#a07c00;font-weight:800;">📍 お届け</div>
-                            <div style="font-size:12px;font-weight:800;color:#1a1a1a;">📅 ${formatDateLabel(state.datetime.startDate) || '日付未選択'}${state.datetime.startTime ? ' '+state.datetime.startTime : ''}</div>
+                            <div style="font-size:10px;color:#a07c00;font-weight:800;">📍 ${t('deliveryShort')}</div>
+                            <div style="font-size:12px;font-weight:800;color:#1a1a1a;">📅 ${formatDateLabel(state.datetime.startDate) || t('dateNotSet')}${state.datetime.startTime ? ' '+state.datetime.startTime : ''}</div>
                             <div style="font-size:11px;font-weight:600;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${state.deliveryAddr || '—'}</div>
                         </div>
                         <div style="flex:1;min-width:0;background:#1a1a1a;border-radius:9px;padding:7px 10px;">
-                            <div style="font-size:10px;color:#FABE00;font-weight:800;">🏁 回収</div>
-                            <div style="font-size:12px;font-weight:800;color:#fff;">📅 ${formatDateLabel(state.datetime.endDate) || '日付未選択'}${state.datetime.endTime ? ' '+state.datetime.endTime : ''}</div>
+                            <div style="font-size:10px;color:#FABE00;font-weight:800;">🏁 ${t('collectionShort')}</div>
+                            <div style="font-size:12px;font-weight:800;color:#fff;">📅 ${formatDateLabel(state.datetime.endDate) || t('dateNotSet')}${state.datetime.endTime ? ' '+state.datetime.endTime : ''}</div>
                             <div style="font-size:11px;font-weight:600;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;">${colShow}</div>
                         </div>
                     </div>
@@ -3846,7 +3846,7 @@
             <div style="font-size:11.5px;color:#888;margin-bottom:14px;">場所・時間の変更を申請します。<b>運営の承認後に反映</b>されます（即時反映ではありません）。<br>お届け＝出発48時間前まで／回収＝返却2時間前まで。</div>
 
             ${mpEdit.delOk ? `
-            <div style="font-weight:800;font-size:12.5px;color:#a07c00;margin:6px 0 6px;">📍 お届け</div>
+            <div style="font-weight:800;font-size:12.5px;color:#a07c00;margin:6px 0 6px;">📍 ${t('deliveryShort')}</div>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
                 <div style="display:flex;align-items:center;gap:8px;">
                     <span style="font-size:12px;color:#666;width:40px;flex:none;">時間</span>
@@ -3862,7 +3862,7 @@
             </div>` : `<div style="background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:9px 12px;font-size:11.5px;color:#9a3412;margin-bottom:12px;">📍 お届けの変更は出発48時間前まで。締切後は公式LINEへ。</div>`}
 
             ${mpEdit.colOk ? `
-            <div style="font-weight:800;font-size:12.5px;color:#1a1a1a;margin:6px 0 6px;border-top:1px solid #f0f0f0;padding-top:12px;">🏁 回収</div>
+            <div style="font-weight:800;font-size:12.5px;color:#1a1a1a;margin:6px 0 6px;border-top:1px solid #f0f0f0;padding-top:12px;">🏁 ${t('collectionShort')}</div>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
                 <div style="display:flex;align-items:center;gap:8px;">
                     <span style="font-size:12px;color:#666;width:40px;flex:none;">時間</span>
@@ -4487,6 +4487,10 @@
             daysShort: '日', resVehClass: 'ご予約車両クラス', goMypage: '📱 マイページに移動する',
             cardSafeNote: '🔒 カード情報はSquare（決済代行）へ直接送信され、当サイトには保存されません（安全決済）。',
             mypageLoginWarn: '⚠️ マイページのログインには<u>予約番号</u>と<u>ご予約時のメールアドレス</u>が必要となります。予約番号は大切に保管してください。',
+            deliveryShort: 'お届け', collectionShort: '回収', dateNotSet: '日付未選択', searchThisPeriod: '🔍 この日程で検索する',
+            mapPickDelivery: '📍 下の地図で<b>お届け場所</b>を選ぶ', mapPickCollection: '🏁 下の地図で<b>回収場所</b>を選ぶ',
+            mapTapDelivery: '📍 地図でお届け場所をタップ', mapTapCollection: '🏁 地図で回収場所をタップ／右のボタン',
+            outOfAreaDefault: '配達エリア外です。エリア内の場所を選び直してください。',
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
@@ -4557,6 +4561,10 @@
             daysShort: ' days', resVehClass: 'Reserved Vehicle Class', goMypage: '📱 Go to My Page',
             cardSafeNote: '🔒 Card details are sent directly to Square (payment processor) and are not stored on this site (secure payment).',
             mypageLoginWarn: '⚠️ Logging in to My Page requires your <u>reservation number</u> and the <u>email used for booking</u>. Please keep your reservation number safe.',
+            deliveryShort: 'Delivery', collectionShort: 'Return', dateNotSet: 'Date not set', searchThisPeriod: '🔍 Search this period',
+            mapPickDelivery: '📍 Pick your <b>delivery location</b> on the map below', mapPickCollection: '🏁 Pick your <b>return location</b> on the map below',
+            mapTapDelivery: '📍 Tap the map to set the delivery location', mapTapCollection: '🏁 Tap the map or use the button',
+            outOfAreaDefault: 'Outside the delivery area. Please choose a location within the area.',
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
@@ -4627,6 +4635,10 @@
             daysShort: '天', resVehClass: '預約車輛車型', goMypage: '📱 前往我的頁面',
             cardSafeNote: '🔒 卡片資訊將直接傳送至Square（金流代理），本網站不會保存（安全付款）。',
             mypageLoginWarn: '⚠️ 登入「我的頁面」需要<u>預約編號</u>與<u>預約時的電子郵件</u>。請妥善保管預約編號。',
+            deliveryShort: '送達', collectionShort: '回收', dateNotSet: '未選擇日期', searchThisPeriod: '🔍 以此日程搜尋',
+            mapPickDelivery: '📍 在下方地圖選擇<b>送達地點</b>', mapPickCollection: '🏁 在下方地圖選擇<b>回收地點</b>',
+            mapTapDelivery: '📍 點擊地圖設定送達地點', mapTapCollection: '🏁 點擊地圖或使用右側按鈕',
+            outOfAreaDefault: '超出外送範圍，請重新選擇範圍內的地點。',
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
@@ -4697,6 +4709,10 @@
             daysShort: '일', resVehClass: '예약 차량 클래스', goMypage: '📱 마이페이지로 이동',
             cardSafeNote: '🔒 카드 정보는 Square(결제 대행)로 직접 전송되며 본 사이트에는 저장되지 않습니다 (안전 결제).',
             mypageLoginWarn: '⚠️ 마이페이지 로그인에는 <u>예약 번호</u>와 <u>예약 시 이메일 주소</u>가 필요합니다. 예약 번호를 소중히 보관해 주세요.',
+            deliveryShort: '배달', collectionShort: '회수', dateNotSet: '날짜 미선택', searchThisPeriod: '🔍 이 일정으로 검색',
+            mapPickDelivery: '📍 아래 지도에서 <b>배달 장소</b>를 선택', mapPickCollection: '🏁 아래 지도에서 <b>회수 장소</b>를 선택',
+            mapTapDelivery: '📍 지도를 탭하여 배달 장소 지정', mapTapCollection: '🏁 지도를 탭하거나 오른쪽 버튼',
+            outOfAreaDefault: '배달 지역 밖입니다. 지역 내 장소를 다시 선택해 주세요.',
         },
     };
 
