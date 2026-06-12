@@ -1494,11 +1494,20 @@
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&accept-language=${_lang}&zoom=18&addressdetails=1&namedetails=1`);
         const data = await res.json();
         if (_lang !== 'ja') {
-            let s = (data.display_name || '').replace(/,?\s*(日本|Japan)\s*$/i, '').replace(/〒?\s*\d{3}-?\d{4}\s*/g, '').replace(/\s*,\s*/g, ', ').trim().replace(/^,\s*/, '');
+            // 日本住所はNominatimが英語化しないため、Google逆ジオ（言語対応）でローマ字/各言語化→失敗時Nominatim
+            let s = '';
+            try {
+                const gr = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=${_lang}&key=${GMAPS_KEY}`);
+                const gd = await gr.json();
+                if (gd && gd.status === 'OK' && gd.results && gd.results[0]) {
+                    s = (gd.results[0].formatted_address || '').replace(/^\s*Japan[,、]?\s*/i, '').replace(/[,、]?\s*Japan\s*$/i, '').replace(/[,、]?\s*日本\s*$/, '').replace(/〒?\s*\d{3}-?\d{4}\s*/g, '').replace(/\s*,\s*/g, ', ').trim().replace(/^,\s*/, '');
+                }
+            } catch (e) {}
+            if (!s) { s = (data.display_name || '').replace(/,?\s*(日本|Japan)\s*$/i, '').replace(/〒?\s*\d{3}-?\d{4}\s*/g, '').replace(/\s*,\s*/g, ', ').trim().replace(/^,\s*/, ''); }
             // エリア判定(cityFilter=日本語)用にJP正規住所も取得
             let canon = '';
             try { const rj = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&accept-language=ja&zoom=18&addressdetails=1`); const dj = await rj.json(); canon = (dj.display_name || '').replace(/、?\s*日本$/, '').replace(/〒?\s*\d{3}-?\d{4}\s*/g, '').trim(); } catch (e) {}
-            return { addr: s, full: (data.display_name || s).trim(), canon: canon || s };
+            return { addr: s, full: s, canon: canon || s };
         }
         const a = data.address || {};
         const pref = a.province || a.state || '';
