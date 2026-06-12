@@ -14,7 +14,11 @@
   .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
   .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
   .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
-  .hd .back{margin-left:auto;font-size:12px;color:#FABE00;text-decoration:none;font-weight:700}
+  .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:10px;flex:none}
+  .langsw{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .langsw button{font-size:11px;font-weight:800;color:#ccc;background:transparent;border:1px solid #555;border-radius:999px;padding:4px 9px;cursor:pointer}
+  .langsw button.active{color:#1a1a1a;background:#FABE00;border-color:#FABE00}
+  .pane{display:none}.pane.on{display:block}
   .hero{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:#fff;padding:30px 20px 26px;text-align:center}
   .hero h1{font-size:22px;font-weight:900;margin-bottom:6px}.hero h1 .y{color:#FABE00}
   .hero p{font-size:13px;opacity:.85}
@@ -25,7 +29,7 @@
   .card h2{font-size:15px;font-weight:900;padding:14px 18px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:7px}
   .row{display:flex;font-size:13.5px;border-bottom:1px solid #f4f4f4}
   .row:last-child{border-bottom:none}
-  .row .k{flex:none;width:108px;background:#fafafa;color:#666;font-weight:700;padding:12px 14px}
+  .row .k{flex:none;width:120px;background:#fafafa;color:#666;font-weight:700;padding:12px 14px}
   .row .v{flex:1;padding:12px 14px;color:#222}
   .row .v small{color:#888;font-size:11.5px}
   .biz{padding:6px 18px 14px}
@@ -41,36 +45,105 @@
 <body>
 <div class="hd">
   <a class="logo" href="./"><span class="mark"><i></i><i></i><i></i></span><b>KEY<span class="y">DROP</span></b></a>
-  <a class="back" href="./">← TOPへ</a>
+  <div class="langsw" id="langsw">
+    <button data-l="ja">日本語</button><button data-l="en">EN</button><button data-l="zh">繁中</button><button data-l="ko">한국어</button>
+  </div>
+  <a class="back" href="./">← TOP</a>
 </div>
 
-<div class="hero">
-  <h1>会社<span class="y">概要</span></h1>
-  <p>KEYDROP 運営会社のご案内</p>
-</div>
-
+<!-- ja -->
+<div class="pane" data-lang="ja">
+<div class="hero"><h1>会社<span class="y">概要</span></h1><p>KEYDROP 運営会社のご案内</p></div>
 <div class="wrap">
   <div class="lead"><b>KEYDROP</b>は、<b>株式会社グローバルラインズ（Global Lines Co.,Ltd.）</b>が運営するカーデリバリーサービスです。「移動という体験から、世界にたくさんの“LINES”を。」をコンセプトに、旅とビジネスの「移動」をAI-nativeな発想で快適にします。</div>
-
-  <div class="card">
-    <h2>🏢 会社概要</h2>
+  <div class="card"><h2>🏢 会社概要</h2>
     <div class="row"><span class="k">法人名</span><span class="v">株式会社グローバルラインズ<br><small>Global Lines Co.,Ltd.</small></span></div>
     <div class="row"><span class="k">設立</span><span class="v">平成23年11月</span></div>
     <div class="row"><span class="k">本社所在地</span><span class="v">〒901-0223<br>沖縄県豊見城市翁長854-1 MEGAドン・キホーテ豊見城店内6階</span></div>
     <div class="row"><span class="k">札幌オフィス</span><span class="v">〒060-0005<br>北海道札幌市中央区北5条西11丁目15-4 BYYARD</span></div>
     <div class="row"><span class="k">事業内容</span><span class="v">レンタカー事業／カーデリバリーサービスプラットフォーム運営</span></div>
   </div>
-
-  <div class="card">
-    <h2>🚗 事業内容</h2>
-    <div class="biz">
-      <div class="b"><span class="tag">沖縄</span><div><h3>HANDYMAN 那覇空港店</h3><p>那覇空港の無料送迎「エアポートシャトル」付き。空港やホテルまでお届けし、沖縄の旅を身軽に。</p></div></div>
-      <div class="b"><span class="tag">札幌</span><div><h3>HANDYMAN 札幌店</h3><p>借りに行かず、届けてもらう時代へ。LINE・オンラインで完結する札幌のデリバリーレンタカー。</p></div></div>
-      <div class="b"><span class="tag y">KEYDROP</span><div><h3>KEYDROP</h3><p>レンタカーと利用者をマッチングする、カーデリバリーサービスプラットフォーム。取りに行かない、新しい移動を。</p></div></div>
-    </div>
-  </div>
-
+  <div class="card"><h2>🚗 事業内容</h2><div class="biz">
+    <div class="b"><span class="tag">沖縄</span><div><h3>HANDYMAN 那覇空港店</h3><p>那覇空港の無料送迎「エアポートシャトル」付き。空港やホテルまでお届けし、沖縄の旅を身軽に。</p></div></div>
+    <div class="b"><span class="tag">札幌</span><div><h3>HANDYMAN 札幌店</h3><p>借りに行かず、届けてもらう時代へ。LINE・オンラインで完結する札幌のデリバリーレンタカー。</p></div></div>
+    <div class="b"><span class="tag y">KEYDROP</span><div><h3>KEYDROP</h3><p>レンタカーと利用者をマッチングする、カーデリバリーサービスプラットフォーム。取りに行かない、新しい移動を。</p></div></div>
+  </div></div>
   <a class="cta" href="./">🚗 レンタカーを予約する</a>
 </div>
+</div>
+
+<!-- en -->
+<div class="pane" data-lang="en">
+<div class="hero"><h1>Company <span class="y">Profile</span></h1><p>About the company operating KEYDROP</p></div>
+<div class="wrap">
+  <div class="lead"><b>KEYDROP</b> is a car delivery service operated by <b>Global Lines Co.,Ltd.</b> With the concept “From the experience of mobility, draw many ‘LINES’ across the world,” we make travel and business mobility comfortable through an AI-native approach.</div>
+  <div class="card"><h2>🏢 Company Overview</h2>
+    <div class="row"><span class="k">Company</span><span class="v">Global Lines Co.,Ltd.<br><small>株式会社グローバルラインズ</small></span></div>
+    <div class="row"><span class="k">Established</span><span class="v">November 2011</span></div>
+    <div class="row"><span class="k">Head office</span><span class="v">854-1 Onaga, Tomigusuku, Okinawa 901-0223<br><small>6F MEGA Don Quijote Tomigusuku</small></span></div>
+    <div class="row"><span class="k">Sapporo office</span><span class="v">15-4 Nishi 11, Kita 5-jo, Chuo-ku, Sapporo, Hokkaido 060-0005 (BYYARD)</span></div>
+    <div class="row"><span class="k">Business</span><span class="v">Car rental / operating a car delivery service platform</span></div>
+  </div>
+  <div class="card"><h2>🚗 Our Businesses</h2><div class="biz">
+    <div class="b"><span class="tag">Okinawa</span><div><h3>HANDYMAN Naha Airport</h3><p>Includes a free “Airport Shuttle.” We deliver to the airport or your hotel, making your Okinawa trip light and easy.</p></div></div>
+    <div class="b"><span class="tag">Sapporo</span><div><h3>HANDYMAN Sapporo</h3><p>No pickup — just delivery. A Sapporo delivery rental car you can book entirely via LINE / online.</p></div></div>
+    <div class="b"><span class="tag y">KEYDROP</span><div><h3>KEYDROP</h3><p>A car delivery platform matching rental cars with users. A new way to get around — without going to pick up.</p></div></div>
+  </div></div>
+  <a class="cta" href="./">🚗 Book a Rental Car</a>
+</div>
+</div>
+
+<!-- zh -->
+<div class="pane" data-lang="zh">
+<div class="hero"><h1>公司<span class="y">概要</span></h1><p>KEYDROP 營運公司介紹</p></div>
+<div class="wrap">
+  <div class="lead"><b>KEYDROP</b> 是由 <b>Global Lines 株式會社</b> 營運的汽車外送服務。以「從移動的體驗，為世界畫出許多『LINES』。」為理念，以 AI-native 的思維讓旅遊與商務的「移動」更舒適。</div>
+  <div class="card"><h2>🏢 公司概要</h2>
+    <div class="row"><span class="k">法人名稱</span><span class="v">Global Lines 株式會社<br><small>株式会社グローバルラインズ</small></span></div>
+    <div class="row"><span class="k">成立</span><span class="v">2011年11月</span></div>
+    <div class="row"><span class="k">總公司地址</span><span class="v">〒901-0223<br>沖縄県豊見城市翁長854-1 MEGAドン・キホーテ豊見城店内6階</span></div>
+    <div class="row"><span class="k">札幌辦公室</span><span class="v">〒060-0005<br>北海道札幌市中央区北5条西11丁目15-4 BYYARD</span></div>
+    <div class="row"><span class="k">事業內容</span><span class="v">租車事業／汽車外送服務平台營運</span></div>
+  </div>
+  <div class="card"><h2>🚗 事業內容</h2><div class="biz">
+    <div class="b"><span class="tag">沖繩</span><div><h3>HANDYMAN 那霸機場店</h3><p>附那霸機場免費接送「機場接駁」。送至機場或飯店，讓您的沖繩之旅更輕鬆。</p></div></div>
+    <div class="b"><span class="tag">札幌</span><div><h3>HANDYMAN 札幌店</h3><p>不必取車，直接送達的時代。透過 LINE・線上即可完成的札幌外送租車。</p></div></div>
+    <div class="b"><span class="tag y">KEYDROP</span><div><h3>KEYDROP</h3><p>媒合租車與使用者的汽車外送服務平台。不必去取車的全新移動方式。</p></div></div>
+  </div></div>
+  <a class="cta" href="./">🚗 預約租車</a>
+</div>
+</div>
+
+<!-- ko -->
+<div class="pane" data-lang="ko">
+<div class="hero"><h1>회사 <span class="y">개요</span></h1><p>KEYDROP 운영 회사 안내</p></div>
+<div class="wrap">
+  <div class="lead"><b>KEYDROP</b>는 <b>주식회사 글로벌라인즈(Global Lines Co.,Ltd.)</b>가 운영하는 카 딜리버리 서비스입니다. “이동이라는 경험에서 세계에 많은 ‘LINES’를.”이라는 콘셉트로 여행과 비즈니스의 ‘이동’을 AI-native한 발상으로 쾌적하게 합니다.</div>
+  <div class="card"><h2>🏢 회사 개요</h2>
+    <div class="row"><span class="k">법인명</span><span class="v">주식회사 글로벌라인즈<br><small>Global Lines Co.,Ltd.</small></span></div>
+    <div class="row"><span class="k">설립</span><span class="v">2011년 11월</span></div>
+    <div class="row"><span class="k">본사 소재지</span><span class="v">〒901-0223<br>沖縄県豊見城市翁長854-1 MEGAドン・キホーテ豊見城店内6階</span></div>
+    <div class="row"><span class="k">삿포로 사무실</span><span class="v">〒060-0005<br>北海道札幌市中央区北5条西11丁目15-4 BYYARD</span></div>
+    <div class="row"><span class="k">사업 내용</span><span class="v">렌터카 사업／카 딜리버리 서비스 플랫폼 운영</span></div>
+  </div>
+  <div class="card"><h2>🚗 사업 내용</h2><div class="biz">
+    <div class="b"><span class="tag">오키나와</span><div><h3>HANDYMAN 나하공항점</h3><p>나하공항 무료 셔틀 「에어포트 셔틀」 포함. 공항이나 호텔까지 배달하여 오키나와 여행을 가볍게.</p></div></div>
+    <div class="b"><span class="tag">삿포로</span><div><h3>HANDYMAN 삿포로점</h3><p>빌리러 가지 않고 받는 시대로. LINE・온라인으로 완결되는 삿포로 배달 렌터카.</p></div></div>
+    <div class="b"><span class="tag y">KEYDROP</span><div><h3>KEYDROP</h3><p>렌터카와 이용자를 매칭하는 카 딜리버리 서비스 플랫폼. 가지러 가지 않는 새로운 이동을.</p></div></div>
+  </div></div>
+  <a class="cta" href="./">🚗 렌터카 예약하기</a>
+</div>
+</div>
+
+<script>
+(function(){
+  var KEY='kd_lang', LS=['ja','en','zh','ko'];
+  var T={ja:'会社概要｜KEYDROP',en:'Company Profile｜KEYDROP',zh:'公司概要｜KEYDROP',ko:'회사 개요｜KEYDROP'};
+  function detect(){try{var s=localStorage.getItem(KEY);if(s&&LS.indexOf(s)>=0)return s;}catch(e){}var n=(navigator.language||'ja').toLowerCase();return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja';}
+  function apply(l){if(LS.indexOf(l)<0)l='ja';document.documentElement.lang=l;document.title=T[l]||T.ja;document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-lang')===l);});document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});try{localStorage.setItem(KEY,l);}catch(e){}}
+  document.querySelectorAll('#langsw button').forEach(function(b){b.onclick=function(){apply(b.getAttribute('data-l'));};});
+  apply(detect());
+})();
+</script>
 </body>
 </html>
