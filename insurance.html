@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1a1a1a">
-<title>保険・補償プラン｜KEYDROP 札幌カーデリバリー</title>
+<title>保険・補償プラン｜KEYDROP カーデリバリー</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans',sans-serif;background:#f5f6f8;color:#1a1a1a;line-height:1.7;padding-bottom:60px}
@@ -13,7 +13,11 @@
   .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
   .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
   .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
-  .hd .back{margin-left:auto;font-size:12px;color:#FABE00;text-decoration:none;font-weight:700}
+  .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:10px;flex:none}
+  .langsw{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .langsw button{font-size:11px;font-weight:800;color:#ccc;background:transparent;border:1px solid #555;border-radius:999px;padding:4px 9px;cursor:pointer}
+  .langsw button.active{color:#1a1a1a;background:#FABE00;border-color:#FABE00}
+  .pane{display:none}.pane.on{display:block}
   .hero{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:#fff;padding:30px 20px 26px;text-align:center}
   .hero h1{font-size:22px;font-weight:900;margin-bottom:6px}.hero h1 .y{color:#FABE00}
   .hero p{font-size:13px;opacity:.85}
@@ -46,18 +50,20 @@
 <body>
 <div class="hd">
   <a class="logo" href="./"><span class="mark"><i></i><i></i><i></i></span><b>KEY<span class="y">DROP</span></b></a>
-  <a class="back" href="./">← TOPへ</a>
+  <div class="langsw" id="langsw">
+    <button data-l="ja">日本語</button><button data-l="en">EN</button><button data-l="zh">繁中</button><button data-l="ko">한국어</button>
+  </div>
+  <a class="back" href="./">← TOP</a>
 </div>
 
+<!-- ===================== 日本語 ===================== -->
+<div class="pane" data-lang="ja">
 <div class="hero">
   <h1>保険・<span class="y">補償</span>プラン</h1>
   <p>安心してご利用いただくための3つのプラン</p>
 </div>
-
 <div class="wrap">
   <div class="lead">全プランに<b>基本補償が付帯</b>しています。万が一に備え、自己負担をなくしたい方は<b>免責補償</b>や<b>安心ワイドパック</b>の追加をおすすめします。</div>
-
-  <!-- 基本プラン -->
   <div class="plan">
     <div class="plan-h">
       <span class="badge base">基本プラン</span>
@@ -74,8 +80,6 @@
       <div class="hl">⚠️ 事故時の<b>免責（自己負担）額</b>：車両補償 15万円。免責保証はありません。</div>
     </div>
   </div>
-
-  <!-- 免責補償 -->
   <div class="plan">
     <div class="plan-h">
       <span class="badge">+ 免責補償（CDW）</span>
@@ -91,8 +95,6 @@
       <div class="hl">万が一の事故でも、基本補償ではカバーできない自己負担額が0円になります。</div>
     </div>
   </div>
-
-  <!-- 安心ワイドパック -->
   <div class="plan rec">
     <div class="plan-h">
       <span class="badge">おすすめ ・ 安心ワイドパック</span>
@@ -110,10 +112,212 @@
       <div class="hl">免責補償に<b>+550円（税込）</b>をプラスするだけで、二つの安心でサポート。</div>
     </div>
   </div>
-
   <p class="note">※「免責補償」と「安心ワイドパック」の同時加入はできません。<br>※補償内容の詳細・適用条件は貸渡約款をご確認ください。</p>
-
   <a class="cta" href="./">🚗 レンタカーを予約する</a>
 </div>
+</div>
+
+<!-- ===================== English ===================== -->
+<div class="pane" data-lang="en">
+<div class="hero">
+  <h1>Insurance &amp; <span class="y">Coverage</span> Plans</h1>
+  <p>Three plans for complete peace of mind</p>
+</div>
+<div class="wrap">
+  <div class="lead">All plans include <b>basic coverage as standard</b>. To eliminate out-of-pocket costs in case of an accident, we recommend adding the <b>Collision Damage Waiver (CDW)</b> or the <b>Anshin Wide Pack</b>.</div>
+  <div class="plan">
+    <div class="plan-h">
+      <span class="badge base">Basic Plan</span>
+      <h2>Basic Plan (Insurance Included)</h2>
+      <div class="price"><span class="free">Standard</span><span class="unit">No extra charge</span></div>
+    </div>
+    <div class="plan-b">
+      <p>Basic coverage included as standard with every rental.</p>
+      <ul class="cov">
+        <li><b>Bodily injury &amp; property damage</b><span class="amt">Unlimited</span></li>
+        <li><b>Vehicle damage</b><span class="amt">Up to market value</span></li>
+        <li><b>Personal injury</b><span class="amt">¥30,000,000</span></li>
+      </ul>
+      <div class="hl">⚠️ <b>Deductible (out-of-pocket) in case of accident</b>: ¥150,000 for vehicle damage. No waiver included.</div>
+    </div>
+  </div>
+  <div class="plan">
+    <div class="plan-h">
+      <span class="badge">+ CDW</span>
+      <h2>Basic Plan + Collision Damage Waiver</h2>
+      <div class="price"><span class="num">¥1,100</span><span class="unit">/ 24h (tax incl.)</span></div>
+    </div>
+    <div class="plan-b">
+      <p>A waiver that exempts you from the out-of-pocket cost (<b>deductible</b>) you would otherwise pay in case of an accident.</p>
+      <ul class="cov">
+        <li>All basic coverage</li>
+        <li><b>¥150,000 vehicle damage deductible waived</b></li>
+      </ul>
+      <div class="hl">Even in the event of an accident, the out-of-pocket amount not covered by basic coverage becomes ¥0.</div>
+    </div>
+  </div>
+  <div class="plan rec">
+    <div class="plan-h">
+      <span class="badge">Recommended ・ Anshin Wide Pack</span>
+      <h2>Basic Plan + CDW + NOC Coverage</h2>
+      <div class="price"><span class="num">¥1,650</span><span class="unit">/ 24h (tax incl.)</span></div>
+    </div>
+    <div class="plan-b">
+      <p>For those who want to eliminate both the deductible and the worry of the <b>Non-Operation Charge (NOC)</b>. An all-in-one plan that bundles every coverage.</p>
+      <ul class="cov">
+        <li>All CDW coverage</li>
+        <li><b>NOC (loss of use) fully covered</b></li>
+        <li>Damaged tire repair covered</li>
+        <li>Lost wheel cap covered</li>
+      </ul>
+      <div class="hl">Just add <b>¥550 (tax incl.)</b> to the CDW for double peace of mind.</div>
+    </div>
+  </div>
+  <p class="note">* The CDW and the Anshin Wide Pack cannot be combined.<br>* For details and conditions of coverage, please refer to the Rental Agreement.</p>
+  <a class="cta" href="./">🚗 Book a Rental Car</a>
+</div>
+</div>
+
+<!-- ===================== 繁體中文 ===================== -->
+<div class="pane" data-lang="zh">
+<div class="hero">
+  <h1>保險・<span class="y">補償</span>方案</h1>
+  <p>讓您安心使用的三種方案</p>
+</div>
+<div class="wrap">
+  <div class="lead">所有方案均<b>標準附帶基本補償</b>。若想在萬一發生事故時免除自付額，建議加購<b>免責補償（CDW）</b>或<b>安心廣域套餐</b>。</div>
+  <div class="plan">
+    <div class="plan-h">
+      <span class="badge base">基本方案</span>
+      <h2>基本方案（含保險）</h2>
+      <div class="price"><span class="free">標準附帶</span><span class="unit">無追加費用</span></div>
+    </div>
+    <div class="plan-b">
+      <p>每次租賃均標準附帶的基本補償。</p>
+      <ul class="cov">
+        <li><b>對人・對物</b><span class="amt">無上限</span></li>
+        <li><b>車輛補償</b><span class="amt">至市價</span></li>
+        <li><b>人身傷害補償</b><span class="amt">3,000萬日圓</span></li>
+      </ul>
+      <div class="hl">⚠️ 事故時的<b>免責（自付）額</b>：車輛補償 15萬日圓。不含免責保證。</div>
+    </div>
+  </div>
+  <div class="plan">
+    <div class="plan-h">
+      <span class="badge">+ 免責補償（CDW）</span>
+      <h2>基本方案 ＋ 免責補償</h2>
+      <div class="price"><span class="num">¥1,100</span><span class="unit">/ 24小時（含稅）</span></div>
+    </div>
+    <div class="plan-b">
+      <p>免除您在事故時需自付費用（<b>免責額</b>）的制度。</p>
+      <ul class="cov">
+        <li>基本補償全部內容</li>
+        <li><b>免除車輛補償自付額15萬日圓</b></li>
+      </ul>
+      <div class="hl">即使萬一發生事故，基本補償無法涵蓋的自付額也將為0日圓。</div>
+    </div>
+  </div>
+  <div class="plan rec">
+    <div class="plan-h">
+      <span class="badge">推薦 ・ 安心廣域套餐</span>
+      <h2>基本方案 ＋ 免責補償 ＋ NOC補償</h2>
+      <div class="price"><span class="num">¥1,650</span><span class="unit">/ 24小時（含稅）</span></div>
+    </div>
+    <div class="plan-b">
+      <p>給想同時免除免責額與<b>非營業補償（NOC）</b>擔憂的您。將所有補償整合為一的安心方案。</p>
+      <ul class="cov">
+        <li>免責補償（CDW）全部內容</li>
+        <li><b>NOC（停業補償）全額負擔</b></li>
+        <li>補償受損輪胎的修理費</li>
+        <li>補償輪轂蓋遺失</li>
+      </ul>
+      <div class="hl">只需在免責補償上加<b>550日圓（含稅）</b>，即可享有雙重安心。</div>
+    </div>
+  </div>
+  <p class="note">※「免責補償」與「安心廣域套餐」不可同時加入。<br>※補償內容詳情與適用條件請參閱租車條款。</p>
+  <a class="cta" href="./">🚗 預約租車</a>
+</div>
+</div>
+
+<!-- ===================== 한국어 ===================== -->
+<div class="pane" data-lang="ko">
+<div class="hero">
+  <h1>보험·<span class="y">보상</span> 플랜</h1>
+  <p>안심하고 이용하실 수 있는 3가지 플랜</p>
+</div>
+<div class="wrap">
+  <div class="lead">모든 플랜에 <b>기본 보상이 기본 포함</b>되어 있습니다. 만일의 사고에 대비해 자기부담을 없애고 싶으신 분께는 <b>면책 보상(CDW)</b>이나 <b>안심 와이드 팩</b> 추가를 권장합니다.</div>
+  <div class="plan">
+    <div class="plan-h">
+      <span class="badge base">기본 플랜</span>
+      <h2>기본 플랜 (보험 포함)</h2>
+      <div class="price"><span class="free">기본 포함</span><span class="unit">추가 요금 없음</span></div>
+    </div>
+    <div class="plan-b">
+      <p>모든 이용에 기본으로 포함되는 기본 보상입니다.</p>
+      <ul class="cov">
+        <li><b>대인·대물</b><span class="amt">무제한</span></li>
+        <li><b>차량 보상</b><span class="amt">시가까지</span></li>
+        <li><b>인신 상해 보상</b><span class="amt">3,000만 엔</span></li>
+      </ul>
+      <div class="hl">⚠️ 사고 시 <b>면책(자기부담)액</b>: 차량 보상 15만 엔. 면책 보장은 없습니다.</div>
+    </div>
+  </div>
+  <div class="plan">
+    <div class="plan-h">
+      <span class="badge">+ 면책 보상(CDW)</span>
+      <h2>기본 플랜 + 면책 보상</h2>
+      <div class="price"><span class="num">¥1,100</span><span class="unit">/ 24시간 (세금 포함)</span></div>
+    </div>
+    <div class="plan-b">
+      <p>사고 시 고객님이 자기부담하는 비용(<b>면책액</b>)을 면제하는 제도입니다.</p>
+      <ul class="cov">
+        <li>기본 보상 전체 내용</li>
+        <li><b>차량 보상 자기부담 15만 엔 면제</b></li>
+      </ul>
+      <div class="hl">만일의 사고에도 기본 보상으로 커버되지 않는 자기부담액이 0원이 됩니다.</div>
+    </div>
+  </div>
+  <div class="plan rec">
+    <div class="plan-h">
+      <span class="badge">추천 ・ 안심 와이드 팩</span>
+      <h2>기본 플랜 + 면책 보상 + NOC 보상</h2>
+      <div class="price"><span class="num">¥1,650</span><span class="unit">/ 24시간 (세금 포함)</span></div>
+    </div>
+    <div class="plan-b">
+      <p>면책 보상은 물론 <b>논 오퍼레이션 차지(NOC)</b> 걱정까지 없애고 싶은 분께. 모든 보상을 하나로 묶은 안심 플랜입니다.</p>
+      <ul class="cov">
+        <li>면책 보상(CDW) 전체 내용</li>
+        <li><b>NOC(휴업 보상)도 전액 보장</b></li>
+        <li>손상된 타이어 수리비 보상</li>
+        <li>휠캡 분실 보상</li>
+      </ul>
+      <div class="hl">면책 보상에 <b>+550엔(세금 포함)</b>만 추가하면 두 가지 안심으로 서포트.</div>
+    </div>
+  </div>
+  <p class="note">※「면책 보상」과「안심 와이드 팩」은 동시 가입할 수 없습니다.<br>※보상 내용의 상세·적용 조건은 대여 약관을 확인해 주세요.</p>
+  <a class="cta" href="./">🚗 렌터카 예약하기</a>
+</div>
+</div>
+
+<script>
+(function(){
+  var KEY='kd_lang', LS=['ja','en','zh','ko'];
+  var TITLES={ja:'保険・補償プラン｜KEYDROP',en:'Insurance & Coverage｜KEYDROP',zh:'保險・補償方案｜KEYDROP',ko:'보험·보상 플랜｜KEYDROP'};
+  function detect(){try{var s=localStorage.getItem(KEY);if(s&&LS.indexOf(s)>=0)return s;}catch(e){}
+    var n=(navigator.language||'ja').toLowerCase();
+    return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja';}
+  function apply(l){
+    if(LS.indexOf(l)<0)l='ja';
+    document.documentElement.lang=l;
+    document.title=TITLES[l]||TITLES.ja;
+    document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-lang')===l);});
+    document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});
+    try{localStorage.setItem(KEY,l);}catch(e){}
+  }
+  document.querySelectorAll('#langsw button').forEach(function(b){b.onclick=function(){apply(b.getAttribute('data-l'));};});
+  apply(detect());
+})();
+</script>
 </body>
 </html>
