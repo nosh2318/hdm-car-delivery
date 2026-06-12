@@ -1950,6 +1950,13 @@
             default:
                 html = renderTopScreen();
         }
+        } catch (err) {
+            // どれかの描画関数が落ちても固まらせない＝復旧UIに倒す（白画面/グルグル防止）
+            kdReportError('render:' + (state && state.screen), err);
+            try { if (typeof mypageState !== 'undefined' && mypageState) mypageState.loading = false; } catch (e) {}
+            try { if (state) state.loading = false; } catch (e) {}
+            html = kdRecoveryHtml(err);
+        }
         app.innerHTML = html;
 
         // 地図画面は確定高さ（下余白/白対策）。スクロール画面は従来のmin-height
