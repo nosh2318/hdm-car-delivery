@@ -5030,6 +5030,12 @@
     // ── Slide Menu ──
     // ════════════════════════════════════════════
     function openMenu() {
+        // メニューを開くたびに選択言語へ同期（ボタンactive＋項目テキスト）＝選択と表示の不一致防止
+        try {
+            const _names = { ja: '日本語', en: 'English', zh: '繁體中文', ko: '한국어' };
+            document.querySelectorAll('.menu-lang-btn').forEach(function (btn) { btn.classList.toggle('active', btn.textContent.trim() === _names[state.lang]); });
+            if (typeof updateMenuText === 'function') updateMenuText();
+        } catch (e) {}
         document.getElementById('menuOverlay')?.classList.add('open');
         document.getElementById('slideMenu')?.classList.add('open');
         document.body.classList.add('menu-open');
