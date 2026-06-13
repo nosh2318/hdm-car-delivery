@@ -17,7 +17,7 @@ const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET") || "";
 const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";
-const SLACK_CH = Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36"; // 既定=札幌KEYDROP ch
+const SLACK_CH = Deno.env.get("SLACK_BUDGET_CHANNEL") || "C07B5G3PV7C"; // 既定=#handyman_development（予約通知chとは分離）
 
 function yen(n: number) { return "¥" + Math.round(n).toLocaleString("ja-JP"); }
 function jstYM() {
