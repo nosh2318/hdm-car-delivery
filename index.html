@@ -154,9 +154,9 @@
         .app-service-subtitle { font-size: 9px; color: #FABE00; font-weight: 500; letter-spacing: .5px; }
         .header-actions { display: flex; align-items: center; gap: 4px; }
         /* ヘッダーのInstagramリンク（PC・スマホ両方に表示） */
-        .kd-ig { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; color: #1a1a1a; text-decoration: none; border-radius: 8px; transition: background .2s, color .2s; flex: none; }
-        .kd-ig:hover { background: #FABE00; color: #1a1a1a; }
-        .kd-ig svg { width: 22px; height: 22px; }
+        .kd-ig { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; color: #fff; text-decoration: none; border-radius: 9px; flex: none; background: linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); box-shadow: 0 2px 6px rgba(220,39,67,.35); transition: transform .15s, box-shadow .2s; }
+        .kd-ig:hover { transform: translateY(-1px) scale(1.06); box-shadow: 0 4px 12px rgba(220,39,67,.55); color: #fff; }
+        .kd-ig svg { width: 21px; height: 21px; }
         /* スマホのヘッダーに「エリア選択」ボタン（PCはpc-navにあるのでスマホのみ表示） */
         .kd-area-m { display: none; align-items: center; gap: 2px; padding: 5px 10px; background: #FABE00; color: #1a1a1a; border: none; border-radius: 14px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; }
         @media (max-width: 767px) { .kd-area-m { display: inline-flex; } }
