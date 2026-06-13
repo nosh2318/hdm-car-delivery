@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+    <!-- Google Analytics 4 (GA4) keydrop.jp -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N1HJ6WLG2Y"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-N1HJ6WLG2Y');</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3447,6 +3451,15 @@
             saveReservationToLocal(resId);
 
             if (data.payUrl) {
+                // GA4コンバージョン用：決済リダイレクト前に金額/エリア/クラスを保存（戻りで発火）
+                try {
+                    localStorage.setItem('kd_conv', JSON.stringify({
+                        id: resId,
+                        amount: Number(data.amount) || 0,
+                        store: (typeof KD_STORE !== 'undefined' ? KD_STORE : 'spk'),
+                        cls: (state.selectedVehicle && (state.selectedVehicle.type || state.selectedVehicle.class)) || ''
+                    }));
+                } catch (e) {}
                 // Square Checkout へリダイレクト（決済完了でwebhookが confirmed 化）
                 window.location.href = data.payUrl;
                 return; // 遷移するのでrenderしない
@@ -5127,6 +5140,22 @@
             if (paid) {
                 state._lastResId = paid;
                 saveReservationToLocal(paid);
+                // GA4 予約コンバージョン（purchase=広告連携用 / booking_complete=カスタム）
+                try {
+                    var _cv = JSON.parse(localStorage.getItem('kd_conv') || 'null');
+                    var _ev = {
+                        transaction_id: paid,
+                        currency: 'JPY',
+                        value: (_cv && _cv.id === paid && Number(_cv.amount)) ? Number(_cv.amount) : 0,
+                        store: (_cv && _cv.store) || '',
+                        vehicle_class: (_cv && _cv.cls) || ''
+                    };
+                    if (typeof gtag === 'function') {
+                        gtag('event', 'purchase', _ev);
+                        gtag('event', 'booking_complete', _ev);
+                    }
+                } catch (e) {}
+                try { localStorage.removeItem('kd_conv'); } catch (e) {}
                 state.screen = 'complete';
                 // クエリを消してリロード時に再表示しない
                 if (window.history && window.history.replaceState) {
