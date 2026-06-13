@@ -841,37 +841,37 @@
                     </div>
                     <div class="menu-section">
                         <div class="menu-section-title">サービス</div>
-                        <a class="menu-item" href="guide.html" target="_blank" rel="noopener">
+                        <a class="menu-item" data-mk="menuUsage" href="guide.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">📖</span>ご利用方法<span class="menu-item-arrow">→</span>
                         </a>
-                        <a class="menu-item" href="vehicles.html" target="_blank" rel="noopener">
+                        <a class="menu-item" data-mk="menuVehicle" href="vehicles.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">🚗</span>車両と料金<span class="menu-item-arrow">→</span>
                         </a>
-                        <a class="menu-item" href="insurance.html" target="_blank" rel="noopener">
+                        <a class="menu-item" data-mk="menuInsurance" href="insurance.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">🛡️</span>保険プラン一覧<span class="menu-item-arrow">→</span>
                         </a>
                     </div>
                     <div class="menu-section">
                         <div class="menu-section-title">サポート</div>
-                        <a class="menu-item" href="faq.html" target="_blank" rel="noopener">
+                        <a class="menu-item" data-mk="menuFaq" href="faq.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">❓</span>よくある質問<span class="menu-item-arrow">→</span>
                         </a>
-                        <a class="menu-item" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">
+                        <a class="menu-item" data-mk="menuContact" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">
                             <span class="menu-item-icon">✉️</span>お問い合わせ<span class="menu-item-arrow">→</span>
                         </a>
                     </div>
                     <div class="menu-section">
                         <div class="menu-section-title">法的情報</div>
-                        <a class="menu-item" href="clause.html" target="_blank" rel="noopener">
+                        <a class="menu-item" data-mk="menuClause" href="clause.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">📄</span>貸渡約款<span class="menu-item-arrow">→</span>
                         </a>
-                        <a class="menu-item" href="privacy.html" target="_blank" rel="noopener">
+                        <a class="menu-item" data-mk="menuPrivacy" href="privacy.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">🔒</span>プライバシーポリシー<span class="menu-item-arrow">→</span>
                         </a>
-                        <a class="menu-item" href="transaction.html" target="_blank" rel="noopener">
+                        <a class="menu-item" data-mk="menuLegal" href="transaction.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">📋</span>特定商取引法<span class="menu-item-arrow">→</span>
                         </a>
-                        <a class="menu-item" href="company.html" target="_blank" rel="noopener">
+                        <a class="menu-item" data-mk="menuCompany" href="company.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">🏢</span>運営会社<span class="menu-item-arrow">→</span>
                         </a>
                     </div>
@@ -5018,16 +5018,17 @@
         if (sections[0]) sections[0].textContent = t('menuService');
         if (sections[1]) sections[1].textContent = t('menuSupport');
         if (sections[2]) sections[2].textContent = t('menuLegalSection');
-        const items = menu.querySelectorAll('.menu-item');
-        const keys = ['menuUsage','menuVehicle','menuInsurance','menuFaq','menuContact','menuClause','menuPrivacy','menuLegal','menuCompany'];
-        items.forEach((item, i) => {
-            if (keys[i]) {
-                const icon = item.querySelector('.menu-item-icon');
-                const arrow = item.querySelector('.menu-item-arrow');
-                const iconText = icon ? icon.textContent : '';
-                const arrowText = arrow ? arrow.outerHTML : '';
-                item.innerHTML = `<span class="menu-item-icon">${iconText}</span>${t(keys[i])}${arrowText}`;
-            }
+        // ⚠️ インデックス順依存は禁止（先頭に「エリアを選び直す」リンク等があると1個ずれて
+        //    ラベルとリンク先が食い違う＝「ご利用方法」を押すとTOPへ等の事故になる）。
+        //    data-mk 属性で確実にキー対応させ、該当項目のhref/onclickは触らない。
+        menu.querySelectorAll('.menu-item[data-mk]').forEach(function (item) {
+            const k = item.getAttribute('data-mk');
+            if (!k) return;
+            const icon = item.querySelector('.menu-item-icon');
+            const arrow = item.querySelector('.menu-item-arrow');
+            const iconText = icon ? icon.textContent : '';
+            const arrowText = arrow ? arrow.outerHTML : '';
+            item.innerHTML = `<span class="menu-item-icon">${iconText}</span>${t(k)}${arrowText}`;
         });
     }
 
