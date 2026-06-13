@@ -12,13 +12,9 @@
     <title>KEYDROP｜札幌カーデリバリーサービス</title>
     <!-- 接続先を事前に確立（初回表示の体感速度向上） -->
     <link rel="preconnect" href="https://ckrxttbnawkclshczsia.supabase.co" crossorigin>
-    <link rel="preconnect" href="https://unpkg.com" crossorigin>
-    <link rel="preconnect" href="https://a.tile.openstreetmap.org" crossorigin>
-    <link rel="preconnect" href="https://b.tile.openstreetmap.org" crossorigin>
-    <link rel="preconnect" href="https://c.tile.openstreetmap.org" crossorigin>
+    <link rel="preconnect" href="https://maps.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://maps.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Square Web Payments SDK（本番）＝サイト内カード入力フォーム用 -->
     <script src="https://web.squarecdn.com/v1/square.js"></script>
     <style>
@@ -1316,24 +1312,57 @@
     let collectionMarker = null;
     let baseMarker = null; // KEYDROP出発拠点（固定）
 
+    // ════════════════════════════════════════════
+    // ── Google Maps アダプタ（2026-06-13 Leaflet→Google移行）──
+    //  Google Maps JS は loadGooglePlaces() で読込済み（住所検索/逆ジオで使用中）。
+    //  地図タイル＋ピンもGoogleに統一（OSM公開タイルのスロットリング回避・課金単位=map load）。
+    // ════════════════════════════════════════════
+    function kdEnsureGoogle(cb) {
+        if (window.google && google.maps && google.maps.Map) { cb(); return; }
+        try { if (typeof loadGooglePlaces === 'function') loadGooglePlaces(); } catch (e) {}
+        var n = 0;
+        var iv = setInterval(function () {
+            if (window.google && google.maps && google.maps.Map) { clearInterval(iv); cb(); }
+            else if (++n > 120) { clearInterval(iv); } // ~12秒で諦め（描画エラーの受け皿が拾う）
+        }, 100);
+    }
+    // SVGデータURIのピン（絵文字つき・anchorは先端）
+    function kdSvgPin(emoji, color) {
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="38" height="48">'
+            + '<path d="M19 1C9 1 1 9 1 19c0 12 18 28 18 28s18-16 18-28C37 9 29 1 19 1z" fill="' + color + '" stroke="#fff" stroke-width="2"/>'
+            + '<circle cx="19" cy="18" r="11" fill="#fff"/>'
+            + '<text x="19" y="23" font-size="14" text-anchor="middle">' + emoji + '</text></svg>';
+        return { url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg), scaledSize: new google.maps.Size(38, 48), anchor: new google.maps.Point(19, 47) };
+    }
+    // 予算監視：地図を1枚生成するたびに +1（＝Googleの「map load」課金単位）。
+    //  fire-and-forget。RPC未作成(024未適用)の間は静かに失敗するだけ（適用後に計測開始）。
+    function kdCountMapLoad() {
+        try {
+            var st = (typeof KD_API_STORE === 'function') ? KD_API_STORE() : (KD_STORE === 'naha' ? 'nha' : 'spk');
+            fetch(SUPABASE_URL + '/rest/v1/rpc/kd_bump_maploads', {
+                method: 'POST', keepalive: true,
+                headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ p_store: st }),
+            }).catch(function () {});
+        } catch (e) {}
+    }
+
     // ── マップ上の「対象エリア」可視化：配達範囲の円＋（那覇）空港の引き渡し不可ゾーン ──
     let kdAreaCircle = null, kdAirportRect = null, kdAirportLabel = null;
     function drawAreaOverlays() {
-        if (!map || typeof L === 'undefined') return;
+        if (!map || !(window.google && google.maps)) return;
         const cfg = state.deliveryConfig || {};
         // 対象エリア（配達可能範囲）＝緑の円
-        if (kdAreaCircle) { try { map.removeLayer(kdAreaCircle); } catch (e) {} kdAreaCircle = null; }
+        if (kdAreaCircle) { try { kdAreaCircle.setMap(null); } catch (e) {} kdAreaCircle = null; }
         if (cfg.centerLat != null && cfg.centerLng != null && cfg.radiusKm) {
-            kdAreaCircle = L.circle([cfg.centerLat, cfg.centerLng], { radius: cfg.radiusKm * 1000, color: '#16a34a', weight: 1.5, opacity: .7, fillColor: '#16a34a', fillOpacity: .05, dashArray: '6 5', interactive: false }).addTo(map);
+            kdAreaCircle = new google.maps.Circle({ center: { lat: cfg.centerLat, lng: cfg.centerLng }, radius: cfg.radiusKm * 1000, strokeColor: '#16a34a', strokeWeight: 1.5, strokeOpacity: .7, fillColor: '#16a34a', fillOpacity: .05, clickable: false, map: map });
         }
-        // 那覇空港 引き渡し不可ゾーン＝赤の矩形＋ラベル
-        if (kdAirportRect) { try { map.removeLayer(kdAirportRect); } catch (e) {} kdAirportRect = null; }
-        if (kdAirportLabel) { try { map.removeLayer(kdAirportLabel); } catch (e) {} kdAirportLabel = null; }
+        // 那覇空港 引き渡し不可ゾーン＝赤のポリゴン
+        if (kdAirportRect) { try { kdAirportRect.forEach(function (p) { p.setMap(null); }); } catch (e) {} kdAirportRect = null; }
         if (KD_STORE === 'naha') {
-            kdAirportRect = L.layerGroup(KD_NAHA_NOGO_POLYS.map(function (p) {
-                return L.polygon(p, { color: '#dc2626', weight: 2, fillColor: '#dc2626', fillOpacity: .28, interactive: false });
-            })).addTo(map);
-            kdAirportLabel = L.marker([26.1960, 127.6455], { interactive: false, keyboard: false, icon: L.divIcon({ className: 'kd-nogo-label', html: '🛫 空港・基地内<br>引き渡し不可', iconSize: [128, 36], iconAnchor: [64, 18] }) }).addTo(map);
+            kdAirportRect = KD_NAHA_NOGO_POLYS.map(function (poly) {
+                return new google.maps.Polygon({ paths: poly.map(function (pt) { return { lat: pt[0], lng: pt[1] }; }), strokeColor: '#dc2626', strokeWeight: 2, strokeOpacity: .9, fillColor: '#dc2626', fillOpacity: .28, clickable: false, map: map });
+            });
         }
     }
     function initMap(lat, lng) {
@@ -1341,47 +1370,39 @@
         const container = document.getElementById('map');
         if (!container) return;
 
-        map = L.map('map', {
-            center: [lat, lng],
-            zoom: 14,
-            zoomControl: false,
+        kdEnsureGoogle(function () {
+            if (map) return;
+            const cont = document.getElementById('map');
+            if (!cont) return;
+            map = new google.maps.Map(cont, {
+                center: { lat: lat, lng: lng }, zoom: 14,
+                disableDefaultUI: true, gestureHandling: 'greedy',
+                clickableIcons: false, keyboardShortcuts: false,
+            });
+            cont.dataset.kdMap = '1';
+            kdCountMapLoad();
+            drawAreaOverlays();
+
+            // Tap to set pin（locStepで お届け/回収 を振り分け）
+            map.addListener('click', function (e) {
+                if (state.screen === 'step_vehicle') return; // 車両画面は閲覧用（ピン移動しない）
+                if (state.locStep === 'collection') setCollectionPin(e.latLng.lat(), e.latLng.lng());
+                else setDeliveryPin(e.latLng.lat(), e.latLng.lng());
+            });
+
+            state.mapReady = true;
+
+            // 初期ピン（他エリアから切替えて来た場合は引き継いだ地点を優先）
+            let _pend = null;
+            try { const r = sessionStorage.getItem('kd_pendingPin'); if (r) { const o = JSON.parse(r); if (o && o.area === KD_STORE) { _pend = o; sessionStorage.removeItem('kd_pendingPin'); } } } catch (e) {}
+            if (_pend) setDeliveryPin(_pend.lat, _pend.lng, _pend.addr || '');
+            else setDeliveryPin(lat, lng);
+
+            // レイアウト確定後にリサイズ反映（flex/PCで高さ確定が遅れる対策）
+            [200, 500, 900].forEach(function (ms) {
+                setTimeout(function () { if (map) { google.maps.event.trigger(map, 'resize'); map.setCenter({ lat: state.deliveryLat || lat, lng: state.deliveryLng || lng }); } }, ms);
+            });
         });
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OSM',
-            maxZoom: 19,
-            crossOrigin: true,
-            keepBuffer: 4,            // 周辺タイルを多めに保持＝パン時の再取得/チラつきを減らす
-            updateWhenZooming: false, // ズーム中はタイル取得を抑えてカクつき軽減
-            updateWhenIdle: true,     // 操作が止まってからまとめて取得＝起動時の同時リクエスト集中を緩和
-        }).addTo(map);
-        drawAreaOverlays();
-
-        // Tap to set pin（locStepで お届け/回収 を振り分け）
-        map.on('click', (e) => {
-            if (state.screen === 'step_vehicle') return; // 車両画面の地図は閲覧用（ピン移動しない）
-            if (state.locStep === 'collection') setCollectionPin(e.latlng.lat, e.latlng.lng);
-            else setDeliveryPin(e.latlng.lat, e.latlng.lng);
-        });
-
-        state.mapReady = true;
-
-        // Fix map size for dynamic containers (PC/flexレイアウトで高さ確定が遅れる対策)
-        setTimeout(() => { if (map) map.invalidateSize(); }, 120);
-        setTimeout(() => { if (map) map.invalidateSize(); }, 350);
-        setTimeout(() => { if (map) map.invalidateSize(); }, 700);
-        // コンテナのサイズ変化に追従してタイル再描画（PCの白抜け/切れ対策）
-        if (window.ResizeObserver) {
-            try {
-                const mw = document.getElementById('mapWrap');
-                if (mw) { const ro = new ResizeObserver(() => { if (map) map.invalidateSize(); }); ro.observe(mw); }
-            } catch (e) {}
-        }
-
-        // Place initial pin（他エリアから切替えて来た場合は引き継いだ地点を優先）
-        let _pend = null;
-        try { const r = sessionStorage.getItem('kd_pendingPin'); if (r) { const o = JSON.parse(r); if (o && o.area === KD_STORE) { _pend = o; sessionStorage.removeItem('kd_pendingPin'); } } } catch (e) {}
-        if (_pend) setDeliveryPin(_pend.lat, _pend.lng, _pend.addr || '');
-        else setDeliveryPin(lat, lng);
     }
 
     function setDeliveryPin(lat, lng, addr) {
@@ -1391,20 +1412,18 @@
         state.deliveryLng = lng;
 
         if (deliveryMarker) {
-            deliveryMarker.setLatLng([lat, lng]);
+            deliveryMarker.setPosition({ lat: lat, lng: lng });
         } else if (map) {
-            const pinIcon = L.divIcon({
-                className: 'custom-pin',
-                html: '<div class="kd-pin-mascot"><div class="kd-mk-label kd-mk-del">📍 お届け場所</div><img src="images/mascot_pin.png" alt="お届け"><div class="pin-marker-shadow" style="margin-top:-2px;"></div></div>',
-                iconSize: [40, 62],
-                iconAnchor: [20, 60],
+            deliveryMarker = new google.maps.Marker({
+                position: { lat: lat, lng: lng }, map: map, draggable: true,
+                icon: { url: 'images/mascot_pin.png', scaledSize: new google.maps.Size(40, 62), anchor: new google.maps.Point(20, 60) },
+                title: 'お届け場所',
             });
-            deliveryMarker = L.marker([lat, lng], { icon: pinIcon, draggable: true }).addTo(map);
-            deliveryMarker.on('dragend', (e) => {
-                const pos = e.target.getLatLng();
-                state.deliveryLat = pos.lat;
-                state.deliveryLng = pos.lng;
-                reverseGeocode(pos.lat, pos.lng);
+            deliveryMarker.addListener('dragend', function () {
+                const pos = deliveryMarker.getPosition();
+                state.deliveryLat = pos.lat();
+                state.deliveryLng = pos.lng();
+                reverseGeocode(pos.lat(), pos.lng());
             });
         }
 
@@ -1416,7 +1435,7 @@
             fetchFullAddress(lat, lng).then(r => { if (r && r.full) { state.deliveryAddrCanon = r.full; if (typeof updateAreaAlert === 'function') updateAreaAlert(); if (typeof renderLocPanel === 'function') renderLocPanel(); } }).catch(() => {});
         }
         else { state.deliveryAddrCanon = ''; reverseGeocode(lat, lng); }
-        if (map) map.panTo([lat, lng]);
+        if (map) map.panTo({ lat: lat, lng: lng });
     }
 
     // 回収場所ピン（お届けとは別色🏁）
@@ -1425,23 +1444,21 @@
         state.collectionLng = lng;
         state.sameCollection = false;
         if (collectionMarker) {
-            collectionMarker.setLatLng([lat, lng]);
+            collectionMarker.setPosition({ lat: lat, lng: lng });
         } else if (map) {
-            const cIcon = L.divIcon({
-                className: 'custom-pin',
-                html: '<div class="pin-marker pin-collect"><div class="kd-mk-label kd-mk-col">🏁 回収場所</div><div class="pin-marker-inner" style="background:#1a1a1a;"><span>🏁</span></div><div class="pin-marker-shadow"></div></div>',
-                iconSize: [32, 42], iconAnchor: [16, 42],
+            collectionMarker = new google.maps.Marker({
+                position: { lat: lat, lng: lng }, map: map, draggable: true,
+                icon: kdSvgPin('🏁', '#1a1a1a'), title: '回収場所',
             });
-            collectionMarker = L.marker([lat, lng], { icon: cIcon, draggable: true }).addTo(map);
-            collectionMarker.on('dragend', (e) => {
-                const pos = e.target.getLatLng();
-                state.collectionLat = pos.lat; state.collectionLng = pos.lng;
-                reverseGeocodeCollection(pos.lat, pos.lng);
+            collectionMarker.addListener('dragend', function () {
+                const pos = collectionMarker.getPosition();
+                state.collectionLat = pos.lat(); state.collectionLng = pos.lng();
+                reverseGeocodeCollection(pos.lat(), pos.lng());
             });
         }
         if (addr) { state.collectionAddr = addr; state.collectionAddrFull = addr; renderLocationBadge(); renderLocPanel(); }
         else { renderLocationBadge(); reverseGeocodeCollection(lat, lng); }
-        if (map) map.panTo([lat, lng]);
+        if (map) map.panTo({ lat: lat, lng: lng });
     }
 
     // 地図再生成後にstateからピンを復元（逆ジオで住所を上書きしないようaddrを渡す）
@@ -1458,22 +1475,20 @@
         if (state.deliveryLat) pts.push([state.deliveryLat, state.deliveryLng]);
         if (state.collectionLat) pts.push([state.collectionLat, state.collectionLng]);
         try {
-            if (pts.length >= 2) map.fitBounds(pts, { padding: [60, 60], maxZoom: 15 });
-            else if (pts.length === 1) map.setView(pts[0], 14);
+            if (pts.length >= 2) {
+                const b = new google.maps.LatLngBounds();
+                pts.forEach(function (p) { b.extend({ lat: p[0], lng: p[1] }); });
+                map.fitBounds(b, 60);
+                google.maps.event.addListenerOnce(map, 'idle', function () { if (map.getZoom() > 15) map.setZoom(15); });
+            } else if (pts.length === 1) { map.setCenter({ lat: pts[0][0], lng: pts[0][1] }); map.setZoom(14); }
         } catch (e) {}
     }
-    // お届け(マスコット)/回収(🏁黒)の2ピンを両方表示＝別アイコンで区別。ドラッグは場所ステップで両方可、車両画面はロック
+    // お届け(マスコット)/回収(🏁黒)の2ピンを両方表示。ドラッグは場所ステップで両方可、車両画面はロック
     function updateMarkerDragging() {
         try {
             const lock = (state.screen === 'step_vehicle');
-            if (deliveryMarker) {
-                if (deliveryMarker._icon) deliveryMarker._icon.style.display = '';
-                if (deliveryMarker.dragging) { lock ? deliveryMarker.dragging.disable() : deliveryMarker.dragging.enable(); }
-            }
-            if (collectionMarker) {
-                if (collectionMarker._icon) collectionMarker._icon.style.display = '';
-                if (collectionMarker.dragging) { lock ? collectionMarker.dragging.disable() : collectionMarker.dragging.enable(); }
-            }
+            if (deliveryMarker) { deliveryMarker.setVisible(true); deliveryMarker.setDraggable(!lock); }
+            if (collectionMarker) { collectionMarker.setVisible(true); collectionMarker.setDraggable(!lock); }
         } catch (e) {}
     }
 
@@ -1661,7 +1676,7 @@
     }
     function clearCollectionPin() {
         state.collectionLat = null; state.collectionLng = null; state.collectionAddr = ''; state.collectionAddrFull = '';
-        if (collectionMarker && map) { map.removeLayer(collectionMarker); collectionMarker = null; }
+        if (collectionMarker && map) { try { collectionMarker.setMap(null); } catch (e) {} collectionMarker = null; }
         const badge = document.getElementById('locationBadge'); if (badge) badge.remove();
         renderLocPanel();
     }
@@ -1676,8 +1691,8 @@
         state.deliveryLat = null;
         state.deliveryLng = null;
         state.deliveryAddr = '';
-        if (deliveryMarker && map) {
-            map.removeLayer(deliveryMarker);
+        if (deliveryMarker) {
+            try { deliveryMarker.setMap(null); } catch (e) {}
             deliveryMarker = null;
         }
         state.availableVehicles = [];
@@ -1689,7 +1704,8 @@
     function geolocateUser() {
         // Reset to Sapporo Station center
         if (map) {
-            map.setView([DEFAULT_LAT, DEFAULT_LNG], 14);
+            map.setCenter({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+            map.setZoom(14);
             setDeliveryPin(DEFAULT_LAT, DEFAULT_LNG);
         }
     }
@@ -1988,22 +2004,23 @@
                     restorePins();
                 } else {
                     const container = document.getElementById('map');
-                    if (container && !container._leaflet_id) {
-                        map.remove();
+                    if (container && container.dataset.kdMap !== '1') {
+                        // #map が作り直された（画面再描画でinnerHTML差し替え）→ 地図を再生成
                         map = null;
                         deliveryMarker = null;
                         collectionMarker = null;
                         baseMarker = null;
-                        initMap(state.deliveryLat || state.userLat, state.deliveryLng || state.userLng);
+                        kdAreaCircle = null; kdAirportRect = null; kdAirportLabel = null;
+                        initMap(state.deliveryLat || state.userLat || DEFAULT_LAT, state.deliveryLng || state.userLng || DEFAULT_LNG);
                         restorePins();
-                    } else {
-                        map.invalidateSize();
+                    } else if (window.google && google.maps) {
+                        google.maps.event.trigger(map, 'resize');
                     }
                 }
                 renderLocationBadge();
-                // レイアウト確定後にタイル再描画＋両ピン(スタート/ゴール)を一括表示
-                setTimeout(() => { if (map) map.invalidateSize(); }, 120);
-                setTimeout(() => { if (map) { map.invalidateSize(); if (state.deliveryLat && state.collectionLat) fitToPins(); } }, 450);
+                // レイアウト確定後にリサイズ反映＋両ピン(スタート/ゴール)を一括表示
+                setTimeout(() => { if (map && window.google && google.maps) google.maps.event.trigger(map, 'resize'); }, 150);
+                setTimeout(() => { if (map && window.google && google.maps) { google.maps.event.trigger(map, 'resize'); if (state.deliveryLat && state.collectionLat) fitToPins(); } }, 500);
             });
         }
 
@@ -2400,7 +2417,7 @@
     function useSameCollection() {
         state.collectionLat=state.deliveryLat; state.collectionLng=state.deliveryLng;
         state.collectionAddr=state.deliveryAddr; state.collectionAddrFull=state.deliveryAddrFull||state.deliveryAddr; state.sameCollection=true;
-        if (collectionMarker && map) { map.removeLayer(collectionMarker); collectionMarker=null; }
+        if (collectionMarker && map) { try { collectionMarker.setMap(null); } catch (e) {} collectionMarker=null; }
         renderLocPanel(); fetchAvailableVehicles();
     }
     // ステップ内の日付/時間（お届け＝STEP1 / 回収＝STEP2）
@@ -3214,9 +3231,9 @@
         const input = document.getElementById('addressSearch');
         if (input) input.value = placeName; // 検索窓に選択名を残す（消さない）
         if (map) {
-            map.invalidateSize();
+            if (window.google && google.maps) google.maps.event.trigger(map, 'resize');
             setTimeout(() => {
-                map.setView([lat, lng], 16);
+                map.setCenter({ lat: lat, lng: lng }); map.setZoom(16);
                 if (state.locStep === 'collection') setCollectionPin(lat, lng, placeName);
                 else setDeliveryPin(lat, lng, placeName);
             }, 100);
@@ -3878,7 +3895,7 @@
     function mpEditClose() {
         const m = document.getElementById('mpEditModal');
         if (m) m.style.display = 'none';
-        if (mpEditMap) { try { mpEditMap.remove(); } catch (e) {} mpEditMap = null; }
+        if (mpEditMap) { try { if (mpEditMarker) mpEditMarker.setMap(null); } catch (e) {} mpEditMap = null; mpEditMarker = null; }
         mpEdit = null;
     }
     let mpEditMap = null, mpEditMarker = null;
@@ -3887,7 +3904,7 @@
         const modal = document.getElementById('mpEditModal');
         if (!el || !modal || !mpEdit) return;
         modal.style.display = 'flex';
-        if (mpEditMap) { try { mpEditMap.remove(); } catch (e) {} mpEditMap = null; }
+        if (mpEditMap) { try { if (mpEditMarker) mpEditMarker.setMap(null); } catch (e) {} mpEditMap = null; mpEditMarker = null; }
 
         // 地図ピック表示
         if (mpEdit.mapMode) {
@@ -4018,7 +4035,7 @@
         if (isDel) { mpEdit.del_place = name; mpEdit.del_lat = lat; mpEdit.del_lng = lng; } else { mpEdit.col_place = name; mpEdit.col_lat = lat; mpEdit.col_lng = lng; }
         const pe = document.getElementById('mpEditPicked'); if (pe) pe.textContent = name;
         const si = document.getElementById('mpEditSearchInput'); if (si) si.value = name;
-        if (mpEditMap) { try { mpEditMap.setView([lat, lng], 16); if (mpEditMarker) mpEditMarker.setLatLng([lat, lng]); } catch (e) {} }
+        if (mpEditMap) { try { mpEditMap.setCenter({ lat: lat, lng: lng }); mpEditMap.setZoom(16); if (mpEditMarker) mpEditMarker.setPosition({ lat: lat, lng: lng }); } catch (e) {} }
         mpEditCheckArea(lat, lng, name);
     }
     // 変更モーダルで選んだ場所が配達エリア内か判定（予約時と同じ checkDeliverable）→警告表示＋送信ブロック用にstateへ
@@ -4033,27 +4050,31 @@
     }
     async function initMpEditMap() {
         const el = document.getElementById('mpEditMap');
-        if (!el || typeof L === 'undefined' || !mpEdit) return;
+        if (!el || !mpEdit) return;
         const isDel = mpEdit.mapMode === 'del';
         // 初期中心：現在の住所をジオコード、なければ現在エリア中心（那覇予約なら那覇）
         let center = kdGeoCenter();
         const cur = isDel ? mpEdit.del_place : mpEdit.col_place;
         if (cur) { try { const g = await geocodeJP(cur); if (g) center = g; } catch (e) {} }
-        mpEditMap = L.map(el, { zoomControl: true, attributionControl: false }).setView(center, 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mpEditMap);
-        mpEditMarker = L.marker(center, { draggable: true }).addTo(mpEditMap);
-        const setFrom = async (lat, lng) => {
-            const pe = document.getElementById('mpEditPicked');
-            if (pe) pe.textContent = '住所を取得中…';
-            let addr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            try { const a = await fetchFullAddress(lat, lng); if (a.addr) addr = a.addr; } catch (e) {}
-            if (isDel) { mpEdit.del_place = addr; mpEdit.del_lat = lat; mpEdit.del_lng = lng; } else { mpEdit.col_place = addr; mpEdit.col_lat = lat; mpEdit.col_lng = lng; }
-            if (pe) pe.textContent = addr;
-            mpEditCheckArea(lat, lng, addr);
-        };
-        mpEditMap.on('click', (e) => { mpEditMarker.setLatLng(e.latlng); setFrom(e.latlng.lat, e.latlng.lng); });
-        mpEditMarker.on('dragend', () => { const ll = mpEditMarker.getLatLng(); setFrom(ll.lat, ll.lng); });
-        setTimeout(() => { try { mpEditMap.invalidateSize(); } catch (e) {} }, 120);
+        kdEnsureGoogle(function () {
+            if (!document.getElementById('mpEditMap')) return;
+            const c = { lat: center[0], lng: center[1] };
+            mpEditMap = new google.maps.Map(el, { center: c, zoom: 15, disableDefaultUI: true, zoomControl: true, gestureHandling: 'greedy', clickableIcons: false });
+            kdCountMapLoad();
+            mpEditMarker = new google.maps.Marker({ position: c, map: mpEditMap, draggable: true, icon: kdSvgPin(isDel ? '📍' : '🏁', isDel ? '#16a34a' : '#dc2626') });
+            const setFrom = async (lat, lng) => {
+                const pe = document.getElementById('mpEditPicked');
+                if (pe) pe.textContent = '住所を取得中…';
+                let addr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                try { const a = await fetchFullAddress(lat, lng); if (a.addr) addr = a.addr; } catch (e) {}
+                if (isDel) { mpEdit.del_place = addr; mpEdit.del_lat = lat; mpEdit.del_lng = lng; } else { mpEdit.col_place = addr; mpEdit.col_lat = lat; mpEdit.col_lng = lng; }
+                if (pe) pe.textContent = addr;
+                mpEditCheckArea(lat, lng, addr);
+            };
+            mpEditMap.addListener('click', function (e) { mpEditMarker.setPosition(e.latLng); setFrom(e.latLng.lat(), e.latLng.lng()); });
+            mpEditMarker.addListener('dragend', function () { const ll = mpEditMarker.getPosition(); setFrom(ll.lat(), ll.lng()); });
+            setTimeout(function () { try { google.maps.event.trigger(mpEditMap, 'resize'); mpEditMap.setCenter(c); } catch (e) {} }, 150);
+        });
     }
     async function mpEditSave() {
         if (!mpEdit || mpEdit.saving) return;
@@ -4294,33 +4315,31 @@
     // 固定マップ：お届け地点＋回収地点を一括表示
     async function initMypageMap() {
         const mapEl = document.getElementById('mypageMap');
-        if (!mapEl || mapEl.querySelector('.leaflet-container')) return;
+        if (!mapEl || mapEl.dataset.kdInit === '1') return;
         const del = decodeURIComponent(mapEl.dataset.del || '');
         const col = decodeURIComponent(mapEl.dataset.col || '');
-
-        const map = L.map(mapEl, { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView(kdGeoCenter(), 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
-
-        const pin = (label, bg, emo) => L.divIcon({
-            className: '',
-            html: `<div style="display:flex;flex-direction:column;align-items:center;">
-                     <div style="background:${bg};color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);margin-bottom:2px;">${label}</div>
-                     <div style="background:${bg};color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">${emo}</div>
-                   </div>`,
-            iconSize: [60, 48], iconAnchor: [30, 48],
-        });
-
         const [d, c] = await Promise.all([geocodeJP(del), geocodeJP(col)]);
-        const pts = [];
-        if (d) { L.marker(d, { icon: pin('お届け', '#16a34a', '📍') }).addTo(map); pts.push(d); }
-        if (c) { L.marker(c, { icon: pin('回収', '#dc2626', '🏁') }).addTo(map); pts.push(c); }
-
-        setTimeout(() => {
-            map.invalidateSize();
-            const same = pts.length === 2 && Math.abs(pts[0][0]-pts[1][0]) < 0.0005 && Math.abs(pts[0][1]-pts[1][1]) < 0.0005;
-            if (pts.length >= 2 && !same) { map.fitBounds(pts, { padding: [45, 55], maxZoom: 15 }); }
-            else if (pts.length >= 1) { map.setView(pts[0], 14); }
-        }, 200);
+        kdEnsureGoogle(function () {
+            const el = document.getElementById('mypageMap');
+            if (!el || el.dataset.kdInit === '1') return;
+            el.dataset.kdInit = '1';
+            const ctr = kdGeoCenter();
+            const map = new google.maps.Map(el, { center: { lat: ctr[0], lng: ctr[1] }, zoom: 12, disableDefaultUI: true, gestureHandling: 'none', clickableIcons: false, keyboardShortcuts: false });
+            kdCountMapLoad();
+            const pts = [];
+            if (d) { new google.maps.Marker({ position: { lat: d[0], lng: d[1] }, map: map, icon: kdSvgPin('📍', '#16a34a'), title: 'お届け' }); pts.push(d); }
+            if (c) { new google.maps.Marker({ position: { lat: c[0], lng: c[1] }, map: map, icon: kdSvgPin('🏁', '#dc2626'), title: '回収' }); pts.push(c); }
+            setTimeout(function () {
+                google.maps.event.trigger(map, 'resize');
+                const same = pts.length === 2 && Math.abs(pts[0][0] - pts[1][0]) < 0.0005 && Math.abs(pts[0][1] - pts[1][1]) < 0.0005;
+                if (pts.length >= 2 && !same) {
+                    const b = new google.maps.LatLngBounds();
+                    pts.forEach(function (p) { b.extend({ lat: p[0], lng: p[1] }); });
+                    map.fitBounds(b, 50);
+                    google.maps.event.addListenerOnce(map, 'idle', function () { if (map.getZoom() > 15) map.setZoom(15); });
+                } else if (pts.length >= 1) { map.setCenter({ lat: pts[0][0], lng: pts[0][1] }); map.setZoom(14); }
+            }, 200);
+        });
     }
 
     function getCancelFee(lendDate, basePrice) {
