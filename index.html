@@ -4991,7 +4991,12 @@
         try{localStorage.setItem('kd_lang',lang);}catch(e){}
         if (_mapLoaded && _mapLangDiff) {
             try { localStorage.setItem('kd_resume', JSON.stringify({ ts: Date.now(), store: (typeof KD_STORE !== 'undefined' ? KD_STORE : ''), datetime: state.datetime })); } catch (e) {}
-            location.reload(); return;
+            // location.reload()はbfcache/既存window.google再利用で地図言語が変わらないことがある→
+            // URLを変える新規ナビゲーションで必ず新言語で地図JSを読み直す（?area維持＝ゲート再表示なし）。
+            var _sp = new URLSearchParams(location.search);
+            if (typeof KD_STORE !== 'undefined' && KD_STORE) _sp.set('area', KD_STORE);
+            _sp.set('_l', lang);
+            location.search = _sp.toString(); return;
         }
         kdResetGmapsLangIfPending(lang);
         // Update menu lang buttons
