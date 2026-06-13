@@ -84,34 +84,42 @@ Deno.serve(async (req) => {
   const projBillable = Math.max(0, projLoads - freeLoads);
   const projCost = (projBillable / 1000) * per1000;
 
-  // 段階判定（高い段階を優先・同じ月で同じ段階は二重通知しない）
-  // 数値が大きいほど深刻: 100(予算100)>80(予算80)>50(予算50)>12(無料100=課金開始)>8(無料80)
-  let stage = 0, head = "";
-  if (budgetPct >= 100) { stage = 100; head = "🔴🔴🔴 *地図API 予算100%超過* 🔴🔴🔴"; }
-  else if (budgetPct >= 80) { stage = 80; head = "🟠 *地図API 予算80%* 到達"; }
-  else if (budgetPct >= 50) { stage = 50; head = "🟡 *地図API 予算50%* 到達"; }
-  else if (freePct >= 100) { stage = 12; head = "🟠 *地図API 無料枠を超過（課金が始まりました）*"; }
-  else if (freePct >= 80) { stage = 8; head = "🟡 *地図API 無料枠80%*（まだ¥0・もうすぐ課金圏）"; }
+  // ── 今日の増分（前回レポート時の累計との差＝直近24h分）──
+  const costAt = (n: number) => Math.max(0, n - freeLoads) / 1000 * per1000;
+  const lastRepYm = cfg.last_report_ym, lastRepLoads = Number(cfg.last_report_loads) || 0;
+  const baseLoads = (lastRepYm === ym) ? lastRepLoads : 0; // 月またぎは0から
+  const todayLoads = Math.max(0, loads - baseLoads);
+  const todayCost = Math.max(0, costAt(loads) - costAt(baseLoads));
+  const remainYen = Math.max(0, budget - costYen);          // 予算残高
+  const remainPct = budget > 0 ? Math.max(0, Math.round((remainYen / budget) * 100)) : 0;
 
-  const lastYM = cfg.last_alert_ym, lastStage = Number(cfg.last_alert_pct) || 0;
-  const isNewMonth = lastYM !== ym;
-  const shouldAlert = stage > 0 && (isNewMonth || stage > lastStage);
+  // ── 閾値（新規到達した時だけ"超過アラート"行を冒頭に付ける）──
+  let stage = 0, alertHead = "";
+  if (budgetPct >= 100) { stage = 100; alertHead = "🔴🔴🔴 *予算100%超過* 🔴🔴🔴\n"; }
+  else if (budgetPct >= 80) { stage = 80; alertHead = "🟠 *予算80%到達*\n"; }
+  else if (budgetPct >= 50) { stage = 50; alertHead = "🟡 *予算50%到達*\n"; }
+  else if (freePct >= 100) { stage = 12; alertHead = "🟠 *無料枠を超過（課金開始・地図は止まりません）*\n"; }
+  else if (freePct >= 80) { stage = 8; alertHead = "🟡 *無料枠80%（まもなく課金圏）*\n"; }
+  const lastStage = (cfg.last_alert_ym === ym) ? (Number(cfg.last_alert_pct) || 0) : 0;
+  const head = (stage > lastStage) ? alertHead : "";
 
-  const summary =
-    `当月(${ym}) 地図起動: *${loads.toLocaleString()}回* (札幌${Number(bySpk).toLocaleString()}/那覇${Number(byNha).toLocaleString()})\n` +
-    `無料枠: ${loads.toLocaleString()} / ${freeLoads.toLocaleString()} (${freePct}%)\n` +
-    `推定コスト: *${yen(costYen)}* / 予算 ${yen(budget)} (${budgetPct}%)\n` +
-    `月末着地予測: ${projLoads.toLocaleString()}回 → 推定 ${yen(projCost)}`;
+  // ── 日次レポート（毎日発信：今日の使用量/料金＋予算残高）──
+  const report = head +
+    `📊 *KEYDROP 地図API 日次レポート* (${ym}-${String(jstDay()).padStart(2, "0")})\n` +
+    `・今日: *${todayLoads.toLocaleString()}回* / 推定 ${yen(todayCost)}\n` +
+    `・当月累計: ${loads.toLocaleString()}回 / 推定 ${yen(costYen)}（札幌${Number(bySpk).toLocaleString()}/那覇${Number(byNha).toLocaleString()}）\n` +
+    `・無料枠: ${loads.toLocaleString()} / ${freeLoads.toLocaleString()}（${freePct}%）\n` +
+    `・予算残高: *${yen(remainYen)}* / ${yen(budget)}（残${remainPct}%）\n` +
+    `・月末着地予測: ${projLoads.toLocaleString()}回 → 推定 ${yen(projCost)}` + (projCost > budget ? "（⚠️予算超過ペース）" : "");
 
-  if (shouldAlert) {
-    await notifySlack(`${head}\n${summary}\n${stage >= 12 ? "→ 課金圏です。問題なければ放置でOK（止まりません）。想定外なら不正アクセス等を確認。" : ""}`);
-    await sbPatch(`keydrop_budget?id=eq.1`, { last_alert_ym: ym, last_alert_pct: stage, updated_at: new Date().toISOString() });
-  } else if (isNewMonth && stage === 0) {
-    // 月初の状態リセット（前月通知をクリア）
-    await sbPatch(`keydrop_budget?id=eq.1`, { last_alert_ym: ym, last_alert_pct: 0, updated_at: new Date().toISOString() });
-  }
+  await notifySlack(report);
+  await sbPatch(`keydrop_budget?id=eq.1`, {
+    last_report_ym: ym, last_report_loads: loads,
+    last_alert_ym: ym, last_alert_pct: Math.max(stage, lastStage),
+    updated_at: new Date().toISOString(),
+  });
 
-  return new Response(JSON.stringify({ ok: true, ym, loads, costYen, budgetPct, freePct, stage, alerted: shouldAlert }), {
+  return new Response(JSON.stringify({ ok: true, ym, today: todayLoads, todayCost, loads, costYen, remainYen, budgetPct, freePct, stage }), {
     headers: { "content-type": "application/json" },
   });
 });
