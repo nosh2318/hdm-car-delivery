@@ -4983,8 +4983,16 @@
         } catch (e) {}
     }
     function switchLang(lang) {
+        // 地図ロード後の言語切替＝Google Maps JSは言語が読込時固定のため、地図ラベルを新言語に合わせるにはページ再読込が必須。
+        // 予約の日程を保存して再読込（エリア・言語はlocalStorageで維持／Pinは再タップ）。地図未ロード時は通常の即時切替。
+        var _mapLoaded = !!(window.google && window.google.maps && window.google.maps.places);
+        var _mapLangDiff = window.__gmapsLang && window.__gmapsLang !== lang;
         state.lang = lang;
         try{localStorage.setItem('kd_lang',lang);}catch(e){}
+        if (_mapLoaded && _mapLangDiff) {
+            try { localStorage.setItem('kd_resume', JSON.stringify({ ts: Date.now(), store: (typeof KD_STORE !== 'undefined' ? KD_STORE : ''), datetime: state.datetime })); } catch (e) {}
+            location.reload(); return;
+        }
         kdResetGmapsLangIfPending(lang);
         // Update menu lang buttons
         document.querySelectorAll('.menu-lang-btn').forEach(btn => {
@@ -5111,6 +5119,14 @@
     // エリア未選択（ゲート表示中）は予約アプリの重い初期化を行わない＝立ち上がり高速化。
     // エリア選択後は ?area= 付きで再読込されるので、その時に初期化される。
     if (window.__kdAppCtx) {
+        // 言語切替によるページ再読込時、保存した日程を復元（30分以内・同エリア）
+        try {
+            var _r = JSON.parse(localStorage.getItem('kd_resume') || 'null');
+            localStorage.removeItem('kd_resume');
+            if (_r && _r.ts && (Date.now() - _r.ts < 1800000) && _r.datetime && _r.store === (typeof KD_STORE !== 'undefined' ? KD_STORE : '')) {
+                state.datetime = _r.datetime;
+            }
+        } catch (e) {}
         render();
         resetHeroTimer();
         loadGooglePlaces(); // 検索用Google Placesを非同期ロード（失敗時はNominatim）
