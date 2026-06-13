@@ -1080,7 +1080,7 @@
             g.querySelector('#kdg-bg').style.backgroundImage = 'url(' + BG + ')';
             // 言語切替（ゲート上）→state.lang更新＋再描画。アプリ本体・静ページにも kd_lang で連動。
             g.querySelectorAll('#kdg-glang button').forEach(function (b) {
-                b.onclick = function () { var l = b.getAttribute('data-l'); state.lang = l; try { localStorage.setItem('kd_lang', l); } catch (e) {} try { document.documentElement.lang = l; } catch (e) {} paintGate(); };
+                b.onclick = function () { var l = b.getAttribute('data-l'); state.lang = l; try { localStorage.setItem('kd_lang', l); } catch (e) {} try { document.documentElement.lang = l; } catch (e) {} try { kdResetGmapsLangIfPending(l); } catch (e) {} paintGate(); };
             });
             g.querySelectorAll('.kdg-area.ready').forEach(function (btn) {
                 btn.onclick = function () {
@@ -3094,7 +3094,11 @@
             window.__gmapsReady = onGmapsReady;
             const s = document.createElement('script');
             s.id = 'gmapsScript'; s.async = true;
-            s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAPS_KEY + '&libraries=places&language=ja&region=JP&loading=async&callback=__gmapsReady';
+            // 地図ラベル(地名/通り名)を選択言語に合わせる。languageはJS API読込時に固定されるため、
+            // 読込時点の state.lang を採用（ゲート/メニューで言語確定後に地図が生成される想定）。
+            window.__gmapsLang = (state.lang && ['ja','en','zh','ko'].indexOf(state.lang) >= 0) ? state.lang : 'ja';
+            var _gmLang = (window.__gmapsLang === 'zh') ? 'zh-TW' : window.__gmapsLang;
+            s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAPS_KEY + '&libraries=places&language=' + _gmLang + '&region=JP&loading=async&callback=__gmapsReady';
             s.onerror = function () { gReady = false; };
             document.head.appendChild(s);
         } catch (e) { gReady = false; }
@@ -3111,7 +3115,7 @@
         const box = document.getElementById('addressSuggestions');
         if (!box || !gAuto) { photonSearch(query); return; }
         gAuto.getPlacePredictions({
-            input: query, sessionToken: gToken, language: 'ja',
+            input: query, sessionToken: gToken, language: (window.__gmapsLang || state.lang || 'ja'),
             componentRestrictions: { country: 'jp' },
             location: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG), radius: 40000,
         }, function (preds, status) {
@@ -4965,9 +4969,23 @@
     function dsSub(st) { const L = LANG[state.lang] || {}; return L['st_' + st + '_s'] || LANG.ja['st_' + st + '_s'] || (DELIVERY_STATUSES[st] || {}).sub || ''; }
     function stepLabel(k) { const L = LANG[state.lang] || {}; return L['step_' + k] || LANG.ja['step_' + k] || k; }
 
+    // 言語切替時、地図JS APIがまだ完全ロードされていなければ、保留中スクリプトを破棄して
+    // 次回の地図生成で新言語ラベルを読み込ませる（ロード後は言語固定＝再読込まで旧言語のまま）。
+    function kdResetGmapsLangIfPending(lang) {
+        try {
+            var loaded = window.google && window.google.maps && window.google.maps.places;
+            if (loaded) return; // 既に確定ロード済み→言語固定（再読込でのみ変更可）
+            if (window.__gmapsLang && window.__gmapsLang !== lang) {
+                var el = document.getElementById('gmapsScript');
+                if (el && el.parentNode) el.parentNode.removeChild(el);
+                window.__gmapsLang = null; window.__gmapsReady = null;
+            }
+        } catch (e) {}
+    }
     function switchLang(lang) {
         state.lang = lang;
         try{localStorage.setItem('kd_lang',lang);}catch(e){}
+        kdResetGmapsLangIfPending(lang);
         // Update menu lang buttons
         document.querySelectorAll('.menu-lang-btn').forEach(btn => {
             btn.classList.toggle('active', btn.textContent.trim() === ({ja:'日本語',en:'English',zh:'繁體中文',ko:'한국어'}[lang]));
