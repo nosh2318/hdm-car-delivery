@@ -687,6 +687,23 @@
         }
         .geolocate-btn:hover { background: #f5f5f5; }
         .geolocate-btn:active { transform: scale(0.9); }
+        /* 選択した住所をマップ下部に常時表示（スクロール不要・ぱっと見で届け先が分かる） */
+        .kd-pin-overlay {
+            position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 1000;
+            background: rgba(255,255,255,.97); border-radius: 12px; border: 1.5px solid #FABE00;
+            box-shadow: 0 4px 18px rgba(0,0,0,.25); padding: 9px 11px;
+            display: flex; align-items: center; gap: 9px; cursor: pointer; max-width: 560px;
+            -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+        }
+        .kd-pin-overlay.ng { border-color: #fca5a5; background: rgba(254,242,242,.98); }
+        .kd-pin-overlay .kp-ic { font-size: 18px; flex: none; }
+        .kd-pin-overlay .kp-body { flex: 1; min-width: 0; }
+        .kd-pin-overlay .kp-lbl { font-size: 10px; font-weight: 800; color: #a07c00; line-height: 1.2; }
+        .kd-pin-overlay.ng .kp-lbl { color: #b91c1c; }
+        .kd-pin-overlay .kp-addr { font-size: 13px; font-weight: 700; color: #1a1a1a; line-height: 1.4;
+            word-break: break-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .kd-pin-overlay .kp-go { flex: none; font-size: 11px; font-weight: 800; color: #1a1a1a;
+            background: #FABE00; border-radius: 8px; padding: 7px 11px; white-space: nowrap; }
 
         /* ── Leaflet Custom ── */
         .leaflet-container { font-family: inherit; }
@@ -1678,9 +1695,53 @@
     }
 
     function renderLocationBadge() {
-        // 地図上のバッジは廃止（住所はマップ下のカードに1本化＝マップ被り/重複を解消）
+        // 旧バッジ掃除
         const existing = document.getElementById('locationBadge');
         if (existing) existing.remove();
+        // 選択した住所をマップ下部に常時表示（スクロール不要で「どこに届くか」がぱっと分かる）
+        const wrap = document.getElementById('mapWrap');
+        if (!wrap) return;
+        const isCol = state.locStep === 'collection';
+        const addr = isCol ? state.collectionAddr : state.deliveryAddr;
+        let ov = document.getElementById('pinOverlay');
+        if (!addr) { if (ov) ov.style.display = 'none'; return; }
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'pinOverlay';
+            ov.className = 'kd-pin-overlay';
+            ov.onclick = function () {
+                const dt = state.datetime;
+                // 条件が揃っていれば次へ進む／未充足なら下のパネル（日時選択・警告）へスクロール
+                if (state.locStep === 'collection') {
+                    if (dt.endDate && dt.endTime && state.collectionAddr) { goToVehicleStep(); return; }
+                } else {
+                    if (dt.startDate && dt.startTime && state.deliveryAddr && !state.outOfArea) { nextToCollection(); return; }
+                }
+                const lp = document.getElementById('locPanel');
+                if (lp && lp.scrollIntoView) lp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            };
+            wrap.appendChild(ov);
+        }
+        const ng = !isCol && state.outOfArea;
+        ov.className = 'kd-pin-overlay' + (ng ? ' ng' : '');
+        ov.style.display = 'flex';
+        if (ng) {
+            ov.innerHTML = `<span class="kp-ic">🚫</span>
+                <div class="kp-body">
+                    <div class="kp-lbl">${t('deliveryPlace')}</div>
+                    <div class="kp-addr">${state.outOfAreaReason || t('outOfAreaDefault')}</div>
+                </div>`;
+        } else {
+            const ic = isCol ? '🏁' : '📍';
+            const lbl = isCol ? t('collectionPlaceL') : t('deliveryPlace');
+            const go = isCol ? t('collectionCTA') : t('nextCollection');
+            ov.innerHTML = `<span class="kp-ic">${ic}</span>
+                <div class="kp-body">
+                    <div class="kp-lbl">${lbl}</div>
+                    <div class="kp-addr">${addr}</div>
+                </div>
+                <span class="kp-go">${go} ›</span>`;
+        }
     }
     function clearCollectionPin() {
         state.collectionLat = null; state.collectionLng = null; state.collectionAddr = ''; state.collectionAddrFull = '';
