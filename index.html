@@ -809,7 +809,7 @@
         }
         @media (min-width: 1280px) { .veh-sheet { width: 560px; } }
         /* 未入力の日付/時間を点滅（黄グロー）で入力を促す。入力完了で停止 */
-        @keyframes kdNeedBlink { 0%,100% { box-shadow: 0 0 0 0 rgba(250,190,0,0); border-color: #FABE00; } 50% { box-shadow: 0 0 0 5px rgba(250,190,0,.40); border-color: #f0a800; } }
+        @keyframes kdNeedBlink { 0%,100% { box-shadow: 0 0 0 0 rgba(250,190,0,.15); border-color: #FABE00; } 50% { box-shadow: 0 0 0 7px rgba(250,190,0,.55); border-color: #f0a800; } }
         .dt-group select.kd-need { border: 2px solid #FABE00 !important; background: #fffdf4 !important; animation: kdNeedBlink 1.05s ease-in-out infinite; }
         .form-input.kd-need { border: 2px solid #FABE00 !important; background: #fffdf4 !important; animation: kdNeedBlink 1.05s ease-in-out infinite; }
         .dt-group.kd-need-wrap label { color: #a07c00; font-weight: 800; }
