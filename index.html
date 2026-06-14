@@ -819,7 +819,7 @@
         /* ステップ誘導：今やる所だけハッキリ、それ以外は薄く（強弱で導く） */
         .kd-dim { opacity: .36 !important; filter: saturate(.5); transition: opacity .35s ease, filter .35s ease; }
         .map-search-bar.kd-need-loc { border: 2px solid #FABE00; animation: kdNeedBlink 1.05s ease-in-out infinite; }
-        .btn-primary.kd-cta-blink:not(:disabled), .kp-confirm.kd-cta-blink:not(:disabled) { animation: kdCtaPulse 1.15s ease-in-out infinite; }
+        .btn-primary.kd-cta-blink:not(:disabled), .kp-confirm.kd-cta-blink:not(:disabled), .kp-opt.kd-cta-blink:not(:disabled) { animation: kdCtaPulse 1.15s ease-in-out infinite; }
         @keyframes kdCtaPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(250,190,0,0); } 50% { box-shadow: 0 0 0 7px rgba(250,190,0,.45); } }
         /* 場所ステップ：地図の上に「ここで場所を選ぶ」点滅ヒント */
         .kd-loc-hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 1001;
@@ -1780,12 +1780,12 @@
                 h += `<div class="kp-opt kp-opt-dim"><b>①</b> 📍 ${t('orPickOnMap')}</div>`;
                 h += `<button class="kp-opt kp-opt-dim" disabled><b>②</b> ${t('sameAsDeliveryBtn')}</button>`;
             } else {
-                // ① 地図で選んだこの場所に決める（無ければ地図で選ぶ案内）
+                // ① 地図で選んだこの場所に決める（無ければ地図で選ぶ案内）。回収場所未FIX＝点滅で促す
                 h += custom
-                    ? `<button class="kp-opt kp-opt-active" onclick="collectionDecideGo()"><b>①</b> ${t('decideCollectHere')}<div class="kp-opt-sub">${state.collectionAddr}</div></button>`
+                    ? `<button class="kp-opt kp-opt-active kd-cta-blink" onclick="collectionDecideGo()"><b>①</b> ${t('decideCollectHere')}<div class="kp-opt-sub">${state.collectionAddr}</div></button>`
                     : `<div class="kp-opt kp-opt-dim"><b>①</b> 📍 ${t('orPickOnMap')}</div>`;
                 // ② お届けと同じ場所
-                h += `<button class="kp-opt" onclick="sameCollectionGo()"><b>②</b> ${t('sameAsDeliveryBtn')}${state.deliveryAddr ? `<div class="kp-opt-sub">${state.deliveryAddr}</div>` : ''}</button>`;
+                h += `<button class="kp-opt kd-cta-blink" onclick="sameCollectionGo()"><b>②</b> ${t('sameAsDeliveryBtn')}${state.deliveryAddr ? `<div class="kp-opt-sub">${state.deliveryAddr}</div>` : ''}</button>`;
             }
             h += `<button onclick="backToDelivery()" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('deliveryDest')}（${t('back')}）</button>`;
             ov.innerHTML = h;
