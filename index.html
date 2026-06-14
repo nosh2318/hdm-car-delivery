@@ -709,6 +709,14 @@
         /* 前進ボタン（回収場所を選ぶ／車両を選ぶ）は濃色で「決める(黄)」と区別 */
         .kd-pin-overlay .kp-confirm.kp-next { background: #1a1a1a; color: #fff; }
         .kd-pin-overlay .kp-confirm.kp-next:disabled { background: #e6e6e6; color: #aaa; }
+        /* 回収の①②2択（同じ枠内に並べる） */
+        .kd-pin-overlay .kp-opt { display: block; width: 100%; margin-top: 8px; background: #fff; border: 1.5px solid #1a1a1a;
+            color: #1a1a1a; border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 800; cursor: pointer; text-align: left; }
+        .kd-pin-overlay .kp-opt b { display: inline-block; min-width: 16px; color: #1a1a1a; }
+        .kd-pin-overlay .kp-opt.kp-opt-active { border-color: #FABE00; background: #fffdf4; }
+        .kd-pin-overlay .kp-opt.kp-opt-dim { border: 1.5px dashed #ccc; color: #999; cursor: default; font-weight: 700; }
+        .kd-pin-overlay .kp-opt-sub { font-size: 11px; font-weight: 600; color: #666; margin-top: 3px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .kd-pin-overlay .kp-note { margin-top: 8px; font-size: 12px; font-weight: 800; color: #a07c00; text-align: center; }
 
         /* ── Leaflet Custom ── */
@@ -1717,40 +1725,56 @@
         // 旧バッジ掃除
         const existing = document.getElementById('locationBadge');
         if (existing) existing.remove();
-        // 地図で選んだ住所＝「決定先」を地図上に1枚だけ表示（重複排除）。ここの「✓ 次へ」だけで進む。
         const wrap = document.getElementById('mapWrap');
         if (!wrap) return;
         const isCol = state.locStep === 'collection';
-        const addr = isCol ? state.collectionAddr : state.deliveryAddr;
-        let ov = document.getElementById('pinOverlay');
-        if (!addr) { if (ov) ov.style.display = 'none'; return; }
-        if (!ov) {
-            ov = document.createElement('div');
-            ov.id = 'pinOverlay';
-            ov.className = 'kd-pin-overlay';
-            wrap.appendChild(ov);
-        }
         const dt = state.datetime;
-        const ng = !isCol && state.outOfArea;
-        const dateOk = isCol ? !!(dt.endDate && dt.endTime) : !!(dt.startDate && dt.startTime);
-        const confirmed = isCol ? !!state.collectionConfirmed : !!state.deliveryConfirmed;
+        let ov = document.getElementById('pinOverlay');
+
+        // ── 回収ステップ：①お届けと同じ ／ ②地図で選んだ場所 を「同じ枠」で2択提示 ──
+        if (isCol) {
+            if (!ov) { ov = document.createElement('div'); ov.id = 'pinOverlay'; ov.className = 'kd-pin-overlay'; wrap.appendChild(ov); }
+            ov.className = 'kd-pin-overlay';
+            ov.style.display = 'block';
+            const dateOk = !!(dt.endDate && dt.endTime);
+            if (state.collectionConfirmed) {
+                // 決定済み → ✅住所 ＋「車両を選ぶ」
+                const go = t('collectionCTA');
+                ov.innerHTML =
+                    `<div class="kp-row"><span class="kp-ic">✅</span><div class="kp-body"><div class="kp-lbl">${t('collectionPlaceL')}</div><div class="kp-addr">${state.collectionAddr}</div></div></div>` +
+                    (dateOk ? `<button class="kp-confirm kp-next" onclick="goToVehicleStep()">${go} ›</button>`
+                            : `<button class="kp-confirm kp-next" disabled>${go} ›</button>`);
+            } else {
+                const custom = !!state.collectionAddr && !state.sameCollection;
+                let h = `<div class="kp-lbl" style="margin-bottom:2px;">🏁 ${t('collectionPlaceL')}</div>`;
+                h += `<button class="kp-opt" onclick="useSameCollection()"><b>①</b> ${t('sameAsDeliveryBtn')}${state.deliveryAddr ? `<div class="kp-opt-sub">${state.deliveryAddr}</div>` : ''}</button>`;
+                h += custom
+                    ? `<button class="kp-opt kp-opt-active" onclick="confirmCollectionLoc()"><b>②</b> 📍 ${t('useThisSpot')}<div class="kp-opt-sub">${state.collectionAddr}</div></button>`
+                    : `<div class="kp-opt kp-opt-dim"><b>②</b> 📍 ${t('orPickOnMap')}</div>`;
+                ov.innerHTML = h;
+            }
+            return;
+        }
+
+        // ── お届けステップ：住所が決まったら「✓ この場所に決める」→ 決定後「次へ」──
+        const addr = state.deliveryAddr;
+        if (!addr) { if (ov) ov.style.display = 'none'; return; }
+        if (!ov) { ov = document.createElement('div'); ov.id = 'pinOverlay'; ov.className = 'kd-pin-overlay'; wrap.appendChild(ov); }
+        const ng = state.outOfArea;
+        const dateOk = !!(dt.startDate && dt.startTime);
+        const confirmed = !!state.deliveryConfirmed;
         ov.className = 'kd-pin-overlay' + (ng ? ' ng' : '');
         ov.style.display = 'block';
-        const ic  = ng ? '🚫' : (confirmed ? '✅' : (isCol ? '🏁' : '📍'));
-        const lbl = isCol ? t('collectionPlaceL') : t('deliveryPlace');
+        const ic  = ng ? '🚫' : (confirmed ? '✅' : '📍');
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
-        let html = `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${lbl}</div><div class="kp-addr">${body}</div></div></div>`;
+        let html = `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
             if (!confirmed) {
-                // 段階A：まず「✓ この場所に決定」（決定するまで“次へ”は出さない）
-                const fn = isCol ? 'confirmCollectionLoc()' : 'confirmDeliveryLoc()';
-                html += `<button class="kp-confirm" onclick="${fn}">${t('decideHere')}</button>`;
+                html += `<button class="kp-confirm" onclick="confirmDeliveryLoc()">${t('decideHere')}</button>`;
             } else {
-                // 段階B：決定後に「次へ」を出す。日時未選択なら押せない（日付へ誘導）
-                const go = isCol ? t('collectionCTA') : t('nextCollection');
-                const fn = isCol ? 'goToVehicleStep()' : 'nextToCollection()';
+                const go = t('nextCollection');
                 html += dateOk
-                    ? `<button class="kp-confirm kp-next" onclick="${fn}">${go} ›</button>`
+                    ? `<button class="kp-confirm kp-next" onclick="nextToCollection()">${go} ›</button>`
                     : `<button class="kp-confirm kp-next" disabled>${go} ›</button>`;
             }
         }
@@ -2599,17 +2623,10 @@
         // 住所＆「次へ」は地図上のオーバーレイ(renderLocationBadge)に1本化＝重複排除。
         // ここ(マップ下)は補助だけ：回収=お届け先参照＋「同じ/戻る」、お届け=エリア外警告のみ。
         if (state.locStep === 'collection') {
-            // お届け先を参照表示（「どこにしたっけ？」対策。タップでお届けに戻れる）
-            const delRef = state.deliveryAddr
-                ? `<div onclick="backToDelivery()" style="cursor:pointer;display:flex;align-items:flex-start;gap:7px;background:#fffbf0;border:1px solid #FABE00;border-radius:9px;padding:7px 11px;"><span style="font-size:13px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:9px;color:#a07c00;font-weight:800;">${t('deliveryDest')}（${t('tapToChange')}）</div><div style="font-size:11.5px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr}</div></div><span style="font-size:10px;color:#a07c00;font-weight:800;flex:none;align-self:center;">${t('edit')}›</span></div>`
-                : '';
+            // ①②の選択は地図上カードに集約（重複排除）。ここはお届けに戻る導線だけ。
             return `
-                <div style="padding:8px 14px 12px;display:flex;flex-direction:column;gap:8px;">
-                    ${delRef}
-                    <div style="display:flex;gap:8px;">
-                        <button onclick="useSameCollection()" style="flex:1;padding:10px;background:#1a1a1a;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;">🔁 ${t('sameAsDeliveryBtn')}</button>
-                        <button onclick="backToDelivery()" style="flex:none;padding:10px 14px;background:#f1f1f1;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#444;cursor:pointer;">‹ ${t('back')}</button>
-                    </div>
+                <div style="padding:8px 14px 12px;">
+                    <button onclick="backToDelivery()" style="width:100%;padding:9px;background:#f1f1f1;border:none;border-radius:10px;font-size:12px;font-weight:700;color:#666;cursor:pointer;">‹ ${t('deliveryDest')}（${t('back')}）</button>
                 </div>`;
         }
         const areaWarn = state.outOfArea
@@ -4715,7 +4732,7 @@
             perDay: '円 / 1日', subtotalLabel: '合計', yenUnit: '円', cdwShort: '免責', seatShort: 'シート',
             age1_4: '1〜4歳', age4_10: '4〜10歳', backToVehSel: '‹ 車両選択へ戻る',
             vehDateChange: '日付・時間を変更', vehDateHint: '📅 日付・時間を変更して「この日程で検索する」を押してください',
-            collectionCTA: '車両を選ぶ', sameAsDeliveryBtn: 'お届けと同じ', deliveryDest: 'お届け先', tapToChange: 'タップで変更',
+            collectionCTA: '車両を選ぶ', sameAsDeliveryBtn: '🔁 お届けと同じ場所にする', orPickOnMap: 'または地図で別の場所を選ぶ', useThisSpot: 'この場所にする', deliveryDest: 'お届け先', tapToChange: 'タップで変更',
             daysShort: '日', resVehClass: 'ご予約車両クラス', goMypage: '📱 マイページに移動する',
             cardSafeNote: '🔒 カード情報はSquare（決済代行）へ直接送信され、当サイトには保存されません（安全決済）。',
             mypageLoginWarn: '⚠️ マイページのログインには<u>予約番号</u>と<u>ご予約時のメールアドレス</u>が必要となります。予約番号は大切に保管してください。',
@@ -4825,7 +4842,7 @@
             perDay: ' yen / day', subtotalLabel: 'Total', yenUnit: ' yen', cdwShort: 'CDW', seatShort: 'Seats',
             age1_4: '1–4 yrs', age4_10: '4–10 yrs', backToVehSel: '‹ Back to vehicles',
             vehDateChange: 'Change date/time', vehDateHint: '📅 Change the date/time, then tap "Search this period"',
-            collectionCTA: 'Choose a car', sameAsDeliveryBtn: 'Same as delivery', deliveryDest: 'Delivery to', tapToChange: 'tap to change',
+            collectionCTA: 'Choose a car', sameAsDeliveryBtn: '🔁 Same as delivery', orPickOnMap: 'or pick another spot on the map', useThisSpot: 'Use this spot', deliveryDest: 'Delivery to', tapToChange: 'tap to change',
             daysShort: ' days', resVehClass: 'Reserved Vehicle Class', goMypage: '📱 Go to My Page',
             cardSafeNote: '🔒 Card details are sent directly to Square (payment processor) and are not stored on this site (secure payment).',
             mypageLoginWarn: '⚠️ Logging in to My Page requires your <u>reservation number</u> and the <u>email used for booking</u>. Please keep your reservation number safe.',
@@ -4935,7 +4952,7 @@
             perDay: '日圓 / 1天', subtotalLabel: '合計', yenUnit: '日圓', cdwShort: '免責', seatShort: '座椅',
             age1_4: '1～4歲', age4_10: '4～10歲', backToVehSel: '‹ 返回車輛選擇',
             vehDateChange: '變更日期時間', vehDateHint: '📅 變更日期時間後請按「以此日程搜尋」',
-            collectionCTA: '選擇車輛', sameAsDeliveryBtn: '與送達相同', deliveryDest: '送達地點', tapToChange: '點擊變更',
+            collectionCTA: '選擇車輛', sameAsDeliveryBtn: '🔁 與送達地點相同', orPickOnMap: '或在地圖選擇其他地點', useThisSpot: '使用此地點', deliveryDest: '送達地點', tapToChange: '點擊變更',
             daysShort: '天', resVehClass: '預約車輛車型', goMypage: '📱 前往我的頁面',
             cardSafeNote: '🔒 卡片資訊將直接傳送至Square（金流代理），本網站不會保存（安全付款）。',
             mypageLoginWarn: '⚠️ 登入「我的頁面」需要<u>預約編號</u>與<u>預約時的電子郵件</u>。請妥善保管預約編號。',
@@ -5045,7 +5062,7 @@
             perDay: '엔 / 1일', subtotalLabel: '합계', yenUnit: '엔', cdwShort: '면책', seatShort: '시트',
             age1_4: '1~4세', age4_10: '4~10세', backToVehSel: '‹ 차량 선택으로',
             vehDateChange: '날짜·시간 변경', vehDateHint: '📅 날짜·시간을 변경한 뒤 "이 일정으로 검색"을 눌러 주세요',
-            collectionCTA: '차량 선택', sameAsDeliveryBtn: '배달과 동일', deliveryDest: '배달지', tapToChange: '탭하여 변경',
+            collectionCTA: '차량 선택', sameAsDeliveryBtn: '🔁 배달지와 동일', orPickOnMap: '또는 지도에서 다른 장소 선택', useThisSpot: '이 위치 사용', deliveryDest: '배달지', tapToChange: '탭하여 변경',
             daysShort: '일', resVehClass: '예약 차량 클래스', goMypage: '📱 마이페이지로 이동',
             cardSafeNote: '🔒 카드 정보는 Square(결제 대행)로 직접 전송되며 본 사이트에는 저장되지 않습니다 (안전 결제).',
             mypageLoginWarn: '⚠️ 마이페이지 로그인에는 <u>예약 번호</u>와 <u>예약 시 이메일 주소</u>가 필요합니다. 예약 번호를 소중히 보관해 주세요.',
