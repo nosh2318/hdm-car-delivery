@@ -690,20 +690,23 @@
         /* 選択した住所をマップ下部に常時表示（スクロール不要・ぱっと見で届け先が分かる） */
         .kd-pin-overlay {
             position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 1000;
-            background: rgba(255,255,255,.97); border-radius: 12px; border: 1.5px solid #FABE00;
-            box-shadow: 0 4px 18px rgba(0,0,0,.25); padding: 9px 11px;
-            display: flex; align-items: center; gap: 9px; cursor: pointer; max-width: 560px;
+            background: rgba(255,255,255,.98); border-radius: 12px; border: 1.5px solid #FABE00;
+            box-shadow: 0 4px 18px rgba(0,0,0,.25); padding: 10px 12px;
+            display: block; max-width: 560px;
             -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
         }
         .kd-pin-overlay.ng { border-color: #fca5a5; background: rgba(254,242,242,.98); }
+        .kd-pin-overlay .kp-row { display: flex; align-items: center; gap: 9px; }
         .kd-pin-overlay .kp-ic { font-size: 18px; flex: none; }
         .kd-pin-overlay .kp-body { flex: 1; min-width: 0; }
         .kd-pin-overlay .kp-lbl { font-size: 10px; font-weight: 800; color: #a07c00; line-height: 1.2; }
         .kd-pin-overlay.ng .kp-lbl { color: #b91c1c; }
         .kd-pin-overlay .kp-addr { font-size: 13px; font-weight: 700; color: #1a1a1a; line-height: 1.4;
             word-break: break-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .kd-pin-overlay .kp-go { flex: none; font-size: 11px; font-weight: 800; color: #1a1a1a;
-            background: #FABE00; border-radius: 8px; padding: 7px 11px; white-space: nowrap; }
+        .kd-pin-overlay .kp-confirm { display: block; width: 100%; margin-top: 9px; background: #FABE00; color: #1a1a1a;
+            border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 800; cursor: pointer; }
+        .kd-pin-overlay .kp-confirm:disabled { background: #e6e6e6; color: #aaa; cursor: not-allowed; }
+        .kd-pin-overlay .kp-note { margin-top: 8px; font-size: 12px; font-weight: 800; color: #a07c00; text-align: center; }
 
         /* ── Leaflet Custom ── */
         .leaflet-container { font-family: inherit; }
@@ -774,7 +777,7 @@
         /* ステップ誘導：今やる所だけハッキリ、それ以外は薄く（強弱で導く） */
         .kd-dim { opacity: .36 !important; filter: saturate(.5); transition: opacity .35s ease, filter .35s ease; }
         .map-search-bar.kd-need-loc { border: 2px solid #FABE00; animation: kdNeedBlink 1.05s ease-in-out infinite; }
-        .btn-primary.kd-cta-blink:not(:disabled) { animation: kdCtaPulse 1.15s ease-in-out infinite; }
+        .btn-primary.kd-cta-blink:not(:disabled), .kp-confirm.kd-cta-blink:not(:disabled) { animation: kdCtaPulse 1.15s ease-in-out infinite; }
         @keyframes kdCtaPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(250,190,0,0); } 50% { box-shadow: 0 0 0 7px rgba(250,190,0,.45); } }
         /* 場所ステップ：地図の上に「ここで場所を選ぶ」点滅ヒント */
         .kd-loc-hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 1001;
@@ -1709,7 +1712,7 @@
         // 旧バッジ掃除
         const existing = document.getElementById('locationBadge');
         if (existing) existing.remove();
-        // 選択した住所をマップ下部に常時表示（スクロール不要で「どこに届くか」がぱっと分かる）
+        // 地図で選んだ住所＝「決定先」を地図上に1枚だけ表示（重複排除）。ここの「✓ 次へ」だけで進む。
         const wrap = document.getElementById('mapWrap');
         if (!wrap) return;
         const isCol = state.locStep === 'collection';
@@ -1720,39 +1723,28 @@
             ov = document.createElement('div');
             ov.id = 'pinOverlay';
             ov.className = 'kd-pin-overlay';
-            ov.onclick = function () {
-                const dt = state.datetime;
-                // 条件が揃っていれば次へ進む／未充足なら下のパネル（日時選択・警告）へスクロール
-                if (state.locStep === 'collection') {
-                    if (dt.endDate && dt.endTime && state.collectionAddr) { goToVehicleStep(); return; }
-                } else {
-                    if (dt.startDate && dt.startTime && state.deliveryAddr && !state.outOfArea) { nextToCollection(); return; }
-                }
-                const lp = document.getElementById('locPanel');
-                if (lp && lp.scrollIntoView) lp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            };
             wrap.appendChild(ov);
         }
+        const dt = state.datetime;
         const ng = !isCol && state.outOfArea;
+        const dateOk = isCol ? !!(dt.endDate && dt.endTime) : !!(dt.startDate && dt.startTime);
         ov.className = 'kd-pin-overlay' + (ng ? ' ng' : '');
-        ov.style.display = 'flex';
-        if (ng) {
-            ov.innerHTML = `<span class="kp-ic">🚫</span>
-                <div class="kp-body">
-                    <div class="kp-lbl">${t('deliveryPlace')}</div>
-                    <div class="kp-addr">${state.outOfAreaReason || t('outOfAreaDefault')}</div>
-                </div>`;
-        } else {
-            const ic = isCol ? '🏁' : '📍';
-            const lbl = isCol ? t('collectionPlaceL') : t('deliveryPlace');
+        ov.style.display = 'block';
+        const ic  = ng ? '🚫' : (isCol ? '🏁' : '📍');
+        const lbl = isCol ? t('collectionPlaceL') : t('deliveryPlace');
+        const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
+        let html = `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${lbl}</div><div class="kp-addr">${body}</div></div></div>`;
+        if (!ng) {
+            // 「✓ この場所に決定して次へ」＝唯一の前進ボタン。日時未選択なら押せない（先に日付へ誘導）。
             const go = isCol ? t('collectionCTA') : t('nextCollection');
-            ov.innerHTML = `<span class="kp-ic">${ic}</span>
-                <div class="kp-body">
-                    <div class="kp-lbl">${lbl}</div>
-                    <div class="kp-addr">${addr}</div>
-                </div>
-                <span class="kp-go">${go} ›</span>`;
+            const fn = isCol ? 'goToVehicleStep()' : 'nextToCollection()';
+            if (dateOk) {
+                html += `<button class="kp-confirm" onclick="${fn}">✓ ${go} ›</button>`;
+            } else {
+                html += `<button class="kp-confirm" disabled>✓ ${go} ›</button>`;
+            }
         }
+        ov.innerHTML = html;
     }
     function clearCollectionPin() {
         state.collectionLat = null; state.collectionLng = null; state.collectionAddr = ''; state.collectionAddrFull = '';
@@ -2497,20 +2489,19 @@
         const locSet  = isCol ? !!state.collectionAddr : !!state.deliveryAddr;
         const stage = !dateSet ? 1 : (!locSet ? 2 : 3);
         const sb  = mw ? mw.querySelector('.map-search-bar') : null;
-        const cta = lp ? lp.querySelector('.btn-primary') : null;
+        const confirmBtn = document.querySelector('#pinOverlay .kp-confirm'); // 前進ボタンは地図上に一本化
         // リセット
-        [ds, mw, lp, cta].forEach(el => { if (el) el.classList.remove('kd-dim'); });
+        [ds, mw, lp].forEach(el => { if (el) el.classList.remove('kd-dim'); });
         if (sb) sb.classList.remove('kd-need-loc');
-        if (cta) cta.classList.remove('kd-cta-blink');
+        if (confirmBtn) confirmBtn.classList.remove('kd-cta-blink');
         const oldHint = document.getElementById('kdLocHint'); if (oldHint) oldHint.remove();
         if (stage === 1) {
             // ①日付に集中：地図・パネルを薄く（日付欄は既存kd-needで点滅）
             if (mw) mw.classList.add('kd-dim');
             if (lp) lp.classList.add('kd-dim');
         } else if (stage === 2) {
-            // ②場所に集中：地図を強調（検索バー点滅＋中央ヒント）、次へボタンだけ薄く
+            // ②場所に集中：地図を強調（検索バー点滅＋中央ヒント）
             if (sb) sb.classList.add('kd-need-loc');
-            if (cta) cta.classList.add('kd-dim');
             if (mw) {
                 const h = document.createElement('div');
                 h.id = 'kdLocHint'; h.className = 'kd-loc-hint';
@@ -2518,8 +2509,8 @@
                 mw.appendChild(h);
             }
         } else {
-            // ③次へに集中：ボタンを点滅
-            if (cta && !cta.disabled) cta.classList.add('kd-cta-blink');
+            // ③決定＝地図上の「✓ 次へ」ボタンを点滅
+            if (confirmBtn && !confirmBtn.disabled) confirmBtn.classList.add('kd-cta-blink');
         }
     }
     // ステップpill（お届け=黄 / 回収=黒 / 車両）
@@ -2590,17 +2581,13 @@
         </div>`;
     }
     function renderLocationStepPanel() {
-        // 住所はここ（マップ下のカード）に1本化。地図上のバッジは廃止（重複/被り回避）
-        const dt = state.datetime;
+        // 住所＆「次へ」は地図上のオーバーレイ(renderLocationBadge)に1本化＝重複排除。
+        // ここ(マップ下)は補助だけ：回収=お届け先参照＋「同じ/戻る」、お届け=エリア外警告のみ。
         if (state.locStep === 'collection') {
-            const ready = !!(dt.endDate && dt.endTime && state.collectionAddr);
             // お届け先を参照表示（「どこにしたっけ？」対策。タップでお届けに戻れる）
             const delRef = state.deliveryAddr
                 ? `<div onclick="backToDelivery()" style="cursor:pointer;display:flex;align-items:flex-start;gap:7px;background:#fffbf0;border:1px solid #FABE00;border-radius:9px;padding:7px 11px;"><span style="font-size:13px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:9px;color:#a07c00;font-weight:800;">${t('deliveryDest')}（${t('tapToChange')}）</div><div style="font-size:11.5px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr}</div></div><span style="font-size:10px;color:#a07c00;font-weight:800;flex:none;align-self:center;">${t('edit')}›</span></div>`
                 : '';
-            const card = state.collectionAddr
-                ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#1a1a1a;border-radius:10px;padding:9px 12px;"><span style="font-size:15px;flex:none;">🏁</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#FABE00;font-weight:800;">${t('collectionPlaceL')}</div><div style="font-size:12.5px;font-weight:700;color:#fff;white-space:normal;word-break:break-all;line-height:1.45;">${state.collectionAddr}</div></div></div>`
-                : `<div style="text-align:center;color:#bbb;padding:6px 0;font-size:12px;">${t('mapTapCollection')}</div>`;
             return `
                 <div style="padding:8px 14px 12px;display:flex;flex-direction:column;gap:8px;">
                     ${delRef}
@@ -2608,23 +2595,12 @@
                         <button onclick="useSameCollection()" style="flex:1;padding:10px;background:#1a1a1a;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;">🔁 ${t('sameAsDeliveryBtn')}</button>
                         <button onclick="backToDelivery()" style="flex:none;padding:10px 14px;background:#f1f1f1;border:none;border-radius:10px;font-size:12.5px;font-weight:700;color:#444;cursor:pointer;">‹ ${t('back')}</button>
                     </div>
-                    ${card}
-                    <div class="kd-cta-sticky"><button class="btn-primary" style="margin:0;width:100%;" ${ready ? '' : 'disabled'} onclick="goToVehicleStep()">🏁 ${t('collectionCTA')} ›</button></div>
                 </div>`;
         }
-        const ready = !!(dt.startDate && dt.startTime && state.deliveryAddr) && !state.outOfArea;
-        const card = state.deliveryAddr
-            ? `<div style="display:flex;align-items:flex-start;gap:8px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:10px;padding:9px 12px;margin-bottom:8px;"><span style="font-size:15px;flex:none;">📍</span><div style="flex:1;min-width:0;"><div style="font-size:10px;color:#a07c00;font-weight:800;">${t('deliveryPlace')}</div><div style="font-size:12.5px;font-weight:700;color:#1a1a1a;white-space:normal;word-break:break-all;line-height:1.45;">${state.deliveryAddr}</div></div></div>`
-            : `<div style="text-align:center;color:#bbb;padding:6px 0 8px;font-size:12px;">${t('mapTapDelivery')}</div>`;
         const areaWarn = state.outOfArea
-            ? `<div style="display:flex;align-items:flex-start;gap:7px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:9px 12px;margin-bottom:8px;color:#b91c1c;font-size:12px;font-weight:700;line-height:1.5;"><span style="flex:none;font-size:14px;">🚫</span><span>${state.outOfAreaReason || t('outOfAreaDefault')}</span></div>`
+            ? `<div style="display:flex;align-items:flex-start;gap:7px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:9px 12px;color:#b91c1c;font-size:12px;font-weight:700;line-height:1.5;"><span style="flex:none;font-size:14px;">🚫</span><span>${state.outOfAreaReason || t('outOfAreaDefault')}</span></div>`
             : '';
-        return `
-            <div style="padding:8px 14px 12px;">
-                ${card}
-                ${areaWarn}
-                <div class="kd-cta-sticky"><button class="btn-primary" style="margin:0;width:100%;" ${ready ? '' : 'disabled'} onclick="nextToCollection()">${t('nextCollection')} ›</button></div>
-            </div>`;
+        return `<div style="padding:8px 14px 12px;">${areaWarn}</div>`;
     }
 
     // ── 次画面：車両（結果）。上部にお届け＝黄/回収＝黒のサマリーを固定し条件一致車両のみ ──
