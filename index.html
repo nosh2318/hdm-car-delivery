@@ -1447,6 +1447,7 @@
     function setDeliveryPin(lat, lng, addr) {
         // お届け先がもう片方の対象エリアなら、そのエリア(車・料金)へ自動切替して引き継ぐ
         if (kdMaybeSwitchArea(lat, lng, addr)) return;
+        state.deliveryConfirmed = false; // ピンを動かしたら「決定」やり直し＝次へは再決定後に出す
         state.deliveryLat = lat;
         state.deliveryLng = lng;
 
@@ -1479,6 +1480,7 @@
 
     // 回収場所ピン（お届けとは別色🏁）
     function setCollectionPin(lat, lng, addr) {
+        state.collectionConfirmed = false; // ピンを動かしたら「決定」やり直し
         state.collectionLat = lat;
         state.collectionLng = lng;
         state.sameCollection = false;
@@ -1728,26 +1730,34 @@
         const dt = state.datetime;
         const ng = !isCol && state.outOfArea;
         const dateOk = isCol ? !!(dt.endDate && dt.endTime) : !!(dt.startDate && dt.startTime);
+        const confirmed = isCol ? !!state.collectionConfirmed : !!state.deliveryConfirmed;
         ov.className = 'kd-pin-overlay' + (ng ? ' ng' : '');
         ov.style.display = 'block';
-        const ic  = ng ? '🚫' : (isCol ? '🏁' : '📍');
+        const ic  = ng ? '🚫' : (confirmed ? '✅' : (isCol ? '🏁' : '📍'));
         const lbl = isCol ? t('collectionPlaceL') : t('deliveryPlace');
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         let html = `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${lbl}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
-            // 「✓ この場所に決定して次へ」＝唯一の前進ボタン。日時未選択なら押せない（先に日付へ誘導）。
-            const go = isCol ? t('collectionCTA') : t('nextCollection');
-            const fn = isCol ? 'goToVehicleStep()' : 'nextToCollection()';
-            if (dateOk) {
-                html += `<button class="kp-confirm" onclick="${fn}">✓ ${go} ›</button>`;
+            if (!confirmed) {
+                // 段階A：まず「✓ この場所に決定」（決定するまで“次へ”は出さない）
+                const fn = isCol ? 'confirmCollectionLoc()' : 'confirmDeliveryLoc()';
+                html += `<button class="kp-confirm" onclick="${fn}">${t('decideHere')}</button>`;
             } else {
-                html += `<button class="kp-confirm" disabled>✓ ${go} ›</button>`;
+                // 段階B：決定後に「次へ」を出す。日時未選択なら押せない（日付へ誘導）
+                const go = isCol ? t('collectionCTA') : t('nextCollection');
+                const fn = isCol ? 'goToVehicleStep()' : 'nextToCollection()';
+                html += dateOk
+                    ? `<button class="kp-confirm" onclick="${fn}">${go} ›</button>`
+                    : `<button class="kp-confirm" disabled>${go} ›</button>`;
             }
         }
         ov.innerHTML = html;
     }
+    // 場所の「決定」＝ここで初めて“次へ”が出る（重複なし・意図を明確に）
+    function confirmDeliveryLoc() { state.deliveryConfirmed = true; renderLocPanel(); }
+    function confirmCollectionLoc() { state.collectionConfirmed = true; renderLocPanel(); }
     function clearCollectionPin() {
-        state.collectionLat = null; state.collectionLng = null; state.collectionAddr = ''; state.collectionAddrFull = '';
+        state.collectionLat = null; state.collectionLng = null; state.collectionAddr = ''; state.collectionAddrFull = ''; state.collectionConfirmed = false;
         if (collectionMarker && map) { try { collectionMarker.setMap(null); } catch (e) {} collectionMarker = null; }
         const badge = document.getElementById('locationBadge'); if (badge) badge.remove();
         renderLocPanel();
@@ -1763,6 +1773,7 @@
         state.deliveryLat = null;
         state.deliveryLng = null;
         state.deliveryAddr = '';
+        state.deliveryConfirmed = false;
         if (deliveryMarker) {
             try { deliveryMarker.setMap(null); } catch (e) {}
             deliveryMarker = null;
@@ -2544,6 +2555,7 @@
     function useSameCollection() {
         state.collectionLat=state.deliveryLat; state.collectionLng=state.deliveryLng;
         state.collectionAddr=state.deliveryAddr; state.collectionAddrFull=state.deliveryAddrFull||state.deliveryAddr; state.sameCollection=true;
+        state.collectionConfirmed=true; // 「お届けと同じ」を選ぶ＝決定済み（すぐ次へが出る）
         if (collectionMarker && map) { try { collectionMarker.setMap(null); } catch (e) {} collectionMarker=null; }
         renderLocPanel(); fetchAvailableVehicles();
     }
@@ -4644,7 +4656,7 @@
             step1sub: '上のフォームで日時を選択', step2sub: 'マップをタップしてピンを置く',
             deliverable: '台デリバリー可能', classes: 'クラス', noVehicle: '該当する車両がありません',
             noVehicleSub: '日程やクラスを変更してお試しください', searching: '車両を検索中...',
-            seats: '人乗り', available: '台空き', days: '日間', select: '選択', deliveryPlace: 'お届け場所',
+            seats: '人乗り', available: '台空き', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決定',
             noAddress: '該当する住所が見つかりません',
             // Confirm
             confirmTitle: '予約内容の確認', estimate: 'お支払い見積もり', taxIncl: '税込',
@@ -4760,7 +4772,7 @@
             step1sub: 'Select dates above', step2sub: 'Tap the map to place a pin',
             deliverable: ' available for delivery', classes: ' classes', noVehicle: 'No vehicles available',
             noVehicleSub: 'Try changing dates or class', searching: 'Searching...',
-            seats: ' seats', available: ' avail.', days: ' days', select: 'Select', deliveryPlace: 'Delivery Location',
+            seats: ' seats', available: ' avail.', days: ' days', select: 'Select', deliveryPlace: 'Delivery Location', decideHere: '✓ Confirm this spot',
             noAddress: 'No matching address found',
             confirmTitle: 'Booking Confirmation', estimate: 'Estimated Total', taxIncl: 'incl. tax',
             baseFee: 'Base fee', deliveryFee: 'Delivery fee', proceed: 'Proceed to Book', backToSelect: 'Back to Vehicle Selection',
@@ -4870,7 +4882,7 @@
             step1sub: '在上方選擇日期', step2sub: '點擊地圖放置標記',
             deliverable: '輛可送達', classes: '個車型', noVehicle: '沒有符合的車輛',
             noVehicleSub: '請嘗試更改日期或車型', searching: '搜尋中...',
-            seats: '人座', available: '輛可用', days: '天', select: '選擇', deliveryPlace: '送車地點',
+            seats: '人座', available: '輛可用', days: '天', select: '選擇', deliveryPlace: '送車地點', decideHere: '✓ 確定此地點',
             noAddress: '找不到符合的地址',
             confirmTitle: '預約內容確認', estimate: '預估費用', taxIncl: '含稅',
             baseFee: '基本費用', deliveryFee: '配送費', proceed: '進入預約手續', backToSelect: '返回車輛選擇',
@@ -4980,7 +4992,7 @@
             step1sub: '위 양식에서 일시 선택', step2sub: '지도를 탭하여 핀을 놓기',
             deliverable: '대 배달 가능', classes: '클래스', noVehicle: '해당하는 차량이 없습니다',
             noVehicleSub: '일정이나 클래스를 변경해 보세요', searching: '차량 검색 중...',
-            seats: '인승', available: '대 가능', days: '일간', select: '선택', deliveryPlace: '배달 장소',
+            seats: '인승', available: '대 가능', days: '일간', select: '선택', deliveryPlace: '배달 장소', decideHere: '✓ 이 위치로 결정',
             noAddress: '해당하는 주소를 찾을 수 없습니다',
             confirmTitle: '예약 내용 확인', estimate: '결제 예상 금액', taxIncl: '세금 포함',
             baseFee: '기본 요금', deliveryFee: '배송료', proceed: '예약 절차로 진행', backToSelect: '차량 선택으로 돌아가기',
