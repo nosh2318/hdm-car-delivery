@@ -790,6 +790,14 @@
         #kdMapGuide .kd-mg-bubble.kd-pop { animation:kdBubblePop .42s cubic-bezier(.18,.9,.32,1.2); }
         #kdMapGuide .kd-mg-bubble b { color:inherit; }
         #kdMapGuide .kd-mg-bubble.col b { color:#FABE00; }
+        /* 中央ピン・マスコットの真上に出る吹き出し（OverlayViewでピンに追従） */
+        .kd-mascot-bubble { position:absolute; transform:translate(-50%, calc(-100% - 58px)); background:#FABE00; color:#1a1a1a; font-size:12.5px; font-weight:800; padding:8px 12px; border-radius:13px; line-height:1.4; text-align:center; max-width:210px; box-shadow:0 4px 14px rgba(0,0,0,.3); pointer-events:none; z-index:5; }
+        .kd-mascot-bubble::after { content:''; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%); width:0; height:0; border:7px solid transparent; border-top-color:#FABE00; border-bottom:0; }
+        .kd-mascot-bubble.col { background:#2563eb; color:#fff; }
+        .kd-mascot-bubble.col::after { border-top-color:#2563eb; }
+        .kd-mascot-bubble b { color:inherit; }
+        .kd-mascot-bubble.col b { color:#FABE00; }
+        .kd-mascot-bubble.kd-pop { animation:kdBubblePop .4s cubic-bezier(.18,.9,.32,1.2); }
         /* 車両画面：モバイル=縦積み（地図上・リスト下シート）／PC=縦割り（地図左・リスト右） */
         .veh-split { flex: 1; display: flex; flex-direction: column; min-height: 0; }
         .veh-map { flex: none; height: 32vh; min-height: 190px; position: relative; }
@@ -2148,8 +2156,9 @@
                     }
                 }
                 renderLocationBadge();
+                updateMascotBubble(); // 中央ピン・マスコットの吹き出しを地図に再マウント
                 // レイアウト確定後にリサイズ反映＋両ピン(スタート/ゴール)を一括表示
-                setTimeout(() => { if (map && window.google && google.maps) google.maps.event.trigger(map, 'resize'); }, 150);
+                setTimeout(() => { if (map && window.google && google.maps) { google.maps.event.trigger(map, 'resize'); updateMascotBubble(); } }, 150);
                 setTimeout(() => { if (map && window.google && google.maps) { google.maps.event.trigger(map, 'resize'); if (state.deliveryLat && state.collectionLat) fitToPins(); } }, 500);
             });
         }
@@ -2208,36 +2217,65 @@
         return { msg: t('guideNextDel'), dark: false };
     }
     function mountHeaderMascot() {
-        // ヘッダーの案内帯は廃止。誘導は「マップ上のマスコット＋吹き出し」に集約。
+        // ヘッダー帯・左上マスコットは廃止。誘導は「中央のピン・マスコットが喋る吹き出し」に集約。
         document.querySelectorAll('.kd-mascot-head').forEach(function(e){ e.remove(); });
         var ex = document.getElementById('kdGuide'); if (ex) ex.remove();
-        mountMapGuide();
+        var ex2 = document.getElementById('kdMapGuide'); if (ex2) ex2.remove();
+        updateMascotBubble();
     }
-    // ── マップ上のマスコット案内（中心＝マップ＋マスコット。喋る＋対象が点滅で連動）──
-    function mountMapGuide() {
-        var wrap = document.getElementById('mapWrap');
+    // ── 中央のマスコット（地図ピン mascot_pin.png）の真上に吹き出しを出して喋らせる ──
+    var mascotBubble = null;
+    function ensureMascotBubble() {
+        if (!window.google || !google.maps || !map) return null;
+        if (mascotBubble && mascotBubble.getMap && mascotBubble.getMap() !== map) { try { mascotBubble.setMap(null); } catch (e) {} mascotBubble = null; }
+        if (mascotBubble) return mascotBubble;
+        function MB() { this._div = null; this._pos = null; this._html = ''; this._col = false; }
+        MB.prototype = new google.maps.OverlayView();
+        MB.prototype.onAdd = function () {
+            var d = document.createElement('div');
+            d.className = 'kd-mascot-bubble' + (this._col ? ' col' : '');
+            if (this._html) d.innerHTML = this._html;
+            this._div = d;
+            this.getPanes().floatPane.appendChild(d);
+        };
+        MB.prototype.draw = function () {
+            if (!this._div || !this._pos) return;
+            var proj = this.getProjection(); if (!proj) return;
+            var p = proj.fromLatLngToDivPixel(this._pos); if (!p) return;
+            this._div.style.left = p.x + 'px';
+            this._div.style.top = p.y + 'px';
+        };
+        MB.prototype.onRemove = function () { if (this._div && this._div.parentNode) this._div.parentNode.removeChild(this._div); this._div = null; };
+        MB.prototype.update = function (html, col, pos, pop) {
+            this._html = html; this._col = col; this._pos = pos;
+            if (this._div) {
+                this._div.className = 'kd-mascot-bubble' + (col ? ' col' : '');
+                this._div.innerHTML = html;
+                if (pop) { this._div.classList.remove('kd-pop'); void this._div.offsetWidth; this._div.classList.add('kd-pop'); }
+            }
+            this.draw();
+        };
+        mascotBubble = new MB();
+        mascotBubble.setMap(map);
+        google.maps.event.addListener(map, 'idle', function () { if (mascotBubble) mascotBubble.draw(); });
+        return mascotBubble;
+    }
+    function updateMascotBubble() {
         var inFlow = (state.screen === 'top' || state.screen === 'step_location');
-        var ex = document.getElementById('kdMapGuide');
-        if (!wrap || !inFlow) { if (ex) ex.remove(); return; }
+        var mb = ensureMascotBubble();
+        if (!mb) return;
+        if (!inFlow) { if (mb._div) mb._div.style.display = 'none'; return; }
+        if (mb._div) mb._div.style.display = '';
         var g = guideText();
-        if (!ex) {
-            ex = document.createElement('div');
-            ex.id = 'kdMapGuide';
-            ex.innerHTML = '<img src="images/mascot.png" class="kd-mg-img" alt="KEYDROP"><div class="kd-mg-bubble"></div>';
-            wrap.appendChild(ex);
-        }
-        var b = ex.querySelector('.kd-mg-bubble');
-        var changed = (b.innerHTML !== g.msg);
-        b.innerHTML = g.msg;
-        b.classList.toggle('col', state.locStep === 'collection'); // 回収=青／お届け=黄
-        if (changed) {
-            // 喋った瞬間：吹き出しポップ＋マスコットがひと跳ね
-            b.classList.remove('kd-pop'); void b.offsetWidth; b.classList.add('kd-pop');
-            var img = ex.querySelector('.kd-mg-img');
-            if (img) { img.classList.remove('kd-hop'); void img.offsetWidth; img.classList.add('kd-hop'); }
-        }
+        var isCol = state.locStep === 'collection';
+        var pos = null;
+        if (isCol && state.collectionLat) pos = new google.maps.LatLng(state.collectionLat, state.collectionLng);
+        else if (!isCol && state.deliveryLat) pos = new google.maps.LatLng(state.deliveryLat, state.deliveryLng);
+        else if (map) pos = map.getCenter();
+        var changed = (mb._html !== g.msg) || (mb._col !== isCol);
+        mb.update(g.msg, isCol, pos, changed);
     }
-    function updateGuide() { mountMapGuide(); }
+    function updateGuide() { updateMascotBubble(); }
     function mountCornerMascot() {
         // コーナーマスコットは廃止（確定/マイページ画面でコンテンツに被るため）
         var ex = document.getElementById('kdCorner'); if (ex) ex.remove();
