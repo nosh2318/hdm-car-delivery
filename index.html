@@ -706,12 +706,13 @@
         .kd-pin-overlay.ng .kp-lbl { color: #b91c1c; }
         .kd-pin-overlay .kp-addr { font-size: 13px; font-weight: 700; color: #1a1a1a; line-height: 1.4;
             word-break: break-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .kd-pin-overlay .kp-confirm { display: block; width: 100%; margin-top: 9px; background: #FABE00; color: #1a1a1a;
-            border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 800; cursor: pointer; }
-        .kd-pin-overlay .kp-confirm:disabled { background: #e6e6e6; color: #aaa; cursor: not-allowed; }
-        /* 前進ボタン（回収場所を選ぶ／車両を選ぶ）は濃色で「決める(黄)」と区別 */
-        .kd-pin-overlay .kp-confirm.kp-next { background: #1a1a1a; color: #fff; }
-        .kd-pin-overlay .kp-confirm.kp-next:disabled { background: #e6e6e6; color: #aaa; }
+        /* 決定ボタン＝枠だけ（塗りなし）＝①②と統一デザイン */
+        .kd-pin-overlay .kp-confirm { display: block; width: 100%; margin-top: 9px; background: #fffdf4; color: #1a1a1a;
+            border: 2px solid #FABE00; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: center; }
+        .kd-pin-overlay .kp-confirm:disabled { background: #f3f3f3; color: #bbb; border-color: #e0e0e0; cursor: not-allowed; }
+        /* 確定後の前進ボタン（回収場所を選ぶ／車両を見る）＝塗りで明確に */
+        .kd-pin-overlay .kp-go { display: block; width: 100%; margin-top: 9px; background: #FABE00; color: #1a1a1a;
+            border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: center; }
         /* 回収の①②2択（同じ枠内に並べる） */
         .kd-pin-overlay .kp-opt { display: block; width: 100%; margin-top: 8px; background: #fff; border: 1.5px solid #1a1a1a;
             color: #1a1a1a; border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 800; cursor: pointer; text-align: left; }
@@ -819,7 +820,7 @@
         /* ステップ誘導：今やる所だけハッキリ、それ以外は薄く（強弱で導く） */
         .kd-dim { opacity: .36 !important; filter: saturate(.5); transition: opacity .35s ease, filter .35s ease; }
         .map-search-bar.kd-need-loc { border: 2px solid #FABE00; animation: kdNeedBlink 1.05s ease-in-out infinite; }
-        .btn-primary.kd-cta-blink:not(:disabled), .kp-confirm.kd-cta-blink:not(:disabled), .kp-opt.kd-cta-blink:not(:disabled) { animation: kdCtaPulse 1.15s ease-in-out infinite; }
+        .btn-primary.kd-cta-blink:not(:disabled), .kp-confirm.kd-cta-blink:not(:disabled), .kp-opt.kd-cta-blink:not(:disabled), .kp-go.kd-cta-blink:not(:disabled) { animation: kdCtaPulse 1.15s ease-in-out infinite; }
         @keyframes kdCtaPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(250,190,0,0); } 50% { box-shadow: 0 0 0 7px rgba(250,190,0,.45); } }
         /* 場所ステップ：地図の上に「ここで場所を選ぶ」点滅ヒント */
         .kd-loc-hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 1001;
@@ -1766,25 +1767,29 @@
         const dt = state.datetime;
         let ov = document.getElementById('pinOverlay');
 
-        // ── 回収ステップ：①お届けと同じ ／ ②地図で選んだ場所 を「同じ枠」で2択提示 ──
-        // 「決めるボタン（②＝回収場所をこの場所に決める／①＝お届けと同じ）」を押すと車両へ進む
+        // ── 回収ステップ ──
         if (isCol) {
             if (!ov) { ov = document.createElement('div'); ov.id = 'pinOverlay'; ov.className = 'kd-pin-overlay'; wrap.appendChild(ov); }
             ov.className = 'kd-pin-overlay';
             ov.style.display = 'block';
             const dateOk = !!(dt.endDate && dt.endTime);
+            if (state.collectionConfirmed) {
+                // ✅ 確定した回収場所を表示 → 「車両を見る」で次画面へ
+                ov.innerHTML =
+                    `<div class="kp-row"><span class="kp-ic">✅</span><div class="kp-body"><div class="kp-lbl">${t('collectionPlaceL')}</div><div class="kp-addr">${state.collectionAddr}</div></div></div>` +
+                    `<button class="kp-go kd-cta-blink" onclick="goToVehicleStep()">${t('collectionCTA')} ›</button>` +
+                    `<button onclick="reopenCollection()" style="margin-top:6px;width:100%;padding:6px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
+                return;
+            }
             const custom = !!state.collectionAddr && !state.sameCollection;
             let h = `<div class="kp-lbl" style="margin-bottom:2px;">🏁 ${t('collectionPlaceL')}</div>`;
             if (!dateOk) {
-                // 返却日時が未設定なら①②は押せない（先に日付）
                 h += `<div class="kp-opt kp-opt-dim"><b>①</b> 📍 ${t('orPickOnMap')}</div>`;
                 h += `<button class="kp-opt kp-opt-dim" disabled><b>②</b> ${t('sameAsDeliveryBtn')}</button>`;
             } else {
-                // ① 地図で選んだこの場所に決める（無ければ地図で選ぶ案内）。回収場所未FIX＝点滅で促す
                 h += custom
                     ? `<button class="kp-opt kp-opt-active kd-cta-blink" onclick="collectionDecideGo()"><b>①</b> ${t('decideCollectHere')}<div class="kp-opt-sub">${state.collectionAddr}</div></button>`
                     : `<div class="kp-opt kp-opt-dim"><b>①</b> 📍 ${t('orPickOnMap')}</div>`;
-                // ② お届けと同じ場所
                 h += `<button class="kp-opt kd-cta-blink" onclick="sameCollectionGo()"><b>②</b> ${t('sameAsDeliveryBtn')}${state.deliveryAddr ? `<div class="kp-opt-sub">${state.deliveryAddr}</div>` : ''}</button>`;
             }
             h += `<button onclick="backToDelivery()" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('deliveryDest')}（${t('back')}）</button>`;
@@ -1792,7 +1797,7 @@
             return;
         }
 
-        // ── お届けステップ：住所が決まったら「✓ お届け場所をこの場所に決める」→ 押すと回収へ ──
+        // ── お届けステップ ──
         const addr = state.deliveryAddr;
         if (!addr) { if (ov) ov.style.display = 'none'; return; }
         if (!ov) { ov = document.createElement('div'); ov.id = 'pinOverlay'; ov.className = 'kd-pin-overlay'; wrap.appendChild(ov); }
@@ -1800,21 +1805,31 @@
         const dateOk = !!(dt.startDate && dt.startTime);
         ov.className = 'kd-pin-overlay' + (ng ? ' ng' : '');
         ov.style.display = 'block';
+        if (state.deliveryConfirmed && !ng) {
+            // ✅ 確定したお届け場所を表示 → 「回収場所を選ぶ」で次へ
+            ov.innerHTML =
+                `<div class="kp-row"><span class="kp-ic">✅</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${addr}</div></div></div>` +
+                `<button class="kp-go kd-cta-blink" onclick="nextToCollection()">${t('nextCollection')} ›</button>` +
+                `<button onclick="reopenDelivery()" style="margin-top:6px;width:100%;padding:6px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
+            return;
+        }
         const ic  = ng ? '🚫' : '📍';
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         let html = `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
-            // 日時が未設定なら押せない（日付→場所→決定の順）。決定＝回収へ進む。
+            // 決定ボタンは「枠だけ点滅（塗りなし）」＝①②と統一。日時未設定はdisabled
             html += dateOk
-                ? `<button class="kp-confirm" onclick="deliveryDecideGo()">${t('decideDeliverHere')}</button>`
+                ? `<button class="kp-confirm kd-cta-blink" onclick="deliveryDecideGo()">${t('decideDeliverHere')}</button>`
                 : `<button class="kp-confirm" disabled>${t('decideDeliverHere')}</button>`;
         }
         ov.innerHTML = html;
     }
-    // 決定＝前進（お届け→回収／回収→車両）
-    function deliveryDecideGo() { state.deliveryConfirmed = true; nextToCollection(); }
-    function collectionDecideGo() { state.collectionConfirmed = true; goToVehicleStep(); }
-    function sameCollectionGo() { useSameCollection(); state.collectionConfirmed = true; goToVehicleStep(); }
+    // 決定＝確定表示（次画面へは確定後の「車両を見る/回収場所を選ぶ」で進む）
+    function deliveryDecideGo() { state.deliveryConfirmed = true; renderLocPanel(); }
+    function collectionDecideGo() { state.collectionConfirmed = true; renderLocPanel(); }
+    function sameCollectionGo() { useSameCollection(); state.collectionConfirmed = true; renderLocPanel(); }
+    function reopenDelivery() { state.deliveryConfirmed = false; renderLocPanel(); }
+    function reopenCollection() { state.collectionConfirmed = false; renderLocPanel(); }
     // 場所の「決定」＝ここで初めて“次へ”が出る（重複なし・意図を明確に）
     function confirmDeliveryLoc() { state.deliveryConfirmed = true; renderLocPanel(); }
     function confirmCollectionLoc() { state.collectionConfirmed = true; renderLocPanel(); }
@@ -2214,6 +2229,7 @@
         const dt = state.datetime;
         if (state.locStep === 'collection') {
             if (!(dt.endDate && dt.endTime)) return { msg: t('guideDateCol'), dark: true };
+            if (state.collectionConfirmed)   return { msg: t('guideNextCol'), dark: true };
             return { msg: t('guidePickCol'), dark: true };
         }
         if (state.outOfArea) return { msg: t('guideOOA'), dark: false };
@@ -2646,6 +2662,7 @@
     }
     function nextToCollection() {
         state.locStep = 'collection';
+        state.collectionConfirmed = false; // 回収に来たら必ず①②チューザーから（確定はその後）
         // 回収ピンが無ければ「お届け地点」に初期配置＝そのまま①で決められる（タップで移動も可）
         if (!state.collectionLat && state.deliveryLat && map && window.google) {
             try { setCollectionPin(state.deliveryLat, state.deliveryLng); } catch (e) {}
