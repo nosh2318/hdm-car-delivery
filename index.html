@@ -706,6 +706,9 @@
         .kd-pin-overlay .kp-confirm { display: block; width: 100%; margin-top: 9px; background: #FABE00; color: #1a1a1a;
             border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 800; cursor: pointer; }
         .kd-pin-overlay .kp-confirm:disabled { background: #e6e6e6; color: #aaa; cursor: not-allowed; }
+        /* 前進ボタン（回収場所を選ぶ／車両を選ぶ）は濃色で「決める(黄)」と区別 */
+        .kd-pin-overlay .kp-confirm.kp-next { background: #1a1a1a; color: #fff; }
+        .kd-pin-overlay .kp-confirm.kp-next:disabled { background: #e6e6e6; color: #aaa; }
         .kd-pin-overlay .kp-note { margin-top: 8px; font-size: 12px; font-weight: 800; color: #a07c00; text-align: center; }
 
         /* ── Leaflet Custom ── */
@@ -1747,8 +1750,8 @@
                 const go = isCol ? t('collectionCTA') : t('nextCollection');
                 const fn = isCol ? 'goToVehicleStep()' : 'nextToCollection()';
                 html += dateOk
-                    ? `<button class="kp-confirm" onclick="${fn}">${go} ›</button>`
-                    : `<button class="kp-confirm" disabled>${go} ›</button>`;
+                    ? `<button class="kp-confirm kp-next" onclick="${fn}">${go} ›</button>`
+                    : `<button class="kp-confirm kp-next" disabled>${go} ›</button>`;
             }
         }
         ov.innerHTML = html;
