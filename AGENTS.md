@@ -1,5 +1,15 @@
 # HDM Car Delivery - プロジェクトコンテキスト
 
+## KEYDROP TOPエリアゲート刷新（2026-06-15）
+- 素の `keydrop.jp` で表示される `kdShowAreaGate()` をPC/スマホ共通の新デザインへ刷新
+- キャッチ: `WHERE TO DROP YOUR KEY?` / `スマートに借りて、自由に走ろう`
+- 構成: メイン角丸ビジュアル + 札幌/那覇カード + 利用3ステップのみ
+- 札幌/那覇カードは既存 `kdPickArea()` に接続し、予約フロー・マップ機能は変更なし
+- PC画像: `images/keydrop_gate_pc.jpg`、スマホ画像: `images/keydrop_gate_sp.jpg`
+- 表示は軽量JPEG（各約320KB）を使用
+- 旧4エリア、特徴4項目、マスコットCTA、外側の言語/SKIP UIはゲートから削除
+- `main` pushでGitHub Pagesへ反映
+
 ## プロジェクト概要
 レンタカーデリバリーサービス「HDM Car Delivery」のプロトタイプUI。
 iPhone端末フレーム内で動作するシングルページHTMLアプリケーション。
