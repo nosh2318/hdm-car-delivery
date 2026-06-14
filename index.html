@@ -2644,8 +2644,12 @@
         // ステップpillは廃止（ガイド帯がステップを示すため冗長）
         if (state.locStep === 'collection') {
             // STEP1で決めた「お届け日時」を参照表示（回収日を選ぶ基準が分かるように）
+            // 前画面で決めた「お届け先（日時＋住所）」を参照表示＝回収を決める基準
             const delRefDt = dt.startDate
-                ? `<div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:#a07c00;font-weight:800;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📍 ${t('deliveryShort')} ${formatDateLabel(dt.startDate)}${dt.startTime ? ' '+dt.startTime : ''}〜</div>`
+                ? `<div style="background:#fffbf0;border:1px solid #FABE00;border-radius:8px;padding:5px 9px;margin-bottom:5px;">
+                       <div style="font-size:9.5px;color:#a07c00;font-weight:800;">📍 ${t('deliveryShort')} ${formatDateLabel(dt.startDate)}${dt.startTime ? ' '+dt.startTime : ''}〜</div>
+                       ${state.deliveryAddr ? `<div style="font-size:11px;font-weight:700;color:#1a1a1a;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr}</div>` : ''}
+                   </div>`
                 : '';
             return `<div style="padding:5px 14px 4px;">${delRefDt}${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', t('colDate'), t('colTime'))}</div>`;
         }
