@@ -1805,14 +1805,6 @@
         const dateOk = !!(dt.startDate && dt.startTime);
         ov.className = 'kd-pin-overlay' + (ng ? ' ng' : '');
         ov.style.display = 'block';
-        if (state.deliveryConfirmed && !ng) {
-            // ✅ 確定したお届け場所を表示 → 「回収場所を選ぶ」で次へ
-            ov.innerHTML =
-                `<div class="kp-row"><span class="kp-ic">✅</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${addr}</div></div></div>` +
-                `<button class="kp-go kd-cta-blink" onclick="nextToCollection()">${t('nextCollection')} ›</button>` +
-                `<button onclick="reopenDelivery()" style="margin-top:6px;width:100%;padding:6px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
-            return;
-        }
         const ic  = ng ? '🚫' : '📍';
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         let html = `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
@@ -1824,11 +1816,11 @@
         }
         ov.innerHTML = html;
     }
-    // 決定＝確定表示（次画面へは確定後の「車両を見る/回収場所を選ぶ」で進む）
-    function deliveryDecideGo() { state.deliveryConfirmed = true; renderLocPanel(); }
+    // お届け：決定＝そのまま回収画面へ移動（確定表示はしない）
+    function deliveryDecideGo() { state.deliveryConfirmed = true; nextToCollection(); }
+    // 回収：①②を押したら「確定場所」を表示→「車両を見る」で次画面へ
     function collectionDecideGo() { state.collectionConfirmed = true; renderLocPanel(); }
     function sameCollectionGo() { useSameCollection(); state.collectionConfirmed = true; renderLocPanel(); }
-    function reopenDelivery() { state.deliveryConfirmed = false; renderLocPanel(); }
     function reopenCollection() { state.collectionConfirmed = false; renderLocPanel(); }
     // 場所の「決定」＝ここで初めて“次へ”が出る（重複なし・意図を明確に）
     function confirmDeliveryLoc() { state.deliveryConfirmed = true; renderLocPanel(); }
@@ -2235,8 +2227,7 @@
         if (state.outOfArea) return { msg: t('guideOOA'), dark: false };
         if (!(dt.startDate && dt.startTime)) return { msg: t('guideDate'), dark: false };
         if (!state.deliveryAddr)             return { msg: t('guidePickDel'), dark: false };
-        if (!state.deliveryConfirmed)        return { msg: t('guideDecideDel'), dark: false };
-        return { msg: t('guideNextDel'), dark: false };
+        return { msg: t('guideDecideDel'), dark: false };
     }
     function mountHeaderMascot() {
         // ヘッダー帯・左上マスコットは廃止。誘導は「中央のピン・マスコットが喋る吹き出し」に集約。
