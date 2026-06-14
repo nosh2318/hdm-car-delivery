@@ -1081,16 +1081,22 @@
             #kd-area-gate{position:fixed;inset:0;z-index:100000;overflow:auto;overscroll-behavior:none;-webkit-overflow-scrolling:touch;background:#07111d;color:#f5f1e8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;}
             .kdg-bg{position:fixed;inset:0;background-size:cover;background-position:center;filter:blur(38px) brightness(.3) saturate(1.05);transform:scale(1.18);z-index:0;pointer-events:none;}
             .kdg-wrap{position:relative;z-index:1;width:min(100%,1440px);min-height:100dvh;margin:0 auto;padding:18px clamp(14px,2.2vw,32px);box-sizing:border-box;display:grid;align-content:center;}
-            .kdg-stage{position:relative;min-height:min(76vh,790px);overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:clamp(24px,3.5vw,52px);box-shadow:0 34px 110px rgba(0,0,0,.42);isolation:isolate;}
+            .kdg-stage{position:relative;min-height:min(76vh,790px);overflow:hidden;border:1px solid rgba(255,255,255,.16);border-radius:clamp(24px,3.5vw,52px);background:#102334;box-shadow:0 34px 110px rgba(0,0,0,.42);isolation:isolate;}
             .kdg-stage:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(5,12,20,.94) 0%,rgba(5,12,20,.74) 34%,rgba(5,12,20,.13) 67%),linear-gradient(0deg,rgba(5,12,20,.72),transparent 42%);pointer-events:none;}
-            .kdg-hero-img{position:absolute;inset:-2%;width:104%;height:104%;object-fit:cover;filter:saturate(.96) contrast(1.04);}
+            .kdg-hero-img{position:absolute;inset:-3%;width:106%;height:106%;object-fit:cover;opacity:.7;filter:blur(2.4px) saturate(.68) contrast(.92) brightness(.86);transform:scale(1.015);}
+            .kdg-langs{position:absolute;z-index:6;top:18px;left:22px;display:flex;gap:5px;padding:4px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(5,12,20,.42);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}
+            .kdg-langs button{min-width:44px;padding:7px 10px;border:0;border-radius:999px;color:rgba(255,255,255,.68);background:transparent;font-family:inherit;font-size:10px;font-weight:900;cursor:pointer;}
+            .kdg-langs button.on{color:#07111d;background:#f5f1e8;}
             .kdg-copy{position:absolute;z-index:2;left:clamp(34px,6vw,92px);top:50%;max-width:min(55%,780px);transform:translateY(-63%);line-height:1;}
             .kdg-kicker{display:flex;align-items:center;gap:11px;margin-bottom:23px;color:#9ee5ff;font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;}
             .kdg-kicker:before{content:"";width:38px;height:2px;background:#9ee5ff;}
-            .kdg-title{margin:0;font-size:clamp(54px,6vw,98px);line-height:.91;letter-spacing:-.055em;font-style:italic;font-weight:950;}
+            .kdg-title{margin:0;font-size:clamp(46px,5.8vw,92px);line-height:.94;letter-spacing:-.055em;font-weight:950;font-style:italic;}
             .kdg-title span{display:block;white-space:nowrap;}
             .kdg-title .yellow{margin-top:8px;color:#8ddcff;}
-            .kdg-jp{margin-top:29px;font-size:clamp(17px,1.45vw,23px);font-weight:800;letter-spacing:.04em;line-height:1.6;}
+            .kdg-subcopy{margin-top:24px;line-height:1.55;}
+            .kdg-subcopy strong,.kdg-subcopy span{display:block;}
+            .kdg-subcopy strong{font-size:clamp(17px,1.7vw,25px);font-weight:900;letter-spacing:.01em;}
+            .kdg-subcopy span{margin-top:3px;color:rgba(255,255,255,.76);font-size:clamp(13px,1.15vw,17px);font-weight:700;}
             .kdg-weather{position:absolute;z-index:2;top:7%;right:5%;display:flex;gap:9px;align-items:center;padding:9px 14px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(5,12,20,.38);font-size:11px;font-weight:800;color:rgba(255,255,255,.68);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}
             .kdg-weather b{font-size:14px;color:#fff;}
             .kdg-radar{position:absolute;z-index:2;right:8%;top:17%;width:min(38vw,500px);aspect-ratio:1;border:1px solid rgba(255,255,255,.17);border-radius:50%;pointer-events:none;}
@@ -1121,12 +1127,16 @@
               .kdg-wrap{display:block;padding:12px;}
               .kdg-stage{min-height:790px;border-radius:26px;}
               .kdg-stage:before{background:radial-gradient(circle at 62% 55%,rgba(255,255,255,.16),transparent 24%),linear-gradient(180deg,rgba(5,12,20,.62),rgba(5,12,20,.18) 42%,rgba(5,12,20,.43) 68%,rgba(5,12,20,.72));}
-              .kdg-hero-img{top:-205px;left:-2%;height:104%;object-position:61% center;filter:saturate(1.04) contrast(1.02) brightness(1.2);}
-              .kdg-copy{left:25px;right:20px;top:41px;max-width:none;transform:none;}
+              .kdg-hero-img{top:-205px;left:-3%;width:106%;height:106%;object-position:61% center;opacity:.74;filter:blur(2px) saturate(.72) contrast(.94) brightness(.94);}
+              .kdg-langs{top:12px;left:14px;right:14px;justify-content:center;}
+              .kdg-langs button{min-width:42px;padding:6px 9px;}
+              .kdg-copy{left:25px;right:20px;top:70px;max-width:none;transform:none;}
               .kdg-kicker{margin-bottom:19px;font-size:10px;}
-              .kdg-title{font-size:clamp(45px,14vw,64px);}
-              .kdg-title span{white-space:normal;}
-              .kdg-jp{margin-top:18px;font-size:15px;}
+              .kdg-title{font-size:clamp(42px,12.4vw,56px);line-height:.94;}
+              .kdg-title span{white-space:nowrap;}
+              .kdg-subcopy{margin-top:17px;}
+              .kdg-subcopy strong{font-size:16px;}
+              .kdg-subcopy span{font-size:12px;}
               .kdg-weather{display:none;}
               .kdg-radar{width:250px;right:-46px;top:28%;opacity:.35;}
               .kdg-pin{width:88px;right:36px;top:37%;opacity:.65;}
@@ -1156,21 +1166,56 @@
         g.id = 'kd-area-gate';
         document.body.appendChild(g);
         let busy = false;
+        const GLABELS = { ja: '日本語', en: 'EN', zh: '繁中', ko: '한국어' };
+        const GATE_COPY = {
+            ja: {
+                kicker: 'Car Delivery Service', title1: 'レンタカーを指定場所に呼ぶ', title2: 'スマートに借りて、自由に走ろう', prompt: 'スタートエリアを選択してください',
+                journeys: { sapporo: ['NORTH JOURNEY', '街から始まる、北海道のロードトリップ'], naha: ['ISLAND JOURNEY', '着いた瞬間から、沖縄を自由に'] },
+                steps: [['マップから場所を指定しよう', '受取・返却したい場所をピンで選択'], ['呼ぶ車両を選択しよう', '旅の人数やスタイルに合う一台を選択'], ['完全オンラインを体感しよう', '予約から受取までスマートフォンで完結']]
+            },
+            en: {
+                kicker: 'Car Delivery Service', title1: 'Call a rental car to your location', title2: 'Rent smart. Drive free.', prompt: 'Choose your starting area',
+                journeys: { sapporo: ['NORTH JOURNEY', 'Begin your Hokkaido road trip in the city'], naha: ['ISLAND JOURNEY', 'Explore Okinawa freely from the moment you arrive'] },
+                steps: [['Choose a location on the map', 'Pin your preferred delivery and return locations'], ['Choose the car to call', 'Select the right car for your group and journey'], ['Experience fully online rental', 'Complete everything from booking to delivery on your phone']]
+            },
+            zh: {
+                kicker: 'Car Delivery Service', title1: '將租賃車輛呼叫至指定地點', title2: '智慧租車，自由馳騁。', prompt: '請選擇出發地區',
+                journeys: { sapporo: ['NORTH JOURNEY', '從城市展開北海道公路之旅'], naha: ['ISLAND JOURNEY', '抵達後立即自由探索沖繩'] },
+                steps: [['在地圖上指定地點', '用圖釘選擇取車與還車地點'], ['選擇要呼叫的車輛', '依人數與旅遊方式選擇合適車輛'], ['體驗全線上租車', '從預約到取車皆可用手機完成']]
+            },
+            ko: {
+                kicker: 'Car Delivery Service', title1: '원하는 장소로 렌터카 호출', title2: '스마트하게 빌리고, 자유롭게 달리세요.', prompt: '출발 지역을 선택해 주세요',
+                journeys: { sapporo: ['NORTH JOURNEY', '도심에서 시작하는 홋카이도 로드 트립'], naha: ['ISLAND JOURNEY', '도착하는 순간부터 오키나와를 자유롭게'] },
+                steps: [['지도에서 장소를 지정하세요', '수령 및 반납 장소를 핀으로 선택'], ['부를 차량을 선택하세요', '인원과 여행 스타일에 맞는 차량 선택'], ['완전 온라인을 경험하세요', '예약부터 차량 수령까지 스마트폰으로 완료']]
+            }
+        };
         function paintGate() {
+            const copy = GATE_COPY[state.lang] || GATE_COPY.ja;
             g.innerHTML = '<div class="kdg-bg" id="kdg-bg"></div>'
                 + '<div class="kdg-wrap">'
                 + '<div class="kdg-stage">'
                 + '<img class="kdg-hero-img" src="' + HEAD + '" alt="KEYDROP Car Delivery Service">'
-                + '<div class="kdg-copy"><div class="kdg-kicker">Car Delivery Service</div><h1 class="kdg-title"><span>WHERE TO</span><span class="yellow">DROP YOUR KEY?</span></h1><div class="kdg-jp">スマートに借りて、自由に走ろう</div></div>'
+                + '<div class="kdg-langs">' + ['ja', 'en', 'zh', 'ko'].map(function (lang) { return '<button type="button" data-lang="' + lang + '"' + (state.lang === lang ? ' class="on"' : '') + '>' + GLABELS[lang] + '</button>'; }).join('') + '</div>'
+                + '<div class="kdg-copy"><div class="kdg-kicker">' + copy.kicker + '</div><h1 class="kdg-title"><span>WHERE TO</span><span class="yellow">DROP YOUR KEY?</span></h1><div class="kdg-subcopy"><strong>' + copy.title1 + '</strong><span>' + copy.title2 + '</span></div></div>'
                 + '<div class="kdg-weather"><span>✦</span><b>14°</b><span>SAPPORO / FRESH</span></div><div class="kdg-radar"></div><div class="kdg-pin"></div>'
-                + '<div class="kdg-area-panel"><div class="kdg-prompt">スタートエリアを選択してください</div><div class="kdg-areas">'
+                + '<div class="kdg-area-panel"><div class="kdg-prompt">' + copy.prompt + '</div><div class="kdg-areas">'
                 + KD_GATE_AREAS.map(function (a) {
-                    return '<button class="kdg-area ' + a.id + '" data-area="' + a.id + '"><i class="num">' + a.num + '</i><small>' + a.journey + '</small><strong>' + t('gLbl_' + a.id) + '</strong><em>' + a.desc + '</em></button>';
+                    const journey = copy.journeys[a.id];
+                    return '<button class="kdg-area ' + a.id + '" data-area="' + a.id + '"><i class="num">' + a.num + '</i><small>' + journey[0] + '</small><strong>' + t('gLbl_' + a.id) + '</strong><em>' + journey[1] + '</em></button>';
                 }).join('')
                 + '</div></div></div>'
-                + '<div class="kdg-steps"><div class="kdg-step"><b>01</b><div><strong>マップから場所を指定しよう</strong><span>受取・返却したい場所をピンで選択</span></div></div><div class="kdg-step"><b>02</b><div><strong>呼ぶ車両を選択しよう</strong><span>旅の人数やスタイルに合う一台を選択</span></div></div><div class="kdg-step"><b>03</b><div><strong>完全オンラインを体感しよう</strong><span>予約から受取までスマートフォンで完結</span></div></div></div>'
+                + '<div class="kdg-steps">' + copy.steps.map(function (step, i) { return '<div class="kdg-step"><b>0' + (i + 1) + '</b><div><strong>' + step[0] + '</strong><span>' + step[1] + '</span></div></div>'; }).join('') + '</div>'
                 + '</div>';
             g.querySelector('#kdg-bg').style.backgroundImage = 'url(' + BG + ')';
+            g.querySelectorAll('.kdg-langs button').forEach(function (btn) {
+                btn.onclick = function () {
+                    state.lang = btn.getAttribute('data-lang');
+                    try { localStorage.setItem('kd_lang', state.lang); } catch (e) {}
+                    try { document.documentElement.lang = state.lang; } catch (e) {}
+                    try { kdResetGmapsLangIfPending(state.lang); } catch (e) {}
+                    paintGate();
+                };
+            });
             g.querySelectorAll('.kdg-area').forEach(function (btn) {
                 btn.onclick = function () {
                     if (busy) return; busy = true;
