@@ -781,10 +781,15 @@
         #kdMapGuide { position:absolute; left:8px; top:50px; z-index:1000; display:flex; align-items:flex-end; gap:6px; max-width:calc(100% - 56px); pointer-events:none; }
         #kdMapGuide .kd-mg-img { height:58px; width:auto; flex:none; transform-origin:50% 95%; filter:drop-shadow(0 3px 6px rgba(0,0,0,.4)); animation:kdFloat 3s ease-in-out infinite; -webkit-user-drag:none; }
         #kdMapGuide .kd-mg-img.kd-hop { animation:kdBounce .6s ease; }
-        #kdMapGuide .kd-mg-bubble { position:relative; background:rgba(26,26,26,.93); color:#fff; font-size:12.5px; font-weight:800; padding:8px 12px; border-radius:13px 13px 13px 3px; line-height:1.45; box-shadow:0 3px 12px rgba(0,0,0,.35); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); }
-        #kdMapGuide .kd-mg-bubble::before { content:''; position:absolute; left:-6px; bottom:8px; width:0; height:0; border:6px solid transparent; border-right-color:rgba(26,26,26,.93); border-left:0; }
+        /* お届け＝黄（既定） */
+        #kdMapGuide .kd-mg-bubble { position:relative; background:#FABE00; color:#1a1a1a; font-size:12.5px; font-weight:800; padding:8px 12px; border-radius:13px 13px 13px 3px; line-height:1.45; box-shadow:0 3px 12px rgba(0,0,0,.28); }
+        #kdMapGuide .kd-mg-bubble::before { content:''; position:absolute; left:-6px; bottom:8px; width:0; height:0; border:6px solid transparent; border-right-color:#FABE00; border-left:0; }
+        /* 回収＝青 */
+        #kdMapGuide .kd-mg-bubble.col { background:#2563eb; color:#fff; }
+        #kdMapGuide .kd-mg-bubble.col::before { border-right-color:#2563eb; }
         #kdMapGuide .kd-mg-bubble.kd-pop { animation:kdBubblePop .42s cubic-bezier(.18,.9,.32,1.2); }
-        #kdMapGuide .kd-mg-bubble b { color:#FABE00; }
+        #kdMapGuide .kd-mg-bubble b { color:inherit; }
+        #kdMapGuide .kd-mg-bubble.col b { color:#FABE00; }
         /* 車両画面：モバイル=縦積み（地図上・リスト下シート）／PC=縦割り（地図左・リスト右） */
         .veh-split { flex: 1; display: flex; flex-direction: column; min-height: 0; }
         .veh-map { flex: none; height: 32vh; min-height: 190px; position: relative; }
@@ -2224,6 +2229,7 @@
         var b = ex.querySelector('.kd-mg-bubble');
         var changed = (b.innerHTML !== g.msg);
         b.innerHTML = g.msg;
+        b.classList.toggle('col', state.locStep === 'collection'); // 回収=青／お届け=黄
         if (changed) {
             // 喋った瞬間：吹き出しポップ＋マスコットがひと跳ね
             b.classList.remove('kd-pop'); void b.offsetWidth; b.classList.add('kd-pop');
