@@ -2633,15 +2633,11 @@
         if (state.locStep === 'collection') {
             // STEP1で決めた「お届け日時」を参照表示（回収日を選ぶ基準が分かるように）
             const delRefDt = dt.startDate
-                ? `<div style="display:flex;align-items:center;gap:6px;background:#fffbf0;border:1px solid #FABE00;border-radius:8px;padding:6px 10px;margin-bottom:8px;">
-                        <span style="font-size:12px;flex:none;">📍</span>
-                        <span style="font-size:10px;color:#a07c00;font-weight:800;flex:none;">${t('deliveryShort')}</span>
-                        <span style="font-size:12px;font-weight:800;color:#1a1a1a;">${formatDateLabel(dt.startDate)}${dt.startTime ? ' '+dt.startTime : ''}〜</span>
-                   </div>`
+                ? `<div style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:#a07c00;font-weight:800;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📍 ${t('deliveryShort')} ${formatDateLabel(dt.startDate)}${dt.startTime ? ' '+dt.startTime : ''}〜</div>`
                 : '';
-            return `<div style="padding:10px 16px 10px;">${delRefDt}${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', t('colDate'), t('colTime'))}<div style="font-size:11px;color:#888;font-weight:700;">${t('mapPickCollection')}</div></div>`;
+            return `<div style="padding:5px 14px 4px;">${delRefDt}${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', t('colDate'), t('colTime'))}</div>`;
         }
-        return `<div style="padding:10px 16px 10px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', t('delDate'), t('delTime'))}<div style="font-size:11px;color:#888;font-weight:700;">${t('mapPickDelivery')}</div></div>`;
+        return `<div style="padding:6px 14px 4px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', t('delDate'), t('delTime'))}</div>`;
     }
     function nextToCollection() {
         state.locStep = 'collection';
@@ -2680,7 +2676,7 @@
     function stepDateTimeRow(dateVal, timeVal, dateFn, timeFn, dateLbl, timeLbl) {
         // 未入力枠は点滅（kd-need）で入力を促す
         const dNeed = dateVal ? '' : 'kd-need', tNeed = timeVal ? '' : 'kd-need';
-        return `<div class="datetime-grid" style="gap:8px;margin-bottom:12px;">
+        return `<div class="datetime-grid" style="gap:8px;margin-bottom:0;">
             <div class="dt-group ${dNeed?'kd-need-wrap':''}"><label>${dateLbl}</label><select class="${dNeed}" onchange="${dateFn}(this.value)">${generateDateOptions(dateVal)}</select></div>
             <div class="dt-group ${tNeed?'kd-need-wrap':''}"><label>${timeLbl}</label><select class="${tNeed}" onchange="${timeFn}(this.value)">${generateTimeOptions(timeVal)}</select></div>
         </div>`;
