@@ -1756,6 +1756,10 @@
         // 旧バッジ掃除
         const existing = document.getElementById('locationBadge');
         if (existing) existing.remove();
+        // 決定カード(①②/お届け決定)は予約フロー(お届け/回収)のみ。車両画面等では出さない
+        const inFlow = (state.screen === 'top' || state.screen === 'step_location');
+        const ov0 = document.getElementById('pinOverlay');
+        if (!inFlow) { if (ov0) ov0.remove(); return; }
         const wrap = document.getElementById('mapWrap');
         if (!wrap) return;
         const isCol = state.locStep === 'collection';
