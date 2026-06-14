@@ -44,14 +44,17 @@
         /* 🔴モバイルのTOP(場所選択)は1画面固定をやめ「自然高さ＋スクロール＋地図は固定高」＝下部CTAが切れる事故を防止
            （100dvh+overflow:hiddenはiOS/Androidのツールバー差で必ず下部をクリップするため）。車両画面(kd-topでない)は従来挙動を維持 */
         @media (max-width: 899px) {
-            .app-container.kd-mapscreen.kd-top { height: auto; min-height: 100dvh; overflow: visible; }
-            .kd-top .top-body { flex: none; overflow: visible; }
-            .kd-top .top-2col { flex: none; min-height: 0; }
-            .kd-top .kd-flow { flex: none; min-height: 0; }
-            .kd-top .kd-mapwrap { flex: none; height: 42vh; min-height: 240px; max-height: 440px; }
-            /* 主CTAは画面下に常時固定＝スクロール不要で必ず押せる */
-            .kd-top #locPanel .kd-cta-sticky { position: sticky; bottom: 0; z-index: 30;
-                background: #fff; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); box-shadow: 0 -6px 14px rgba(0,0,0,.08); }
+            /* スマホ予約フロー＝1画面フル活用（KV帯を消し、マップが残り全部を占有） */
+            .app-container.kd-mapscreen.kd-top { height: 100dvh; overflow: hidden; }
+            .kd-top .top-body { flex: 1; overflow: hidden; }
+            .kd-top .top-2col { flex: 1; min-height: 0; }
+            .kd-top .kd-flow { flex: 1; min-height: 0; }
+            .kd-top .kv-mobile { display: none; }              /* 予約中はKVバナー非表示＝マップ最大化 */
+            .kd-top #dateStrip { flex: none; }
+            .kd-top .kd-mapwrap { flex: 1 1 auto; height: auto; min-height: 200px; max-height: none; } /* マップが残り全部 */
+            .kd-top #locPanel { flex: none; }
+            /* 地図下のCTA/オーバーレイがホームバーに被らないよう余白 */
+            .kd-top .kd-pin-overlay { bottom: calc(10px + env(safe-area-inset-bottom)); }
         }
         .demo-nav { display: none; }
 
