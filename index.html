@@ -764,12 +764,19 @@
         .kd-bubble { background:#1a1a1a; color:#fff; font-size:12px; font-weight:700; padding:8px 11px; border-radius:12px 12px 2px 12px;
             box-shadow:0 4px 12px rgba(0,0,0,.2); max-width:170px; line-height:1.5; margin-bottom:26px; pointer-events:none; animation: kdPeek .5s .15s both; }
         .kd-bubble b{ color:#FABE00; }
-        /* ヘッダー直下の案内帯（マスコットが喋る・1体に集約） */
-        #kdGuide { display:flex; align-items:center; gap:8px; padding:5px 14px; background:#fff; border-bottom:1px solid #eee; }
-        #kdGuide .kd-guide-img { height:38px; width:auto; flex:none; transform-origin:50% 90%; animation:kdFloat 3s ease-in-out infinite; -webkit-user-drag:none; }
-        #kdGuide .kd-guide-bubble { flex:1; min-width:0; background:#FABE00; color:#1a1a1a; font-size:12px; font-weight:800; padding:7px 11px; border-radius:12px 12px 12px 3px; line-height:1.45; box-shadow:0 2px 8px rgba(0,0,0,.10); }
+        /* マスコットがユーザーを案内（喋る吹き出し＋対象が点滅で連動） */
+        #kdGuide { display:flex; align-items:flex-end; gap:9px; padding:8px 14px 9px; background:linear-gradient(180deg,#fffdf6,#fff); border-bottom:1px solid #f0e6c8; }
+        #kdGuide .kd-guide-img { height:52px; width:auto; flex:none; transform-origin:50% 95%; animation:kdFloat 3s ease-in-out infinite; -webkit-user-drag:none; }
+        #kdGuide .kd-guide-img.kd-hop { animation:kdBounce .6s ease; }
+        #kdGuide .kd-guide-bubble { position:relative; flex:1; min-width:0; background:#FABE00; color:#1a1a1a; font-size:13px; font-weight:800; padding:10px 13px; border-radius:14px 14px 14px 4px; line-height:1.5; box-shadow:0 3px 10px rgba(0,0,0,.13); }
+        /* 吹き出しのしっぽ（マスコット側へ） */
+        #kdGuide .kd-guide-bubble::before { content:''; position:absolute; left:-7px; bottom:8px; width:0; height:0; border-style:solid; border-width:6px 8px 6px 0; border-color:transparent #FABE00 transparent transparent; }
         #kdGuide .kd-guide-bubble.dark { background:#1a1a1a; color:#fff; }
+        #kdGuide .kd-guide-bubble.dark::before { border-color:transparent #1a1a1a transparent transparent; }
         #kdGuide .kd-guide-bubble b { color:inherit; }
+        #kdGuide .kd-guide-bubble.kd-pop { animation:kdBubblePop .42s cubic-bezier(.18,.9,.32,1.2); }
+        @keyframes kdBubblePop { 0%{ transform:scale(.82); opacity:.4; } 60%{ transform:scale(1.04); opacity:1; } 100%{ transform:scale(1); } }
+        @media (max-width:767px){ #kdGuide .kd-guide-img{ height:48px; } #kdGuide .kd-guide-bubble{ font-size:12.5px; } }
         /* 車両画面：モバイル=縦積み（地図上・リスト下シート）／PC=縦割り（地図左・リスト右） */
         .veh-split { flex: 1; display: flex; flex-direction: column; min-height: 0; }
         .veh-map { flex: none; height: 32vh; min-height: 190px; position: relative; }
@@ -2197,7 +2204,7 @@
         var g = guideText();
         var strip = document.createElement('div');
         strip.id = 'kdGuide';
-        strip.innerHTML = '<img src="images/mascot_head.png" class="kd-guide-img" alt="KEYDROP"><div class="kd-guide-bubble ' + (g.dark ? 'dark' : '') + '">' + g.msg + '</div>';
+        strip.innerHTML = '<img src="images/mascot.png" class="kd-guide-img" alt="KEYDROP"><div class="kd-guide-bubble ' + (g.dark ? 'dark' : '') + '">' + g.msg + '</div>';
         // 右の予約カラム(.kd-flow)の先頭に入れる＝PCで左キービジュアルに被らない。無ければヘッダー直下
         var flow = document.querySelector('.kd-flow');
         if (flow) { flow.insertBefore(strip, flow.firstChild); }
@@ -2205,7 +2212,15 @@
     }
     function updateGuide() {
         var b = document.querySelector('#kdGuide .kd-guide-bubble'); if (!b) return;
-        var g = guideText(); b.innerHTML = g.msg; b.classList.toggle('dark', g.dark);
+        var g = guideText();
+        var changed = (b.innerHTML !== g.msg);
+        b.innerHTML = g.msg; b.classList.toggle('dark', g.dark);
+        if (changed) {
+            // 発言が変わった瞬間に吹き出しポップ＋マスコットがひと跳ね（喋ってる感）
+            b.classList.remove('kd-pop'); void b.offsetWidth; b.classList.add('kd-pop');
+            var img = document.querySelector('#kdGuide .kd-guide-img');
+            if (img) { img.classList.remove('kd-hop'); void img.offsetWidth; img.classList.add('kd-hop'); }
+        }
     }
     function mountCornerMascot() {
         // コーナーマスコットは廃止（確定/マイページ画面でコンテンツに被るため）
