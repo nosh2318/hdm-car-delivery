@@ -11,6 +11,7 @@
 - 多言語ボタンは新ゲート内へ再実装。日本語/英語/繁中/韓国語でキャッチ・案内・エリア説明・3ステップを即時切替
 - 言語選択は既存 `state.lang` と `localStorage.kd_lang` に接続し、エリア選択後の予約画面へ引き継ぐ
 - 車両・背景写真はキャッチを主役にするため、PC/スマホとも軽いblur・低彩度・透過を適用
+- KEYDROPロゴは既存 `images/logo_header.png` を白プレート上に配置。英語キャッチは `WHERE TO` を白、`DROP YOUR KEY?` をブランドイエローで固定
 - `main` pushでGitHub Pagesへ反映
 
 ## プロジェクト概要
