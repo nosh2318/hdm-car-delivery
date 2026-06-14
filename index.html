@@ -2640,7 +2640,14 @@
         }
         return `<div style="padding:10px 16px 10px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', t('delDate'), t('delTime'))}<div style="font-size:11px;color:#888;font-weight:700;">${t('mapPickDelivery')}</div></div>`;
     }
-    function nextToCollection() { state.locStep='collection'; renderLocPanel(); }
+    function nextToCollection() {
+        state.locStep = 'collection';
+        // 回収ピンが無ければ「お届け地点」に初期配置＝そのまま①で決められる（タップで移動も可）
+        if (!state.collectionLat && state.deliveryLat && map && window.google) {
+            try { setCollectionPin(state.deliveryLat, state.deliveryLng); } catch (e) {}
+        }
+        renderLocPanel();
+    }
     function backToDelivery() { state.locStep='delivery'; renderLocPanel(); }
     function useSameCollection() {
         state.collectionLat=state.deliveryLat; state.collectionLng=state.deliveryLng;
