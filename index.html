@@ -771,6 +771,17 @@
         .dt-group select.kd-need { border: 2px solid #FABE00 !important; background: #fffdf4 !important; animation: kdNeedBlink 1.05s ease-in-out infinite; }
         .form-input.kd-need { border: 2px solid #FABE00 !important; background: #fffdf4 !important; animation: kdNeedBlink 1.05s ease-in-out infinite; }
         .dt-group.kd-need-wrap label { color: #a07c00; font-weight: 800; }
+        /* ステップ誘導：今やる所だけハッキリ、それ以外は薄く（強弱で導く） */
+        .kd-dim { opacity: .36 !important; filter: saturate(.5); transition: opacity .35s ease, filter .35s ease; }
+        .map-search-bar.kd-need-loc { border: 2px solid #FABE00; animation: kdNeedBlink 1.05s ease-in-out infinite; }
+        .btn-primary.kd-cta-blink:not(:disabled) { animation: kdCtaPulse 1.15s ease-in-out infinite; }
+        @keyframes kdCtaPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(250,190,0,0); } 50% { box-shadow: 0 0 0 7px rgba(250,190,0,.45); } }
+        /* 場所ステップ：地図の上に「ここで場所を選ぶ」点滅ヒント */
+        .kd-loc-hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 1001;
+            background: rgba(26,26,26,.86); color: #fff; font-size: 12.5px; font-weight: 800; padding: 9px 14px;
+            border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.3); pointer-events: none; white-space: nowrap;
+            animation: kdHintPulse 1.3s ease-in-out infinite; }
+        @keyframes kdHintPulse { 0%,100% { opacity: .65; transform: translate(-50%,-50%) scale(.97); } 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.03); } }
         /* TOP：PCは左キービジュアル/右機能の2カラム。モバイルは右(機能)のみ */
         .top-2col { flex: 1; display: flex; flex-direction: column; min-height: 0; }
         .top-visual { display: none; }
@@ -2472,6 +2483,44 @@
         if (typeof updateGuide === 'function') updateGuide();
         if (typeof renderLocationBadge === 'function') renderLocationBadge();
         if (typeof updateMarkerDragging === 'function') updateMarkerDragging();
+        applyStepFocus();
+    }
+    // ── ステップ誘導：今やる所だけハッキリ、他は薄く（①日付→②場所→③次へ）──
+    function applyStepFocus() {
+        const ds = document.getElementById('dateStrip');
+        const mw = document.getElementById('mapWrap');
+        const lp = document.getElementById('locPanel');
+        if (!ds && !lp) return; // PCレイアウトや該当画面外では何もしない（モバイル予約フロー専用）
+        const isCol = state.locStep === 'collection';
+        const dt = state.datetime;
+        const dateSet = isCol ? !!(dt.endDate && dt.endTime) : !!(dt.startDate && dt.startTime);
+        const locSet  = isCol ? !!state.collectionAddr : !!state.deliveryAddr;
+        const stage = !dateSet ? 1 : (!locSet ? 2 : 3);
+        const sb  = mw ? mw.querySelector('.map-search-bar') : null;
+        const cta = lp ? lp.querySelector('.btn-primary') : null;
+        // リセット
+        [ds, mw, lp, cta].forEach(el => { if (el) el.classList.remove('kd-dim'); });
+        if (sb) sb.classList.remove('kd-need-loc');
+        if (cta) cta.classList.remove('kd-cta-blink');
+        const oldHint = document.getElementById('kdLocHint'); if (oldHint) oldHint.remove();
+        if (stage === 1) {
+            // ①日付に集中：地図・パネルを薄く（日付欄は既存kd-needで点滅）
+            if (mw) mw.classList.add('kd-dim');
+            if (lp) lp.classList.add('kd-dim');
+        } else if (stage === 2) {
+            // ②場所に集中：地図を強調（検索バー点滅＋中央ヒント）、次へボタンだけ薄く
+            if (sb) sb.classList.add('kd-need-loc');
+            if (cta) cta.classList.add('kd-dim');
+            if (mw) {
+                const h = document.createElement('div');
+                h.id = 'kdLocHint'; h.className = 'kd-loc-hint';
+                h.textContent = isCol ? t('mapTapCollection') : t('mapTapDelivery');
+                mw.appendChild(h);
+            }
+        } else {
+            // ③次へに集中：ボタンを点滅
+            if (cta && !cta.disabled) cta.classList.add('kd-cta-blink');
+        }
     }
     // ステップpill（お届け=黄 / 回収=黒 / 車両）
     function stepPills(n) {
@@ -5103,6 +5152,7 @@
         updateMenuText();
         // Re-render app content
         render();
+        setTimeout(function () { try { applyStepFocus(); } catch (e) {} }, 60);
     }
 
     function updateMenuText() {
@@ -5253,6 +5303,7 @@
         } catch (e) {}
         render();
         resetHeroTimer();
+        setTimeout(function () { try { applyStepFocus(); } catch (e) {} }, 80); // 初回描画後にステップ誘導を反映
         loadGooglePlaces(); // 検索用Google Placesを非同期ロード（失敗時はNominatim）
     }
     </script>
