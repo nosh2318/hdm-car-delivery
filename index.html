@@ -1027,45 +1027,41 @@
         /* 那覇空港 */ [[26.18076,127.6446],[26.18099,127.64416],[26.18857,127.64379],[26.19277,127.63987],[26.19719,127.63796],[26.19864,127.63662],[26.20176,127.64118],[26.20152,127.63579],[26.20033,127.63512],[26.17833,127.63617],[26.17746,127.63529],[26.17576,127.63539],[26.1757,127.63187],[26.17895,127.631],[26.18201,127.63169],[26.18811,127.6314],[26.18757,127.62856],[26.18825,127.62927],[26.18833,127.63139],[26.20623,127.63042],[26.20635,127.63387],[26.20445,127.63396],[26.20369,127.63494],[26.20388,127.64198],[26.20719,127.6427],[26.20744,127.64058],[26.20922,127.643],[26.21132,127.6442],[26.21204,127.64655],[26.21304,127.64686],[26.2127,127.64621],[26.2146,127.64679],[26.21659,127.64884],[26.21761,127.65307],[26.21416,127.65622],[26.2137,127.65549],[26.21383,127.65435],[26.21447,127.65419],[26.2138,127.65332],[26.21475,127.65062],[26.21443,127.64947],[26.2113,127.65034],[26.21132,127.65098],[26.20341,127.65129],[26.20254,127.65364],[26.20056,127.65373],[26.20023,127.65418],[26.20046,127.65548],[26.19973,127.65726],[26.19758,127.65992],[26.19508,127.65886],[26.19159,127.65909],[26.18748,127.65635],[26.18073,127.65464],[26.17912,127.65044],[26.18174,127.64879],[26.18089,127.64747],[26.18076,127.6446]],
         /* 那覇港湾施設 */ [[26.21323,127.65964],[26.21325,127.66317],[26.21254,127.66227],[26.21262,127.6613],[26.21208,127.66125],[26.21201,127.66215],[26.21288,127.66335],[26.21218,127.66435],[26.20955,127.66579],[26.20766,127.66986],[26.20523,127.67117],[26.20655,127.67316],[26.20742,127.67151],[26.20747,127.6723],[26.20802,127.67122],[26.20867,127.67132],[26.2073,127.67393],[26.20798,127.67424],[26.20675,127.67385],[26.20459,127.67137],[26.20483,127.66858],[26.20751,127.66409],[26.21006,127.66162],[26.21153,127.65878],[26.21323,127.65964]]
     ];
-    // 対象「市」＝プルダウンで1市選択（1市1枠）。各市：名前/中心/近似ポリゴン枠。
-    const KD_AREA_CITIES = {
-        sapporo: [
-            { name: '札幌市',   c: [43.0687, 141.3508], poly: [[43.1750,141.3200],[43.1700,141.4500],[43.1050,141.4650],[43.0250,141.4600],[42.9850,141.3850],[43.0050,141.2950],[43.1050,141.2650],[43.1450,141.2950]] },
-            { name: '北広島市', c: [42.9856, 141.5630], poly: [[43.0550,141.5150],[43.0480,141.6100],[42.9650,141.6250],[42.9250,141.5650],[42.9600,141.4950],[43.0250,141.4880]] }
-        ],
-        naha: [
-            { name: '那覇市',   c: [26.2124, 127.6792], poly: [[26.2460,127.6650],[26.2470,127.6900],[26.2440,127.7140],[26.2270,127.7240],[26.2080,127.7170],[26.1940,127.6980],[26.1850,127.6680],[26.1900,127.6480],[26.2150,127.6520],[26.2350,127.6580]] },
-            { name: '豊見城市', c: [26.1772, 127.6862], poly: [[26.1850,127.6630],[26.1900,127.6900],[26.1780,127.7060],[26.1610,127.7010],[26.1560,127.6770],[26.1680,127.6600]] }
-        ]
+    // 登録は管理画面の「市区町村フィルタ」に複数市を「,」区切りで＝それがお客様のプルダウンに並ぶ。
+    // 各市の「中心・枠ポリゴン」はここに用意（枠を出したい市はここへ追加。未登録の市は枠なしで判定だけ）。
+    const KD_CITY_META = {
+        sapporo: {
+            '札幌市':   { c: [43.0687, 141.3508], poly: [[43.1750,141.3200],[43.1700,141.4500],[43.1050,141.4650],[43.0250,141.4600],[42.9850,141.3850],[43.0050,141.2950],[43.1050,141.2650],[43.1450,141.2950]] },
+            '北広島市': { c: [42.9856, 141.5630], poly: [[43.0550,141.5150],[43.0480,141.6100],[42.9650,141.6250],[42.9250,141.5650],[42.9600,141.4950],[43.0250,141.4880]] }
+        },
+        naha: {
+            '那覇市':   { c: [26.2124, 127.6792], poly: [[26.2460,127.6650],[26.2470,127.6900],[26.2440,127.7140],[26.2270,127.7240],[26.2080,127.7170],[26.1940,127.6980],[26.1850,127.6680],[26.1900,127.6480],[26.2150,127.6520],[26.2350,127.6580]] },
+            '豊見城市': { c: [26.1772, 127.6862], poly: [[26.1850,127.6630],[26.1900,127.6900],[26.1780,127.7060],[26.1610,127.7010],[26.1560,127.6770],[26.1680,127.6600]] }
+        }
     };
-    function kdCityList() { return KD_AREA_CITIES[KD_STORE] || []; }
-    function kdCurrentCity() {
-        var list = kdCityList(); if (!list.length) return null;
-        var cf = (state.deliveryConfig && state.deliveryConfig.cityFilter) || '';
-        var found = list.filter(function (x) { return x.name === cf; })[0];
-        return found || list[0];
-    }
-    // 対象市リスト（cityFilterを「,」「、」で分割）／住所が対象市を含むか
-    function kdTargetCities() { var cf = (state.deliveryConfig && state.deliveryConfig.cityFilter) || ''; return cf.split(/[,、\s]+/).filter(Boolean); }
-    function kdAddrInCities(addr) { var cs = kdTargetCities(); if (!cs.length) return true; var a = addr || ''; return cs.some(function (c) { return a.indexOf(c) >= 0; }); }
-    // 市プルダウン（1市1枠）。選ぶと対象市・枠・地図中心が切替わる。
+    function kdCityMeta(name) { return (KD_CITY_META[KD_STORE] || {})[name] || null; }
+    // 登録済み市リスト（管理画面 cityFilter を「,」区切り）＝プルダウンの選択肢
+    function kdAllowedCities() { var cf = (state.deliveryConfig && state.deliveryConfig.cityFilter) || ''; return cf.split(/[,、\s]+/).filter(Boolean); }
+    // 現在選択中の1市（プルダウン）。未選択なら先頭。
+    function kdSelectedCity() { var a = kdAllowedCities(); if (!a.length) return ''; return (state.selectedCity && a.indexOf(state.selectedCity) >= 0) ? state.selectedCity : a[0]; }
+    // 配達可否＝選択中の1市に含まれるか（1市1枠）
+    function kdAddrInCities(addr) { var sel = kdSelectedCity(); if (!sel) return true; return (addr || '').indexOf(sel) >= 0; }
+    // 市プルダウン（登録された複数市から1市選択）
     function renderCityBar() {
-        var list = kdCityList(); if (list.length < 2) return '';
-        var cur = kdCurrentCity();
-        var opts = list.map(function (x) { return '<option value="' + x.name + '"' + (cur && x.name === cur.name ? ' selected' : '') + '>' + x.name + '</option>'; }).join('');
+        var a = kdAllowedCities(); if (a.length < 2) return '';
+        var sel = kdSelectedCity();
+        var opts = a.map(function (nm) { return '<option value="' + nm + '"' + (nm === sel ? ' selected' : '') + '>' + nm + '</option>'; }).join('');
         return '<div style="display:flex;align-items:center;gap:8px;padding:7px 14px 2px;">'
             + '<span style="font-size:11px;font-weight:800;color:#555;flex:none;">🚙 ' + t('cityLabel') + '</span>'
             + '<select onchange="onCityChange(this.value)" style="flex:1;min-width:0;padding:9px 30px 9px 12px;border:2px solid #cfcfcf;border-radius:10px;font-size:14px;font-weight:800;color:#1a1a1a;background:#fff;appearance:none;-webkit-appearance:none;background-image:url(\'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22%3E%3Cpath d=%22M0 0l6 8 6-8z%22 fill=%22%231a1a1a%22/%3E%3C/svg%3E\');background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;">' + opts + '</select>'
             + '</div>';
     }
     function onCityChange(name) {
-        if (!state.deliveryConfig) state.deliveryConfig = {};
-        state.deliveryConfig.cityFilter = name;
-        var city = kdCurrentCity();
-        if (city) { state.deliveryConfig.centerName = name; state.deliveryConfig.centerLat = city.c[0]; state.deliveryConfig.centerLng = city.c[1]; }
-        if (map && city && window.google) { map.setCenter({ lat: city.c[0], lng: city.c[1] }); map.setZoom(13); }
+        state.selectedCity = name;
+        var m = kdCityMeta(name);
+        if (map && m && window.google) { map.setCenter({ lat: m.c[0], lng: m.c[1] }); map.setZoom(13); }
         drawAreaOverlays();
-        // 既存のお届けピンが新しい市の外なら解除（混乱回避）
+        // 既存のお届けピンが選択した市の外なら解除（混乱回避）
         if (state.deliveryLat) {
             var chk = checkDeliverable(state.deliveryLat, state.deliveryLng, (state.deliveryAddr || '') + ' ' + (state.deliveryAddrCanon || ''));
             if (!chk.ok) { try { clearDeliveryPin(); } catch (e) {} }
@@ -1403,9 +1399,10 @@
         sameCollection: true,
         // 配達可能範囲（DB public_delivery_config_v＝adminオーナー設定で上書き。既定=札幌駅中心20km/札幌市内）
         deliveryConfig: (KD_STORE === 'naha'
-            ? { centerLat: 26.2124, centerLng: 127.6792, centerName: '那覇市', radiusKm: 12, cityFilter: '那覇市' }
-            : { centerLat: 43.0687, centerLng: 141.3508, centerName: '札幌市', radiusKm: 25, cityFilter: '札幌市' }),
+            ? { centerLat: 26.2124, centerLng: 127.6792, centerName: '那覇', radiusKm: 12, cityFilter: '那覇市,豊見城市' }
+            : { centerLat: 43.0687, centerLng: 141.3508, centerName: '札幌', radiusKm: 25, cityFilter: '札幌市,北広島市' }),
         outOfArea: false,
+        selectedCity: '', // プルダウンで選んだ配達先の市（空=登録リストの先頭）
         mapReady: false,
         // DateTime
         datetime: {
@@ -1483,7 +1480,7 @@
         // 対象エリア（配達可能エリア）の可視化：市域の枠（緑ポリゴン）を優先。無ければ緑の円。
         if (kdAreaCircle) { try { kdAreaCircle.setMap(null); } catch (e) {} kdAreaCircle = null; }
         if (kdAreaPoly) { try { kdAreaPoly.setMap(null); } catch (e) {} kdAreaPoly = null; }
-        const city = kdCurrentCity(); // 1市1枠（選択中の市のみ）
+        const city = kdCityMeta(kdSelectedCity()); // 1市1枠（選択中の市のみ）
         if (city && city.poly) {
             kdAreaPoly = new google.maps.Polygon({ paths: city.poly.map(function (pt) { return { lat: pt[0], lng: pt[1] }; }), strokeColor: '#16a34a', strokeWeight: 2.5, strokeOpacity: .95, fillColor: '#16a34a', fillOpacity: .06, clickable: false, map: map });
         } else if (cfg.centerLat != null && cfg.centerLng != null && cfg.radiusKm) {
@@ -2014,7 +2011,7 @@
             // 配達エリア外/空港内: 車両を出さない
             state.outOfArea = true;
             state.outOfAreaReason = inAirport ? t('nogoAirport')
-                : t('outOfAreaCity').replace('{c}', (cfg.cityFilter || '').replace(/[,、\s]+/g, '・'));
+                : t('outOfAreaCity').replace('{c}', kdSelectedCity() || (cfg.cityFilter || ''));
             state.availableVehicles = [];
             renderPanel();
             return;
@@ -2634,7 +2631,7 @@
         if (!cfg.cityFilter) return { ok: true, reason: '' };
         // 対象「市」に含まれるか（複数市OK）。住所未解決(座標文字列)の間は弾かない。
         const addrResolved = !!addr && !/^\s*-?\d+\.\d+\s*,\s*-?\d+\.\d+\s*$/.test(addr);
-        if (addrResolved && !kdAddrInCities(addr)) return { ok: false, reason: t('outOfAreaCity').replace('{c}', cfg.cityFilter.replace(/[,、\s]+/g, '・')) };
+        if (addrResolved && !kdAddrInCities(addr)) return { ok: false, reason: t('outOfAreaCity').replace('{c}', kdSelectedCity() || cfg.cityFilter) };
         return { ok: true, reason: '' };
     }
     // お届けピンのエリア判定→state更新＋マップ上に赤い警告バナーを表示/非表示
