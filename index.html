@@ -1027,6 +1027,11 @@
         /* 那覇空港 */ [[26.18076,127.6446],[26.18099,127.64416],[26.18857,127.64379],[26.19277,127.63987],[26.19719,127.63796],[26.19864,127.63662],[26.20176,127.64118],[26.20152,127.63579],[26.20033,127.63512],[26.17833,127.63617],[26.17746,127.63529],[26.17576,127.63539],[26.1757,127.63187],[26.17895,127.631],[26.18201,127.63169],[26.18811,127.6314],[26.18757,127.62856],[26.18825,127.62927],[26.18833,127.63139],[26.20623,127.63042],[26.20635,127.63387],[26.20445,127.63396],[26.20369,127.63494],[26.20388,127.64198],[26.20719,127.6427],[26.20744,127.64058],[26.20922,127.643],[26.21132,127.6442],[26.21204,127.64655],[26.21304,127.64686],[26.2127,127.64621],[26.2146,127.64679],[26.21659,127.64884],[26.21761,127.65307],[26.21416,127.65622],[26.2137,127.65549],[26.21383,127.65435],[26.21447,127.65419],[26.2138,127.65332],[26.21475,127.65062],[26.21443,127.64947],[26.2113,127.65034],[26.21132,127.65098],[26.20341,127.65129],[26.20254,127.65364],[26.20056,127.65373],[26.20023,127.65418],[26.20046,127.65548],[26.19973,127.65726],[26.19758,127.65992],[26.19508,127.65886],[26.19159,127.65909],[26.18748,127.65635],[26.18073,127.65464],[26.17912,127.65044],[26.18174,127.64879],[26.18089,127.64747],[26.18076,127.6446]],
         /* 那覇港湾施設 */ [[26.21323,127.65964],[26.21325,127.66317],[26.21254,127.66227],[26.21262,127.6613],[26.21208,127.66125],[26.21201,127.66215],[26.21288,127.66335],[26.21218,127.66435],[26.20955,127.66579],[26.20766,127.66986],[26.20523,127.67117],[26.20655,127.67316],[26.20742,127.67151],[26.20747,127.6723],[26.20802,127.67122],[26.20867,127.67132],[26.2073,127.67393],[26.20798,127.67424],[26.20675,127.67385],[26.20459,127.67137],[26.20483,127.66858],[26.20751,127.66409],[26.21006,127.66162],[26.21153,127.65878],[26.21323,127.65964]]
     ];
+    // 対象エリア（配達可能エリア）の枠＝市域の近似ポリゴン。緑線で可視化（cityFilterの実判定はDB設定が正・これは表示用の近似）
+    const KD_AREA_POLY = {
+        sapporo: [[43.1750,141.3200],[43.1700,141.4500],[43.1050,141.4650],[43.0250,141.4600],[42.9850,141.3850],[43.0050,141.2950],[43.1050,141.2650],[43.1450,141.2950]],
+        naha: [[26.2460,127.6650],[26.2470,127.6900],[26.2440,127.7140],[26.2270,127.7240],[26.2080,127.7170],[26.1940,127.6980],[26.1850,127.6680],[26.1900,127.6480],[26.2150,127.6520],[26.2350,127.6580]]
+    };
     function kdPointInPoly(lat, lng, p) {
         let inside = false;
         for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
@@ -1430,13 +1435,17 @@
     }
 
     // ── マップ上の「対象エリア」可視化：配達範囲の円＋（那覇）空港の引き渡し不可ゾーン ──
-    let kdAreaCircle = null, kdAirportRect = null, kdAirportLabel = null;
+    let kdAreaCircle = null, kdAreaPoly = null, kdAirportRect = null, kdAirportLabel = null;
     function drawAreaOverlays() {
         if (!map || !(window.google && google.maps)) return;
         const cfg = state.deliveryConfig || {};
-        // 対象エリア（配達可能範囲）＝緑の円
+        // 対象エリア（配達可能エリア）の可視化：市域の枠（緑ポリゴン）を優先。無ければ緑の円。
         if (kdAreaCircle) { try { kdAreaCircle.setMap(null); } catch (e) {} kdAreaCircle = null; }
-        if (cfg.centerLat != null && cfg.centerLng != null && cfg.radiusKm) {
+        if (kdAreaPoly) { try { kdAreaPoly.setMap(null); } catch (e) {} kdAreaPoly = null; }
+        const areaPoly = KD_AREA_POLY[KD_STORE];
+        if (areaPoly) {
+            kdAreaPoly = new google.maps.Polygon({ paths: areaPoly.map(function (pt) { return { lat: pt[0], lng: pt[1] }; }), strokeColor: '#16a34a', strokeWeight: 2.5, strokeOpacity: .95, fillColor: '#16a34a', fillOpacity: .06, clickable: false, map: map });
+        } else if (cfg.centerLat != null && cfg.centerLng != null && cfg.radiusKm) {
             kdAreaCircle = new google.maps.Circle({ center: { lat: cfg.centerLat, lng: cfg.centerLng }, radius: cfg.radiusKm * 1000, strokeColor: '#16a34a', strokeWeight: 1.5, strokeOpacity: .7, fillColor: '#16a34a', fillOpacity: .05, clickable: false, map: map });
         }
         // 那覇空港 引き渡し不可ゾーン＝赤のポリゴン
@@ -2162,7 +2171,7 @@
                         deliveryMarker = null;
                         collectionMarker = null;
                         baseMarker = null;
-                        kdAreaCircle = null; kdAirportRect = null; kdAirportLabel = null;
+                        kdAreaCircle = null; kdAreaPoly = null; kdAirportRect = null; kdAirportLabel = null;
                         initMap(state.deliveryLat || state.userLat || DEFAULT_LAT, state.deliveryLng || state.userLng || DEFAULT_LNG);
                         restorePins();
                     } else if (window.google && google.maps) {
