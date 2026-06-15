@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <!-- Google Analytics 4 (GA4) keydrop.jp -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N1HJ6WLG2Y"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-N1HJ6WLG2Y');</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1a1a">
+<title>マイページの使い方｜KEYDROP カーデリバリー</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans',sans-serif;background:#f5f6f8;color:#1a1a1a;line-height:1.7;padding-bottom:60px}
+  a{color:#0369a1}
+  .hd{background:#1a1a1a;color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+  .hd a.logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+  .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
+  .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
+  .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
+  .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:10px;flex:none}
+  .langsw{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .langsw button{font-size:11px;font-weight:800;color:#ccc;background:transparent;border:1px solid #555;border-radius:999px;padding:4px 9px;cursor:pointer}
+  .langsw button.active{color:#1a1a1a;background:#FABE00;border-color:#FABE00}
+  .pane{display:none}.pane.on{display:block}
+  .hero{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:#fff;padding:30px 20px 26px;text-align:center}
+  .hero h1{font-size:22px;font-weight:900;margin-bottom:6px}
+  .hero h1 .y{color:#FABE00}
+  .hero p{font-size:13px;opacity:.85}
+  .wrap{max-width:760px;margin:0 auto;padding:20px 16px}
+  .lead{font-size:14px;color:#444;background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 6px rgba(0,0,0,.05);margin-bottom:18px}
+  .sechd{font-size:15px;font-weight:900;margin:22px 2px 12px;display:flex;align-items:center;gap:8px}
+  .sechd::before{content:'';width:5px;height:18px;background:#FABE00;border-radius:3px}
+  /* できること カードグリッド */
+  .caps{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px}
+  .cap{background:#fff;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.06);padding:16px 15px;border:1px solid #f0f0f0}
+  .cap .ic{font-size:26px;line-height:1;margin-bottom:8px}
+  .cap h3{font-size:14.5px;font-weight:900;margin-bottom:5px}
+  .cap p{font-size:12.5px;color:#555;line-height:1.6}
+  @media(max-width:520px){.caps{grid-template-columns:1fr}}
+  /* ステップ（画像枠付き） */
+  .step{background:#fff;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.06);padding:18px 18px 16px;margin-bottom:16px;position:relative;overflow:hidden}
+  .step::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:#FABE00}
+  .step .num{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:900;color:#a07c00;background:#fffbf0;border:1px solid #FABE00;border-radius:20px;padding:4px 12px;margin-bottom:10px}
+  .step h2{font-size:17px;font-weight:900;margin-bottom:8px}
+  .step p{font-size:13.5px;color:#444;margin-bottom:8px}
+  .step ul{list-style:none;margin:4px 0 4px}
+  .step li{font-size:13.5px;color:#333;padding:6px 0 6px 26px;position:relative;border-bottom:1px dashed #f0f0f0}
+  .step li:last-child{border-bottom:none}
+  .step li::before{content:'✓';position:absolute;left:4px;color:#FABE00;font-weight:900}
+  .step li b{color:#1a1a1a}
+  .shot{margin:10px 0 4px;border:2px dashed #d4d4d8;border-radius:12px;background:#fafafa;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#9ca3af;text-align:center;padding:18px}
+  .shot img{width:100%;border-radius:10px;display:block}
+  .shot .ph-ic{font-size:30px}
+  .shot .ph-tx{font-size:12px;font-weight:700;letter-spacing:.02em}
+  .warn{background:#fff7ed;border:1px solid #fdba74;border-radius:9px;padding:9px 12px;font-size:12.5px;color:#9a3412;font-weight:600;margin-top:8px}
+  .tip{background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:9px 12px;font-size:12.5px;color:#1e40af;font-weight:600;margin-top:8px}
+  .linebox{background:#06c755;color:#fff;border-radius:11px;padding:13px 16px;margin-top:10px;display:flex;flex-direction:column;gap:3px}
+  .linebox a{color:#fff;font-weight:800;text-decoration:none}
+  .linebox .lid{font-size:12px;opacity:.92}
+  .faq{background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,.05);padding:6px 16px;margin-bottom:16px}
+  .faq dt{font-size:13.5px;font-weight:900;padding:12px 0 4px;color:#1a1a1a}
+  .faq dt::before{content:'Q. ';color:#FABE00}
+  .faq dd{font-size:13px;color:#555;padding:0 0 12px;border-bottom:1px solid #f3f3f3}
+  .faq dd:last-child{border-bottom:none}
+  .cta{display:block;text-align:center;background:#FABE00;color:#1a1a1a;font-weight:900;font-size:15px;padding:15px;border-radius:12px;text-decoration:none;margin-top:20px;box-shadow:0 3px 12px rgba(250,190,0,.4)}
+  .cta.line{background:#06c755;color:#fff;box-shadow:0 3px 12px rgba(6,199,85,.35)}
+</style>
+</head>
+<body>
+<div class="hd">
+  <a class="logo" href="./"><span class="mark"><i></i><i></i><i></i></span><b>KEY<span class="y">DROP</span></b></a>
+  <div class="langsw" id="langsw">
+    <button data-l="ja">日本語</button><button data-l="en">EN</button><button data-l="zh">繁中</button><button data-l="ko">한국어</button>
+  </div>
+  <a class="back" href="./">← TOP</a>
+</div>
+
+<!-- ============ ja ============ -->
+<div class="pane" data-lang="ja">
+<div class="hero"><h1>マイ<span class="y">ページ</span>の使い方</h1><p>予約の確認・変更・キャンセルを、ご自身でかんたんに</p></div>
+<div class="wrap">
+  <div class="lead">マイページは、<b>予約番号</b>と<b>ご予約時のメールアドレス</b>でログインできる、お客様専用の画面です。予約の内容確認から、お届け・回収の変更リクエスト、キャンセルリクエストまで、<b>24時間いつでもセルフでお手続き</b>いただけます。</div>
+
+  <div class="sechd">マイページでできること</div>
+  <div class="caps">
+    <div class="cap"><div class="ic">📋</div><h3>予約内容の確認</h3><p>車両・お届け／回収の日時・場所・オプション・お支払い金額をいつでも確認。</p></div>
+    <div class="cap"><div class="ic">🚚</div><h3>今の状況を確認</h3><p>「準備中」「お届け中」「ご利用中」など、いまどの段階かが一目でわかります。</p></div>
+    <div class="cap"><div class="ic">📝</div><h3>お届け・回収の変更</h3><p>受け取り／返却の<b>時間・場所</b>の変更をリクエスト（地図で指定）。</p></div>
+    <div class="cap"><div class="ic">❌</div><h3>キャンセル</h3><p>キャンセルをリクエスト。キャンセル料は規定に沿って自動計算されます。</p></div>
+    <div class="cap"><div class="ic">🗺️</div><h3>場所をマップで確認</h3><p>お届け・回収先のGoogleマップをワンタップで開けます。</p></div>
+    <div class="cap"><div class="ic">💬</div><h3>そのまま問い合わせ</h3><p>不明点は画面から公式LINEへ。番号を忘れても再確認できます。</p></div>
+  </div>
+
+  <div class="sechd">使い方（4ステップ）</div>
+
+  <div class="step"><span class="num">STEP 1 ・ ひらく</span><h2>マイページを開く</h2>
+    <p>下記いずれかから開けます。</p>
+    <ul>
+      <li>メニュー「<b>予約を確認する（マイページ）</b>」</li>
+      <li>予約完了画面の「<b>📱 マイページに移動する</b>」</li>
+      <li>ご予約確認<b>メール内のリンク</b></li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">画像：メニュー → 予約を確認する（マイページ）</div></div>
+  </div>
+
+  <div class="step"><span class="num">STEP 2 ・ ログイン</span><h2>予約番号＋メールでログイン</h2>
+    <p><b>予約番号</b>（札幌 KD-… / 那覇 KDN-…）と<b>ご予約時のメールアドレス</b>を入力します。</p>
+    <ul>
+      <li>同じメールに複数のご予約 → <b>一覧から選択</b></li>
+      <li>チェックを入れると<b>次回から入力不要</b>（この端末のみ）</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">画像：ログイン画面（予約番号・メール入力）</div></div>
+    <div class="warn">⚠️ 予約番号がわからないときは、画面下の<b>公式LINE</b>からお問い合わせください。</div>
+  </div>
+
+  <div class="step"><span class="num">STEP 3 ・ 確認</span><h2>予約内容・今の状況を見る</h2>
+    <p>ログインすると、予約の<b>ステータス</b>と<b>進捗バー</b>、車両・日時・場所・金額などの詳細が表示されます。</p>
+    <ul>
+      <li>状況：予約確定 → 出発準備中 → お届け中 → ご利用中 → 返却完了</li>
+      <li>お届け／回収の場所は<b>マップリンク</b>で確認可能</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">画像：予約詳細（ステータスHero＋進捗バー）</div></div>
+  </div>
+
+  <div class="step"><span class="num">STEP 4 ・ 手続き</span><h2>変更・キャンセルをリクエスト</h2>
+    <p>必要に応じて、その場でリクエストできます。送信後、<b>運営が確認して確定</b>します（即時確定ではありません）。</p>
+    <ul>
+      <li><b>📝 変更</b>：お届け・回収の時間／場所（地図で指定）</li>
+      <li><b>❌ キャンセル</b>：規定のキャンセル料を確認して送信</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">画像：変更リクエスト（時間選択＋地図）</div></div>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">画像：キャンセルリクエスト（ポリシー同意）</div></div>
+  </div>
+
+  <div class="sechd">変更・キャンセルのルール</div>
+  <div class="step"><h2>受付の締切</h2>
+    <ul>
+      <li><b>お届け</b>（時間・場所）：<b>出発の48時間前</b>まで</li>
+      <li><b>回収</b>（時間・場所）：<b>返却の2時間前</b>まで</li>
+      <li>日程・車種・オプションの変更は<b>公式LINE</b>へ</li>
+    </ul>
+    <p style="margin-top:10px;font-weight:800">キャンセル料（基本料金に対して）</p>
+    <ul>
+      <li>貸出7日前まで：<b>無料</b></li>
+      <li>6〜3日前：<b>20%</b> ／ 2〜1日前：<b>30%</b></li>
+      <li>当日以降・無連絡不使用：<b>50%</b></li>
+    </ul>
+    <div class="tip">✈️ 航空便の欠航時は、欠航証明書のご提示でキャンセル料無料です。</div>
+  </div>
+
+  <div class="sechd">よくある質問</div>
+  <dl class="faq">
+    <dt>予約番号を忘れました</dt><dd>公式LINE（@149ahjll）へお名前とご予約日をお知らせください。確認のうえご案内します。</dd>
+    <dt>変更はすぐ確定しますか？</dt><dd>いいえ。リクエスト後、運営が確認して確定します。確定するとメールでお知らせします。</dd>
+    <dt>返金はいつ戻りますか？</dt><dd>キャンセル確定後、ご利用カードへ返金します（カード会社により反映に数日かかる場合があります）。</dd>
+    <dt>当日の急ぎの連絡は？</dt><dd>公式LINE、またはTEL 050-1785-2711（9:00〜19:00）へご連絡ください。</dd>
+  </dl>
+
+  <a class="cta" href="./#mypage">📱 マイページを開く</a>
+  <a class="cta line" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">💬 公式LINEで問い合わせる</a>
+</div>
+</div>
+
+<!-- ============ en ============ -->
+<div class="pane" data-lang="en">
+<div class="hero"><h1>Using <span class="y">My Page</span></h1><p>Check, change, or cancel your booking — easily, by yourself</p></div>
+<div class="wrap">
+  <div class="lead">My Page is your personal screen, accessed with your <b>reservation number</b> and the <b>email you booked with</b>. From checking your booking to requesting delivery/collection changes or a cancellation, you can <b>do it yourself, anytime, 24/7</b>.</div>
+
+  <div class="sechd">What you can do</div>
+  <div class="caps">
+    <div class="cap"><div class="ic">📋</div><h3>Check your booking</h3><p>Vehicle, delivery/collection date, time, place, options and amount paid — anytime.</p></div>
+    <div class="cap"><div class="ic">🚚</div><h3>Track the status</h3><p>See at a glance whether it's "Preparing", "Delivering", "In use" and more.</p></div>
+    <div class="cap"><div class="ic">📝</div><h3>Change delivery/return</h3><p>Request a change to the pickup/return <b>time and place</b> (set on the map).</p></div>
+    <div class="cap"><div class="ic">❌</div><h3>Cancel</h3><p>Request a cancellation. The fee is calculated automatically per the policy.</p></div>
+    <div class="cap"><div class="ic">🗺️</div><h3>Open the map</h3><p>Open the Google Maps of your delivery/return spot in one tap.</p></div>
+    <div class="cap"><div class="ic">💬</div><h3>Contact us</h3><p>Reach our Official LINE from the screen. Forgot your number? We can help.</p></div>
+  </div>
+
+  <div class="sechd">How to use (4 steps)</div>
+
+  <div class="step"><span class="num">STEP 1 ・ Open</span><h2>Open My Page</h2>
+    <p>You can open it from any of these:</p>
+    <ul>
+      <li>Menu "<b>Check booking (My Page)</b>"</li>
+      <li>"<b>📱 Go to My Page</b>" on the booking-complete screen</li>
+      <li>The <b>link in your confirmation email</b></li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">Image: Menu → Check booking (My Page)</div></div>
+  </div>
+
+  <div class="step"><span class="num">STEP 2 ・ Log in</span><h2>Log in with number + email</h2>
+    <p>Enter your <b>reservation number</b> (Sapporo KD-… / Naha KDN-…) and the <b>email you booked with</b>.</p>
+    <ul>
+      <li>Several bookings on one email → <b>pick from the list</b></li>
+      <li>Tick the box to <b>skip input next time</b> (this device only)</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">Image: Login screen (number & email)</div></div>
+    <div class="warn">⚠️ Don't know your reservation number? Contact us via the <b>Official LINE</b> at the bottom of the screen.</div>
+  </div>
+
+  <div class="step"><span class="num">STEP 3 ・ Check</span><h2>See your booking & status</h2>
+    <p>After logging in, you'll see the <b>status</b> and <b>progress bar</b>, plus details like vehicle, date/time, place and amount.</p>
+    <ul>
+      <li>Status: Confirmed → Preparing → Delivering → In use → Returned</li>
+      <li>Delivery/return places open via a <b>map link</b></li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">Image: Booking detail (status hero + progress)</div></div>
+  </div>
+
+  <div class="step"><span class="num">STEP 4 ・ Request</span><h2>Request a change or cancellation</h2>
+    <p>Request right on the screen if needed. After you send it, <b>our team reviews and confirms</b> (not instant).</p>
+    <ul>
+      <li><b>📝 Change</b>: delivery/return time or place (set on the map)</li>
+      <li><b>❌ Cancel</b>: review the fee, then send</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">Image: Change request (time + map)</div></div>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">Image: Cancellation request (policy consent)</div></div>
+  </div>
+
+  <div class="sechd">Change / cancellation rules</div>
+  <div class="step"><h2>Deadlines</h2>
+    <ul>
+      <li><b>Delivery</b> (time/place): up to <b>48 hours before departure</b></li>
+      <li><b>Collection</b> (time/place): up to <b>2 hours before return</b></li>
+      <li>Dates, vehicle class, options → via <b>Official LINE</b></li>
+    </ul>
+    <p style="margin-top:10px;font-weight:800">Cancellation fee (against base fare)</p>
+    <ul>
+      <li>Up to 7 days before pickup: <b>Free</b></li>
+      <li>6–3 days: <b>20%</b> / 2–1 days: <b>30%</b></li>
+      <li>Same day onward / no-show: <b>50%</b></li>
+    </ul>
+    <div class="tip">✈️ If your flight is cancelled, show the cancellation certificate for a free cancellation.</div>
+  </div>
+
+  <div class="sechd">FAQ</div>
+  <dl class="faq">
+    <dt>I forgot my reservation number</dt><dd>Send your name and booking date to our Official LINE (@149ahjll). We'll check and assist.</dd>
+    <dt>Is a change confirmed instantly?</dt><dd>No. After your request, our team reviews and confirms it. You'll get an email once confirmed.</dd>
+    <dt>When is my refund returned?</dt><dd>After the cancellation is confirmed, we refund to your card (it may take a few days depending on your card issuer).</dd>
+    <dt>Urgent same-day contact?</dt><dd>Reach our Official LINE, or call 050-1785-2711 (9:00–19:00).</dd>
+  </dl>
+
+  <a class="cta" href="./#mypage">📱 Open My Page</a>
+  <a class="cta line" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">💬 Contact via Official LINE</a>
+</div>
+</div>
+
+<!-- ============ zh ============ -->
+<div class="pane" data-lang="zh">
+<div class="hero"><h1>會員<span class="y">頁面</span>使用方法</h1><p>確認、變更、取消預約，輕鬆自助完成</p></div>
+<div class="wrap">
+  <div class="lead">會員頁面是您的專屬畫面，以<b>預約編號</b>與<b>預約時的電子郵件</b>登入。從確認預約內容、申請送達／回收的變更，到申請取消，皆可<b>24小時自助辦理</b>。</div>
+
+  <div class="sechd">會員頁面可以做什麼</div>
+  <div class="caps">
+    <div class="cap"><div class="ic">📋</div><h3>確認預約內容</h3><p>隨時確認車輛、送達／回收的日期時間地點、選項與付款金額。</p></div>
+    <div class="cap"><div class="ic">🚚</div><h3>查看目前狀態</h3><p>「準備中」「送車中」「使用中」等，目前進度一目了然。</p></div>
+    <div class="cap"><div class="ic">📝</div><h3>變更送達／回收</h3><p>申請變更取車／還車的<b>時間與地點</b>（於地圖指定）。</p></div>
+    <div class="cap"><div class="ic">❌</div><h3>取消</h3><p>申請取消。取消費用將依規定自動計算。</p></div>
+    <div class="cap"><div class="ic">🗺️</div><h3>以地圖確認地點</h3><p>一鍵開啟送達／回收地點的 Google 地圖。</p></div>
+    <div class="cap"><div class="ic">💬</div><h3>直接洽詢</h3><p>有疑問可從畫面前往官方LINE。忘記編號也能再次確認。</p></div>
+  </div>
+
+  <div class="sechd">使用方法（4步驟）</div>
+
+  <div class="step"><span class="num">STEP 1 ・ 開啟</span><h2>開啟會員頁面</h2>
+    <p>可從以下任一方式開啟。</p>
+    <ul>
+      <li>選單「<b>確認預約（會員頁面）</b>」</li>
+      <li>預約完成畫面的「<b>📱 前往會員頁面</b>」</li>
+      <li>預約確認<b>郵件中的連結</b></li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">圖片：選單 → 確認預約（會員頁面）</div></div>
+  </div>
+
+  <div class="step"><span class="num">STEP 2 ・ 登入</span><h2>以預約編號＋郵件登入</h2>
+    <p>輸入<b>預約編號</b>（札幌 KD-… / 那霸 KDN-…）與<b>預約時的電子郵件</b>。</p>
+    <ul>
+      <li>同一郵件有多筆預約 → <b>於清單選擇</b></li>
+      <li>勾選後<b>下次免輸入</b>（僅限本裝置）</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">圖片：登入畫面（編號・郵件）</div></div>
+    <div class="warn">⚠️ 不知道預約編號時，請從畫面下方的<b>官方LINE</b>洽詢。</div>
+  </div>
+
+  <div class="step"><span class="num">STEP 3 ・ 確認</span><h2>查看預約內容與狀態</h2>
+    <p>登入後會顯示預約的<b>狀態</b>與<b>進度條</b>，以及車輛、日期時間、地點、金額等詳細資訊。</p>
+    <ul>
+      <li>狀態：預約確定 → 準備中 → 送車中 → 使用中 → 還車完成</li>
+      <li>送達／回收地點可透過<b>地圖連結</b>確認</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">圖片：預約詳情（狀態＋進度條）</div></div>
+  </div>
+
+  <div class="step"><span class="num">STEP 4 ・ 辦理</span><h2>申請變更・取消</h2>
+    <p>可視需要當場申請。送出後由<b>營運方確認後確定</b>（非即時確定）。</p>
+    <ul>
+      <li><b>📝 變更</b>：送達／回收的時間或地點（於地圖指定）</li>
+      <li><b>❌ 取消</b>：確認取消費用後送出</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">圖片：變更申請（時間＋地圖）</div></div>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">圖片：取消申請（同意條款）</div></div>
+  </div>
+
+  <div class="sechd">變更・取消規則</div>
+  <div class="step"><h2>受理截止</h2>
+    <ul>
+      <li><b>送達</b>（時間・地點）：<b>出發48小時前</b></li>
+      <li><b>回收</b>（時間・地點）：<b>還車2小時前</b></li>
+      <li>日程・車型・選項的變更請洽<b>官方LINE</b></li>
+    </ul>
+    <p style="margin-top:10px;font-weight:800">取消費用（對基本費用）</p>
+    <ul>
+      <li>取車7天前：<b>免費</b></li>
+      <li>6〜3天前：<b>20%</b> ／ 2〜1天前：<b>30%</b></li>
+      <li>當天以後・未聯絡未使用：<b>50%</b></li>
+    </ul>
+    <div class="tip">✈️ 航班取消時，出示停飛證明可免取消費用。</div>
+  </div>
+
+  <div class="sechd">常見問題</div>
+  <dl class="faq">
+    <dt>忘記預約編號</dt><dd>請以官方LINE（@149ahjll）告知姓名與預約日期，我們確認後為您說明。</dd>
+    <dt>變更會立即確定嗎？</dt><dd>不會。送出後由營運方確認確定，確定後將以郵件通知。</dd>
+    <dt>退款何時退回？</dt><dd>取消確定後退回原信用卡（依發卡公司，反映可能需數日）。</dd>
+    <dt>當天緊急聯絡？</dt><dd>請洽官方LINE，或電 050-1785-2711（9:00〜19:00）。</dd>
+  </dl>
+
+  <a class="cta" href="./#mypage">📱 開啟會員頁面</a>
+  <a class="cta line" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">💬 以官方LINE洽詢</a>
+</div>
+</div>
+
+<!-- ============ ko ============ -->
+<div class="pane" data-lang="ko">
+<div class="hero"><h1>마이<span class="y">페이지</span> 사용법</h1><p>예약 확인・변경・취소를 직접 간편하게</p></div>
+<div class="wrap">
+  <div class="lead">마이페이지는 <b>예약 번호</b>와 <b>예약 시 이메일</b>로 로그인하는 고객 전용 화면입니다. 예약 내용 확인부터 배달・회수 변경 요청, 취소 요청까지 <b>24시간 언제든 셀프로</b> 처리하실 수 있습니다.</div>
+
+  <div class="sechd">마이페이지에서 할 수 있는 것</div>
+  <div class="caps">
+    <div class="cap"><div class="ic">📋</div><h3>예약 내용 확인</h3><p>차량・배달／회수 일시・장소・옵션・결제 금액을 언제든 확인.</p></div>
+    <div class="cap"><div class="ic">🚚</div><h3>현재 상태 확인</h3><p>「준비 중」「배달 중」「이용 중」 등 현재 단계를 한눈에.</p></div>
+    <div class="cap"><div class="ic">📝</div><h3>배달／회수 변경</h3><p>수령／반납의 <b>시간・장소</b> 변경을 요청(지도로 지정).</p></div>
+    <div class="cap"><div class="ic">❌</div><h3>취소</h3><p>취소를 요청. 취소 수수료는 규정에 따라 자동 계산됩니다.</p></div>
+    <div class="cap"><div class="ic">🗺️</div><h3>지도로 장소 확인</h3><p>배달／회수 장소의 Google 지도를 원탭으로 열기.</p></div>
+    <div class="cap"><div class="ic">💬</div><h3>바로 문의</h3><p>궁금한 점은 화면에서 공식 LINE으로. 번호를 잊어도 재확인 가능.</p></div>
+  </div>
+
+  <div class="sechd">사용법 (4단계)</div>
+
+  <div class="step"><span class="num">STEP 1 ・ 열기</span><h2>마이페이지 열기</h2>
+    <p>아래 중 어느 곳에서나 열 수 있습니다.</p>
+    <ul>
+      <li>메뉴 「<b>예약 확인(마이페이지)</b>」</li>
+      <li>예약 완료 화면의 「<b>📱 마이페이지로 이동</b>」</li>
+      <li>예약 확인 <b>메일 안의 링크</b></li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">이미지: 메뉴 → 예약 확인(마이페이지)</div></div>
+  </div>
+
+  <div class="step"><span class="num">STEP 2 ・ 로그인</span><h2>예약 번호＋메일로 로그인</h2>
+    <p><b>예약 번호</b>(삿포로 KD-… / 나하 KDN-…)와 <b>예약 시 이메일</b>을 입력합니다.</p>
+    <ul>
+      <li>같은 메일에 여러 예약 → <b>목록에서 선택</b></li>
+      <li>체크하면 <b>다음부터 입력 불필요</b>(이 기기만)</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">이미지: 로그인 화면(번호・메일)</div></div>
+    <div class="warn">⚠️ 예약 번호를 모를 때는 화면 하단의 <b>공식 LINE</b>으로 문의해 주세요.</div>
+  </div>
+
+  <div class="step"><span class="num">STEP 3 ・ 확인</span><h2>예약 내용・현재 상태 보기</h2>
+    <p>로그인하면 예약의 <b>상태</b>와 <b>진행 바</b>, 차량・일시・장소・금액 등 상세가 표시됩니다.</p>
+    <ul>
+      <li>상태: 예약 확정 → 준비 중 → 배달 중 → 이용 중 → 반납 완료</li>
+      <li>배달／회수 장소는 <b>지도 링크</b>로 확인 가능</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">이미지: 예약 상세(상태＋진행 바)</div></div>
+  </div>
+
+  <div class="step"><span class="num">STEP 4 ・ 신청</span><h2>변경・취소 요청</h2>
+    <p>필요에 따라 그 자리에서 요청할 수 있습니다. 전송 후 <b>운영이 확인하여 확정</b>합니다(즉시 확정 아님).</p>
+    <ul>
+      <li><b>📝 변경</b>: 배달／회수 시간 또는 장소(지도로 지정)</li>
+      <li><b>❌ 취소</b>: 취소 수수료 확인 후 전송</li>
+    </ul>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">이미지: 변경 요청(시간＋지도)</div></div>
+    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">이미지: 취소 요청(정책 동의)</div></div>
+  </div>
+
+  <div class="sechd">변경・취소 규칙</div>
+  <div class="step"><h2>접수 마감</h2>
+    <ul>
+      <li><b>배달</b>(시간・장소): <b>출발 48시간 전</b>까지</li>
+      <li><b>회수</b>(시간・장소): <b>반납 2시간 전</b>까지</li>
+      <li>일정・차종・옵션 변경은 <b>공식 LINE</b>으로</li>
+    </ul>
+    <p style="margin-top:10px;font-weight:800">취소 수수료(기본 요금 대비)</p>
+    <ul>
+      <li>대여 7일 전까지: <b>무료</b></li>
+      <li>6〜3일 전: <b>20%</b> / 2〜1일 전: <b>30%</b></li>
+      <li>당일 이후・무연락 미사용: <b>50%</b></li>
+    </ul>
+    <div class="tip">✈️ 항공편 결항 시 결항 증명서 제시로 취소 수수료 무료입니다.</div>
+  </div>
+
+  <div class="sechd">자주 묻는 질문</div>
+  <dl class="faq">
+    <dt>예약 번호를 잊었습니다</dt><dd>공식 LINE(@149ahjll)으로 성함과 예약일을 알려 주세요. 확인 후 안내드립니다.</dd>
+    <dt>변경은 바로 확정되나요?</dt><dd>아니요. 요청 후 운영이 확인하여 확정합니다. 확정되면 메일로 알려드립니다.</dd>
+    <dt>환불은 언제 돌아오나요?</dt><dd>취소 확정 후 이용 카드로 환불합니다(카드사에 따라 반영에 며칠 걸릴 수 있습니다).</dd>
+    <dt>당일 긴급 연락은?</dt><dd>공식 LINE 또는 TEL 050-1785-2711(9:00〜19:00)로 연락해 주세요.</dd>
+  </dl>
+
+  <a class="cta" href="./#mypage">📱 마이페이지 열기</a>
+  <a class="cta line" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">💬 공식 LINE으로 문의</a>
+</div>
+</div>
+
+<script>
+(function(){
+  var KEY='kd_lang', LS=['ja','en','zh','ko'];
+  var T={ja:'マイページの使い方｜KEYDROP',en:'Using My Page｜KEYDROP',zh:'會員頁面使用方法｜KEYDROP',ko:'마이페이지 사용법｜KEYDROP'};
+  function detect(){try{var s=localStorage.getItem(KEY);if(s&&LS.indexOf(s)>=0)return s;}catch(e){}var n=(navigator.language||'ja').toLowerCase();return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja';}
+  function apply(l){if(LS.indexOf(l)<0)l='ja';document.documentElement.lang=l;document.title=T[l]||T.ja;document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-lang')===l);});document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});try{localStorage.setItem(KEY,l);}catch(e){}}
+  document.querySelectorAll('#langsw button').forEach(function(b){b.onclick=function(){apply(b.getAttribute('data-l'));};});
+  apply(detect());
+})();
+</script>
+</body>
+</html>

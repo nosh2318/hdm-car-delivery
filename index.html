@@ -938,6 +938,9 @@
                         <a class="menu-item" data-mk="menuFaq" href="faq.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">❓</span>よくある質問<span class="menu-item-arrow">→</span>
                         </a>
+                        <a class="menu-item" data-mk="menuMypageGuide" href="mypage-guide.html" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">📱</span>マイページの使い方<span class="menu-item-arrow">→</span>
+                        </a>
                         <a class="menu-item" data-mk="menuContact" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">
                             <span class="menu-item-icon">✉️</span>お問い合わせ<span class="menu-item-arrow">→</span>
                         </a>
@@ -3922,6 +3925,7 @@
                 </button>
                 <div style="font-size:11px;color:#999;margin-top:8px;line-height:1.6;text-align:center;">${t('lookupHint')}</div>
                 <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;padding:11px;background:#06c755;color:#fff;border-radius:10px;font-size:13px;font-weight:800;text-decoration:none;">${t('lineHelpResId')}</a>
+                <a href="mypage-guide.html" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:9px;font-size:12.5px;color:#0369a1;font-weight:700;text-decoration:none;">📱 ${t('mpGuideLink')}</a>
             </div>
 
             <div style="text-align:center;margin-top:20px;">
@@ -4763,7 +4767,7 @@
         ja: {
             menuMypage: '予約を確認する（マイページ）',
             menuUsage: 'ご利用方法', menuVehicle: '車両と料金', menuInsurance: '保険プラン一覧',
-            menuFaq: 'よくある質問', menuContact: 'お問い合わせ',
+            menuFaq: 'よくある質問', menuMypageGuide: 'マイページの使い方', menuContact: 'お問い合わせ',
             menuClause: '貸渡約款', menuPrivacy: 'プライバシーポリシー', menuLegal: '特定商取引法', menuCompany: '運営会社',
             menuService: 'サービス', menuSupport: 'サポート', menuLegalSection: '法的情報',
             progressDate: '日程', progressPlace: '場所', progressVehicle: '車両',
@@ -4846,7 +4850,7 @@
             reservationList: 'ご予約一覧', countSuffix: '件', viewDetail: '詳細を見る', mpResNoLabel: 'ご予約番号', bookingEmailLabel: 'ご予約時のメールアドレス',
             saveResIdNote: '💾 この端末に予約番号を保存（次回入力不要）', checkReservation: '予約を確認する',
             lookupHint: 'ご予約時にお送りした予約番号（KD-…）とメールアドレスでご確認いただけます',
-            lineHelpResId: '💬 予約番号がわからない場合は公式LINEへ', noReservationQ: '予約がない場合は',
+            lineHelpResId: '💬 予約番号がわからない場合は公式LINEへ', mpGuideLink: 'マイページの使い方を見る', noReservationQ: '予約がない場合は',
             mpResInfo: '予約情報', mpBooker: '予約者', samaSuffix: ' 様', mpVehClass: '車両クラス', mpOptionsLabel: 'オプション',
             optCover: '補償：', optBaby: 'ベビーシート×', optUsb: 'USBケーブル', mpPeople: 'ご利用人数', meiSuffix: ' 名',
             mpPayStatus: '決済状況', mpPayAmount: 'お支払い金額', payPaid: '決済済み', payCancelled: 'キャンセル済み', payPending: 'お支払い待ち（未決済）',
@@ -4879,7 +4883,7 @@
         en: {
             menuMypage: 'Check Reservation (My Page)',
             menuUsage: 'How to Use (Sapporo)', menuVehicle: 'Vehicles & Pricing', menuInsurance: 'Insurance Plans',
-            menuFaq: 'FAQ (Sapporo)', menuContact: 'Contact Us',
+            menuFaq: 'FAQ (Sapporo)', menuMypageGuide: 'Using My Page', menuContact: 'Contact Us',
             menuClause: 'Rental Agreement', menuPrivacy: 'Privacy Policy', menuLegal: 'Legal Notice', menuCompany: 'Company Info',
             menuService: 'Service', menuSupport: 'Support', menuLegalSection: 'Legal',
             progressDate: 'Date', progressPlace: 'Place', progressVehicle: 'Vehicle',
@@ -4956,7 +4960,7 @@
             reservationList: 'Your Reservations', countSuffix: ' booking(s)', viewDetail: 'View details', mpResNoLabel: 'Reservation Number', bookingEmailLabel: 'Email used for booking',
             saveResIdNote: '💾 Save reservation number on this device (skip next time)', checkReservation: 'Check reservation',
             lookupHint: 'Use the reservation number (KD-…) and email we sent you when booking.',
-            lineHelpResId: "💬 Don't know your reservation number? Contact us on LINE", noReservationQ: "Don't have a reservation?",
+            lineHelpResId: "💬 Don't know your reservation number? Contact us on LINE", mpGuideLink: 'See how to use My Page', noReservationQ: "Don't have a reservation?",
             mpResInfo: 'Reservation Details', mpBooker: 'Booker', samaSuffix: '', mpVehClass: 'Vehicle Class', mpOptionsLabel: 'Options',
             optCover: 'Insurance: ', optBaby: 'Baby seat ×', optUsb: 'USB cable', mpPeople: 'Passengers', meiSuffix: ' ppl',
             mpPayStatus: 'Payment Status', mpPayAmount: 'Amount Paid', payPaid: 'Paid', payCancelled: 'Cancelled', payPending: 'Awaiting payment (unpaid)',
@@ -4989,7 +4993,7 @@
         zh: {
             menuMypage: '查看預約（我的頁面）',
             menuUsage: '使用方法', menuVehicle: '車輛與價格', menuInsurance: '保險方案',
-            menuFaq: '常見問題', menuContact: '聯絡我們',
+            menuFaq: '常見問題', menuMypageGuide: '會員頁面使用方法', menuContact: '聯絡我們',
             menuClause: '租車條款', menuPrivacy: '隱私政策', menuLegal: '特定商業交易法', menuCompany: '公司概要',
             menuService: '服務', menuSupport: '支援', menuLegalSection: '法律資訊',
             progressDate: '日期', progressPlace: '地點', progressVehicle: '車輛',
@@ -5066,7 +5070,7 @@
             reservationList: '預約一覽', countSuffix: '件', viewDetail: '查看詳情', mpResNoLabel: '預約編號', bookingEmailLabel: '預約時的電子郵件',
             saveResIdNote: '💾 在此裝置儲存預約編號（下次免輸入）', checkReservation: '確認預約',
             lookupHint: '可使用預約時寄送的預約編號（KD-…）與電子郵件查詢。',
-            lineHelpResId: '💬 不知道預約編號？請洽官方LINE', noReservationQ: '還沒有預約嗎？',
+            lineHelpResId: '💬 不知道預約編號？請洽官方LINE', mpGuideLink: '查看會員頁面使用方法', noReservationQ: '還沒有預約嗎？',
             mpResInfo: '預約資訊', mpBooker: '預約者', samaSuffix: '', mpVehClass: '車輛車型', mpOptionsLabel: '選項',
             optCover: '補償：', optBaby: '嬰兒座椅×', optUsb: 'USB線', mpPeople: '乘車人數', meiSuffix: ' 人',
             mpPayStatus: '付款狀態', mpPayAmount: '付款金額', payPaid: '已付款', payCancelled: '已取消', payPending: '待付款（未付款）',
@@ -5099,7 +5103,7 @@
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
             menuUsage: '이용 방법', menuVehicle: '차량 및 요금', menuInsurance: '보험 플랜',
-            menuFaq: '자주 묻는 질문', menuContact: '문의하기',
+            menuFaq: '자주 묻는 질문', menuMypageGuide: '마이페이지 사용법', menuContact: '문의하기',
             menuClause: '대여 약관', menuPrivacy: '개인정보 처리방침', menuLegal: '특정상거래법 표기', menuCompany: '운영 회사',
             menuService: '서비스', menuSupport: '지원', menuLegalSection: '법적 정보',
             progressDate: '일정', progressPlace: '장소', progressVehicle: '차량',
@@ -5176,7 +5180,7 @@
             reservationList: '예약 목록', countSuffix: '건', viewDetail: '상세 보기', mpResNoLabel: '예약 번호', bookingEmailLabel: '예약 시 이메일 주소',
             saveResIdNote: '💾 이 기기에 예약 번호 저장 (다음에 입력 불필요)', checkReservation: '예약 확인',
             lookupHint: '예약 시 보내드린 예약 번호(KD-…)와 이메일로 확인하실 수 있습니다.',
-            lineHelpResId: '💬 예약 번호를 모르시나요? 공식 LINE으로', noReservationQ: '예약이 없으신가요?',
+            lineHelpResId: '💬 예약 번호를 모르시나요? 공식 LINE으로', mpGuideLink: '마이페이지 사용법 보기', noReservationQ: '예약이 없으신가요?',
             mpResInfo: '예약 정보', mpBooker: '예약자', samaSuffix: ' 님', mpVehClass: '차량 클래스', mpOptionsLabel: '옵션',
             optCover: '보상: ', optBaby: '베이비 시트×', optUsb: 'USB 케이블', mpPeople: '이용 인원', meiSuffix: '명',
             mpPayStatus: '결제 상태', mpPayAmount: '결제 금액', payPaid: '결제 완료', payCancelled: '취소됨', payPending: '결제 대기 (미결제)',
