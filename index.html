@@ -1032,6 +1032,17 @@
         sapporo: [[43.1750,141.3200],[43.1700,141.4500],[43.1050,141.4650],[43.0250,141.4600],[42.9850,141.3850],[43.0050,141.2950],[43.1050,141.2650],[43.1450,141.2950]],
         naha: [[26.2460,127.6650],[26.2470,127.6900],[26.2440,127.7140],[26.2270,127.7240],[26.2080,127.7170],[26.1940,127.6980],[26.1850,127.6680],[26.1900,127.6480],[26.2150,127.6520],[26.2350,127.6580]]
     };
+    // 対応可能の市（管理画面 cityFilter を「,」「、」区切り）＝複数市OK。住所が対象市を含むか。
+    function kdTargetCities() { var cf = (state.deliveryConfig && state.deliveryConfig.cityFilter) || ''; return cf.split(/[,、\s]+/).filter(Boolean); }
+    function kdAddrInCities(addr) { var cs = kdTargetCities(); if (!cs.length) return true; var a = addr || ''; return cs.some(function (c) { return a.indexOf(c) >= 0; }); }
+    // 対応エリア（管理画面で設定した対応可能の市）をお届け日付の上に表示
+    function renderAreaInfo() {
+        var cs = kdTargetCities(); if (!cs.length) return '';
+        return '<div style="display:flex;align-items:center;gap:6px;padding:8px 14px 0;font-size:11.5px;font-weight:800;">'
+            + '<span style="flex:none;color:#16a34a;">📍 ' + t('areaLabel') + '</span>'
+            + '<span style="flex:1;min-width:0;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + cs.join('・') + '</span>'
+            + '</div>';
+    }
     function kdPointInPoly(lat, lng, p) {
         let inside = false;
         for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
@@ -1362,8 +1373,8 @@
         sameCollection: true,
         // 配達可能範囲（DB public_delivery_config_v＝adminオーナー設定で上書き。既定=札幌駅中心20km/札幌市内）
         deliveryConfig: (KD_STORE === 'naha'
-            ? { centerLat: 26.2124, centerLng: 127.6792, centerName: '那覇市', radiusKm: 8, cityFilter: '那覇市' }
-            : { centerLat: 43.0687, centerLng: 141.3508, centerName: '札幌駅', radiusKm: 20, cityFilter: '札幌市' }),
+            ? { centerLat: 26.2124, centerLng: 127.6792, centerName: '那覇', radiusKm: 8, cityFilter: '那覇市,豊見城市' }
+            : { centerLat: 43.0687, centerLng: 141.3508, centerName: '札幌', radiusKm: 20, cityFilter: '札幌市,北広島市' }),
         outOfArea: false,
         mapReady: false,
         // DateTime
@@ -1961,17 +1972,19 @@
             }
         }
 
-        // 配達可能範囲判定（オーナー設定: 中心(札幌駅)から半径◯km かつ 指定市内）
+        // 配達可能判定＝対応可能の「市」に含まれるか（複数市OK・半径は使わない）。住所未解決の間は弾かない。
         const cfg = state.deliveryConfig;
-        const distFromCenter = distanceKm(state.deliveryLat, state.deliveryLng, cfg.centerLat, cfg.centerLng);
-        const inCity = !cfg.cityFilter || (state.deliveryAddr || '').includes(cfg.cityFilter);
+        const canon = state.deliveryAddrCanon || state.deliveryAddr || '';
+        const addrResolved = !!canon && !/^\s*-?\d+\.\d+\s*,\s*-?\d+\.\d+\s*$/.test(canon);
+        const inCity = !cfg.cityFilter || !addrResolved || kdAddrInCities(canon);
         const inAirport = kdInNahaAirport(state.deliveryLat, state.deliveryLng); // 那覇空港内=不可
-        const inArea = (distFromCenter <= cfg.radiusKm) && inCity && !inAirport;
+        const inArea = inCity && !inAirport;
 
         if (!inArea) {
             // 配達エリア外/空港内: 車両を出さない
             state.outOfArea = true;
-            if (inAirport) state.outOfAreaReason = t('nogoAirport');
+            state.outOfAreaReason = inAirport ? t('nogoAirport')
+                : t('outOfAreaCity').replace('{c}', (cfg.cityFilter || '').replace(/[,、\s]+/g, '・'));
             state.availableVehicles = [];
             renderPanel();
             return;
@@ -2346,6 +2359,7 @@
                 </div>
                 <!-- 右：機能（縦フロー：日付/時間→マップ→確定） -->
                 <div class="kd-flow">
+                    <div id="areaInfo">${renderAreaInfo()}</div>
                     <div id="dateStrip">${renderStepDateStrip()}</div>
                     <div id="mapWrap" class="kd-mapwrap">
                         <div id="map" style="height:100%;"></div>
@@ -2587,12 +2601,10 @@
         const cfg = state.deliveryConfig || {};
         if (lat == null || lng == null) return { ok: true, reason: '' };
         if (KD_STORE === 'naha' && kdInNahaAirport(lat, lng)) return { ok: false, reason: t('nogoAirport') };
-        if (cfg.centerLat == null || cfg.radiusKm == null) return { ok: true, reason: '' };
-        const dist = distanceKm(lat, lng, cfg.centerLat, cfg.centerLng);
-        if (dist > cfg.radiusKm) return { ok: false, reason: t('outOfAreaDist').replace('{d}', Math.round(dist)).replace('{r}', cfg.radiusKm) };
-        // cityFilterは「住所が解決済み」のときだけ適用（座標文字列のうちは誤判定しない）
+        if (!cfg.cityFilter) return { ok: true, reason: '' };
+        // 対応可能の「市」に含まれるか（複数市OK）。住所未解決(座標文字列)の間は弾かない。
         const addrResolved = !!addr && !/^\s*-?\d+\.\d+\s*,\s*-?\d+\.\d+\s*$/.test(addr);
-        if (cfg.cityFilter && addrResolved && !addr.includes(cfg.cityFilter)) return { ok: false, reason: t('outOfAreaCity').replace('{c}', cfg.cityFilter) };
+        if (addrResolved && !kdAddrInCities(addr)) return { ok: false, reason: t('outOfAreaCity').replace('{c}', cfg.cityFilter.replace(/[,、\s]+/g, '・')) };
         return { ok: true, reason: '' };
     }
     // お届けピンのエリア判定→state更新＋マップ上に赤い警告バナーを表示/非表示
@@ -2608,6 +2620,8 @@
         const el = document.getElementById('locPanel');
         if (el) el.innerHTML = renderLocationStepPanel();
         updateAreaAlert();
+        const ai = document.getElementById('areaInfo');
+        if (ai) ai.innerHTML = renderAreaInfo();
         const ds = document.getElementById('dateStrip');
         if (ds) ds.innerHTML = renderStepDateStrip();
         if (typeof updateGuide === 'function') updateGuide();
@@ -4806,7 +4820,7 @@
             areaReselect: 'エリアを選び直す',
             guideStep1: '<b>STEP1</b>：CARデリバリーの<b>お届け日時</b>と<b>場所</b>を決めよう！🔑',
             guideStep2: '<b>STEP2</b>：CARデリバリーの<b>回収日時</b>と<b>場所</b>を決めてね🏁', guideDate: '📅 まず<b>利用日時</b>を選んでください', guideDateCol: '📅 次に<b>回収日時</b>を選んでください', guidePickDel: '📍 地図で<b>お届け先</b>を選んでください', guideDecideDel: '📍 お届け場所を決めて「決めるボタン」を押してね！', guideNextDel: '→「回収場所を選ぶ」に進みましょう', guidePickCol: '🏁 回収場所を決めて「決めるボタン」を押してね！', guideNextCol: '→「車両を選ぶ」に進みましょう', guideOOA: '🚫 申し訳ございません、配達エリア外です',
-            periodLabel: '利用期間', delDate: 'お届け日', delTime: 'お届け時間', colDate: '回収日', colTime: '回収時間',
+            periodLabel: '利用期間', areaLabel: '対応エリア', delDate: 'お届け日', delTime: 'お届け時間', colDate: '回収日', colTime: '回収時間',
             selDate: '日付を選択', selTime: '時間を選択', daysSuffix: '日間',
             emptyVehTitle: 'お届け場所を選択すると', emptyVehDesc: 'デリバリー可能な車両が表示されます',
             clickMapDeliver: '📍 マップをクリックしてお届け場所を指定',
@@ -4916,7 +4930,7 @@
             areaReselect: 'Change area',
             guideStep1: '<b>STEP1</b>: Set the <b>delivery date/time</b> and <b>location</b>! 🔑',
             guideStep2: '<b>STEP2</b>: Set the <b>return date/time</b> and <b>location</b> 🏁', guideDate: '📅 First, choose your <b>rental dates</b>', guideDateCol: '📅 Next, choose your <b>return date & time</b>', guidePickDel: '📍 Pick your <b>delivery spot</b> on the map', guideDecideDel: '📍 Set your delivery spot, then tap the confirm button!', guideNextDel: '→ Continue to "Choose return location"', guidePickCol: '🏁 Set your return spot, then tap the confirm button!', guideNextCol: '→ Continue to "Choose a car"', guideOOA: '🚫 Sorry, this is outside our delivery area',
-            periodLabel: 'Rental Period', delDate: 'Delivery Date', delTime: 'Delivery Time', colDate: 'Return Date', colTime: 'Return Time',
+            periodLabel: 'Rental Period', areaLabel: 'Service area', delDate: 'Delivery Date', delTime: 'Delivery Time', colDate: 'Return Date', colTime: 'Return Time',
             selDate: 'Select date', selTime: 'Select time', daysSuffix: ' days',
             emptyVehTitle: 'Once you set a delivery location', emptyVehDesc: 'available vehicles will appear',
             clickMapDeliver: '📍 Click the map to set the delivery location',
@@ -5026,7 +5040,7 @@
             areaReselect: '重新選擇地區',
             guideStep1: '<b>STEP1</b>：決定汽車外送的<b>送達日期時間</b>與<b>地點</b>！🔑',
             guideStep2: '<b>STEP2</b>：決定汽車外送的<b>回收日期時間</b>與<b>地點</b>🏁', guideDate: '📅 請先選擇<b>租借日期時間</b>', guideDateCol: '📅 接著請選擇<b>回收日期時間</b>', guidePickDel: '📍 請在地圖選擇<b>送車地點</b>', guideDecideDel: '📍 決定送車地點後，請按「決定」按鈕！', guideNextDel: '→ 前往「選擇回收地點」', guidePickCol: '🏁 決定回收地點後，請按「決定」按鈕！', guideNextCol: '→ 前往「選擇車輛」', guideOOA: '🚫 抱歉，此處不在配送範圍內',
-            periodLabel: '租用期間', delDate: '送達日', delTime: '送達時間', colDate: '回收日', colTime: '回收時間',
+            periodLabel: '租用期間', areaLabel: '服務地區', delDate: '送達日', delTime: '送達時間', colDate: '回收日', colTime: '回收時間',
             selDate: '選擇日期', selTime: '選擇時間', daysSuffix: '天',
             emptyVehTitle: '選擇送達地點後', emptyVehDesc: '即會顯示可外送的車輛',
             clickMapDeliver: '📍 點擊地圖指定送達地點',
@@ -5136,7 +5150,7 @@
             areaReselect: '지역 다시 선택',
             guideStep1: '<b>STEP1</b>: 차량 배달의 <b>배달 일시</b>와 <b>장소</b>를 정하세요! 🔑',
             guideStep2: '<b>STEP2</b>: 차량 회수의 <b>회수 일시</b>와 <b>장소</b>를 정하세요 🏁', guideDate: '📅 먼저 <b>이용 일시</b>를 선택하세요', guideDateCol: '📅 다음으로 <b>회수 일시</b>를 선택하세요', guidePickDel: '📍 지도에서 <b>배달 장소</b>를 선택하세요', guideDecideDel: '📍 배달 장소를 정하고 "결정 버튼"을 눌러주세요!', guideNextDel: '→ "회수 장소 선택"으로 진행', guidePickCol: '🏁 회수 장소를 정하고 "결정 버튼"을 눌러주세요!', guideNextCol: '→ "차량 선택"으로 진행', guideOOA: '🚫 죄송합니다. 배달 지역 밖입니다',
-            periodLabel: '이용 기간', delDate: '배달일', delTime: '배달 시간', colDate: '회수일', colTime: '회수 시간',
+            periodLabel: '이용 기간', areaLabel: '서비스 지역', delDate: '배달일', delTime: '배달 시간', colDate: '회수일', colTime: '회수 시간',
             selDate: '날짜 선택', selTime: '시간 선택', daysSuffix: '일간',
             emptyVehTitle: '배달 장소를 선택하면', emptyVehDesc: '배달 가능한 차량이 표시됩니다',
             clickMapDeliver: '📍 지도를 클릭해 배달 장소를 지정',
