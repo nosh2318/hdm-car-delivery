@@ -65,6 +65,54 @@
   .faq dd:last-child{border-bottom:none}
   .cta{display:block;text-align:center;background:#FABE00;color:#1a1a1a;font-weight:900;font-size:15px;padding:15px;border-radius:12px;text-decoration:none;margin-top:20px;box-shadow:0 3px 12px rgba(250,190,0,.4)}
   .cta.line{background:#06c755;color:#fff;box-shadow:0 3px 12px rgba(6,199,85,.35)}
+  /* ===== スマホ画面 再現モック ===== */
+  .mock-slot{margin:12px 0 4px}
+  .mok{max-width:288px;margin:0 auto;border:7px solid #1a1a1a;border-radius:26px;overflow:hidden;background:#f5f6f8;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+  .mok-bar{background:#1a1a1a;color:#fff;padding:9px 13px;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:900}
+  .mok-bar .y{color:#FABE00}.mok-bar .sp{margin-left:auto;opacity:.7;font-weight:700}
+  .mok-body{padding:13px}
+  /* メニュー */
+  .mok-menu{background:#1f1f1f}
+  .mkm-btn{background:#FABE00;color:#1a1a1a;font-weight:900;font-size:12.5px;border-radius:9px;padding:11px 12px;text-align:center;margin-bottom:12px}
+  .mkm-sec{color:#888;font-size:10px;font-weight:800;letter-spacing:.08em;margin:4px 2px 6px}
+  .mkm-it{color:#e5e5e5;font-size:12.5px;font-weight:600;padding:9px 4px;border-bottom:1px solid #333;display:flex;gap:7px;align-items:center}
+  .mkm-it.on{color:#FABE00;font-weight:900}
+  /* 共通フォーム */
+  .mk-logo{text-align:center;font-size:17px;font-weight:900;letter-spacing:.04em;margin:6px 0 2px}.mk-logo .y{color:#FABE00}
+  .mk-h{text-align:center;font-size:14px;font-weight:900;margin-bottom:12px}
+  .mk-lbl{font-size:11px;font-weight:800;color:#555;margin:8px 0 4px}
+  .mk-input{background:#fff;border:1.5px solid #e2e2e8;border-radius:9px;padding:10px 11px;font-size:12.5px;font-weight:700;color:#1a1a1a}
+  .mk-input.mut{color:#aaa;font-weight:600}
+  .mk-btn{background:#FABE00;color:#1a1a1a;font-weight:900;font-size:13px;border-radius:10px;padding:12px;text-align:center;margin-top:13px;box-shadow:0 3px 10px rgba(250,190,0,.35)}
+  .mk-btn.red{background:#dc2626;color:#fff;box-shadow:0 3px 10px rgba(220,38,38,.3)}
+  .mk-line{background:#06c755;color:#fff;font-weight:800;font-size:11.5px;border-radius:9px;padding:9px;text-align:center;margin-top:9px}
+  /* 詳細 */
+  .mk-hero{background:linear-gradient(135deg,#1a1a1a,#333);color:#fff;border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center;margin-bottom:11px}
+  .mk-hero .ic{font-size:26px;flex:none}
+  .mk-hero .nm{font-size:13.5px;font-weight:900}.mk-hero .sb{font-size:10.5px;opacity:.8;margin-top:2px}
+  .mk-prog{display:flex;align-items:center;gap:5px;margin:0 4px 12px}
+  .mk-prog i{flex:1;height:5px;border-radius:3px;background:#e2e2e8}
+  .mk-prog i.on{background:#FABE00}
+  .mk-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px;box-shadow:0 1px 5px rgba(0,0,0,.05)}
+  .mk-cr{display:flex;justify-content:space-between;align-items:center;padding-bottom:9px;border-bottom:1px solid #f1f1f1;margin-bottom:8px}
+  .mk-cr b{font-size:14px;font-weight:900}.mk-cr span{font-size:14px;font-weight:900;color:#1a1a1a}
+  .mk-row{font-size:11.5px;color:#444;font-weight:600;padding:5px 0;display:flex;gap:6px}
+  /* 変更モーダル */
+  .mk-chips{display:flex;gap:7px}
+  .mk-chips span{flex:1;text-align:center;font-size:12px;font-weight:800;color:#666;background:#fff;border:1.5px solid #e2e2e8;border-radius:8px;padding:9px 0}
+  .mk-chips span.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+  .mk-map{height:96px;border-radius:11px;margin-top:4px;background:
+      linear-gradient(0deg,rgba(0,0,0,.04),rgba(0,0,0,.04)),
+      repeating-linear-gradient(0deg,#e8efe6 0 18px,#e2eae0 18px 19px),
+      repeating-linear-gradient(90deg,#e8efe6 0 22px,#e2eae0 22px 23px);
+      border:1px solid #d8e2d6;display:flex;align-items:center;justify-content:center;position:relative}
+  .mk-map .pin{font-size:30px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))}
+  /* キャンセルモーダル */
+  .mk-feeT{font-size:12px;font-weight:900;margin:2px 0 7px}
+  .mk-fee{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:#444;padding:7px 0;border-bottom:1px solid #f1f1f1}
+  .mk-fee b{color:#1a1a1a}
+  .mk-agree{font-size:11.5px;font-weight:700;color:#1a1a1a;margin-top:10px;display:flex;gap:6px;align-items:center}
+  .mok-cap{text-align:center;font-size:11px;font-weight:700;color:#9ca3af;margin-top:7px}
 </style>
 </head>
 <body>
@@ -101,7 +149,7 @@
       <li>予約完了画面の「<b>📱 マイページに移動する</b>」</li>
       <li>ご予約確認<b>メール内のリンク</b></li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">画像：メニュー → 予約を確認する（マイページ）</div></div>
+    <div class="mock-slot" data-mock="menu"></div>
   </div>
 
   <div class="step"><span class="num">STEP 2 ・ ログイン</span><h2>予約番号＋メールでログイン</h2>
@@ -110,7 +158,7 @@
       <li>同じメールに複数のご予約 → <b>一覧から選択</b></li>
       <li>チェックを入れると<b>次回から入力不要</b>（この端末のみ）</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">画像：ログイン画面（予約番号・メール入力）</div></div>
+    <div class="mock-slot" data-mock="login"></div>
     <div class="warn">⚠️ 予約番号がわからないときは、画面下の<b>公式LINE</b>からお問い合わせください。</div>
   </div>
 
@@ -120,7 +168,7 @@
       <li>状況：予約確定 → 出発準備中 → お届け中 → ご利用中 → 返却完了</li>
       <li>お届け／回収の場所は<b>マップリンク</b>で確認可能</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">画像：予約詳細（ステータスHero＋進捗バー）</div></div>
+    <div class="mock-slot" data-mock="detail"></div>
   </div>
 
   <div class="step"><span class="num">STEP 4 ・ 手続き</span><h2>変更・キャンセルをリクエスト</h2>
@@ -129,8 +177,8 @@
       <li><b>📝 変更</b>：お届け・回収の時間／場所（地図で指定）</li>
       <li><b>❌ キャンセル</b>：規定のキャンセル料を確認して送信</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">画像：変更リクエスト（時間選択＋地図）</div></div>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">画像：キャンセルリクエスト（ポリシー同意）</div></div>
+    <div class="mock-slot" data-mock="change"></div>
+    <div class="mock-slot" data-mock="cancel"></div>
   </div>
 
   <div class="sechd">変更・キャンセルのルール</div>
@@ -187,7 +235,7 @@
       <li>"<b>📱 Go to My Page</b>" on the booking-complete screen</li>
       <li>The <b>link in your confirmation email</b></li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">Image: Menu → Check booking (My Page)</div></div>
+    <div class="mock-slot" data-mock="menu"></div>
   </div>
 
   <div class="step"><span class="num">STEP 2 ・ Log in</span><h2>Log in with number + email</h2>
@@ -196,7 +244,7 @@
       <li>Several bookings on one email → <b>pick from the list</b></li>
       <li>Tick the box to <b>skip input next time</b> (this device only)</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">Image: Login screen (number & email)</div></div>
+    <div class="mock-slot" data-mock="login"></div>
     <div class="warn">⚠️ Don't know your reservation number? Contact us via the <b>Official LINE</b> at the bottom of the screen.</div>
   </div>
 
@@ -206,7 +254,7 @@
       <li>Status: Confirmed → Preparing → Delivering → In use → Returned</li>
       <li>Delivery/return places open via a <b>map link</b></li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">Image: Booking detail (status hero + progress)</div></div>
+    <div class="mock-slot" data-mock="detail"></div>
   </div>
 
   <div class="step"><span class="num">STEP 4 ・ Request</span><h2>Request a change or cancellation</h2>
@@ -215,8 +263,8 @@
       <li><b>📝 Change</b>: delivery/return time or place (set on the map)</li>
       <li><b>❌ Cancel</b>: review the fee, then send</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">Image: Change request (time + map)</div></div>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">Image: Cancellation request (policy consent)</div></div>
+    <div class="mock-slot" data-mock="change"></div>
+    <div class="mock-slot" data-mock="cancel"></div>
   </div>
 
   <div class="sechd">Change / cancellation rules</div>
@@ -273,7 +321,7 @@
       <li>預約完成畫面的「<b>📱 前往會員頁面</b>」</li>
       <li>預約確認<b>郵件中的連結</b></li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">圖片：選單 → 確認預約（會員頁面）</div></div>
+    <div class="mock-slot" data-mock="menu"></div>
   </div>
 
   <div class="step"><span class="num">STEP 2 ・ 登入</span><h2>以預約編號＋郵件登入</h2>
@@ -282,7 +330,7 @@
       <li>同一郵件有多筆預約 → <b>於清單選擇</b></li>
       <li>勾選後<b>下次免輸入</b>（僅限本裝置）</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">圖片：登入畫面（編號・郵件）</div></div>
+    <div class="mock-slot" data-mock="login"></div>
     <div class="warn">⚠️ 不知道預約編號時，請從畫面下方的<b>官方LINE</b>洽詢。</div>
   </div>
 
@@ -292,7 +340,7 @@
       <li>狀態：預約確定 → 準備中 → 送車中 → 使用中 → 還車完成</li>
       <li>送達／回收地點可透過<b>地圖連結</b>確認</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">圖片：預約詳情（狀態＋進度條）</div></div>
+    <div class="mock-slot" data-mock="detail"></div>
   </div>
 
   <div class="step"><span class="num">STEP 4 ・ 辦理</span><h2>申請變更・取消</h2>
@@ -301,8 +349,8 @@
       <li><b>📝 變更</b>：送達／回收的時間或地點（於地圖指定）</li>
       <li><b>❌ 取消</b>：確認取消費用後送出</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">圖片：變更申請（時間＋地圖）</div></div>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">圖片：取消申請（同意條款）</div></div>
+    <div class="mock-slot" data-mock="change"></div>
+    <div class="mock-slot" data-mock="cancel"></div>
   </div>
 
   <div class="sechd">變更・取消規則</div>
@@ -359,7 +407,7 @@
       <li>예약 완료 화면의 「<b>📱 마이페이지로 이동</b>」</li>
       <li>예약 확인 <b>메일 안의 링크</b></li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">이미지: 메뉴 → 예약 확인(마이페이지)</div></div>
+    <div class="mock-slot" data-mock="menu"></div>
   </div>
 
   <div class="step"><span class="num">STEP 2 ・ 로그인</span><h2>예약 번호＋메일로 로그인</h2>
@@ -368,7 +416,7 @@
       <li>같은 메일에 여러 예약 → <b>목록에서 선택</b></li>
       <li>체크하면 <b>다음부터 입력 불필요</b>(이 기기만)</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">이미지: 로그인 화면(번호・메일)</div></div>
+    <div class="mock-slot" data-mock="login"></div>
     <div class="warn">⚠️ 예약 번호를 모를 때는 화면 하단의 <b>공식 LINE</b>으로 문의해 주세요.</div>
   </div>
 
@@ -378,7 +426,7 @@
       <li>상태: 예약 확정 → 준비 중 → 배달 중 → 이용 중 → 반납 완료</li>
       <li>배달／회수 장소는 <b>지도 링크</b>로 확인 가능</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">이미지: 예약 상세(상태＋진행 바)</div></div>
+    <div class="mock-slot" data-mock="detail"></div>
   </div>
 
   <div class="step"><span class="num">STEP 4 ・ 신청</span><h2>변경・취소 요청</h2>
@@ -387,8 +435,8 @@
       <li><b>📝 변경</b>: 배달／회수 시간 또는 장소(지도로 지정)</li>
       <li><b>❌ 취소</b>: 취소 수수료 확인 후 전송</li>
     </ul>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">이미지: 변경 요청(시간＋지도)</div></div>
-    <div class="shot"><div class="ph-ic">🖼️</div><div class="ph-tx">이미지: 취소 요청(정책 동의)</div></div>
+    <div class="mock-slot" data-mock="change"></div>
+    <div class="mock-slot" data-mock="cancel"></div>
   </div>
 
   <div class="sechd">변경・취소 규칙</div>
@@ -421,11 +469,56 @@
 </div>
 
 <script>
+// ===== スマホ画面 再現モック（4言語・JSで描画） =====
+var MOCKLBL={
+  ja:{mypageBtn:'予約を確認する（マイページ）',service:'サービス',usage:'ご利用方法',vehicles:'車両と料金',faq:'よくある質問',guide:'マイページの使い方',mypage:'マイページ',resno:'予約番号',email:'メールアドレス',loginBtn:'予約を確認する',lineHelp:'番号がわからない',stPrep:'出発準備中',stPrepSub:'スタッフが準備しています',del:'お届け',delEx:'札幌駅',colTime:'回収日時',colPlace:'回収場所',chTitle:'変更リクエスト',send:'送信する',cxTitle:'キャンセル',feeTitle:'キャンセル料',f7:'7日前まで',free:'無料',day:'日前',agree:'規約に同意する',cxSend:'キャンセルを送信',
+    cMenu:'メニュー → マイページ',cLogin:'ログイン（予約番号＋メール）',cDetail:'予約詳細（状況＋進捗）',cChange:'変更リクエスト（時間＋地図）',cCancel:'キャンセル（料金確認）'},
+  en:{mypageBtn:'Check booking (My Page)',service:'Service',usage:'How to Use',vehicles:'Vehicles & Pricing',faq:'FAQ',guide:'Using My Page',mypage:'My Page',resno:'Reservation No.',email:'Email',loginBtn:'Check booking',lineHelp:"Don't know your number",stPrep:'Preparing',stPrepSub:'Our staff is getting ready',del:'Delivery',delEx:'Sapporo Sta.',colTime:'Return time',colPlace:'Return place',chTitle:'Change request',send:'Send',cxTitle:'Cancel',feeTitle:'Cancellation fee',f7:'Up to 7 days',free:'Free',day:'d before',agree:'I agree to the policy',cxSend:'Send cancellation',
+    cMenu:'Menu → My Page',cLogin:'Login (number + email)',cDetail:'Booking detail (status + progress)',cChange:'Change request (time + map)',cCancel:'Cancellation (fee check)'},
+  zh:{mypageBtn:'確認預約（會員頁面）',service:'服務',usage:'使用方法',vehicles:'車輛與價格',faq:'常見問題',guide:'會員頁面使用方法',mypage:'會員頁面',resno:'預約編號',email:'電子郵件',loginBtn:'確認預約',lineHelp:'不知道編號',stPrep:'準備中',stPrepSub:'人員正在準備',del:'送達',delEx:'札幌站',colTime:'回收日期時間',colPlace:'回收地點',chTitle:'變更申請',send:'送出',cxTitle:'取消',feeTitle:'取消費用',f7:'7天前',free:'免費',day:'天前',agree:'同意條款',cxSend:'送出取消',
+    cMenu:'選單 → 會員頁面',cLogin:'登入（編號＋郵件）',cDetail:'預約詳情（狀態＋進度）',cChange:'變更申請（時間＋地圖）',cCancel:'取消（確認費用）'},
+  ko:{mypageBtn:'예약 확인(마이페이지)',service:'서비스',usage:'이용 방법',vehicles:'차량 및 요금',faq:'자주 묻는 질문',guide:'마이페이지 사용법',mypage:'마이페이지',resno:'예약 번호',email:'이메일',loginBtn:'예약 확인',lineHelp:'번호를 모를 때',stPrep:'준비 중',stPrepSub:'직원이 준비 중입니다',del:'배달',delEx:'삿포로역',colTime:'회수 일시',colPlace:'회수 장소',chTitle:'변경 요청',send:'보내기',cxTitle:'취소',feeTitle:'취소 수수료',f7:'7일 전까지',free:'무료',day:'일 전',agree:'약관에 동의',cxSend:'취소 보내기',
+    cMenu:'메뉴 → 마이페이지',cLogin:'로그인(번호＋메일)',cDetail:'예약 상세(상태＋진행)',cChange:'변경 요청(시간＋지도)',cCancel:'취소(요금 확인)'}
+};
+function kdMock(kind,l){
+  var L=MOCKLBL[l]||MOCKLBL.ja, cap='', body='';
+  if(kind==='menu'){cap=L.cMenu;body='<div class="mok-bar">☰ <b>KEY<span class="y">DROP</span></b></div>'+
+    '<div class="mok-body mok-menu"><div class="mkm-btn">'+L.mypageBtn+'</div>'+
+    '<div class="mkm-sec">'+L.service+'</div>'+
+    '<div class="mkm-it">📖 '+L.usage+'</div>'+
+    '<div class="mkm-it">🚗 '+L.vehicles+'</div>'+
+    '<div class="mkm-it">❓ '+L.faq+'</div>'+
+    '<div class="mkm-it on">📱 '+L.guide+'</div></div>';}
+  else if(kind==='login'){cap=L.cLogin;body='<div class="mok-bar"><b>KEY<span class="y">DROP</span></b></div>'+
+    '<div class="mok-body"><div class="mk-logo">KEY<span class="y">DROP</span></div><div class="mk-h">'+L.mypage+'</div>'+
+    '<div class="mk-lbl">'+L.resno+'</div><div class="mk-input">KD-2606-0001</div>'+
+    '<div class="mk-lbl">'+L.email+'</div><div class="mk-input mut">example@mail.com</div>'+
+    '<div class="mk-btn">'+L.loginBtn+'</div><div class="mk-line">💬 '+L.lineHelp+'</div></div>';}
+  else if(kind==='detail'){cap=L.cDetail;body='<div class="mok-bar">← <b>'+L.mypage+'</b></div>'+
+    '<div class="mok-body"><div class="mk-hero"><div class="ic">📦</div><div><div class="nm">'+L.stPrep+'</div><div class="sb">'+L.stPrepSub+'</div></div></div>'+
+    '<div class="mk-prog"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>'+
+    '<div class="mk-card"><div class="mk-cr"><b>Alphard</b><span>¥28,000</span></div>'+
+    '<div class="mk-row">📍 '+L.del+'：'+L.delEx+'</div>'+
+    '<div class="mk-row">📅 6/20 10:00 〜 6/22 17:00</div></div></div>';}
+  else if(kind==='change'){cap=L.cChange;body='<div class="mok-bar"><b>'+L.chTitle+'</b><span class="sp">✕</span></div>'+
+    '<div class="mok-body"><div class="mk-lbl">'+L.colTime+'</div>'+
+    '<div class="mk-chips"><span>17:00</span><span class="on">18:00</span><span>19:00</span></div>'+
+    '<div class="mk-lbl">'+L.colPlace+'</div><div class="mk-map"><div class="pin">📍</div></div>'+
+    '<div class="mk-btn">'+L.send+'</div></div>';}
+  else if(kind==='cancel'){cap=L.cCancel;body='<div class="mok-bar"><b>'+L.cxTitle+'</b><span class="sp">✕</span></div>'+
+    '<div class="mok-body"><div class="mk-feeT">'+L.feeTitle+'</div>'+
+    '<div class="mk-fee"><span>'+L.f7+'</span><b>'+L.free+'</b></div>'+
+    '<div class="mk-fee"><span>6–3 '+L.day+'</span><b>20%</b></div>'+
+    '<div class="mk-fee"><span>2–1 '+L.day+'</span><b>30%</b></div>'+
+    '<div class="mk-agree">☑ '+L.agree+'</div><div class="mk-btn red">'+L.cxSend+'</div></div>';}
+  return '<div class="mok">'+body+'</div><div class="mok-cap">'+cap+'</div>';
+}
 (function(){
   var KEY='kd_lang', LS=['ja','en','zh','ko'];
   var T={ja:'マイページの使い方｜KEYDROP',en:'Using My Page｜KEYDROP',zh:'會員頁面使用方法｜KEYDROP',ko:'마이페이지 사용법｜KEYDROP'};
   function detect(){try{var s=localStorage.getItem(KEY);if(s&&LS.indexOf(s)>=0)return s;}catch(e){}var n=(navigator.language||'ja').toLowerCase();return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja';}
-  function apply(l){if(LS.indexOf(l)<0)l='ja';document.documentElement.lang=l;document.title=T[l]||T.ja;document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-lang')===l);});document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});try{localStorage.setItem(KEY,l);}catch(e){}}
+  function fillMocks(l){document.querySelectorAll('.pane[data-lang="'+l+'"] [data-mock]').forEach(function(el){el.innerHTML=kdMock(el.getAttribute('data-mock'),l);});}
+  function apply(l){if(LS.indexOf(l)<0)l='ja';document.documentElement.lang=l;document.title=T[l]||T.ja;document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-lang')===l);});document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});fillMocks(l);try{localStorage.setItem(KEY,l);}catch(e){}}
   document.querySelectorAll('#langsw button').forEach(function(b){b.onclick=function(){apply(b.getAttribute('data-l'));};});
   apply(detect());
 })();
