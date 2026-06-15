@@ -113,6 +113,8 @@
   .mk-fee b{color:#1a1a1a}
   .mk-agree{font-size:11.5px;font-weight:700;color:#1a1a1a;margin-top:10px;display:flex;gap:6px;align-items:center}
   .mok-cap{text-align:center;font-size:11px;font-weight:700;color:#9ca3af;margin-top:7px}
+  .mok-shot{border:1px solid #e6e6ea;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);background:#fff;max-width:420px;margin:0 auto}
+  .mok-shot img{width:100%;display:block}
 </style>
 </head>
 <body>
@@ -480,8 +482,12 @@ var MOCKLBL={
   ko:{mypageBtn:'예약 확인(마이페이지)',service:'서비스',usage:'이용 방법',vehicles:'차량 및 요금',faq:'자주 묻는 질문',guide:'마이페이지 사용법',mypage:'마이페이지',resno:'예약 번호',email:'이메일',loginBtn:'예약 확인',lineHelp:'번호를 모를 때',stPrep:'준비 중',stPrepSub:'직원이 준비 중입니다',del:'배달',delEx:'삿포로역',colTime:'회수 일시',colPlace:'회수 장소',chTitle:'변경 요청',send:'보내기',cxTitle:'취소',feeTitle:'취소 수수료',f7:'7일 전까지',free:'무료',day:'일 전',agree:'약관에 동의',cxSend:'취소 보내기',
     cMenu:'메뉴 → 마이페이지',cLogin:'로그인(번호＋메일)',cDetail:'예약 상세(상태＋진행)',cChange:'변경 요청(시간＋지도)',cCancel:'취소(요금 확인)'}
 };
+// 実スクショがあるステップはこちらを優先（無いものはCSSモックを描画）
+var MOCKIMG={login:'images/mp_login.png?v=1'};
 function kdMock(kind,l){
   var L=MOCKLBL[l]||MOCKLBL.ja, cap='', body='';
+  var CAP={menu:L.cMenu,login:L.cLogin,detail:L.cDetail,change:L.cChange,cancel:L.cCancel};
+  if(MOCKIMG[kind]){return '<div class="mok-shot"><img src="'+MOCKIMG[kind]+'" alt=""></div><div class="mok-cap">'+(CAP[kind]||'')+'</div>';}
   if(kind==='menu'){cap=L.cMenu;body='<div class="mok-bar">☰ <b>KEY<span class="y">DROP</span></b></div>'+
     '<div class="mok-body mok-menu"><div class="mkm-btn">'+L.mypageBtn+'</div>'+
     '<div class="mkm-sec">'+L.service+'</div>'+
