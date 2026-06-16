@@ -50,7 +50,7 @@
 <script>
 var SB_URL='https://ckrxttbnawkclshczsia.supabase.co';
 var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
-var TOKEN=null, EMAIL=null, COUPONS=[];
+var TOKEN=null, EMAIL=null, COUPONS=[], REDEMPTIONS=[], KPIRANGE='all';
 var app=document.getElementById('app'), modal=document.getElementById('modal'), sheet=document.getElementById('sheet'), who=document.getElementById('who');
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function hdrs(){return {apikey:ANON, Authorization:'Bearer '+(TOKEN||ANON), 'content-type':'application/json'};}
@@ -86,14 +86,61 @@ async function loadCoupons(){
     var r=await fetch(SB_URL+'/rest/v1/keydrop_coupons?select=*&order=created_at.desc',{headers:hdrs()});
     if(r.status===401){return renderLogin('セッションが切れました。再度ログインしてください');}
     COUPONS=await r.json(); if(!Array.isArray(COUPONS))COUPONS=[];
+    try{ var r2=await fetch(SB_URL+'/rest/v1/keydrop_coupon_redemptions?select=*&order=redeemed_at.desc&limit=5000',{headers:hdrs()}); REDEMPTIONS=r2.ok?await r2.json():[]; if(!Array.isArray(REDEMPTIONS))REDEMPTIONS=[]; }catch(e){ REDEMPTIONS=[]; }
     renderList();
   }catch(e){app.innerHTML='<div class="err">読み込み失敗：'+esc(e.message)+'</div>';}
 }
 function discLabel(c){return c.discount_type==='percent'?(Number(c.discount_value)+'% OFF'+(c.max_discount_yen?'（上限¥'+Number(c.max_discount_yen).toLocaleString()+'）':'')):('¥'+Number(c.discount_value).toLocaleString()+' OFF');}
 function storeLabel(s){return s==='all'?'全店':s==='spk'?'札幌':s==='nha'?'那覇':s;}
 function fmtD(s){return s?String(s).slice(0,10):'—';}
+function yen(n){return '¥'+(Number(n)||0).toLocaleString();}
+function maskMail(m){m=String(m||'');var i=m.indexOf('@');if(i<1)return m?'***':'—';return m.slice(0,2)+'***'+m.slice(i);}
+function renderDash(){
+  var now=new Date(); var ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  var rs = KPIRANGE==='month' ? REDEMPTIONS.filter(function(x){return (x.redeemed_at||'').slice(0,7)===ym;}) : REDEMPTIONS;
+  var cnt=rs.length;
+  var discSum=rs.reduce(function(a,x){return a+(Number(x.discount_amount)||0);},0);
+  var finalSum=rs.reduce(function(a,x){return a+(Number(x.final_amount)||0);},0);
+  var baseSum=rs.reduce(function(a,x){return a+(Number(x.base_amount)||0);},0);
+  var avg=cnt?Math.round(discSum/cnt):0;
+  var totalC=COUPONS.length, activeC=COUPONS.filter(function(c){return c.active;}).length;
+  // クーポン別集計（選択期間）
+  var byCode={}; rs.forEach(function(x){var k=(x.code||'').toUpperCase(); if(!byCode[k])byCode[k]={cnt:0,disc:0}; byCode[k].cnt++; byCode[k].disc+=Number(x.discount_amount)||0;});
+  var rows=Object.keys(byCode).map(function(k){return {code:k,cnt:byCode[k].cnt,disc:byCode[k].disc};}).sort(function(a,b){return b.cnt-a.cnt;});
+  var card=function(lbl,val,sub){return '<div style="flex:1;min-width:120px;background:#fff;border:1px solid #eee;border-radius:12px;padding:12px 13px;"><div style="font-size:10.5px;font-weight:800;color:#888;">'+lbl+'</div><div style="font-size:19px;font-weight:900;color:#1a1a1a;margin-top:3px;">'+val+'</div>'+(sub?'<div style="font-size:10px;color:#aaa;margin-top:1px;">'+sub+'</div>':'')+'</div>';};
+  var h='<div class="card" style="padding:14px;"><div style="display:flex;align-items:center;margin-bottom:10px;"><div style="font-size:14px;font-weight:900;">📊 クーポンKPI</div>'
+    +'<div style="margin-left:auto;display:flex;gap:6px;">'
+    +'<button onclick="setRange(\'all\')" style="font-size:11px;font-weight:800;border:1px solid '+(KPIRANGE==='all'?'#1a1a1a':'#ddd')+';background:'+(KPIRANGE==='all'?'#1a1a1a':'#fff')+';color:'+(KPIRANGE==='all'?'#fff':'#666')+';border-radius:999px;padding:5px 11px;cursor:pointer;">全期間</button>'
+    +'<button onclick="setRange(\'month\')" style="font-size:11px;font-weight:800;border:1px solid '+(KPIRANGE==='month'?'#1a1a1a':'#ddd')+';background:'+(KPIRANGE==='month'?'#1a1a1a':'#fff')+';color:'+(KPIRANGE==='month'?'#fff':'#666')+';border-radius:999px;padding:5px 11px;cursor:pointer;">今月</button>'
+    +'</div></div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'
+    +card('利用件数', cnt+'件', KPIRANGE==='month'?ym:'累計')
+    +card('割引総額', yen(discSum), '会社負担分')
+    +card('割引後の売上', yen(finalSum), '割引前 '+yen(baseSum))
+    +card('平均割引/件', yen(avg), '')
+    +'</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">'
+    +card('発行クーポン数', totalC+'種', '有効 '+activeC+' / 停止 '+(totalC-activeC))
+    +'</div>';
+  if(rows.length){
+    h+='<div style="margin-top:12px;font-size:12px;font-weight:800;color:#555;">コード別 利用</div>'
+      +'<table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:12px;">'
+      +'<tr style="color:#999;text-align:left;"><th style="padding:5px 4px;">コード</th><th style="padding:5px 4px;text-align:right;">利用</th><th style="padding:5px 4px;text-align:right;">割引額</th><th style="padding:5px 4px;text-align:right;">消化率</th></tr>';
+    rows.forEach(function(r){
+      var c=COUPONS.find(function(x){return (x.code||'').toUpperCase()===r.code;});
+      var rate=(c&&c.max_uses)?Math.round((c.used_count||0)/c.max_uses*100)+'%':'—';
+      h+='<tr style="border-top:1px solid #f1f1f1;"><td style="padding:6px 4px;font-weight:800;">'+r.code+'</td><td style="padding:6px 4px;text-align:right;">'+r.cnt+'件</td><td style="padding:6px 4px;text-align:right;">'+yen(r.disc)+'</td><td style="padding:6px 4px;text-align:right;">'+rate+'</td></tr>';
+    });
+    h+='</table>';
+  }
+  h+='</div>';
+  return h;
+}
+function setRange(r){KPIRANGE=r;renderList();}
 function renderList(){
-  var html='<button class="btn p full" style="margin-bottom:14px;" onclick="openForm(null)">＋ 新しいクーポンを発行</button>';
+  // コード別 割引累計（全期間）＝各カードに表示
+  var discAll={}; REDEMPTIONS.forEach(function(x){var k=(x.code||'').toUpperCase(); discAll[k]=(discAll[k]||0)+(Number(x.discount_amount)||0);});
+  var html=renderDash()+'<button class="btn p full" style="margin-bottom:14px;" onclick="openForm(null)">＋ 新しいクーポンを発行</button>';
   if(!COUPONS.length){html+='<div class="muted">まだクーポンがありません</div>';}
   COUPONS.forEach(function(c){
     var uses=(c.used_count||0)+(c.max_uses?(' / '+c.max_uses):' / ∞');
@@ -103,6 +150,7 @@ function renderList(){
       +'<div class="meta">店舗：<b>'+storeLabel(c.store)+'</b>　使用：<b>'+uses+'</b>'
       +(c.per_email_once?'　<b>1人1回</b>':'')
       +(c.min_amount_yen?'　最低¥'+Number(c.min_amount_yen).toLocaleString():'')
+      +'　割引累計：<b>'+yen(discAll[(c.code||'').toUpperCase()]||0)+'</b>'
       +'<br>期間：'+fmtD(c.valid_from)+' 〜 '+fmtD(c.valid_until)
       +(c.memo?('<br>メモ：'+esc(c.memo)):'')+'</div>'
       +'<div class="acts">'
@@ -111,6 +159,21 @@ function renderList(){
       +'<button style="background:#fee2e2;color:#991b1b;" onclick="delCoupon('+c.id+",'"+esc(c.code)+"')\">削除</button>"
       +'</div></div>';
   });
+  // 🧾 利用履歴（出口）
+  if(REDEMPTIONS.length){
+    html+='<div class="card"><div style="font-size:14px;font-weight:900;margin-bottom:8px;">🧾 利用履歴（最新50件・計'+REDEMPTIONS.length+'件）</div>'
+      +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:11.5px;white-space:nowrap;">'
+      +'<tr style="color:#999;text-align:left;"><th style="padding:5px 6px;">日時</th><th style="padding:5px 6px;">コード</th><th style="padding:5px 6px;">予約番号</th><th style="padding:5px 6px;">メール</th><th style="padding:5px 6px;text-align:right;">割引</th><th style="padding:5px 6px;text-align:right;">支払</th></tr>';
+    REDEMPTIONS.slice(0,50).forEach(function(x){
+      html+='<tr style="border-top:1px solid #f1f1f1;"><td style="padding:6px;">'+esc(String(x.redeemed_at||'').slice(0,16).replace('T',' '))+'</td>'
+        +'<td style="padding:6px;font-weight:800;">'+esc(x.code||'')+'</td>'
+        +'<td style="padding:6px;">'+esc(x.reservation_id||'—')+'</td>'
+        +'<td style="padding:6px;">'+esc(maskMail(x.email))+'</td>'
+        +'<td style="padding:6px;text-align:right;color:#dc2626;font-weight:800;">-'+yen(x.discount_amount)+'</td>'
+        +'<td style="padding:6px;text-align:right;">'+yen(x.final_amount)+'</td></tr>';
+    });
+    html+='</table></div></div>';
+  }
   html+='<div style="text-align:center;margin-top:8px;"><button class="btn s" onclick="logout()">ログアウト</button></div>';
   app.innerHTML=html;
 }
