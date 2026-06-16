@@ -74,6 +74,14 @@ const STORE_MAP: Record<string, { resv: string; fleet: string; rpc: string; resv
     resvSel: "name,mail,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_place,col_place,price,people,insurance,opt_b,opt_c,opt_j,opt_usb",
     slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA", slackDefault: "C06KZ56NTDF" },
 };
+function couponReasonJa(reason: string): string {
+  const m: Record<string,string> = {
+    not_found:'コードが見つかりません', inactive:'無効なクーポンです', store:'この店舗では使えません',
+    not_started:'利用期間前です', expired:'有効期限切れです', min_amount:'最低利用額に達していません',
+    exhausted:'上限に達しました', used:'既に使用済みです', empty:'コード未入力',
+  };
+  return m[reason] || '適用できません';
+}
 function resolveStore(p: any) {
   const s = p && p.store === "nha" ? "nha" : "spk";
   const m = STORE_MAP[s];
@@ -135,7 +143,54 @@ Deno.serve(async (req) => {
   const amount = Math.round(Number(rpc.total || 0));
   if (amount <= 0) { await cancelPending(resId); return json({ error: "金額計算エラー" }, 400); }
 
-  // Square Payments API で即時課金
+  // ── クーポン（任意）：読み取り検証で割引後の課金額を確定。確定記録(used_count++)は決済成功後＝失敗時に消費しない ──
+  const couponCode = String(p.coupon || "").trim();
+  let chargeAmount = amount, couponDiscount = 0;
+  if (couponCode) {
+    const chk = await sbRpc("keydrop_check_coupon", { p_code: couponCode, p_store: M.store, p_amount: amount, p_email: mail });
+    if (!chk || chk.ok !== true) {
+      await cancelPending(resId);
+      return json({ error: "クーポンを適用できませんでした（" + couponReasonJa((chk && chk.reason) || "invalid") + "）", couponError: true }, 400);
+    }
+    couponDiscount = Math.max(0, Math.round(Number(chk.discount || 0)));
+    chargeAmount = Math.max(0, Math.round(Number(chk.final || amount)));
+  }
+
+  async function finalizeCoupon() {
+    if (!couponCode) return;
+    const rd = await sbRpc("keydrop_redeem_coupon", { p_code: couponCode, p_store: M.store, p_amount: amount, p_email: mail, p_resv: resId });
+    if (!rd || rd.ok !== true) { try { await notifySlack("\u26A0\uFE0F KEYDROP クーポン確定記録に失敗 " + resId + " code=" + couponCode + " reason=" + ((rd && rd.reason) || "?"), M.slack); } catch (e) {} }
+  }
+  async function finalizeReservation(payId: string) {
+    const patch: any = { status: "confirmed" };
+    if (couponCode) { patch.price = chargeAmount; patch.discount = couponDiscount; patch.coupon_code = couponCode; }
+    await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}&status=eq.pending_payment`, patch);
+    await sbPost("keydrop_payments", { reservation_id: resId, square_payment_id: payId, amount: chargeAmount, status: "paid", paid_at: new Date().toISOString(), store: M.store });
+    await finalizeCoupon();
+    const rv = (await sbGet(M.resv, `id=eq.${encodeURIComponent(resId)}&select=${M.resvSel}`))[0];
+    if (rv && rv.mail) {
+      await sbPost("keydrop_notifications", { type: "confirm", reservation_id: resId, to_email: rv.mail, store: M.store, payload: {
+        name: rv.name || "", vehicleClass: rv.vehicle || "", lend_date: rv.lend_date || "", lend_time: rv.lend_time || "",
+        return_date: rv.return_date || "", return_time: rv.return_time || "", del_place: rv.del_place || "", col_place: rv.col_place || "",
+        price: chargeAmount, people: rv.people || 1, insurance: rv.insurance || "なし",
+        opt_b: rv.opt_b || 0, opt_c: rv.opt_c || 0, opt_j: rv.opt_j || 0, opt_usb: rv.opt_usb || 0 } });
+    }
+    await notifySlack([`\uD83C\uDD95 *KEYDROP 新規予約*（カード決済・確定）${M.store === "nha" ? "【那覇】" : ""}`,
+      `予約番号: ${resId} / ${rv?.name || ""}様`, `車両: ${rv?.vehicle || ""}クラス`,
+      `お届け: ${rv?.lend_date || ""} ${rv?.lend_time || ""}　${rv?.del_place || ""}`,
+      `回収: ${rv?.return_date || ""} ${rv?.return_time || ""}　${rv?.col_place || ""}`,
+      couponCode ? `クーポン: ${couponCode}（-¥${couponDiscount.toLocaleString()}）` : null,
+      `金額: ¥${chargeAmount.toLocaleString()}`].filter(Boolean).join("\n"), M.slack);
+  }
+
+  // 全額割引（¥0）＝Square課金なしで無料確定
+  if (chargeAmount <= 0) {
+    await finalizeReservation("FREE-COUPON");
+    console.log(`[pay] FREE(coupon) ${resId} code=${couponCode}`);
+    return json({ ok: true, reservationId: resId, amount: 0, discount: couponDiscount });
+  }
+
+  // Square Payments API で即時課金（割引後の金額）
   try {
     const r = await fetch(`${SQUARE_API}/v2/payments`, { method: "POST",
       headers: { Authorization: `Bearer ${SQUARE_TOKEN}`, "content-type": "application/json", "Square-Version": "2024-06-04" },
@@ -143,7 +198,7 @@ Deno.serve(async (req) => {
         idempotency_key: `kdpay-${resId}`,
         source_id: token,
         location_id: SQUARE_LOCATION,
-        amount_money: { amount: amount, currency: "JPY" },
+        amount_money: { amount: chargeAmount, currency: "JPY" },
         reference_id: resId,
         note: `KEYDROP ${resId}`,
       }) });
@@ -156,25 +211,9 @@ Deno.serve(async (req) => {
       return json({ error: "決済に失敗しました：" + detail }, 402);
     }
     const payId = j.payment.id;
-    // 確定（店舗別テーブル）
-    await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}&status=eq.pending_payment`, { status: "confirmed" });
-    await sbPost("keydrop_payments", { reservation_id: resId, square_payment_id: payId, amount, status: "paid", paid_at: new Date().toISOString(), store: M.store });
-    // 完了メール投入＋Slack（予約詳細取得・那覇は列エイリアスで札幌項目名に揃える）
-    const rv = (await sbGet(M.resv, `id=eq.${encodeURIComponent(resId)}&select=${M.resvSel}`))[0];
-    if (rv && rv.mail) {
-      await sbPost("keydrop_notifications", { type: "confirm", reservation_id: resId, to_email: rv.mail, store: M.store, payload: {
-        name: rv.name || "", vehicleClass: rv.vehicle || "", lend_date: rv.lend_date || "", lend_time: rv.lend_time || "",
-        return_date: rv.return_date || "", return_time: rv.return_time || "", del_place: rv.del_place || "", col_place: rv.col_place || "",
-        price: rv.price || amount, people: rv.people || 1, insurance: rv.insurance || "なし",
-        opt_b: rv.opt_b || 0, opt_c: rv.opt_c || 0, opt_j: rv.opt_j || 0, opt_usb: rv.opt_usb || 0 } });
-    }
-    await notifySlack([`🆕 *KEYDROP 新規予約*（カード決済・確定）${M.store === "nha" ? "【那覇】" : ""}`,
-      `予約番号: ${resId} / ${rv?.name || ""}様`, `車両: ${rv?.vehicle || ""}クラス`,
-      `お届け: ${rv?.lend_date || ""} ${rv?.lend_time || ""}　${rv?.del_place || ""}`,
-      `回収: ${rv?.return_date || ""} ${rv?.return_time || ""}　${rv?.col_place || ""}`,
-      `金額: ¥${amount.toLocaleString()}`].join("\n"), M.slack);
-    console.log(`[pay] PAID ${resId} ¥${amount} payment=${payId}`);
-    return json({ ok: true, reservationId: resId, amount });
+    await finalizeReservation(payId);
+    console.log(`[pay] PAID ${resId} ¥${chargeAmount} payment=${payId}${couponCode ? ` coupon=${couponCode}` : ""}`);
+    return json({ ok: true, reservationId: resId, amount: chargeAmount, discount: couponDiscount });
   } catch (e) {
     console.error("[pay]", e); await cancelPending(resId);
     return json({ error: "決済処理で問題が発生しました。時間をおいてお試しください" }, 500);
