@@ -43,6 +43,7 @@
 </head>
 <body>
 <div class="hd"><b>KEY<span class="y">DROP</span> クーポン管理</b><span class="who" id="who"></span></div>
+<div id="storeCtx" style="max-width:760px;margin:8px auto 0;padding:0 14px;font-size:12px;color:#555"></div>
 <div class="wrap" id="app"></div>
 
 <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
@@ -50,7 +51,8 @@
 <script>
 var SB_URL='https://ckrxttbnawkclshczsia.supabase.co';
 var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
-var TOKEN=null, EMAIL=null, COUPONS=[], REDEMPTIONS=[], KPIRANGE='all', KPISTORE='all';
+var TOKEN=null, EMAIL=null, COUPONS=[], REDEMPTIONS=[], KPIRANGE='all', KPISTORE='all', NEW_STORE='all';
+(function(){var q=new URLSearchParams(location.search).get('store');if(q==='spk'||q==='nha'){KPISTORE=q;NEW_STORE=q;}})();
 var app=document.getElementById('app'), modal=document.getElementById('modal'), sheet=document.getElementById('sheet'), who=document.getElementById('who');
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function hdrs(){return {apikey:ANON, Authorization:'Bearer '+(TOKEN||ANON), 'content-type':'application/json'};}
@@ -192,7 +194,7 @@ function renderList(){
 // ---- 作成/編集 ----
 function openForm(id){
   var c=id?COUPONS.find(function(x){return x.id===id;}):null;
-  c=c||{discount_type:'percent',discount_value:10,store:'all',active:true,per_email_once:false,min_amount_yen:0,applies_to:'total'};
+  c=c||{discount_type:'percent',discount_value:10,store:NEW_STORE,active:true,per_email_once:false,min_amount_yen:0,applies_to:'total'};
   sheet.innerHTML='<h2>'+(id?'クーポンを編集':'クーポンを発行')+'</h2>'
     +'<label>コード（お客様が入力）</label><input id="f_code" value="'+esc(c.code||'')+'" placeholder="WELCOME10" '+(id?'readonly style="background:#f3f4f6;"':'')+'>'
     +'<div class="row"><div><label>割引タイプ</label><select id="f_type"><option value="percent"'+(c.discount_type==='percent'?' selected':'')+'>％（パーセント）</option><option value="fixed"'+(c.discount_type==='fixed'?' selected':'')+'>固定（円）</option></select></div>'
@@ -246,6 +248,7 @@ async function delCoupon(id,code){
 
 // ---- 起動：保存済みトークンがあれば自動ログイン ----
 (function(){
+  try{var c=document.getElementById('storeCtx');if(c){c.innerHTML=(NEW_STORE==='spk'?'🏪 <b>札幌</b> のクーポンを作成・表示中（新規は既定で札幌）':NEW_STORE==='nha'?'🏝 <b>那覇</b> のクーポンを作成・表示中（新規は既定で那覇）':'🌐 全店モード（新規は既定で全店）')+' ／ 対象店舗は作成時に変更できます';}}catch(e){}
   try{ var t=localStorage.getItem('kdc_tok'); var e=localStorage.getItem('kdc_email'); if(t){TOKEN=t;EMAIL=e;who.textContent=e||'';loadCoupons();return;} }catch(e){}
   renderLogin();
 })();
