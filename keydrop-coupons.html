@@ -50,7 +50,7 @@
 <script>
 var SB_URL='https://ckrxttbnawkclshczsia.supabase.co';
 var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
-var TOKEN=null, EMAIL=null, COUPONS=[], REDEMPTIONS=[], KPIRANGE='all';
+var TOKEN=null, EMAIL=null, COUPONS=[], REDEMPTIONS=[], KPIRANGE='all', KPISTORE='all';
 var app=document.getElementById('app'), modal=document.getElementById('modal'), sheet=document.getElementById('sheet'), who=document.getElementById('who');
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function hdrs(){return {apikey:ANON, Authorization:'Bearer '+(TOKEN||ANON), 'content-type':'application/json'};}
@@ -97,7 +97,11 @@ function yen(n){return '¥'+(Number(n)||0).toLocaleString();}
 function maskMail(m){m=String(m||'');var i=m.indexOf('@');if(i<1)return m?'***':'—';return m.slice(0,2)+'***'+m.slice(i);}
 function renderDash(){
   var now=new Date(); var ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-  var rs = KPIRANGE==='month' ? REDEMPTIONS.filter(function(x){return (x.redeemed_at||'').slice(0,7)===ym;}) : REDEMPTIONS;
+  var rs = REDEMPTIONS.filter(function(x){
+    if(KPISTORE!=='all' && (x.store||'spk')!==KPISTORE) return false;
+    if(KPIRANGE==='month' && (x.redeemed_at||'').slice(0,7)!==ym) return false;
+    return true;
+  });
   var cnt=rs.length;
   var discSum=rs.reduce(function(a,x){return a+(Number(x.discount_amount)||0);},0);
   var finalSum=rs.reduce(function(a,x){return a+(Number(x.final_amount)||0);},0);
@@ -113,6 +117,9 @@ function renderDash(){
     +'<button onclick="setRange(\'all\')" style="font-size:11px;font-weight:800;border:1px solid '+(KPIRANGE==='all'?'#1a1a1a':'#ddd')+';background:'+(KPIRANGE==='all'?'#1a1a1a':'#fff')+';color:'+(KPIRANGE==='all'?'#fff':'#666')+';border-radius:999px;padding:5px 11px;cursor:pointer;">全期間</button>'
     +'<button onclick="setRange(\'month\')" style="font-size:11px;font-weight:800;border:1px solid '+(KPIRANGE==='month'?'#1a1a1a':'#ddd')+';background:'+(KPIRANGE==='month'?'#1a1a1a':'#fff')+';color:'+(KPIRANGE==='month'?'#fff':'#666')+';border-radius:999px;padding:5px 11px;cursor:pointer;">今月</button>'
     +'</div></div>'
+    +'<div style="display:flex;gap:6px;margin-bottom:10px;">'
+    +['all','spk','nha'].map(function(st){var lbl=st==='all'?'全店':st==='spk'?'札幌':'那覇';return '<button onclick="setStore(\''+st+'\')" style="font-size:11px;font-weight:800;border:1px solid '+(KPISTORE===st?'#FABE00':'#ddd')+';background:'+(KPISTORE===st?'#FABE00':'#fff')+';color:'+(KPISTORE===st?'#1a1a1a':'#666')+';border-radius:999px;padding:5px 13px;cursor:pointer;">'+lbl+'</button>';}).join('')
+    +'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'
     +card('利用件数', cnt+'件', KPIRANGE==='month'?ym:'累計')
     +card('割引総額', yen(discSum), '会社負担分')
@@ -137,6 +144,7 @@ function renderDash(){
   return h;
 }
 function setRange(r){KPIRANGE=r;renderList();}
+function setStore(st){KPISTORE=st;renderList();}
 function renderList(){
   // コード別 割引累計（全期間）＝各カードに表示
   var discAll={}; REDEMPTIONS.forEach(function(x){var k=(x.code||'').toUpperCase(); discAll[k]=(discAll[k]||0)+(Number(x.discount_amount)||0);});
@@ -160,13 +168,16 @@ function renderList(){
       +'</div></div>';
   });
   // 🧾 利用履歴（出口）
-  if(REDEMPTIONS.length){
-    html+='<div class="card"><div style="font-size:14px;font-weight:900;margin-bottom:8px;">🧾 利用履歴（最新50件・計'+REDEMPTIONS.length+'件）</div>'
+  var rlog=REDEMPTIONS.filter(function(x){return KPISTORE==='all'||(x.store||'spk')===KPISTORE;});
+  if(rlog.length){
+    var stLbl=KPISTORE==='all'?'全店':KPISTORE==='spk'?'札幌':'那覇';
+    html+='<div class="card"><div style="font-size:14px;font-weight:900;margin-bottom:8px;">🧾 利用履歴（'+stLbl+'・最新50件・計'+rlog.length+'件）</div>'
       +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:11.5px;white-space:nowrap;">'
-      +'<tr style="color:#999;text-align:left;"><th style="padding:5px 6px;">日時</th><th style="padding:5px 6px;">コード</th><th style="padding:5px 6px;">予約番号</th><th style="padding:5px 6px;">メール</th><th style="padding:5px 6px;text-align:right;">割引</th><th style="padding:5px 6px;text-align:right;">支払</th></tr>';
-    REDEMPTIONS.slice(0,50).forEach(function(x){
+      +'<tr style="color:#999;text-align:left;"><th style="padding:5px 6px;">日時</th><th style="padding:5px 6px;">コード</th><th style="padding:5px 6px;">店舗</th><th style="padding:5px 6px;">予約番号</th><th style="padding:5px 6px;">メール</th><th style="padding:5px 6px;text-align:right;">割引</th><th style="padding:5px 6px;text-align:right;">支払</th></tr>';
+    rlog.slice(0,50).forEach(function(x){
       html+='<tr style="border-top:1px solid #f1f1f1;"><td style="padding:6px;">'+esc(String(x.redeemed_at||'').slice(0,16).replace('T',' '))+'</td>'
         +'<td style="padding:6px;font-weight:800;">'+esc(x.code||'')+'</td>'
+        +'<td style="padding:6px;">'+(((x.store||'spk')==='nha')?'那覇':'札幌')+'</td>'
         +'<td style="padding:6px;">'+esc(x.reservation_id||'—')+'</td>'
         +'<td style="padding:6px;">'+esc(maskMail(x.email))+'</td>'
         +'<td style="padding:6px;text-align:right;color:#dc2626;font-weight:800;">-'+yen(x.discount_amount)+'</td>'
