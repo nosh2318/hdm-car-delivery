@@ -115,6 +115,7 @@
   .mok-cap{text-align:center;font-size:11px;font-weight:700;color:#9ca3af;margin-top:7px}
   .mok-shot{border:1px solid #e6e6ea;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);background:#fff;max-width:420px;margin:0 auto}
   .mok-shot img{width:100%;display:block}
+  .mok-shot + .mok-shot{margin-top:10px}
 </style>
 </head>
 <body>
@@ -483,11 +484,11 @@ var MOCKLBL={
     cMenu:'마이페이지를 연 화면',cLogin:'로그인(번호＋메일)',cDetail:'예약 상세(상태＋진행)',cChange:'변경 요청(시간＋지도)',cCancel:'취소(요금 확인)'}
 };
 // 実スクショがあるステップはこちらを優先（無いものはCSSモックを描画）
-var MOCKIMG={menu:'images/mp_open.png?v=1',login:'images/mp_login.png?v=3',detail:'images/mp_detail.png?v=1',cancel:'images/mp_cancel.png?v=1'};
+var MOCKIMG={menu:'images/mp_open.png?v=1',login:'images/mp_login.png?v=3',detail:'images/mp_detail.png?v=1',change:['images/mp_change1.png?v=1','images/mp_change2.png?v=1','images/mp_change3.png?v=1'],cancel:'images/mp_cancel.png?v=1'};
 function kdMock(kind,l){
   var L=MOCKLBL[l]||MOCKLBL.ja, cap='', body='';
   var CAP={menu:L.cMenu,login:L.cLogin,detail:L.cDetail,change:L.cChange,cancel:L.cCancel};
-  if(MOCKIMG[kind]){return '<div class="mok-shot"><img src="'+MOCKIMG[kind]+'" alt=""></div><div class="mok-cap">'+(CAP[kind]||'')+'</div>';}
+  if(MOCKIMG[kind]){var _a=[].concat(MOCKIMG[kind]);var _im=_a.map(function(src){return '<div class="mok-shot"><img src="'+src+'" alt=""></div>';}).join('');return _im+'<div class="mok-cap">'+(CAP[kind]||'')+'</div>';}
   if(kind==='menu'){cap=L.cMenu;body='<div class="mok-bar">☰ <b>KEY<span class="y">DROP</span></b></div>'+
     '<div class="mok-body mok-menu"><div class="mkm-btn">'+L.mypageBtn+'</div>'+
     '<div class="mkm-sec">'+L.service+'</div>'+
