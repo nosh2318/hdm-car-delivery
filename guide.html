@@ -6,51 +6,72 @@
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-N1HJ6WLG2Y');</script>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1a1a1a">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
 <title>ご利用方法｜KEYDROP カーデリバリー</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Helvetica Neue',sans-serif;background:#f5f6f8;color:#1a1a1a;line-height:1.7;padding-bottom:60px}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Helvetica Neue',sans-serif;background:#f5f6f8;color:#1a1a1a;line-height:1.7;padding-bottom:50px;overflow-x:hidden}
   a{color:#0369a1}
-  .hd{background:#1a1a1a;color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+  .hd{background:#0e1116;color:#fff;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30}
   .hd a.logo{display:flex;align-items:center;gap:9px;text-decoration:none}
   .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
   .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
   .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
-  .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:10px;flex:none}
+  .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:8px;flex:none}
   .langsw{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
   .langsw button{font-size:11px;font-weight:800;color:#ccc;background:transparent;border:1px solid #555;border-radius:999px;padding:4px 9px;cursor:pointer}
   .langsw button.active{color:#1a1a1a;background:#FABE00;border-color:#FABE00}
-  .pane{display:none}.pane.on{display:block}
-  .hero{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:#fff;padding:30px 20px 26px;text-align:center}
-  .hero h1{font-size:22px;font-weight:900;margin-bottom:6px}
+
+  /* hero */
+  .hero{background:radial-gradient(1100px 420px at 72% -12%, #2b313d 0%, #11151b 55%, #0b0e13 100%);color:#fff;padding:50px 20px 44px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;left:-40px;top:-40px;width:160px;height:160px;background:repeating-linear-gradient(135deg,#FABE00 0 6px,transparent 6px 14px);opacity:.10;transform:skewX(-12deg)}
+  .hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;color:#FABE00;opacity:.95}
+  .hero h1{font-size:clamp(26px,7vw,34px);font-weight:900;letter-spacing:.02em;margin-top:8px;font-style:italic}
   .hero h1 .y{color:#FABE00}
-  .hero p{font-size:13px;opacity:.85}
-  .wrap{max-width:760px;margin:0 auto;padding:20px 16px}
-  .lead{font-size:14px;color:#444;background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 6px rgba(0,0,0,.05);margin-bottom:18px}
-  .step{background:#fff;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.06);padding:18px 18px 16px;margin-bottom:16px;position:relative;overflow:hidden}
-  .step::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:#FABE00}
-  .step .num{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:900;color:#a07c00;background:#fffbf0;border:1px solid #FABE00;border-radius:20px;padding:4px 12px;margin-bottom:10px}
-  .step h2{font-size:17px;font-weight:900;margin-bottom:8px}
-  .step p{font-size:13.5px;color:#444;margin-bottom:8px}
-  .step ul{list-style:none;margin:4px 0 4px}
-  .step li{font-size:13.5px;color:#333;padding:6px 0 6px 26px;position:relative;border-bottom:1px dashed #f0f0f0}
-  .step li:last-child{border-bottom:none}
-  .step li::before{content:'✓';position:absolute;left:4px;color:#FABE00;font-weight:900}
-  .step li b{color:#1a1a1a}
-  .warn{background:#fff7ed;border:1px solid #fdba74;border-radius:9px;padding:9px 12px;font-size:12.5px;color:#9a3412;font-weight:600;margin-top:8px}
-  .linebox{background:#06c755;color:#fff;border-radius:11px;padding:13px 16px;margin-top:10px;display:flex;flex-direction:column;gap:3px}
-  .linebox a{color:#fff;font-weight:800;text-decoration:none}
-  .linebox .lid{font-size:12px;opacity:.92}
-  .info{background:#1a1a1a;color:#fff;border-radius:14px;padding:20px 18px;margin-top:8px}
-  .info h2{font-size:16px;font-weight:900;margin-bottom:4px}.info h2 .y{color:#FABE00}
-  .info .row{display:flex;gap:10px;font-size:13px;padding:7px 0;border-bottom:1px solid #333}
-  .info .row:last-child{border-bottom:none}
-  .info .row .k{flex:none;width:108px;color:#9aa;font-weight:700}
-  .info .row .v{color:#fff}
-  .info .row .v a{color:#FABE00}
-  .cta{display:block;text-align:center;background:#FABE00;color:#1a1a1a;font-weight:900;font-size:15px;padding:15px;border-radius:12px;text-decoration:none;margin-top:20px;box-shadow:0 3px 12px rgba(250,190,0,.4)}
+  .hero p{margin-top:12px;opacity:.82;font-size:13.5px;max-width:520px;margin-left:auto;margin-right:auto}
+
+  /* section */
+  .sec{max-width:780px;margin:0 auto;padding:34px 16px 4px}
+  .sec-h{text-align:center;margin-bottom:16px}
+  .sec-h .tag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.05em;color:#a07c00;background:#fffbf0;border:1px solid #FABE00;border-radius:999px;padding:4px 14px}
+  .sec-h h2{font-size:21px;font-weight:900;margin-top:10px}
+  .sec-h p{color:#7a7f87;font-size:12.5px;margin-top:5px}
+
+  /* carousel */
+  .kc-wrap{margin:0 auto}
+  .kc{position:relative;max-width:430px;margin:0 auto;overflow:hidden;border-radius:22px}
+  .kc-track{display:flex;transition:transform .5s cubic-bezier(.22,.61,.36,1);will-change:transform}
+  .kc-slide{min-width:100%;box-sizing:border-box;padding:4px 4px 0}
+  .kc-card{background:#fff;border-radius:18px;box-shadow:0 14px 36px rgba(14,17,22,.16);overflow:hidden;border:1px solid #eceef1}
+  .kc-chrome{height:30px;background:linear-gradient(#fafbfc,#eef0f3);display:flex;align-items:center;gap:6px;padding:0 13px;border-bottom:1px solid #edeff2}
+  .kc-chrome i{width:9px;height:9px;border-radius:50%;background:#d4d7dd;display:block}
+  .kc-chrome i:nth-child(1){background:#ff5f57}.kc-chrome i:nth-child(2){background:#febc2e}.kc-chrome i:nth-child(3){background:#28c840}
+  .kc-shot{background:#fff;max-height:62vh;overflow:hidden;display:flex;justify-content:center}
+  .kc-shot img{width:100%;display:block;object-fit:cover;object-position:top}
+  .kc-cap{padding:15px 16px 18px;text-align:center}
+  .kc-badge{display:inline-block;background:#0e1116;color:#FABE00;font-weight:900;font-size:11px;letter-spacing:.08em;padding:4px 13px;border-radius:999px;margin-bottom:9px}
+  .kc-cap h3{font-size:16.5px;font-weight:900;margin-bottom:6px}
+  .kc-cap p{font-size:12.5px;color:#555;line-height:1.75}
+  .kc-prev,.kc-next{position:absolute;top:38%;transform:translateY(-50%);z-index:4;border:none;background:rgba(14,17,22,.72);color:#fff;width:40px;height:40px;border-radius:50%;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:.15s}
+  .kc-prev:active,.kc-next:active{transform:translateY(-50%) scale(.9)}
+  .kc-prev{left:7px}.kc-next{right:7px}
+  .kc-bar{height:4px;background:#e7e9ed;border-radius:3px;margin:14px auto 0;max-width:300px;overflow:hidden}
+  .kc-bar i{display:block;height:100%;background:linear-gradient(90deg,#FABE00,#ffd84a);border-radius:3px;width:12%;transition:width .45s cubic-bezier(.22,.61,.36,1)}
+  .kc-dots{display:flex;justify-content:center;gap:6px;margin-top:12px;flex-wrap:wrap;max-width:340px;margin-left:auto;margin-right:auto}
+  .kc-dots b{width:8px;height:8px;border-radius:50%;background:#d2d5da;cursor:pointer;transition:.25s}
+  .kc-dots b.on{background:#FABE00;width:22px;border-radius:5px}
+  .swipe{text-align:center;color:#b4b8bf;font-size:11px;font-weight:700;margin-top:11px;letter-spacing:.03em}
+
+  /* CTA + footer */
+  .cta-wrap{max-width:430px;margin:30px auto 6px;padding:0 16px}
+  .cta{display:block;text-align:center;font-weight:900;font-size:15px;padding:15px;border-radius:14px;text-decoration:none;margin-top:11px}
+  .cta.book{background:#FABE00;color:#1a1a1a;box-shadow:0 6px 18px rgba(250,190,0,.4)}
+  .cta.line{background:#06c755;color:#fff;box-shadow:0 6px 18px rgba(6,199,85,.32)}
+  .cta.my{background:#fff;color:#1a1a1a;border:1.5px solid #e2e2e8}
+  .foot{max-width:430px;margin:18px auto 0;padding:0 16px;text-align:center;color:#9aa0a8;font-size:11.5px;line-height:1.9}
+  .foot b{color:#555}
+  .foot a{color:#0369a1;font-weight:700;text-decoration:none}
 </style>
 </head>
 <body>
@@ -62,74 +83,196 @@
   <a class="back" href="./">← TOP</a>
 </div>
 
-<!-- ja -->
-<div class="pane" data-lang="ja">
-<div class="hero"><h1>ご利用<span class="y">方法</span></h1><p>カーデリバリーサービス KEYDROP のご利用の流れ</p></div>
-<div class="wrap">
-  <div class="lead">KEYDROPは<b>無店舗型のデリバリー専門レンタカー</b>です。ご指定の場所まで車をお届け／ご返却場所まで回収にうかがいます。ご利用の流れを以下にご案内します。</div>
-  <div class="step"><span class="num">STEP 1 ・ ご予約</span><h2>サイトでご予約</h2><p>画面の流れに沿って、ご予約を完了させてください。</p><ul><li>① <b>お届け</b>の日時・場所を指定</li><li>② <b>回収</b>の日時・場所を指定</li><li>③ <b>車両（クラス）</b>を選ぶ</li><li>④ <b>オプション</b>を選ぶ</li><li>⑤ <b>運転者情報</b>を入力</li><li>⑥ <b>貸渡約款</b>に同意</li><li>⑦ <b>事前決済</b>でお支払い</li></ul></div>
-  <div class="step"><span class="num">STEP 2 ・ LINE登録</span><h2>公式LINE友だち登録</h2><p>ご連絡は基本的に<b>LINE</b>にて行います。<b>貸出3日前の19:00まで</b>に公式LINEの友だち登録をお願いします。</p><div class="linebox"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">📱 LINE公式アカウントを友だち追加</a><span class="lid">LINE ID：@149ahjll</span></div><p style="margin-top:10px;">登録後、ご予約いただいた<b>お名前・予約番号</b>を元に予約情報と照合いたします。</p></div>
-  <div class="step"><span class="num">STEP 3 ・ 貸出（ご出発）</span><h2>車両をお届け</h2><p>事前にご指定の<b>時間・場所</b>へデリバリー（お届け）します。到着前後にLINEにて詳細の待ち合わせ場所をご連絡します。</p><ul><li><b>時間</b>：9:00〜19:00</li><li><b>エリア</b>：エリアごとの配達範囲内</li></ul><div class="warn">⚠️ 貸出時間・場所の変更は、貸出3日前の19:00までとなります。</div></div>
-  <div class="step"><span class="num">STEP 4 ・ 受付</span><h2>免許証のご提示</h2><p>現地にて、運転される方<b>全員の免許証</b>をご提示ください。</p></div>
-  <div class="step"><span class="num">STEP 5 ・ ご返却</span><h2>車両を回収</h2><p>事前にご指定の<b>時間・場所</b>へ回収にうかがいます。<b>燃料を満タンに給油</b>後、ご返却場所に到着しましたらLINEにてご一報ください。</p><ul><li><b>時間</b>：9:00〜19:00</li><li><b>エリア</b>：エリアごとの配達範囲内</li></ul><div class="warn">⚠️ 返却時間・場所の変更は、返却時刻の2時間前までとなります。</div></div>
-  <div class="info"><h2>KEY<span class="y">DROP</span> 基本情報</h2><div class="row"><span class="k">運営会社</span><span class="v">株式会社グローバルラインズ</span></div><div class="row"><span class="k">お問い合わせ</span><span class="v"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">公式LINE</a>（ID：@149ahjll）</span></div><div class="row"><span class="k">TEL</span><span class="v"><a href="tel:05017852711">050-1785-2711</a></span></div><div class="row"><span class="k">営業日</span><span class="v">年中無休</span></div><div class="row"><span class="k">営業時間</span><span class="v">9:00〜19:00</span></div></div>
-  <a class="cta" href="./">🚗 レンタカーを予約する</a>
-</div>
+<div class="hero">
+  <div class="eyebrow">KEYDROP CAR DELIVERY</div>
+  <h1 data-i18n="heroT">ご利用<span class="y">方法</span></h1>
+  <p data-i18n="heroP">スマホで完結。お届けから返却、予約後の管理まで。</p>
 </div>
 
-<!-- en -->
-<div class="pane" data-lang="en">
-<div class="hero"><h1>How to <span class="y">Use</span></h1><p>How the KEYDROP car delivery service works</p></div>
-<div class="wrap">
-  <div class="lead">KEYDROP is a <b>storeless, delivery-only rental car service</b>. We deliver the car to your chosen location and pick it up at your chosen return spot. Here is how it works.</div>
-  <div class="step"><span class="num">STEP 1 ・ Booking</span><h2>Book on the website</h2><p>Follow the on-screen steps to complete your booking.</p><ul><li>① Set <b>delivery</b> date/time & place</li><li>② Set <b>return</b> date/time & place</li><li>③ Choose your <b>vehicle (class)</b></li><li>④ Choose <b>options</b></li><li>⑤ Enter <b>driver details</b></li><li>⑥ Agree to the <b>rental agreement</b></li><li>⑦ Pay by <b>prepayment</b></li></ul></div>
-  <div class="step"><span class="num">STEP 2 ・ LINE</span><h2>Add our Official LINE</h2><p>We mainly communicate via <b>LINE</b>. Please add our Official LINE <b>by 19:00, 3 days before pickup</b>.</p><div class="linebox"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">📱 Add our Official LINE account</a><span class="lid">LINE ID: @149ahjll</span></div><p style="margin-top:10px;">After adding, we match your booking using your <b>name and reservation number</b>.</p></div>
-  <div class="step"><span class="num">STEP 3 ・ Pickup (Departure)</span><h2>We deliver the car</h2><p>We deliver to your specified <b>time and place</b>. We'll contact you on LINE around arrival to confirm the exact meeting point.</p><ul><li><b>Hours</b>: 9:00–19:00</li><li><b>Area</b>: within each area's delivery range</li></ul><div class="warn">⚠️ Changes to pickup time/place are accepted up to 19:00, 3 days before pickup.</div></div>
-  <div class="step"><span class="num">STEP 4 ・ Check-in</span><h2>Show your license</h2><p>On site, please show the <b>driver's license of everyone who will drive</b>.</p></div>
-  <div class="step"><span class="num">STEP 5 ・ Return</span><h2>We collect the car</h2><p>We come to collect at your specified <b>time and place</b>. Please <b>refill the fuel tank</b>, and message us on LINE once you arrive at the return spot.</p><ul><li><b>Hours</b>: 9:00–19:00</li><li><b>Area</b>: within each area's delivery range</li></ul><div class="warn">⚠️ Changes to return time/place are accepted up to 2 hours before the return time.</div></div>
-  <div class="info"><h2>KEY<span class="y">DROP</span> Basic Info</h2><div class="row"><span class="k">Company</span><span class="v">Global Lines Inc.</span></div><div class="row"><span class="k">Contact</span><span class="v"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">Official LINE</a> (ID: @149ahjll)</span></div><div class="row"><span class="k">TEL</span><span class="v"><a href="tel:05017852711">050-1785-2711</a></span></div><div class="row"><span class="k">Open</span><span class="v">Year-round</span></div><div class="row"><span class="k">Hours</span><span class="v">9:00–19:00</span></div></div>
-  <a class="cta" href="./">🚗 Book a Rental Car</a>
-</div>
+<!-- 予約の流れ -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag" data-i18n="tagBook">STEP BY STEP</span>
+    <h2 data-i18n="secBook">予約の流れ</h2>
+    <p data-i18n="secBookP">かんたん操作で、最短ステップ予約</p>
+  </div>
+  <div class="kc-wrap" id="carBook"></div>
+  <div class="swipe" data-i18n="swipe">← スワイプ／矢印で進む →</div>
 </div>
 
-<!-- zh -->
-<div class="pane" data-lang="zh">
-<div class="hero"><h1>使用<span class="y">方法</span></h1><p>KEYDROP 汽車外送服務的使用流程</p></div>
-<div class="wrap">
-  <div class="lead">KEYDROP 是<b>無門市的外送專門租車服務</b>。我們將車送到您指定的地點，並於您指定的還車地點回收。以下為使用流程。</div>
-  <div class="step"><span class="num">STEP 1 ・ 預約</span><h2>於網站預約</h2><p>請依畫面流程完成預約。</p><ul><li>① 指定<b>送達</b>的日期時間・地點</li><li>② 指定<b>回收</b>的日期時間・地點</li><li>③ 選擇<b>車輛（車型）</b></li><li>④ 選擇<b>選項</b></li><li>⑤ 輸入<b>駕駛人資訊</b></li><li>⑥ 同意<b>租車條款</b></li><li>⑦ 以<b>事前付款</b>結帳</li></ul></div>
-  <div class="step"><span class="num">STEP 2 ・ LINE</span><h2>加入官方LINE好友</h2><p>聯絡主要透過<b>LINE</b>進行。請於<b>取車3天前19:00前</b>加入官方LINE好友。</p><div class="linebox"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">📱 加入官方LINE帳號好友</a><span class="lid">LINE ID：@149ahjll</span></div><p style="margin-top:10px;">加入後，我們將依您的<b>姓名・預約編號</b>核對預約資訊。</p></div>
-  <div class="step"><span class="num">STEP 3 ・ 取車（出發）</span><h2>送車</h2><p>我們將於您指定的<b>時間・地點</b>外送（送車）。抵達前後會透過LINE聯絡詳細的會合地點。</p><ul><li><b>時間</b>：9:00〜19:00</li><li><b>範圍</b>：各地區的外送範圍內</li></ul><div class="warn">⚠️ 取車時間・地點的變更受理至取車3天前19:00。</div></div>
-  <div class="step"><span class="num">STEP 4 ・ 報到</span><h2>出示駕照</h2><p>請於現場出示<b>所有駕駛人的駕照</b>。</p></div>
-  <div class="step"><span class="num">STEP 5 ・ 還車</span><h2>回收車輛</h2><p>我們將於您指定的<b>時間・地點</b>回收。請<b>加滿油料</b>後，抵達還車地點時以LINE通知我們。</p><ul><li><b>時間</b>：9:00〜19:00</li><li><b>範圍</b>：各地區的外送範圍內</li></ul><div class="warn">⚠️ 還車時間・地點的變更受理至還車時刻2小時前。</div></div>
-  <div class="info"><h2>KEY<span class="y">DROP</span> 基本資訊</h2><div class="row"><span class="k">營運公司</span><span class="v">Global Lines 株式會社</span></div><div class="row"><span class="k">聯絡方式</span><span class="v"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">官方LINE</a>（ID：@149ahjll）</span></div><div class="row"><span class="k">TEL</span><span class="v"><a href="tel:05017852711">050-1785-2711</a></span></div><div class="row"><span class="k">營業日</span><span class="v">全年無休</span></div><div class="row"><span class="k">營業時間</span><span class="v">9:00〜19:00</span></div></div>
-  <a class="cta" href="./">🚗 預約租車</a>
-</div>
+<!-- マイページ -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag" data-i18n="tagMy">AFTER BOOKING</span>
+    <h2 data-i18n="secMy">予約後・マイページ</h2>
+    <p data-i18n="secMyP">確認・変更・キャンセルもセルフで</p>
+  </div>
+  <div class="kc-wrap" id="carMy"></div>
+  <div class="swipe" data-i18n="swipe">← スワイプ／矢印で進む →</div>
 </div>
 
-<!-- ko -->
-<div class="pane" data-lang="ko">
-<div class="hero"><h1>이용 <span class="y">방법</span></h1><p>KEYDROP 카 딜리버리 서비스 이용 흐름</p></div>
-<div class="wrap">
-  <div class="lead">KEYDROP는 <b>무점포형 배달 전문 렌터카</b>입니다. 지정하신 장소로 차량을 배달하고 반납 장소로 회수하러 갑니다. 이용 흐름은 아래와 같습니다.</div>
-  <div class="step"><span class="num">STEP 1 ・ 예약</span><h2>사이트에서 예약</h2><p>화면 흐름에 따라 예약을 완료해 주세요.</p><ul><li>① <b>배달</b> 일시·장소 지정</li><li>② <b>회수</b> 일시·장소 지정</li><li>③ <b>차량(클래스)</b> 선택</li><li>④ <b>옵션</b> 선택</li><li>⑤ <b>운전자 정보</b> 입력</li><li>⑥ <b>대여 약관</b> 동의</li><li>⑦ <b>사전 결제</b>로 결제</li></ul></div>
-  <div class="step"><span class="num">STEP 2 ・ LINE</span><h2>공식 LINE 친구 추가</h2><p>연락은 기본적으로 <b>LINE</b>으로 진행합니다. <b>대여 3일 전 19:00까지</b> 공식 LINE 친구 추가를 부탁드립니다.</p><div class="linebox"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">📱 공식 LINE 계정 친구 추가</a><span class="lid">LINE ID: @149ahjll</span></div><p style="margin-top:10px;">추가 후, 예약하신 <b>이름·예약 번호</b>를 기준으로 예약 정보를 대조합니다.</p></div>
-  <div class="step"><span class="num">STEP 3 ・ 대여(출발)</span><h2>차량 배달</h2><p>사전에 지정하신 <b>시간·장소</b>로 배달합니다. 도착 전후에 LINE으로 자세한 만남 장소를 안내드립니다.</p><ul><li><b>시간</b>: 9:00~19:00</li><li><b>지역</b>: 각 지역의 배달 범위 내</li></ul><div class="warn">⚠️ 대여 시간·장소 변경은 대여 3일 전 19:00까지입니다.</div></div>
-  <div class="step"><span class="num">STEP 4 ・ 접수</span><h2>면허증 제시</h2><p>현장에서 운전하실 <b>모든 분의 면허증</b>을 제시해 주세요.</p></div>
-  <div class="step"><span class="num">STEP 5 ・ 반납</span><h2>차량 회수</h2><p>사전에 지정하신 <b>시간·장소</b>로 회수하러 갑니다. <b>연료를 가득 주유</b>한 뒤 반납 장소에 도착하시면 LINE으로 알려 주세요.</p><ul><li><b>시간</b>: 9:00~19:00</li><li><b>지역</b>: 각 지역의 배달 범위 내</li></ul><div class="warn">⚠️ 반납 시간·장소 변경은 반납 시각 2시간 전까지입니다.</div></div>
-  <div class="info"><h2>KEY<span class="y">DROP</span> 기본 정보</h2><div class="row"><span class="k">운영 회사</span><span class="v">주식회사 글로벌라인즈</span></div><div class="row"><span class="k">문의</span><span class="v"><a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">공식 LINE</a> (ID: @149ahjll)</span></div><div class="row"><span class="k">TEL</span><span class="v"><a href="tel:05017852711">050-1785-2711</a></span></div><div class="row"><span class="k">영업일</span><span class="v">연중무휴</span></div><div class="row"><span class="k">영업시간</span><span class="v">9:00~19:00</span></div></div>
-  <a class="cta" href="./">🚗 렌터카 예약하기</a>
+<div class="cta-wrap">
+  <a class="cta book" href="./" data-i18n="ctaBook">🚗 レンタカーを予約する</a>
+  <a class="cta my" href="mypage-guide.html" data-i18n="ctaMy">📱 マイページの使い方（詳細）</a>
+  <a class="cta line" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener" data-i18n="ctaLine">💬 公式LINEで相談</a>
 </div>
+<div class="foot">
+  <span data-i18n="footHours">受付・運営 9:00〜19:00（年中無休）</span><br>
+  <b>KEYDROP</b>（株式会社グローバルラインズ）／ TEL <a href="tel:05017852711">050-1785-2711</a>
 </div>
 
 <script>
+// ===== スライド定義（画像は言語非依存。文言はLで4言語） =====
+var SLIDES={
+  book:[
+    {img:'images/flow1.jpg', k:'bDeliver'},
+    {img:'images/flow2.jpg', k:'bCollect'},
+    {img:'images/flow3.jpg', k:'bVehicle'},
+    {img:'images/flow4.png', k:'bConfirm'},
+    {img:'images/flow5.png', k:'bOption'},
+    {img:'images/flow6.png', k:'bDriver'},
+    {img:'images/flow7.png', k:'bTerms'},
+    {img:'images/flow8.png', k:'bPay'}
+  ],
+  my:[
+    {img:'images/mp_open.png?v=1',   k:'mOpen'},
+    {img:'images/mp_login.png?v=3',  k:'mLogin'},
+    {img:'images/mp_detail.png?v=1', k:'mDetail'},
+    {img:'images/mp_change2.png?v=1',k:'mChange'},
+    {img:'images/mp_cancel.png?v=1', k:'mCancel'}
+  ]
+};
+var L={
+  ja:{title:'ご利用方法｜KEYDROP',
+    heroT:'ご利用<span class="y">方法</span>', heroP:'スマホで完結。お届けから返却、予約後の管理まで。',
+    tagBook:'STEP BY STEP', secBook:'予約の流れ', secBookP:'かんたん操作で、最短ステップ予約',
+    tagMy:'AFTER BOOKING', secMy:'予約後・マイページ', secMyP:'確認・変更・キャンセルもセルフで',
+    swipe:'← スワイプ／矢印で進む →', ctaBook:'🚗 レンタカーを予約する', ctaMy:'📱 マイページの使い方（詳細）', ctaLine:'💬 公式LINEで相談',
+    footHours:'受付・運営 9:00〜19:00（年中無休）',
+    s:{
+      bDeliver:{t:'お届け先を地図で決める',d:'マスコットが案内。ホテル・住所・駅名で検索、または地図をタップして指定。'},
+      bCollect:{t:'回収先を決める',d:'同じ流れで返却場所を指定。「お届けと同じ」もワンタップ。'},
+      bVehicle:{t:'車両を選ぶ',d:'指定エリアに配車できる空車だけを表示。クラスと料金で選択。'},
+      bConfirm:{t:'内容を確認',d:'車両・日時・お届け／回収・料金をまとめてチェック。'},
+      bOption:{t:'オプションを選ぶ',d:'補償（免責補償／安心パック）やチャイルド・ジュニアシートを追加。'},
+      bDriver:{t:'予約者情報を入力',d:'お名前・連絡先・メールを入力。メールはマイページのログインに使います。'},
+      bTerms:{t:'約款に同意',d:'貸渡約款・プライバシー・キャンセルポリシーを確認して同意。'},
+      bPay:{t:'お支払い',d:'クレジットカードで事前決済。Square経由の安全な決済です。'},
+      mOpen:{t:'マイページを開く',d:'メニュー、または予約確認メールのリンクから。'},
+      mLogin:{t:'ログイン',d:'予約番号＋ご予約時のメールで本人確認。'},
+      mDetail:{t:'予約を確認',d:'ステータス・進捗バー・車両・場所・金額を表示。'},
+      mChange:{t:'変更をリクエスト',d:'お届け／回収の時間・場所を地図で変更申請（運営の承認後に確定）。'},
+      mCancel:{t:'キャンセル',d:'規定のキャンセル料を確認してリクエスト。'}
+    }},
+  en:{title:'How to Use｜KEYDROP',
+    heroT:'How to <span class="y">Use</span>', heroP:'All on your phone — from delivery to return and post-booking management.',
+    tagBook:'STEP BY STEP', secBook:'Booking flow', secBookP:'Simple taps, fewest steps',
+    tagMy:'AFTER BOOKING', secMy:'After booking · My Page', secMyP:'Check, change & cancel by yourself',
+    swipe:'← Swipe / use arrows →', ctaBook:'🚗 Book a Rental Car', ctaMy:'📱 Using My Page (details)', ctaLine:'💬 Ask on Official LINE',
+    footHours:'Service hours 9:00–19:00 (year-round)',
+    s:{
+      bDeliver:{t:'Set delivery spot on the map',d:'Our mascot guides you. Search by hotel, address or station, or tap the map.'},
+      bCollect:{t:'Set the return spot',d:'Same flow for the return place. "Same as delivery" in one tap.'},
+      bVehicle:{t:'Choose a vehicle',d:'Only cars available for your area & dates. Pick by class and price.'},
+      bConfirm:{t:'Review details',d:'Check vehicle, dates, delivery/return and price at a glance.'},
+      bOption:{t:'Choose options',d:'Add insurance (CDW / Anshin Pack) and child/junior seats.'},
+      bDriver:{t:'Enter your details',d:'Name, phone and email. The email is used to log in to My Page.'},
+      bTerms:{t:'Agree to terms',d:'Review the rental agreement, privacy and cancellation policy.'},
+      bPay:{t:'Payment',d:'Prepay by credit card — secure checkout via Square.'},
+      mOpen:{t:'Open My Page',d:'From the menu or the link in your confirmation email.'},
+      mLogin:{t:'Log in',d:'Verify with your reservation number + booking email.'},
+      mDetail:{t:'Check your booking',d:'Status, progress bar, vehicle, place and amount.'},
+      mChange:{t:'Request a change',d:'Change delivery/return time & place on the map (confirmed after review).'},
+      mCancel:{t:'Cancel',d:'Review the cancellation fee and send a request.'}
+    }},
+  zh:{title:'使用方法｜KEYDROP',
+    heroT:'使用<span class="y">方法</span>', heroP:'用手機完成。從送車到還車、預約後管理一手包辦。',
+    tagBook:'STEP BY STEP', secBook:'預約流程', secBookP:'簡單操作，最短步驟',
+    tagMy:'AFTER BOOKING', secMy:'預約後・會員頁面', secMyP:'確認・變更・取消皆可自助',
+    swipe:'← 滑動／用箭頭 →', ctaBook:'🚗 預約租車', ctaMy:'📱 會員頁面使用方法（詳細）', ctaLine:'💬 用官方LINE洽詢',
+    footHours:'受理・營運 9:00〜19:00（全年無休）',
+    s:{
+      bDeliver:{t:'在地圖上指定送達地點',d:'吉祥物會引導。以飯店・地址・車站搜尋，或點地圖指定。'},
+      bCollect:{t:'指定回收地點',d:'相同流程指定還車地點。「與送達相同」一鍵完成。'},
+      bVehicle:{t:'選擇車輛',d:'只顯示可配送的空車。依車型與價格選擇。'},
+      bConfirm:{t:'確認內容',d:'車輛・日期時間・送達／回收・費用一次確認。'},
+      bOption:{t:'選擇選項',d:'加購補償（免責補償／安心方案）與兒童・幼童座椅。'},
+      bDriver:{t:'輸入預約人資訊',d:'姓名・聯絡方式・電子郵件。郵件用於登入會員頁面。'},
+      bTerms:{t:'同意條款',d:'確認租車條款・隱私權・取消政策後同意。'},
+      bPay:{t:'付款',d:'以信用卡事前付款。透過 Square 的安全結帳。'},
+      mOpen:{t:'開啟會員頁面',d:'從選單或預約確認郵件的連結。'},
+      mLogin:{t:'登入',d:'以預約編號＋預約時的郵件驗證本人。'},
+      mDetail:{t:'確認預約',d:'顯示狀態・進度條・車輛・地點・金額。'},
+      mChange:{t:'申請變更',d:'於地圖變更送達／回收的時間・地點（營運確認後確定）。'},
+      mCancel:{t:'取消',d:'確認取消費用後送出申請。'}
+    }},
+  ko:{title:'이용 방법｜KEYDROP',
+    heroT:'이용 <span class="y">방법</span>', heroP:'휴대폰으로 완결. 배달부터 반납, 예약 후 관리까지.',
+    tagBook:'STEP BY STEP', secBook:'예약 흐름', secBookP:'간단 조작, 최소 단계',
+    tagMy:'AFTER BOOKING', secMy:'예약 후・마이페이지', secMyP:'확인・변경・취소도 셀프로',
+    swipe:'← 스와이프／화살표 →', ctaBook:'🚗 렌터카 예약하기', ctaMy:'📱 마이페이지 사용법(자세히)', ctaLine:'💬 공식 LINE으로 문의',
+    footHours:'접수・운영 9:00〜19:00 (연중무휴)',
+    s:{
+      bDeliver:{t:'지도에서 배달 장소 지정',d:'마스코트가 안내. 호텔・주소・역명으로 검색하거나 지도를 탭.'},
+      bCollect:{t:'회수 장소 지정',d:'같은 흐름으로 반납 장소 지정. "배달과 동일"도 원탭.'},
+      bVehicle:{t:'차량 선택',d:'해당 지역에 배차 가능한 빈 차량만 표시. 클래스・요금으로 선택.'},
+      bConfirm:{t:'내용 확인',d:'차량・일시・배달／회수・요금을 한 번에 확인.'},
+      bOption:{t:'옵션 선택',d:'보상(면책보상／안심팩)과 아동・주니어 시트 추가.'},
+      bDriver:{t:'예약자 정보 입력',d:'이름・연락처・이메일 입력. 이메일은 마이페이지 로그인에 사용.'},
+      bTerms:{t:'약관 동의',d:'대여 약관・개인정보・취소 정책을 확인 후 동의.'},
+      bPay:{t:'결제',d:'신용카드로 사전 결제. Square를 통한 안전 결제.'},
+      mOpen:{t:'마이페이지 열기',d:'메뉴 또는 예약 확인 메일의 링크에서.'},
+      mLogin:{t:'로그인',d:'예약 번호＋예약 시 이메일로 본인 확인.'},
+      mDetail:{t:'예약 확인',d:'상태・진행 바・차량・장소・금액 표시.'},
+      mChange:{t:'변경 요청',d:'배달／회수 시간・장소를 지도에서 변경 신청(운영 승인 후 확정).'},
+      mCancel:{t:'취소',d:'정해진 취소 수수료를 확인하고 요청.'}
+    }}
+};
+
+function buildCarousel(mountId, slides){
+  var root=document.getElementById(mountId);
+  var h='<div class="kc"><div class="kc-track">';
+  slides.forEach(function(s,i){
+    h+='<div class="kc-slide"><div class="kc-card">'
+      +'<div class="kc-chrome"><i></i><i></i><i></i></div>'
+      +'<div class="kc-shot"><img src="'+s.img+'" alt="" loading="lazy"></div>'
+      +'<div class="kc-cap"><span class="kc-badge">STEP '+(i+1)+'</span>'
+      +'<h3 data-k="'+s.k+'-t"></h3><p data-k="'+s.k+'-d"></p></div>'
+      +'</div></div>';
+  });
+  h+='</div><button class="kc-prev" aria-label="prev">‹</button><button class="kc-next" aria-label="next">›</button></div>'
+    +'<div class="kc-bar"><i></i></div><div class="kc-dots"></div>';
+  root.innerHTML=h;
+  var kc=root.querySelector('.kc'), track=root.querySelector('.kc-track');
+  var dots=root.querySelector('.kc-dots'), bar=root.querySelector('.kc-bar i');
+  var idx=0, n=slides.length;
+  for(var i=0;i<n;i++){ (function(j){ var b=document.createElement('b'); b.onclick=function(){go(j);}; dots.appendChild(b); })(i); }
+  function go(i){ idx=Math.max(0,Math.min(n-1,i)); track.style.transform='translateX(-'+(idx*100)+'%)';
+    var bs=dots.querySelectorAll('b'); for(var j=0;j<bs.length;j++) bs[j].classList.toggle('on',j===idx);
+    bar.style.width=((idx+1)/n*100)+'%'; }
+  root.querySelector('.kc-prev').onclick=function(){go(idx-1);};
+  root.querySelector('.kc-next').onclick=function(){go(idx+1);};
+  var sx=null;
+  kc.addEventListener('pointerdown',function(e){sx=e.clientX;});
+  kc.addEventListener('pointerup',function(e){ if(sx==null)return; var dx=e.clientX-sx; if(Math.abs(dx)>40) go(idx+(dx<0?1:-1)); sx=null; });
+  kc.addEventListener('pointercancel',function(){sx=null;});
+  go(0);
+}
+
 (function(){
   var KEY='kd_lang', LS=['ja','en','zh','ko'];
-  var T={ja:'ご利用方法｜KEYDROP',en:'How to Use｜KEYDROP',zh:'使用方法｜KEYDROP',ko:'이용 방법｜KEYDROP'};
-  function detect(){try{var s=localStorage.getItem(KEY);if(s&&LS.indexOf(s)>=0)return s;}catch(e){}var n=(navigator.language||'ja').toLowerCase();return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja';}
-  function apply(l){if(LS.indexOf(l)<0)l='ja';document.documentElement.lang=l;document.title=T[l]||T.ja;document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-lang')===l);});document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});try{localStorage.setItem(KEY,l);}catch(e){}}
-  document.querySelectorAll('#langsw button').forEach(function(b){b.onclick=function(){apply(b.getAttribute('data-l'));};});
-  apply(detect());
+  function detect(){ try{var s=localStorage.getItem(KEY); if(s&&LS.indexOf(s)>=0)return s;}catch(e){} var n=(navigator.language||'ja').toLowerCase(); return n.indexOf('ko')===0?'ko':n.indexOf('zh')===0?'zh':n.indexOf('en')===0?'en':'ja'; }
+  function setLang(l){ if(LS.indexOf(l)<0)l='ja'; var D=L[l]||L.ja;
+    document.documentElement.lang=l; document.title=D.title;
+    document.querySelectorAll('[data-i18n]').forEach(function(el){ var k=el.getAttribute('data-i18n'); if(D[k]!=null) el.innerHTML=D[k]; });
+    document.querySelectorAll('[data-k]').forEach(function(el){ var k=el.getAttribute('data-k'); var base=k.slice(0,-2), fld=k.slice(-1); var o=D.s[base]; if(o) el.textContent=(fld==='t'?o.t:o.d); });
+    document.querySelectorAll('#langsw button').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-l')===l); });
+    try{localStorage.setItem(KEY,l);}catch(e){}
+  }
+  buildCarousel('carBook', SLIDES.book);
+  buildCarousel('carMy', SLIDES.my);
+  document.querySelectorAll('#langsw button').forEach(function(b){ b.onclick=function(){ setLang(b.getAttribute('data-l')); }; });
+  setLang(detect());
 })();
 </script>
 </body>
