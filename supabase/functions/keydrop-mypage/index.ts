@@ -121,7 +121,13 @@ const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; le
     sel: "id,ota,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,kd_status" },
 };
 function resolveStore(p: any, resId: string) {
-  const s = (p && p.store === "nha") || /^KDN-/i.test(resId) ? "nha" : "spk";
+  // 店舗は「予約番号の接頭辞」で確定する（KDN-=那覇 / KD-=札幌）。
+  // 接頭辞が無い時のみ p.store を採用。これにより、那覇エリアからマイページを
+  // 開いて store:'nha' が送られても、KD-（札幌）予約は札幌テーブルを正しく参照する。
+  let s: string;
+  if (/^KDN-/i.test(resId)) s = "nha";
+  else if (/^KD-/i.test(resId)) s = "spk";
+  else s = (p && p.store === "nha") ? "nha" : "spk";
   const m = STORE_MAP[s];
   const slack = Deno.env.get(m.slackEnv) || m.slackDefault;
   return { store: s, ...m, slack };
@@ -170,7 +176,8 @@ Deno.serve(async (req) => {
 
   const action = String(p.action || "").trim();
   const mail = String(p.mail || "").trim().toLowerCase();
-  const resId = String(p.resId || p.reservationId || "").trim();
+  // 予約番号は大文字に正規化（DBのid＝KD-/KDN-は大文字。小文字入力でもログイン可に）
+  const resId = String(p.resId || p.reservationId || "").trim().toUpperCase();
 
   // 本人確認：予約番号 + メール の両方必須（片方だけでは何も返さない＝総当たり/PII漏洩防止）
   if (!mail || mail.indexOf("@") < 0) return json({ error: "メールアドレスが必要です" }, 400, origin);

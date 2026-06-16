@@ -1000,6 +1000,9 @@
     //   area/mypage/paid のいずれかがあれば「アプリ文脈」=初期化する。無ければゲートのみ（軽い）。
     window.__kdAppCtx = (function () { const q = new URLSearchParams(location.search); return !!(q.get('area') || q.get('mypage') || q.get('paid')); })();
     function KD_API_STORE() { return KD_AREAS[KD_STORE].api; }          // 'spk' | 'nha'（Edge Functionへ）
+    // マイページ系は「ブラウズ中エリア」ではなく予約番号の接頭辞で店舗を決める（KDN-=那覇 / KD-=札幌）。
+    // これで那覇エリアからKD-（札幌）予約を開いても正しく札幌テーブルを参照する。
+    function kdStoreForRes(id) { return /^KDN-/i.test(String(id || '')) ? 'nha' : 'spk'; }
     function KD_GEO_HINT() { return KD_AREAS[KD_STORE].geo; }            // ジオコーディングの地域ヒント
     function KD_BBOX() { return KD_AREAS[KD_STORE].bbox; }               // 検索範囲 [minLon,minLat,maxLon,maxLat]
     // 地点がどの対象エリア(札幌/那覇)に属するか。どちらでもなければ null（=対応エリア外）。
@@ -4372,7 +4375,7 @@
         // 配達エリア外チェック（場所を変更した場合のみ・予約時と同じ判定）
         if (dchg && del.place && del.lat != null) { const c = checkDeliverable(del.lat, del.lng, del.place); if (!c.ok) { mpEdit.error = '【お届け】' + c.reason; renderMpEdit(); return; } }
         if (cchg && col.place && col.lat != null) { const c = checkDeliverable(col.lat, col.lng, col.place); if (!c.ok) { mpEdit.error = '【回収】' + c.reason; renderMpEdit(); return; } }
-        const body = { action: 'change_request', store: KD_API_STORE(), mail: (mypageState.email || localStorage.getItem('hdm_mypage_email') || ''), resId: r.id };
+        const body = { action: 'change_request', store: kdStoreForRes(r.id), mail: (mypageState.email || localStorage.getItem('hdm_mypage_email') || ''), resId: r.id };
         if (dchg) body.del = del;
         if (cchg) body.col = col;
         mpEdit.saving = true; mpEdit.error = ''; renderMpEdit();
@@ -4470,7 +4473,7 @@
     async function lookupMypage() {
         const al = mypageState._autoLookup || {};
         const email = (document.getElementById('mypageEmail')?.value?.trim()) || al.mail || '';
-        const resId = (document.getElementById('mypageResId')?.value?.trim()) || al.id || '';
+        const resId = ((document.getElementById('mypageResId')?.value?.trim()) || al.id || '').toUpperCase();
         const saveChk = document.getElementById('mypageSaveResId'); // 保存チェックボックス（あれば）
         const wantSaveResId = saveChk ? saveChk.checked : null; // null=自動ログイン等でフォーム無し→保存状態を変えない
         mypageState._autoLookup = null; // 一度きり
@@ -4500,7 +4503,7 @@
             const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
                 method: 'POST',
                 headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'lookup', store: KD_API_STORE(), mail: email, resId }),
+                body: JSON.stringify({ action: 'lookup', store: kdStoreForRes(resId), mail: email, resId }),
             });
             const data = await res.json();
             if (!res.ok || !data.ok) {
@@ -4697,7 +4700,7 @@
                 const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
                     method: 'POST',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'cancel_request', store: KD_API_STORE(), mail: email, resId, reason }),
+                    body: JSON.stringify({ action: 'cancel_request', store: kdStoreForRes(resId), mail: email, resId, reason }),
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok || !data.ok) {
@@ -4733,7 +4736,7 @@
                 const res = await fetch(`${SUPABASE_URL}/functions/v1/keydrop-mypage`, {
                     method: 'POST',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'cancel_request', store: KD_API_STORE(), mail: email, resId, reason }),
+                    body: JSON.stringify({ action: 'cancel_request', store: kdStoreForRes(resId), mail: email, resId, reason }),
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok || !data.ok) {
