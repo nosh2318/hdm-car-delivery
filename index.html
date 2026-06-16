@@ -1137,7 +1137,8 @@
             .kdg-cta .ct2{font-size:11px;font-weight:700;color:#6b4800;margin-top:2px;}
             .kdg-cta .cta-arrow{margin-left:auto;font-size:24px;color:#1a1a1a;font-weight:800;flex:none;}
             .kdg-links{display:flex;flex-direction:column;gap:9px;margin:14px 16px 0;}
-            .kdg-link{display:flex;align-items:center;gap:11px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.10);border:1.5px solid rgba(255,255,255,.22);color:#fff;text-decoration:none;font-family:inherit;}
+            .kdg-link{display:flex;align-items:center;gap:11px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.10);border:2px solid rgba(255,255,255,.22);color:#fff;text-decoration:none;font-family:inherit;animation:kdgLinkBlink 1.5s ease-in-out infinite;}
+            @keyframes kdgLinkBlink{0%,100%{border-color:rgba(255,255,255,.22);box-shadow:0 0 0 0 rgba(250,190,0,0);}50%{border-color:rgba(250,190,0,.95);box-shadow:0 0 13px 1px rgba(250,190,0,.45);}}
             .kdg-link .li{font-size:20px;flex:none;}
             .kdg-link .lt{font-size:14px;font-weight:800;min-width:0;}
             .kdg-link .lc{margin-left:auto;font-size:20px;opacity:.85;flex:none;}
