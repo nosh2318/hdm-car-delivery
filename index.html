@@ -164,6 +164,15 @@
         .kd-ig { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; color: #fff; text-decoration: none; border-radius: 9px; flex: none; background: linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); box-shadow: 0 2px 6px rgba(220,39,67,.35); transition: transform .15s, box-shadow .2s; }
         .kd-ig:hover { transform: translateY(-1px) scale(1.06); box-shadow: 0 4px 12px rgba(220,39,67,.55); color: #fff; }
         .kd-ig svg { width: 21px; height: 21px; }
+        /* ヘッダー言語切替（PC/スマホ共通） */
+        .kd-lang-h { position: relative; flex: none; }
+        .kd-lang-btn { display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,.05); border: 1px solid #e2e2e8; border-radius: 14px; padding: 5px 10px; font-size: 11px; font-weight: 800; color: #1a1a1a; cursor: pointer; font-family: inherit; white-space: nowrap; }
+        .kd-lang-btn i { font-style: normal; font-size: 9px; opacity: .7; }
+        .kd-lang-pop { position: absolute; right: 0; top: calc(100% + 6px); background: #fff; border: 1px solid #e6e6ea; border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,.18); padding: 5px; display: none; z-index: 60; min-width: 124px; }
+        .kd-lang-h.open .kd-lang-pop { display: block; }
+        .kd-lang-pop button { display: block; width: 100%; text-align: left; background: none; border: none; padding: 9px 12px; font-size: 13px; font-weight: 700; color: #333; border-radius: 8px; cursor: pointer; font-family: inherit; }
+        .kd-lang-pop button.on { background: #fffbf0; color: #a07c00; }
+        .kd-lang-pop button:hover { background: #f5f5f7; }
         /* スマホのヘッダーに「エリア選択」ボタン（PCはpc-navにあるのでスマホのみ表示） */
         .kd-area-m { display: none; align-items: center; gap: 2px; padding: 5px 10px; background: #FABE00; color: #1a1a1a; border: none; border-radius: 14px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; }
         @media (max-width: 767px) { .kd-area-m { display: inline-flex; } }
@@ -943,6 +952,9 @@
                         </a>
                         <a class="menu-item" data-mk="menuContact" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">
                             <span class="menu-item-icon">✉️</span>お問い合わせ<span class="menu-item-arrow">→</span>
+                        </a>
+                        <a class="menu-item" href="https://www.instagram.com/keydrop_car_deliveryservice/" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">📷</span>Instagram<span class="menu-item-arrow">→</span>
                         </a>
                     </div>
                     <div class="menu-section">
@@ -2236,24 +2248,39 @@
         mountHeaderMascot();
         mountCornerMascot();
         mountLogoTagline();
-        mountHeaderIG();
+        mountHeaderLang();
     }
 
     // ヘッダーにInstagramリンクを注入（全ヘッダー共通・PC/スマホ両方）
-    function mountHeaderIG() {
+    // ヘッダーに言語切替（PC/スマホ共通）。Instagramはメニューへ移動（2026-06-16）。
+    var KD_LANGNAMES = { ja:'日本語', en:'English', zh:'繁體中文', ko:'한국어' };
+    var KD_LANGSHORT = { ja:'日本語', en:'EN', zh:'繁中', ko:'한국어' };
+    function mountHeaderLang() {
+        var cur = (typeof state !== 'undefined' && state.lang) ? state.lang : 'ja';
         document.querySelectorAll('.header-actions').forEach(function(box){
-            if (box.querySelector('.kd-ig')) return;
-            var a = document.createElement('a');
-            a.className = 'kd-ig';
-            a.href = 'https://www.instagram.com/keydrop_car_deliveryservice/';
-            a.target = '_blank';
-            a.rel = 'noopener';
-            a.setAttribute('aria-label', 'Instagram');
-            a.title = 'Instagram';
-            a.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5.5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>';
+            if (box.querySelector('.kd-lang-h')) return;
+            var wrap = document.createElement('div');
+            wrap.className = 'kd-lang-h';
+            wrap.innerHTML = '<button class="kd-lang-btn" type="button">\u{1F310} <span>' + KD_LANGSHORT[cur] + '</span> <i>\u25BE</i></button>'
+                + '<div class="kd-lang-pop">' + ['ja','en','zh','ko'].map(function(l){
+                    return '<button type="button" data-l="' + l + '"' + (l===cur?' class="on"':'') + '>' + KD_LANGNAMES[l] + '</button>';
+                  }).join('') + '</div>';
+            wrap.querySelector('.kd-lang-btn').onclick = function(e){
+                e.stopPropagation();
+                var open = wrap.classList.contains('open');
+                document.querySelectorAll('.kd-lang-h.open').forEach(function(o){ o.classList.remove('open'); });
+                if (!open) wrap.classList.add('open');
+            };
+            wrap.querySelectorAll('.kd-lang-pop button').forEach(function(b){
+                b.onclick = function(e){ e.stopPropagation(); switchLang(b.getAttribute('data-l')); };
+            });
             var areaBtn = box.querySelector('.kd-area-m');
-            if (areaBtn) { box.insertBefore(a, areaBtn); } else { box.appendChild(a); }
+            if (areaBtn) { box.insertBefore(wrap, areaBtn); } else { box.appendChild(wrap); }
         });
+        if (!window.__kdLangCloseBound) {
+            window.__kdLangCloseBound = true;
+            document.addEventListener('click', function(){ document.querySelectorAll('.kd-lang-h.open').forEach(function(o){ o.classList.remove('open'); }); });
+        }
     }
 
     // ロゴ下に読めるタグライン（英語）を全ヘッダーへ注入
@@ -2359,9 +2386,7 @@
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
-                        <a href="#" onclick="state.screen='top'; render(); return false;">${t('navBook')}</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
-                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">${t('navVehicleP')}</a>
                         <a href="faq.html" target="_blank">FAQ</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
@@ -2470,9 +2495,7 @@
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
-                        <a href="#" onclick="state.screen='top'; render(); return false;">${t('navBook')}</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
-                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">${t('navVehicleP')}</a>
                         <a href="faq.html" target="_blank">FAQ</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
@@ -2580,9 +2603,7 @@
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
-                        <a href="#" onclick="state.screen='top'; render(); return false;">${t('navBook')}</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
-                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">${t('navVehicleP')}</a>
                         <a href="faq.html" target="_blank">FAQ</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
@@ -2774,9 +2795,7 @@
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
-                        <a href="#" onclick="state.screen='top'; render(); return false;">${t('navBook')}</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
-                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">${t('navVehicleP')}</a>
                         <a href="faq.html" target="_blank">FAQ</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
@@ -3832,9 +3851,7 @@
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
-                        <a href="#" onclick="state.screen='top'; render(); return false;">${t('navBook')}</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
-                        <a href="vehicles.html?area=${KD_STORE}" target="_blank">${t('navVehicleP')}</a>
                         <a href="faq.html" target="_blank">FAQ</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
