@@ -3224,6 +3224,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // ════════════════════════════════════════════
     // ── Payment Screen ──
     // ════════════════════════════════════════════
+    // ===== クーポン（決済画面）4言語ローカル辞書＋ロジック =====
+    var CP = {
+      ja:{label:'クーポンコード',ph:'コードを入力',apply:'適用',remove:'取消',after:'割引後の合計',empty:'コードを入力してください',err:'通信エラー。もう一度お試しください',ng:'適用できません',not_found:'コードが見つかりません',inactive:'無効なクーポンです',store:'この店舗では使えません',not_started:'利用期間前です',expired:'有効期限切れです',min_amount:'最低利用額に達していません',exhausted:'上限に達しました',used:'既に使用済みです',applied:'クーポンを適用しました'},
+      en:{label:'Coupon code',ph:'Enter code',apply:'Apply',remove:'Remove',after:'Total after discount',empty:'Please enter a code',err:'Network error. Please retry',ng:'Cannot apply',not_found:'Code not found',inactive:'Invalid coupon',store:'Not usable at this store',not_started:'Not started yet',expired:'Expired',min_amount:'Minimum amount not met',exhausted:'Usage limit reached',used:'Already used',applied:'Coupon applied'},
+      zh:{label:'優惠碼',ph:'輸入代碼',apply:'套用',remove:'取消',after:'折扣後合計',empty:'請輸入代碼',err:'通訊錯誤，請重試',ng:'無法套用',not_found:'找不到代碼',inactive:'無效的優惠券',store:'此店鋪無法使用',not_started:'尚未開始',expired:'已過期',min_amount:'未達最低金額',exhausted:'已達使用上限',used:'已使用過',applied:'已套用優惠券'},
+      ko:{label:'쿠폰 코드',ph:'코드 입력',apply:'적용',remove:'취소',after:'할인 후 합계',empty:'코드를 입력하세요',err:'통신 오류. 다시 시도해 주세요',ng:'적용할 수 없습니다',not_found:'코드를 찾을 수 없습니다',inactive:'무효한 쿠폰입니다',store:'이 매장에서는 사용 불가',not_started:'이용 기간 전입니다',expired:'유효기간 만료',min_amount:'최소 이용액 미달',exhausted:'사용 상한 도달',used:'이미 사용됨',applied:'쿠폰을 적용했습니다'}
+    };
+    function cp(k){ var d=CP[state.lang]||CP.ja; return d[k]||CP.ja[k]||k; }
+    function couponReasonMsg(reason){ var d=CP[state.lang]||CP.ja; return d[reason]||d.ng; }
+    async function applyCoupon(){
+      var el=document.getElementById('couponInput'), msg=document.getElementById('couponMsg');
+      var code=((el&&el.value)||'').trim().toUpperCase();
+      if(!code){ if(msg){msg.style.color='#dc2626';msg.textContent=cp('empty');} return; }
+      if(msg){msg.style.color='#777';msg.textContent='…';}
+      try{
+        var r=await fetch(SUPABASE_URL+'/rest/v1/rpc/keydrop_check_coupon',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_code:code,p_store:KD_API_STORE(),p_amount:state._payBase||0,p_email:(state.formData&&state.formData.email)||null})});
+        var d=await r.json();
+        if(!d||d.ok!==true){ if(msg){msg.style.color='#dc2626';msg.textContent=couponReasonMsg(d&&d.reason);} return; }
+        state.couponCode=d.code; state.couponDiscount=d.discount||0; state.couponAmount=state._payBase||0;
+        render();
+      }catch(e){ if(msg){msg.style.color='#dc2626';msg.textContent=cp('err');} }
+    }
+    function removeCoupon(){ state.couponCode=null; state.couponDiscount=0; state.couponAmount=null; render(); }
+
     function renderPaymentScreen() {
         const v = state.selectedVehicle;
         const cls = VEHICLE_CLASSES[v?.type] || {};
@@ -3233,7 +3257,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const cdwName = state.cdw === 'pack' ? t('packName') : (state.cdw === 'cdw' ? t('cdwShort') : '');
         const seatFee = state.options.childSeat * 1000 + state.options.juniorSeat * 500;
         const totalPrice = basePrice + cdwFee + seatFee;
-        state._payTotal = totalPrice;
+        state._payBase = totalPrice;
+        // オプション変更等で合計が変わったらクーポン解除（適用時金額と不一致）
+        if (state.couponCode && state.couponAmount != null && state.couponAmount !== totalPrice) { state.couponCode = null; state.couponDiscount = 0; state.couponAmount = null; }
+        const couponDiscount = state.couponCode ? (state.couponDiscount || 0) : 0;
+        const finalTotal = Math.max(0, totalPrice - couponDiscount);
+        state._payTotal = finalTotal;
 
         const methods = [
             { id: 'square', icon: '💳', name: 'クレジットカード', desc: 'Visa / Mastercard / JCB / AMEX（Square安全決済）' },
@@ -3275,12 +3304,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                 </div>
 
+                <!-- クーポン -->
+                <div style="background:#fff;border:1.5px solid #eee;border-radius:10px;padding:12px;margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:7px;">\uD83C\uDF9F ${cp('label')}</div>
+                    ${state.couponCode ? `
+                        <div style="display:flex;align-items:center;justify-content:space-between;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:9px 11px;">
+                            <div style="font-size:12.5px;font-weight:800;color:#166534;">${state.couponCode}　-¥${couponDiscount.toLocaleString()}</div>
+                            <button onclick="removeCoupon()" style="background:none;border:none;color:#999;font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline;">${cp('remove')}</button>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-top:10px;font-weight:900;color:#1a1a1a;font-size:15px;">
+                            <span>${cp('after')}</span><span>¥${finalTotal.toLocaleString()}</span>
+                        </div>
+                    ` : `
+                        <div style="display:flex;gap:8px;">
+                            <input id="couponInput" type="text" placeholder="${cp('ph')}" autocapitalize="characters" style="flex:1;min-width:0;border:1.5px solid #e2e8f0;border-radius:8px;padding:10px;font-size:14px;font-family:inherit;text-transform:uppercase;">
+                            <button onclick="applyCoupon()" style="flex:none;background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:800;cursor:pointer;">${cp('apply')}</button>
+                        </div>
+                        <div id="couponMsg" style="font-size:11.5px;font-weight:700;margin-top:6px;"></div>
+                    `}
+                </div>
+
                 <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#1a1a1a;margin-bottom:10px;">💳 ${t('cardName')} <span style="font-size:11px;color:#888;font-weight:500;">Visa / Mastercard / JCB / AMEX</span></div>
                 <!-- Square Web Payments SDK のカード入力欄がここに描画される -->
                 <div id="card-container" style="min-height:46px;border:1.5px solid #e2e8f0;border-radius:10px;padding:6px 10px;background:#fff;margin-bottom:6px;"></div>
                 <div id="cardError" style="display:none;font-size:11.5px;color:#dc2626;font-weight:700;margin:2px 0 6px;"></div>
                 <div style="font-size:10.5px;color:#94a3b8;margin-bottom:12px;line-height:1.6;">${t('cardSafeNote')}</div>
-                <button class="btn-primary" id="payBtn" style="margin-top:2px;" onclick="payWithCard();">¥${totalPrice.toLocaleString()}${t('paymentPay')}</button>
+                <button class="btn-primary" id="payBtn" style="margin-top:2px;" onclick="payWithCard();">¥${finalTotal.toLocaleString()}${t('paymentPay')}</button>
                 <button class="btn-secondary" onclick="state.screen='terms'; render();">${t('back')}</button>
             </div>
         `;
@@ -3643,6 +3692,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const payload = {
                 token: token,
                 store: KD_API_STORE(), // 店舗振り分け（'spk'|'nha'）
+                coupon: state.couponCode || '',
                 vehicleClass: cls, vehicleModel: v ? v.name : '',
                 lend_date: state.datetime.startDate, return_date: state.datetime.endDate,
                 lend_time: state.datetime.startTime, return_time: state.datetime.endTime,
