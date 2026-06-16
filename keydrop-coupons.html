@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>KEYDROP クーポン管理</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Helvetica Neue',sans-serif;background:#f5f6f8;color:#1a1a1a;line-height:1.6;padding-bottom:60px}
+  .hd{background:#0e1116;color:#fff;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+  .hd b{font-size:16px;font-weight:900;letter-spacing:.03em}.hd .y{color:#FABE00}
+  .hd .who{margin-left:auto;font-size:11px;color:#9aa0a8}
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px}
+  .card{background:#fff;border-radius:14px;box-shadow:0 1px 8px rgba(0,0,0,.06);padding:16px;margin-bottom:14px;border:1px solid #eee}
+  label{display:block;font-size:12px;font-weight:800;color:#555;margin:10px 0 4px}
+  input,select,textarea{width:100%;border:1.5px solid #e2e2e8;border-radius:9px;padding:10px 11px;font-size:14px;font-family:inherit;color:#1a1a1a;background:#fff}
+  textarea{resize:vertical;min-height:54px}
+  .row{display:flex;gap:10px}.row>div{flex:1}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit}
+  .btn.p{background:#FABE00;color:#1a1a1a}.btn.d{background:#dc2626;color:#fff}.btn.s{background:#fff;color:#1a1a1a;border:1.5px solid #ddd}
+  .btn.full{width:100%}
+  .err{color:#dc2626;font-size:12.5px;font-weight:700;margin-top:8px}
+  .ok{color:#059669;font-size:12.5px;font-weight:700;margin-top:8px}
+  .cp{border:1px solid #eee;border-radius:12px;padding:12px 13px;margin-bottom:10px;background:#fff}
+  .cp.off{opacity:.55}
+  .cp .top{display:flex;align-items:center;gap:8px}
+  .cp .code{font-size:16px;font-weight:900;letter-spacing:.04em;background:#0e1116;color:#FABE00;padding:3px 10px;border-radius:8px}
+  .cp .disc{font-size:14px;font-weight:900;color:#1a1a1a}
+  .cp .meta{font-size:11.5px;color:#777;margin-top:6px;line-height:1.7}
+  .cp .meta b{color:#444}
+  .cp .acts{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+  .cp .acts button{font-size:12px;font-weight:800;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;font-family:inherit}
+  .badge{font-size:10px;font-weight:900;padding:3px 8px;border-radius:999px;margin-left:auto}
+  .badge.on{background:#dcfce7;color:#166534}.badge.no{background:#fee2e2;color:#991b1b}
+  .muted{color:#9aa0a8;font-size:12px;text-align:center;padding:20px}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:50;display:none;align-items:flex-end;justify-content:center}
+  .modal.on{display:flex}
+  .sheet{background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:18px 16px 26px;max-height:92vh;overflow:auto}
+  @media(min-width:560px){.modal{align-items:center}.sheet{border-radius:18px}}
+  .sheet h2{font-size:17px;font-weight:900;margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="hd"><b>KEY<span class="y">DROP</span> クーポン管理</b><span class="who" id="who"></span></div>
+<div class="wrap" id="app"></div>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+
+<script>
+var SB_URL='https://ckrxttbnawkclshczsia.supabase.co';
+var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+var TOKEN=null, EMAIL=null, COUPONS=[];
+var app=document.getElementById('app'), modal=document.getElementById('modal'), sheet=document.getElementById('sheet'), who=document.getElementById('who');
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function hdrs(){return {apikey:ANON, Authorization:'Bearer '+(TOKEN||ANON), 'content-type':'application/json'};}
+
+// ---- ログイン ----
+function renderLogin(msg){
+  TOKEN=null; who.textContent='';
+  app.innerHTML='<div class="card"><h2 style="font-size:17px;font-weight:900;margin-bottom:4px;">スタッフログイン</h2>'
+    +'<div style="font-size:12px;color:#777;margin-bottom:8px;">クーポンの発行・管理にはログインが必要です。</div>'
+    +'<label>メールアドレス</label><input id="email" type="email" autocomplete="username" placeholder="staff@g-lines.jp">'
+    +'<label>パスワード</label><input id="pw" type="password" autocomplete="current-password">'
+    +(msg?'<div class="err">'+esc(msg)+'</div>':'')
+    +'<button class="btn p full" style="margin-top:14px;" onclick="doLogin()">ログイン</button></div>';
+}
+async function doLogin(){
+  var email=document.getElementById('email').value.trim(), pw=document.getElementById('pw').value;
+  if(!email||!pw){renderLogin('メールとパスワードを入力してください');return;}
+  try{
+    var r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:ANON,'content-type':'application/json'},body:JSON.stringify({email:email,password:pw})});
+    var j=await r.json();
+    if(!r.ok||!j.access_token){renderLogin('ログインに失敗しました（メール/パスワードをご確認ください）');return;}
+    TOKEN=j.access_token; EMAIL=email; who.textContent=email;
+    try{localStorage.setItem('kdc_tok',TOKEN);localStorage.setItem('kdc_email',email);}catch(e){}
+    loadCoupons();
+  }catch(e){renderLogin('通信エラー：'+e.message);}
+}
+function logout(){TOKEN=null;try{localStorage.removeItem('kdc_tok');localStorage.removeItem('kdc_email');}catch(e){}renderLogin();}
+
+// ---- 一覧 ----
+async function loadCoupons(){
+  app.innerHTML='<div class="muted">読み込み中…</div>';
+  try{
+    var r=await fetch(SB_URL+'/rest/v1/keydrop_coupons?select=*&order=created_at.desc',{headers:hdrs()});
+    if(r.status===401){return renderLogin('セッションが切れました。再度ログインしてください');}
+    COUPONS=await r.json(); if(!Array.isArray(COUPONS))COUPONS=[];
+    renderList();
+  }catch(e){app.innerHTML='<div class="err">読み込み失敗：'+esc(e.message)+'</div>';}
+}
+function discLabel(c){return c.discount_type==='percent'?(Number(c.discount_value)+'% OFF'+(c.max_discount_yen?'（上限¥'+Number(c.max_discount_yen).toLocaleString()+'）':'')):('¥'+Number(c.discount_value).toLocaleString()+' OFF');}
+function storeLabel(s){return s==='all'?'全店':s==='spk'?'札幌':s==='nha'?'那覇':s;}
+function fmtD(s){return s?String(s).slice(0,10):'—';}
+function renderList(){
+  var html='<button class="btn p full" style="margin-bottom:14px;" onclick="openForm(null)">＋ 新しいクーポンを発行</button>';
+  if(!COUPONS.length){html+='<div class="muted">まだクーポンがありません</div>';}
+  COUPONS.forEach(function(c){
+    var uses=(c.used_count||0)+(c.max_uses?(' / '+c.max_uses):' / ∞');
+    html+='<div class="cp'+(c.active?'':' off')+'">'
+      +'<div class="top"><span class="code">'+esc(c.code)+'</span><span class="disc">'+esc(discLabel(c))+'</span>'
+      +'<span class="badge '+(c.active?'on':'no')+'">'+(c.active?'有効':'停止')+'</span></div>'
+      +'<div class="meta">店舗：<b>'+storeLabel(c.store)+'</b>　使用：<b>'+uses+'</b>'
+      +(c.per_email_once?'　<b>1人1回</b>':'')
+      +(c.min_amount_yen?'　最低¥'+Number(c.min_amount_yen).toLocaleString():'')
+      +'<br>期間：'+fmtD(c.valid_from)+' 〜 '+fmtD(c.valid_until)
+      +(c.memo?('<br>メモ：'+esc(c.memo)):'')+'</div>'
+      +'<div class="acts">'
+      +'<button style="background:#1a1a1a;color:#fff;" onclick="toggleActive('+c.id+','+(c.active?'false':'true')+')">'+(c.active?'停止する':'有効化')+'</button>'
+      +'<button style="background:#f1f1f1;color:#1a1a1a;" onclick="openForm('+c.id+')">編集</button>'
+      +'<button style="background:#fee2e2;color:#991b1b;" onclick="delCoupon('+c.id+",'"+esc(c.code)+"')\">削除</button>"
+      +'</div></div>';
+  });
+  html+='<div style="text-align:center;margin-top:8px;"><button class="btn s" onclick="logout()">ログアウト</button></div>';
+  app.innerHTML=html;
+}
+
+// ---- 作成/編集 ----
+function openForm(id){
+  var c=id?COUPONS.find(function(x){return x.id===id;}):null;
+  c=c||{discount_type:'percent',discount_value:10,store:'all',active:true,per_email_once:false,min_amount_yen:0,applies_to:'total'};
+  sheet.innerHTML='<h2>'+(id?'クーポンを編集':'クーポンを発行')+'</h2>'
+    +'<label>コード（お客様が入力）</label><input id="f_code" value="'+esc(c.code||'')+'" placeholder="WELCOME10" '+(id?'readonly style="background:#f3f4f6;"':'')+'>'
+    +'<div class="row"><div><label>割引タイプ</label><select id="f_type"><option value="percent"'+(c.discount_type==='percent'?' selected':'')+'>％（パーセント）</option><option value="fixed"'+(c.discount_type==='fixed'?' selected':'')+'>固定（円）</option></select></div>'
+    +'<div><label>値（％ または 円）</label><input id="f_val" type="number" value="'+(c.discount_value||0)+'"></div></div>'
+    +'<div class="row"><div><label>％の割引上限（円・任意）</label><input id="f_max" type="number" value="'+(c.max_discount_yen||'')+'" placeholder="無制限"></div>'
+    +'<div><label>最低利用額（円）</label><input id="f_min" type="number" value="'+(c.min_amount_yen||0)+'"></div></div>'
+    +'<div class="row"><div><label>対象店舗</label><select id="f_store"><option value="all"'+(c.store==='all'?' selected':'')+'>全店</option><option value="spk"'+(c.store==='spk'?' selected':'')+'>札幌</option><option value="nha"'+(c.store==='nha'?' selected':'')+'>那覇</option></select></div>'
+    +'<div><label>使用回数の上限（任意）</label><input id="f_maxuses" type="number" value="'+(c.max_uses||'')+'" placeholder="無制限"></div></div>'
+    +'<div class="row"><div><label>開始日（任意）</label><input id="f_from" type="date" value="'+fmtD(c.valid_from===undefined?'':c.valid_from).replace('—','')+'"></div>'
+    +'<div><label>終了日（任意）</label><input id="f_until" type="date" value="'+fmtD(c.valid_until===undefined?'':c.valid_until).replace('—','')+'"></div></div>'
+    +'<label style="display:flex;align-items:center;gap:8px;margin-top:12px;"><input id="f_once" type="checkbox" style="width:18px;height:18px;" '+(c.per_email_once?'checked':'')+'> 1メールアドレスにつき1回まで</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;margin-top:8px;"><input id="f_active" type="checkbox" style="width:18px;height:18px;" '+(c.active?'checked':'')+'> 有効にする</label>'
+    +'<label>メモ（社内用・任意）</label><textarea id="f_memo">'+esc(c.memo||'')+'</textarea>'
+    +'<div id="f_msg"></div>'
+    +'<button class="btn p full" style="margin-top:14px;" onclick="saveForm('+(id||'null')+')">保存する</button>'
+    +'<button class="btn s full" style="margin-top:8px;" onclick="closeModal()">閉じる</button>';
+  modal.classList.add('on');
+}
+function closeModal(){modal.classList.remove('on');}
+function val(id){return document.getElementById(id).value;}
+async function saveForm(id){
+  var code=val('f_code').trim().toUpperCase();
+  if(!code){document.getElementById('f_msg').innerHTML='<div class="err">コードを入力してください</div>';return;}
+  var body={
+    discount_type:val('f_type'), discount_value:Number(val('f_val'))||0,
+    max_discount_yen:val('f_max')?Number(val('f_max')):null,
+    min_amount_yen:Number(val('f_min'))||0,
+    store:val('f_store'),
+    max_uses:val('f_maxuses')?Number(val('f_maxuses')):null,
+    valid_from:val('f_from')?val('f_from')+'T00:00:00+09:00':null,
+    valid_until:val('f_until')?val('f_until')+'T23:59:59+09:00':null,
+    per_email_once:document.getElementById('f_once').checked,
+    active:document.getElementById('f_active').checked,
+    memo:val('f_memo').trim()||null
+  };
+  try{
+    var r;
+    if(id){ r=await fetch(SB_URL+'/rest/v1/keydrop_coupons?id=eq.'+id,{method:'PATCH',headers:Object.assign(hdrs(),{Prefer:'return=minimal'}),body:JSON.stringify(body)}); }
+    else { body.code=code; r=await fetch(SB_URL+'/rest/v1/keydrop_coupons',{method:'POST',headers:Object.assign(hdrs(),{Prefer:'return=minimal'}),body:JSON.stringify(body)}); }
+    if(!r.ok){var t=await r.text(); document.getElementById('f_msg').innerHTML='<div class="err">保存失敗：'+esc(t.indexOf('duplicate')>=0?'同じコードが既にあります':t.slice(0,160))+'</div>';return;}
+    closeModal(); loadCoupons();
+  }catch(e){document.getElementById('f_msg').innerHTML='<div class="err">通信エラー：'+esc(e.message)+'</div>';}
+}
+async function toggleActive(id,to){
+  try{ await fetch(SB_URL+'/rest/v1/keydrop_coupons?id=eq.'+id,{method:'PATCH',headers:Object.assign(hdrs(),{Prefer:'return=minimal'}),body:JSON.stringify({active:to==='true'||to===true})}); loadCoupons(); }catch(e){alert('失敗：'+e.message);}
+}
+async function delCoupon(id,code){
+  if(!confirm('クーポン「'+code+'」を削除します。よろしいですか？\\n（利用履歴は残ります）'))return;
+  try{ var r=await fetch(SB_URL+'/rest/v1/keydrop_coupons?id=eq.'+id,{method:'DELETE',headers:hdrs()}); if(!r.ok){alert('削除失敗：'+(await r.text()).slice(0,160));return;} loadCoupons(); }catch(e){alert('失敗：'+e.message);}
+}
+
+// ---- 起動：保存済みトークンがあれば自動ログイン ----
+(function(){
+  try{ var t=localStorage.getItem('kdc_tok'); var e=localStorage.getItem('kdc_email'); if(t){TOKEN=t;EMAIL=e;who.textContent=e||'';loadCoupons();return;} }catch(e){}
+  renderLogin();
+})();
+</script>
+</body>
+</html>
