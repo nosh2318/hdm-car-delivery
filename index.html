@@ -963,6 +963,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a class="menu-item" data-mk="menuMypageGuide" href="mypage-guide.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">📱</span>マイページの使い方<span class="menu-item-arrow">→</span>
                         </a>
+                        <a class="menu-item" data-mk="menuCouponGuide" href="coupon-guide.html" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">🎟</span>クーポンの使い方<span class="menu-item-arrow">→</span>
+                        </a>
                         <a class="menu-item" data-mk="menuContact" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">
                             <span class="menu-item-icon">✉️</span>お問い合わせ<span class="menu-item-arrow">→</span>
                         </a>
@@ -3226,10 +3229,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // ════════════════════════════════════════════
     // ===== クーポン（決済画面）4言語ローカル辞書＋ロジック =====
     var CP = {
-      ja:{label:'クーポンコード',ph:'コードを入力',apply:'適用',remove:'取消',after:'割引後の合計',empty:'コードを入力してください',err:'通信エラー。もう一度お試しください',ng:'適用できません',not_found:'コードが見つかりません',inactive:'無効なクーポンです',store:'この店舗では使えません',not_started:'利用期間前です',expired:'有効期限切れです',min_amount:'最低利用額に達していません',exhausted:'上限に達しました',used:'既に使用済みです',applied:'クーポンを適用しました'},
-      en:{label:'Coupon code',ph:'Enter code',apply:'Apply',remove:'Remove',after:'Total after discount',empty:'Please enter a code',err:'Network error. Please retry',ng:'Cannot apply',not_found:'Code not found',inactive:'Invalid coupon',store:'Not usable at this store',not_started:'Not started yet',expired:'Expired',min_amount:'Minimum amount not met',exhausted:'Usage limit reached',used:'Already used',applied:'Coupon applied'},
-      zh:{label:'優惠碼',ph:'輸入代碼',apply:'套用',remove:'取消',after:'折扣後合計',empty:'請輸入代碼',err:'通訊錯誤，請重試',ng:'無法套用',not_found:'找不到代碼',inactive:'無效的優惠券',store:'此店鋪無法使用',not_started:'尚未開始',expired:'已過期',min_amount:'未達最低金額',exhausted:'已達使用上限',used:'已使用過',applied:'已套用優惠券'},
-      ko:{label:'쿠폰 코드',ph:'코드 입력',apply:'적용',remove:'취소',after:'할인 후 합계',empty:'코드를 입력하세요',err:'통신 오류. 다시 시도해 주세요',ng:'적용할 수 없습니다',not_found:'코드를 찾을 수 없습니다',inactive:'무효한 쿠폰입니다',store:'이 매장에서는 사용 불가',not_started:'이용 기간 전입니다',expired:'유효기간 만료',min_amount:'최소 이용액 미달',exhausted:'사용 상한 도달',used:'이미 사용됨',applied:'쿠폰을 적용했습니다'}
+      ja:{label:'クーポンコード',ph:'コードを入力',apply:'適用',remove:'取消',after:'割引後の合計',howto:'クーポンの使い方',empty:'コードを入力してください',err:'通信エラー。もう一度お試しください',ng:'適用できません',not_found:'コードが見つかりません',inactive:'無効なクーポンです',store:'この店舗では使えません',not_started:'利用期間前です',expired:'有効期限切れです',min_amount:'最低利用額に達していません',exhausted:'上限に達しました',used:'既に使用済みです',applied:'クーポンを適用しました'},
+      en:{label:'Coupon code',ph:'Enter code',apply:'Apply',remove:'Remove',after:'Total after discount',howto:'How to use a coupon',empty:'Please enter a code',err:'Network error. Please retry',ng:'Cannot apply',not_found:'Code not found',inactive:'Invalid coupon',store:'Not usable at this store',not_started:'Not started yet',expired:'Expired',min_amount:'Minimum amount not met',exhausted:'Usage limit reached',used:'Already used',applied:'Coupon applied'},
+      zh:{label:'優惠碼',ph:'輸入代碼',apply:'套用',remove:'取消',after:'折扣後合計',howto:'優惠券使用方法',empty:'請輸入代碼',err:'通訊錯誤，請重試',ng:'無法套用',not_found:'找不到代碼',inactive:'無效的優惠券',store:'此店鋪無法使用',not_started:'尚未開始',expired:'已過期',min_amount:'未達最低金額',exhausted:'已達使用上限',used:'已使用過',applied:'已套用優惠券'},
+      ko:{label:'쿠폰 코드',ph:'코드 입력',apply:'적용',remove:'취소',after:'할인 후 합계',howto:'쿠폰 사용법',empty:'코드를 입력하세요',err:'통신 오류. 다시 시도해 주세요',ng:'적용할 수 없습니다',not_found:'코드를 찾을 수 없습니다',inactive:'무효한 쿠폰입니다',store:'이 매장에서는 사용 불가',not_started:'이용 기간 전입니다',expired:'유효기간 만료',min_amount:'최소 이용액 미달',exhausted:'사용 상한 도달',used:'이미 사용됨',applied:'쿠폰을 적용했습니다'}
     };
     function cp(k){ var d=CP[state.lang]||CP.ja; return d[k]||CP.ja[k]||k; }
     function couponReasonMsg(reason){ var d=CP[state.lang]||CP.ja; return d[reason]||d.ng; }
@@ -3321,6 +3324,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <button onclick="applyCoupon()" style="flex:none;background:#1a1a1a;color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:13px;font-weight:800;cursor:pointer;">${cp('apply')}</button>
                         </div>
                         <div id="couponMsg" style="font-size:11.5px;font-weight:700;margin-top:6px;"></div>
+                        <a href="coupon-guide.html" target="_blank" rel="noopener" style="display:inline-block;margin-top:7px;font-size:11.5px;color:#0369a1;font-weight:700;text-decoration:none;">🎟 ${cp('howto')}</a>
                     `}
                 </div>
 
@@ -4877,7 +4881,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         ja: {
             menuMypage: '予約を確認する（マイページ）',
             menuUsage: 'ご利用方法', menuVehicle: '車両と料金', menuInsurance: '保険プラン一覧',
-            menuFaq: 'よくある質問', menuMypageGuide: 'マイページの使い方', menuContact: 'お問い合わせ',
+            menuFaq: 'よくある質問', menuMypageGuide: 'マイページの使い方', menuCouponGuide: 'クーポンの使い方', menuContact: 'お問い合わせ',
             menuClause: '貸渡約款', menuPrivacy: 'プライバシーポリシー', menuLegal: '特定商取引法', menuCompany: '運営会社',
             menuService: 'サービス', menuSupport: 'サポート', menuLegalSection: '法的情報',
             progressDate: '日程', progressPlace: '場所', progressVehicle: '車両',
@@ -4993,7 +4997,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         en: {
             menuMypage: 'Check Reservation (My Page)',
             menuUsage: 'How to Use (Sapporo)', menuVehicle: 'Vehicles & Pricing', menuInsurance: 'Insurance Plans',
-            menuFaq: 'FAQ (Sapporo)', menuMypageGuide: 'Using My Page', menuContact: 'Contact Us',
+            menuFaq: 'FAQ (Sapporo)', menuMypageGuide: 'Using My Page', menuCouponGuide: 'How to use a coupon', menuContact: 'Contact Us',
             menuClause: 'Rental Agreement', menuPrivacy: 'Privacy Policy', menuLegal: 'Legal Notice', menuCompany: 'Company Info',
             menuService: 'Service', menuSupport: 'Support', menuLegalSection: 'Legal',
             progressDate: 'Date', progressPlace: 'Place', progressVehicle: 'Vehicle',
@@ -5103,7 +5107,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         zh: {
             menuMypage: '查看預約（我的頁面）',
             menuUsage: '使用方法', menuVehicle: '車輛與價格', menuInsurance: '保險方案',
-            menuFaq: '常見問題', menuMypageGuide: '會員頁面使用方法', menuContact: '聯絡我們',
+            menuFaq: '常見問題', menuMypageGuide: '會員頁面使用方法', menuCouponGuide: '優惠券使用方法', menuContact: '聯絡我們',
             menuClause: '租車條款', menuPrivacy: '隱私政策', menuLegal: '特定商業交易法', menuCompany: '公司概要',
             menuService: '服務', menuSupport: '支援', menuLegalSection: '法律資訊',
             progressDate: '日期', progressPlace: '地點', progressVehicle: '車輛',
@@ -5213,7 +5217,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
             menuUsage: '이용 방법', menuVehicle: '차량 및 요금', menuInsurance: '보험 플랜',
-            menuFaq: '자주 묻는 질문', menuMypageGuide: '마이페이지 사용법', menuContact: '문의하기',
+            menuFaq: '자주 묻는 질문', menuMypageGuide: '마이페이지 사용법', menuCouponGuide: '쿠폰 사용법', menuContact: '문의하기',
             menuClause: '대여 약관', menuPrivacy: '개인정보 처리방침', menuLegal: '특정상거래법 표기', menuCompany: '운영 회사',
             menuService: '서비스', menuSupport: '지원', menuLegalSection: '법적 정보',
             progressDate: '일정', progressPlace: '장소', progressVehicle: '차량',
