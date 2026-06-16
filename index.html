@@ -3291,16 +3291,20 @@
                     </div>
                 </div>
                 <div style="background:#f9f9f9;border-radius:12px;padding:14px;text-align:left;margin-bottom:16px;font-size:12px;line-height:1.8;">
-                    <div style="display:flex;justify-content:space-between;">
-                        <span style="color:#666;">${t('deliveryPlace')}</span>
-                        <span style="font-weight:600;text-align:right;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${state.deliveryAddr}</span>
+                    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;">
+                        <span style="color:#666;flex:none;">📍 ${t('deliveryPlace')}</span>
+                        <span style="font-weight:600;text-align:right;max-width:62%;word-break:break-word;">${state.deliveryAddr || '—'}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;">
+                        <span style="color:#666;flex:none;">📍 ${t('collectionPlaceL')}</span>
+                        <span style="font-weight:600;text-align:right;max-width:62%;word-break:break-word;">${(state.sameCollection === false && state.collectionAddr) ? state.collectionAddr : ((state.deliveryAddr || '—') + t('sameAsDelivery'))}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;">
-                        <span style="color:#666;">${t('rental')}</span>
+                        <span style="color:#666;">📅 ${t('rental')}</span>
                         <span style="font-weight:600;">${startLabel} ${state.datetime.startTime}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;">
-                        <span style="color:#666;">${t('returnLabel')}</span>
+                        <span style="color:#666;">📅 ${t('returnLabel')}</span>
                         <span style="font-weight:600;">${endLabel} ${state.datetime.endTime}</span>
                     </div>
                 </div>
