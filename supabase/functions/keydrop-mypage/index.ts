@@ -120,6 +120,11 @@ const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; le
   nha: { resv: "nha_reservations", fleet: "nha_fleet", tasks: "nha_tasks", lendTimeCol: "start_time", returnTimeCol: "end_time", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA", slackDefault: "C06KZ56NTDF",
     sel: "id,ota,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,kd_status" },
 };
+function mkStore(s: string) {
+  const m = STORE_MAP[s];
+  const slack = Deno.env.get(m.slackEnv) || m.slackDefault;
+  return { store: s, ...m, slack };
+}
 function resolveStore(p: any, resId: string) {
   // 店舗は「予約番号の接頭辞」で確定する（KDN-=那覇 / KD-=札幌）。
   // 接頭辞が無い時のみ p.store を採用。これにより、那覇エリアからマイページを
@@ -128,10 +133,9 @@ function resolveStore(p: any, resId: string) {
   if (/^KDN-/i.test(resId)) s = "nha";
   else if (/^KD-/i.test(resId)) s = "spk";
   else s = (p && p.store === "nha") ? "nha" : "spk";
-  const m = STORE_MAP[s];
-  const slack = Deno.env.get(m.slackEnv) || m.slackDefault;
-  return { store: s, ...m, slack };
+  return mkStore(s);
 }
+function otherStoreKey(s: string) { return s === "nha" ? "spk" : "nha"; }
 
 // 営業時間 9:00〜19:00・30分刻みのみ許可（不正値は弾く）
 function validTime(s: string): boolean {
@@ -183,14 +187,23 @@ Deno.serve(async (req) => {
   if (!mail || mail.indexOf("@") < 0) return json({ error: "メールアドレスが必要です" }, 400, origin);
   if (!resId) return json({ error: "予約番号が必要です" }, 400, origin);
 
-  const M = resolveStore(p, resId); // 店舗解決（spk/nha）
+  let M = resolveStore(p, resId); // 店舗解決（予約番号の接頭辞優先）
 
   // 予約を1件だけ取得（id一致 かつ mail一致 のときのみ・店舗別テーブル／那覇は列エイリアスで札幌項目名に揃える）
-  const rows = await sbGet(
+  let rows = await sbGet(
     M.resv,
     `id=eq.${encodeURIComponent(resId)}&select=${M.sel}`,
   );
-  const r = rows[0];
+  let r = rows[0];
+  // 🛡 自己修復：解決した店舗で見つからなければ、もう一方の店舗も必ず探す。
+  // 接頭辞ルールが将来変わっても／クライアントが誤ったstoreを送っても、本人の予約に確実に到達する
+  // （本人確認は下のmail一致で担保＝総当たり防止は維持）。
+  if (!r) {
+    const oKey = otherStoreKey(M.store);
+    const oM = mkStore(oKey);
+    const orows = await sbGet(oM.resv, `id=eq.${encodeURIComponent(resId)}&select=${oM.sel}`).catch(() => []);
+    if (orows[0]) { r = orows[0]; M = oM; }
+  }
   if (!r || String(r.mail || "").trim().toLowerCase() !== mail) {
     // 一致しなければ存在を明かさず一律エラー
     return json({ error: "予約番号またはメールアドレスが一致しません" }, 404, origin);

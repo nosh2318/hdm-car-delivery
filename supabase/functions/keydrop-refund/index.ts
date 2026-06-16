@@ -66,7 +66,12 @@ const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; re
     resvSel: "id,ota,status,lend_date:start_date,price,name,vehicle:vehicle_class,mail", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA", slackDefault: "C06KZ56NTDF" },
 };
 function resolveStore(p: any, resId: string) {
-  const s = (p && p.store === "nha") || /^KDN-/i.test(resId) ? "nha" : "spk";
+  // 店舗は「予約番号の接頭辞」で確定（KDN-=那覇 / KD-=札幌）。接頭辞が無い時のみ p.store。
+  // 管理アプリが誤ったstoreを送っても、KD-（札幌）予約を那覇テーブルで返金しようとする事故を防ぐ。
+  let s: string;
+  if (/^KDN-/i.test(resId)) s = "nha";
+  else if (/^KD-/i.test(resId)) s = "spk";
+  else s = (p && p.store === "nha") ? "nha" : "spk";
   const m = STORE_MAP[s];
   const slack = Deno.env.get(m.slackEnv) || m.slackDefault;
   return { store: s, ...m, slack };
@@ -105,7 +110,7 @@ Deno.serve(async (req) => {
   }
 
   let p: any; try { p = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
-  const resId = String(p.reservationId || p.resId || "").trim();
+  const resId = String(p.reservationId || p.resId || "").trim().toUpperCase();
   if (!resId) return json({ error: "予約番号が必要です" }, 400);
 
   const M = resolveStore(p, resId); // 店舗解決（spk/nha）
