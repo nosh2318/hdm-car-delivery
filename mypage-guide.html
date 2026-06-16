@@ -474,16 +474,16 @@
 // ===== スマホ画面 再現モック（4言語・JSで描画） =====
 var MOCKLBL={
   ja:{mypageBtn:'予約を確認する（マイページ）',service:'サービス',usage:'ご利用方法',vehicles:'車両と料金',faq:'よくある質問',guide:'マイページの使い方',mypage:'マイページ',resno:'予約番号',email:'メールアドレス',loginBtn:'予約を確認する',lineHelp:'番号がわからない',stPrep:'出発準備中',stPrepSub:'スタッフが準備しています',del:'お届け',delEx:'札幌駅',colTime:'回収日時',colPlace:'回収場所',chTitle:'変更リクエスト',send:'送信する',cxTitle:'キャンセル',feeTitle:'キャンセル料',f7:'7日前まで',free:'無料',day:'日前',agree:'規約に同意する',cxSend:'キャンセルを送信',
-    cMenu:'メニュー → マイページ',cLogin:'ログイン（予約番号＋メール）',cDetail:'予約詳細（状況＋進捗）',cChange:'変更リクエスト（時間＋地図）',cCancel:'キャンセル（料金確認）'},
+    cMenu:'マイページを開いた画面',cLogin:'ログイン（予約番号＋メール）',cDetail:'予約詳細（状況＋進捗）',cChange:'変更リクエスト（時間＋地図）',cCancel:'キャンセル（料金確認）'},
   en:{mypageBtn:'Check booking (My Page)',service:'Service',usage:'How to Use',vehicles:'Vehicles & Pricing',faq:'FAQ',guide:'Using My Page',mypage:'My Page',resno:'Reservation No.',email:'Email',loginBtn:'Check booking',lineHelp:"Don't know your number",stPrep:'Preparing',stPrepSub:'Our staff is getting ready',del:'Delivery',delEx:'Sapporo Sta.',colTime:'Return time',colPlace:'Return place',chTitle:'Change request',send:'Send',cxTitle:'Cancel',feeTitle:'Cancellation fee',f7:'Up to 7 days',free:'Free',day:'d before',agree:'I agree to the policy',cxSend:'Send cancellation',
-    cMenu:'Menu → My Page',cLogin:'Login (number + email)',cDetail:'Booking detail (status + progress)',cChange:'Change request (time + map)',cCancel:'Cancellation (fee check)'},
+    cMenu:'My Page opened',cLogin:'Login (number + email)',cDetail:'Booking detail (status + progress)',cChange:'Change request (time + map)',cCancel:'Cancellation (fee check)'},
   zh:{mypageBtn:'確認預約（會員頁面）',service:'服務',usage:'使用方法',vehicles:'車輛與價格',faq:'常見問題',guide:'會員頁面使用方法',mypage:'會員頁面',resno:'預約編號',email:'電子郵件',loginBtn:'確認預約',lineHelp:'不知道編號',stPrep:'準備中',stPrepSub:'人員正在準備',del:'送達',delEx:'札幌站',colTime:'回收日期時間',colPlace:'回收地點',chTitle:'變更申請',send:'送出',cxTitle:'取消',feeTitle:'取消費用',f7:'7天前',free:'免費',day:'天前',agree:'同意條款',cxSend:'送出取消',
-    cMenu:'選單 → 會員頁面',cLogin:'登入（編號＋郵件）',cDetail:'預約詳情（狀態＋進度）',cChange:'變更申請（時間＋地圖）',cCancel:'取消（確認費用）'},
+    cMenu:'開啟後的會員頁面',cLogin:'登入（編號＋郵件）',cDetail:'預約詳情（狀態＋進度）',cChange:'變更申請（時間＋地圖）',cCancel:'取消（確認費用）'},
   ko:{mypageBtn:'예약 확인(마이페이지)',service:'서비스',usage:'이용 방법',vehicles:'차량 및 요금',faq:'자주 묻는 질문',guide:'마이페이지 사용법',mypage:'마이페이지',resno:'예약 번호',email:'이메일',loginBtn:'예약 확인',lineHelp:'번호를 모를 때',stPrep:'준비 중',stPrepSub:'직원이 준비 중입니다',del:'배달',delEx:'삿포로역',colTime:'회수 일시',colPlace:'회수 장소',chTitle:'변경 요청',send:'보내기',cxTitle:'취소',feeTitle:'취소 수수료',f7:'7일 전까지',free:'무료',day:'일 전',agree:'약관에 동의',cxSend:'취소 보내기',
-    cMenu:'메뉴 → 마이페이지',cLogin:'로그인(번호＋메일)',cDetail:'예약 상세(상태＋진행)',cChange:'변경 요청(시간＋지도)',cCancel:'취소(요금 확인)'}
+    cMenu:'마이페이지를 연 화면',cLogin:'로그인(번호＋메일)',cDetail:'예약 상세(상태＋진행)',cChange:'변경 요청(시간＋지도)',cCancel:'취소(요금 확인)'}
 };
 // 実スクショがあるステップはこちらを優先（無いものはCSSモックを描画）
-var MOCKIMG={login:'images/mp_login.png?v=3'};
+var MOCKIMG={menu:'images/mp_open.png?v=1',login:'images/mp_login.png?v=3'};
 function kdMock(kind,l){
   var L=MOCKLBL[l]||MOCKLBL.ja, cap='', body='';
   var CAP={menu:L.cMenu,login:L.cLogin,detail:L.cDetail,change:L.cChange,cancel:L.cCancel};
