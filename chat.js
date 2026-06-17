@@ -14,6 +14,29 @@
   var LINE_URL = 'https://lin.ee/ZxBknUv';
   var TEL = '050-1785-2711';
 
+  // ---- 行動ログ（匿名・ヒット率計測。keydrop_faq_logs へ INSERT） ----
+  var SB_URL = 'https://ckrxttbnawkclshczsia.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+  function areaStore() {
+    try { var a = (new URLSearchParams(location.search).get('area') || '').toLowerCase(); if (/naha|nha|oki/.test(a)) return 'nha'; } catch (e) {}
+    return 'spk';
+  }
+  function sid() {
+    try { var s = sessionStorage.getItem('kd_faq_sid'); if (!s) { s = 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sessionStorage.setItem('kd_faq_sid', s); } return s; } catch (e) { return ''; }
+  }
+  function logEv(event, extra) {
+    try {
+      var body = { store: areaStore(), lang: lang(), event: event, session_id: sid() };
+      if (extra && extra.query) body.query = String(extra.query).slice(0, 200);
+      if (extra && extra.question) body.question = String(extra.question).slice(0, 300);
+      fetch(SB_URL + '/rest/v1/keydrop_faq_logs', {
+        method: 'POST', keepalive: true,
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(body)
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
   // ---- 言語 ----
   function lang() {
     try {
@@ -28,22 +51,26 @@
   }
 
   var UI = {
-    ja: { title: 'KEYDROP サポート', sub: 'よくある質問にお答えします',
-      greet: 'こんにちは！KEYDROPのよくある質問です🔑 知りたい項目をタップしてください。',
-      more: 'こちらもよく見られています', line: '公式LINEで質問', tel: '電話する（' + TEL + '）',
-      open: 'よくある質問', list: '📋 ほかの質問を見る', pick: '質問をタップしてください' },
-    en: { title: 'KEYDROP Support', sub: 'We answer common questions',
-      greet: 'Hi! Here are common KEYDROP questions🔑 Tap the topic you want to know.',
-      more: 'People also ask', line: 'Ask on Official LINE', tel: 'Call (' + TEL + ')',
-      open: 'FAQ / Help', list: '📋 See other questions', pick: 'Tap a question' },
-    zh: { title: 'KEYDROP 客服', sub: '為您解答常見問題',
-      greet: '您好！這是KEYDROP常見問題🔑 請點選您想了解的項目。',
-      more: '其他人也在問', line: '用官方LINE詢問', tel: '撥打電話（' + TEL + '）',
-      open: '常見問題', list: '📋 查看其他問題', pick: '請點選問題' },
-    ko: { title: 'KEYDROP 고객지원', sub: '자주 묻는 질문에 답합니다',
-      greet: '안녕하세요! KEYDROP 자주 묻는 질문입니다🔑 원하는 항목을 눌러주세요.',
-      more: '이런 질문도 많이 해요', line: '공식 LINE으로 문의', tel: '전화하기（' + TEL + '）',
-      open: '자주 묻는 질문', list: '📋 다른 질문 보기', pick: '질문을 눌러주세요' }
+    ja: { title: 'よくある質問', sub: '知りたいことを検索 / 一覧から選べます', open: 'よくある質問',
+      ph: 'キーワードで検索（例：料金）',
+      fbAsk: 'このページで解決しましたか？', fbYes: 'はい', fbNo: 'いいえ', fbThanks: 'お役に立てて良かったです🔑',
+      other: 'こちらは解決になりそうですか？', lineQ: '公式LINEで質問する',
+      none: '該当が見つかりませんでした。公式LINEでお気軽にお問い合わせください。' },
+    en: { title: 'FAQ / Help', sub: 'Search or pick from the list', open: 'FAQ / Help',
+      ph: 'Search by keyword (e.g. price)',
+      fbAsk: 'Did this solve your question?', fbYes: 'Yes', fbNo: 'No', fbThanks: 'Glad it helped🔑',
+      other: 'Maybe one of these?', lineQ: 'Ask on Official LINE',
+      none: 'No match found. Please feel free to ask us on Official LINE.' },
+    zh: { title: '常見問題', sub: '可搜尋或從清單選擇', open: '常見問題',
+      ph: '輸入關鍵字搜尋（例：費用）',
+      fbAsk: '這個頁面解決了您的問題嗎？', fbYes: '是', fbNo: '否', fbThanks: '很高興能幫上忙🔑',
+      other: '這些是否能解決呢？', lineQ: '用官方LINE詢問',
+      none: '找不到相關內容。歡迎透過官方LINE與我們聯絡。' },
+    ko: { title: '자주 묻는 질문', sub: '검색하거나 목록에서 선택하세요', open: '자주 묻는 질문',
+      ph: '키워드로 검색（예: 요금）',
+      fbAsk: '이 페이지로 해결되셨나요?', fbYes: '예', fbNo: '아니오', fbThanks: '도움이 되어 기쁩니다🔑',
+      other: '혹시 이건 어떠세요?', lineQ: '공식 LINE으로 문의',
+      none: '관련 내용을 찾지 못했습니다. 공식 LINE으로 문의해 주세요.' }
   };
   function L() { return UI[lang()] || UI.ja; }
 
@@ -113,7 +140,22 @@
     });
   }
 
-  // ---- UI（アコーディオン式：項目タップ→開く→再タップで閉じる の固定フロー） ----
+  // 検索：バイグラム重なり＋類義語展開で近い候補を複数返す
+  function search(query) {
+    var lg = lang(); var list = FAQ[lg] && FAQ[lg].length ? FAQ[lg] : FAQ.ja;
+    var qb = bigrams(expand(norm(query)));
+    var qkeys = Object.keys(qb);
+    if (!qkeys.length) return [];
+    var scored = list.map(function (e) {
+      var hit = 0, eb = bigrams(e.q + e.q + e.q + ' ' + e.blob); // 質問文を重み付け
+      for (var k = 0; k < qkeys.length; k++) if (eb[qkeys[k]]) hit++;
+      return { e: e, s: hit / Math.max(4, qkeys.length) };
+    }).filter(function (x) { return x.s > 0.18; });
+    scored.sort(function (a, b) { return b.s - a.s; });
+    return scored.slice(0, 6).map(function (x) { return x.e; });
+  }
+
+  // ---- UI（検索＋アコーディオン＋解決フィードバック） ----
   function css() {
     if (document.getElementById('kdchat-css')) return;
     var FF = 'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif';
@@ -150,7 +192,22 @@
       '.kdc-item .a .warn{background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:8px 10px;font-size:12.5px;margin:6px 0}',
       '.kdc-item .a .blue,.kdc-item .a a{color:#2563eb}.kdc-item .a b{color:#1a1a1a}',
       '.kdc-item .a .info{background:#f6f7f9;border-radius:10px;padding:10px 12px;margin-top:6px}.kdc-item .a .info .row{display:flex;gap:8px;margin:3px 0;font-size:12.5px}.kdc-item .a .info .k{color:#6b7280;min-width:84px}',
-      '.kdc-empty{padding:24px 16px;text-align:center;color:#6b7280;font-size:13px}'
+      '.kdc-empty{padding:24px 16px;text-align:center;color:#6b7280;font-size:13px}',
+      // 検索バー
+      '.kdc-search{padding:10px 12px;border-bottom:1px solid #eceef1;background:#fff;position:relative;flex:none}',
+      '.kdc-search input{width:100%;border:1.5px solid #d1d5db;border-radius:11px;padding:9px 34px 9px 12px;font-size:16px;outline:none;box-sizing:border-box;' + FF + '}',
+      '.kdc-search input:focus{border-color:#FABE00}',
+      '.kdc-clear{display:none;position:absolute;right:22px;top:50%;transform:translateY(-50%);background:#e5e7eb;border:none;border-radius:50%;width:22px;height:22px;font-size:13px;line-height:1;cursor:pointer;color:#374151}',
+      // 解決フィードバック
+      '.kdc-fb{margin-top:11px;padding-top:10px;border-top:1px dashed #e5e7eb;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px;color:#374151}',
+      '.kdc-fb>span{font-weight:700}',
+      '.kdc-fb .yes,.kdc-fb .no{border:1px solid #d1d5db;background:#fff;border-radius:999px;padding:5px 16px;font-size:12.5px;font-weight:800;cursor:pointer}',
+      '.kdc-fb .yes{color:#059669;border-color:#a7f3d0}.kdc-fb .no{color:#dc2626;border-color:#fecaca}',
+      '.kdc-fb .ok{color:#059669;font-weight:800}',
+      '.kdc-fb-more{flex-basis:100%;font-weight:700;color:#6b7280;margin-top:2px}',
+      '.kdc-fb-chips{flex-basis:100%;display:flex;flex-direction:column;gap:6px}',
+      '.kdc-chip2{text-align:left;background:#f6f7f9;border:1px solid #e5e7eb;border-radius:9px;padding:8px 10px;font-size:12.5px;cursor:pointer;color:#1f2937;line-height:1.35}',
+      '.kdc-fb-line{display:inline-block;background:#06c755;color:#fff;text-decoration:none;font-weight:800;font-size:12.5px;padding:9px 15px;border-radius:10px;margin-top:4px}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -161,23 +218,52 @@
   }
   function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-  // 一覧を描画（各項目＝<details>。タップで開閉。同時に開くのは1つだけ）
-  function renderList() {
-    bodyEl.innerHTML = '';
-    var list = allList();
-    if (!list.length) { var e = document.createElement('div'); e.className = 'kdc-empty'; e.textContent = '…'; bodyEl.appendChild(e); return; }
-    var acc = document.createElement('div');
-    list.forEach(function (it) {
-      var d = document.createElement('details'); d.className = 'kdc-item';
-      d.innerHTML = '<summary>' + esc(it.q) + '</summary><div class="a">' + it.a + '</div>';
-      acc.appendChild(d);
+  // 1項目（<details>）。開いたら view ログ＋「解決しましたか？」を表示
+  function buildItem(it, peers) {
+    var d = document.createElement('details'); d.className = 'kdc-item';
+    d.innerHTML = '<summary>' + esc(it.q) + '</summary><div class="a">' + it.a + '</div>';
+    var ansEl = d.querySelector('.a');
+    d.addEventListener('toggle', function () {
+      if (!d.open) return;
+      logEv('view', { question: it.q });
+      if (d._fb) return; d._fb = true;
+      var fb = document.createElement('div'); fb.className = 'kdc-fb';
+      fb.innerHTML = '<span>' + L().fbAsk + '</span><button class="yes">' + L().fbYes + '</button><button class="no">' + L().fbNo + '</button>';
+      fb.querySelector('.yes').onclick = function () { logEv('resolved', { question: it.q }); fb.innerHTML = '<span class="ok">' + L().fbThanks + '</span>'; };
+      fb.querySelector('.no').onclick = function () {
+        logEv('unresolved', { question: it.q });
+        var others = (peers || []).filter(function (p) { return p.q !== it.q; }).slice(0, 3);
+        fb.innerHTML = (others.length ? '<div class="kdc-fb-more">' + L().other + '</div><div class="kdc-fb-chips"></div>' : '')
+          + '<a class="kdc-fb-line" href="' + LINE_URL + '" target="_blank" rel="noopener">' + L().lineQ + '</a>';
+        var ln = fb.querySelector('.kdc-fb-line'); if (ln) ln.onclick = function () { logEv('escalate_line', { question: it.q }); };
+        var box = fb.querySelector('.kdc-fb-chips');
+        if (box) others.forEach(function (o) {
+          var b = document.createElement('button'); b.className = 'kdc-chip2'; b.textContent = o.q;
+          b.onclick = function () { d.open = false; var t = document.getElementById(o._domid); if (t) { t.open = true; t.scrollIntoView({ block: 'nearest' }); } };
+          box.appendChild(b);
+        });
+      };
+      ansEl.appendChild(fb);
     });
+    return d;
+  }
+
+  // 一覧（または検索結果）を描画。同時に開くのは1つだけ
+  function renderList(entries, isSearch) {
+    entries = entries || allList();
+    bodyEl.innerHTML = '';
+    if (isSearch && !entries.length) {
+      var e = document.createElement('div'); e.className = 'kdc-empty';
+      e.innerHTML = esc(L().none) + '<div style="margin-top:11px"><a class="kdc-fb-line" href="' + LINE_URL + '" target="_blank" rel="noopener">' + L().lineQ + '</a></div>';
+      var a = e.querySelector('a'); if (a) a.onclick = function () { logEv('escalate_line', {}); };
+      bodyEl.appendChild(e); return;
+    }
+    var acc = document.createElement('div');
+    entries.forEach(function (it, i) { it._domid = 'kdc-i-' + i; var d = buildItem(it, entries); d.id = it._domid; acc.appendChild(d); });
     // toggle はバブルしないので capture で受ける → 開いたら他を閉じる（1つだけ開く）
     acc.addEventListener('toggle', function (ev) {
       var d = ev.target;
-      if (d && d.tagName === 'DETAILS' && d.open) {
-        acc.querySelectorAll('details[open]').forEach(function (o) { if (o !== d) o.open = false; });
-      }
+      if (d && d.tagName === 'DETAILS' && d.open) acc.querySelectorAll('details[open]').forEach(function (o) { if (o !== d) o.open = false; });
     }, true);
     bodyEl.appendChild(acc);
   }
@@ -193,10 +279,24 @@
     panelEl.className = 'kdc-panel';
     panelEl.innerHTML =
       '<div class="kdc-head"><div><div class="ti">KEY<span class="k">DROP</span> ' + L().title + '</div><div class="su">' + L().sub + '</div></div><button class="kdc-x" aria-label="close">×</button></div>'
+      + '<div class="kdc-search"><input type="text" placeholder="' + esc(L().ph) + '"><button class="kdc-clear" aria-label="clear">×</button></div>'
       + '<div class="kdc-body"></div>';
     document.body.appendChild(panelEl);
     bodyEl = panelEl.querySelector('.kdc-body');
     panelEl.querySelector('.kdc-x').onclick = close;
+    // 検索：入力＝近い候補を複数表示／空＝全件。ログはタイプ確定（1.3秒静止）で1回
+    var inp = panelEl.querySelector('.kdc-search input');
+    var clr = panelEl.querySelector('.kdc-clear');
+    var rT = null, lT = null;
+    inp.addEventListener('input', function () {
+      var v = inp.value.trim();
+      clr.style.display = v ? 'block' : 'none';
+      clearTimeout(rT); clearTimeout(lT);
+      if (!v) { renderList(allList(), false); return; }
+      rT = setTimeout(function () { renderList(search(v), true); }, 280);
+      if (v.length >= 2) lT = setTimeout(function () { var r = search(v); logEv(r.length ? 'search' : 'no_result', { query: v }); }, 1300);
+    });
+    clr.onclick = function () { inp.value = ''; clr.style.display = 'none'; renderList(allList(), false); inp.focus(); };
   }
   // ヘッダー（上部バー）の🌐の隣に「❓よくある質問」を常設（スマホで見つけやすい・下部カードと重ならない）
   function mountHelpBtn() {
@@ -223,9 +323,10 @@
     document.body.appendChild(fab);
   }
   function open() {
-    if (!bodyEl.childElementCount) renderList();
+    if (!bodyEl.childElementCount) renderList(allList(), false);
     scrimEl.classList.add('open');
     panelEl.classList.add('open');
+    logEv('open', {});
   }
   function close() {
     panelEl.classList.remove('open');

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>KEYDROP よくある質問 ヒット率ダッシュボード</title>
+<style>
+  :root{ --y:#FABE00; }
+  *{box-sizing:border-box}
+  body{margin:0;background:#0f1115;color:#e8eaed;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;font-size:14px;line-height:1.5}
+  .wrap{max-width:860px;margin:0 auto;padding:18px 14px 60px}
+  h1{font-size:18px;margin:6px 0 2px}h1 .k{color:var(--y)}
+  .sub{color:#9aa0a6;font-size:12px;margin-bottom:16px}
+  .ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  select{background:#1a1d24;color:#e8eaed;border:1px solid #2a2e37;border-radius:9px;padding:8px 10px;font-size:14px}
+  .seg{display:inline-flex;border:1px solid #2a2e37;border-radius:9px;overflow:hidden}
+  .seg button{background:#1a1d24;color:#cbd0d6;border:none;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer}
+  .seg button.on{background:var(--y);color:#1a1a1a}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+  .card{background:#1a1d24;border:1px solid #242833;border-radius:14px;padding:14px}
+  .card .lbl{font-size:11.5px;color:#9aa0a6;font-weight:700}
+  .card .val{font-size:26px;font-weight:800;margin-top:4px}
+  .card .val.big{font-size:34px}
+  .card.hit .val{color:var(--y)}
+  .card .note{font-size:11px;color:#7c828a;margin-top:3px}
+  .bar{height:9px;border-radius:5px;background:#2a2e37;overflow:hidden;margin-top:8px}
+  .bar>i{display:block;height:100%;background:var(--y)}
+  h2{font-size:14px;margin:22px 0 8px;color:#e8eaed}
+  h2 .hint{font-weight:400;color:#7c828a;font-size:11.5px;margin-left:6px}
+  table{width:100%;border-collapse:collapse;background:#1a1d24;border-radius:12px;overflow:hidden}
+  th,td{padding:9px 11px;text-align:left;font-size:13px;border-bottom:1px solid #242833}
+  th{color:#9aa0a6;font-weight:700;font-size:11.5px}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:none}
+  .miss td:first-child{color:#ff9b9b}
+  .empty{color:#7c828a;padding:14px;text-align:center}
+  .err{background:#3a1d1d;border:1px solid #5a2a2a;color:#ffb4b4;padding:12px;border-radius:10px;font-size:12.5px;margin-bottom:14px}
+  .ref{color:#7c828a;font-size:11px;margin-top:26px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>KEY<span class="k">DROP</span> よくある質問 ヒット率</h1>
+  <div class="sub">顧客の「よくある質問」操作ログ（匿名）。ヒット率＝解決できた割合。未解決ワード＝足すべきFAQ。</div>
+
+  <div class="ctrl">
+    <select id="ym"></select>
+    <div class="seg" id="store">
+      <button data-s="" class="on">全店</button>
+      <button data-s="spk">札幌</button>
+      <button data-s="nha">那覇</button>
+    </div>
+  </div>
+
+  <div id="err"></div>
+
+  <div class="cards">
+    <div class="card hit"><div class="lbl">ヒット率（解決）</div><div class="val big" id="hitRate">–</div><div class="bar"><i id="hitBar" style="width:0"></i></div><div class="note" id="hitNote"></div></div>
+    <div class="card"><div class="lbl">利用回数（開いた）</div><div class="val" id="opens">–</div></div>
+    <div class="card"><div class="lbl">検索回数</div><div class="val" id="searches">–</div><div class="note" id="searchNote"></div></div>
+    <div class="card"><div class="lbl">LINEへ誘導</div><div class="val" id="esc">–</div><div class="note">解決できずLINEへ</div></div>
+  </div>
+
+  <h2>🕳 未解決ワード Top<span class="hint">「いいえ」「検索0件」になった言葉＝次に足すべきFAQ</span></h2>
+  <table><thead><tr><th>検索ワード</th><th class="n">件数</th></tr></thead><tbody id="missTbl"><tr><td class="empty" colspan="2">…</td></tr></tbody></table>
+
+  <h2>🔎 よく検索された言葉<span class="hint">需要の生データ</span></h2>
+  <table><thead><tr><th>検索ワード</th><th class="n">件数</th></tr></thead><tbody id="qTbl"><tr><td class="empty" colspan="2">…</td></tr></tbody></table>
+
+  <h2>📖 よく開かれた質問<span class="hint">役に立っている項目／解決・未解決の内訳</span></h2>
+  <table><thead><tr><th>質問</th><th class="n">開いた</th><th class="n">解決</th><th class="n">未解決</th></tr></thead><tbody id="vTbl"><tr><td class="empty" colspan="4">…</td></tr></tbody></table>
+
+  <div class="ref">データソース：keydrop_faq_logs（匿名・個人情報なし）／集計ビュー public_kd_faq_*_v</div>
+</div>
+
+<script>
+var SB_URL='https://ckrxttbnawkclshczsia.supabase.co';
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+var daily=[], qs=[], questions=[];
+var curStore='', curYm='';
+
+function get(path){
+  return fetch(SB_URL+'/rest/v1/'+path,{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();});
+}
+function num(n){return (n||0).toLocaleString();}
+
+function load(){
+  Promise.all([
+    get('public_kd_faq_daily_v?select=*'),
+    get('public_kd_faq_query_v?select=*'),
+    get('public_kd_faq_question_v?select=*')
+  ]).then(function(res){
+    daily=res[0]||[]; qs=res[1]||[]; questions=res[2]||[];
+    buildYm(); render();
+  }).catch(function(e){
+    document.getElementById('err').innerHTML='<div class="err">読み込みエラー（'+e.message+'）。テーブル未作成 or 権限の可能性。026_keydrop_faq_logs.sql を実行してください。</div>';
+  });
+}
+
+function buildYm(){
+  var set={};
+  daily.forEach(function(r){if(r.ym)set[r.ym]=1;});
+  var months=Object.keys(set).sort().reverse();
+  if(!months.length){var d=new Date();months=[d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)];}
+  curYm=months[0];
+  var sel=document.getElementById('ym');
+  sel.innerHTML=months.map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('');
+  sel.value=curYm;
+  sel.onchange=function(){curYm=sel.value;render();};
+}
+
+function evSum(rows,events){
+  var t=0; rows.forEach(function(r){if(events.indexOf(r.event)>=0)t+=(r.cnt||0);}); return t;
+}
+
+function render(){
+  var dRows=daily.filter(function(r){return r.ym===curYm && (!curStore||r.store===curStore);});
+  var resolved=evSum(dRows,['resolved']);
+  var unresolved=evSum(dRows,['unresolved']);
+  var noResult=evSum(dRows,['no_result']);
+  var opens=evSum(dRows,['open']);
+  var searches=evSum(dRows,['search'])+noResult;
+  var esc=evSum(dRows,['escalate_line']);
+  var denom=resolved+unresolved+noResult;
+  var rate=denom? Math.round(resolved/denom*100):0;
+
+  document.getElementById('hitRate').textContent=denom? rate+'%':'–';
+  document.getElementById('hitBar').style.width=rate+'%';
+  document.getElementById('hitNote').textContent='解決 '+num(resolved)+' / 未解決 '+num(unresolved+noResult);
+  document.getElementById('opens').textContent=num(opens);
+  document.getElementById('searches').textContent=num(searches);
+  document.getElementById('searchNote').textContent='うち0件 '+num(noResult);
+  document.getElementById('esc').textContent=num(esc);
+
+  // 未解決ワード（no_result + unresolved）
+  var miss={};
+  qs.filter(function(r){return r.ym===curYm && (!curStore||r.store===curStore) && (r.event==='no_result'||r.event==='unresolved');})
+    .forEach(function(r){var k=r.q||'(空)';miss[k]=(miss[k]||0)+(r.cnt||0);});
+  fillKV('missTbl',miss,'miss');
+
+  // 検索ワード（search）
+  var qm={};
+  qs.filter(function(r){return r.ym===curYm && (!curStore||r.store===curStore) && r.event==='search';})
+    .forEach(function(r){var k=r.q||'(空)';qm[k]=(qm[k]||0)+(r.cnt||0);});
+  fillKV('qTbl',qm,'');
+
+  // 質問別（view / resolved / unresolved）
+  var qq={};
+  questions.filter(function(r){return r.ym===curYm && (!curStore||r.store===curStore);})
+    .forEach(function(r){var k=r.question||'(空)';qq[k]=qq[k]||{v:0,r:0,u:0};if(r.event==='view')qq[k].v+=r.cnt;if(r.event==='resolved')qq[k].r+=r.cnt;if(r.event==='unresolved')qq[k].u+=r.cnt;});
+  var qrows=Object.keys(qq).map(function(k){return [k,qq[k]];}).sort(function(a,b){return b[1].v-a[1].v;}).slice(0,30);
+  var vt=document.getElementById('vTbl');
+  vt.innerHTML=qrows.length? qrows.map(function(x){return '<tr><td>'+escapeHtml(x[0])+'</td><td class="n">'+num(x[1].v)+'</td><td class="n">'+num(x[1].r)+'</td><td class="n">'+num(x[1].u)+'</td></tr>';}).join('')
+    : '<tr><td class="empty" colspan="4">データなし</td></tr>';
+}
+
+function fillKV(id,map,cls){
+  var rows=Object.keys(map).map(function(k){return [k,map[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,30);
+  var tb=document.getElementById(id);
+  tb.innerHTML=rows.length? rows.map(function(x){return '<tr'+(cls?(' class="'+cls+'"'):'')+'><td>'+escapeHtml(x[0])+'</td><td class="n">'+num(x[1])+'</td></tr>';}).join('')
+    : '<tr><td class="empty" colspan="2">データなし</td></tr>';
+}
+function escapeHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+document.querySelectorAll('#store button').forEach(function(b){
+  b.onclick=function(){document.querySelectorAll('#store button').forEach(function(o){o.classList.remove('on');});b.classList.add('on');curStore=b.getAttribute('data-s');render();};
+});
+load();
+</script>
+</body>
+</html>
