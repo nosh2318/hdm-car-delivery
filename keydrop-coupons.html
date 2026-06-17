@@ -152,11 +152,15 @@ function renderList(){
   var discAll={}; REDEMPTIONS.forEach(function(x){var k=(x.code||'').toUpperCase(); discAll[k]=(discAll[k]||0)+(Number(x.discount_amount)||0);});
   var html=renderDash()+'<button class="btn p full" style="margin-bottom:14px;" onclick="openForm(null)">＋ 新しいクーポンを発行</button>';
   if(!COUPONS.length){html+='<div class="muted">まだクーポンがありません</div>';}
-  COUPONS.forEach(function(c){
+  function isCampaign(c){return c.max_uses==null||c.max_uses==='';}
+  function couponCard(c){
     var uses=(c.used_count||0)+(c.max_uses?(' / '+c.max_uses):' / ∞');
-    html+='<div class="cp'+(c.active?'':' off')+'">'
-      +'<div class="top"><span class="code">'+esc(c.code)+'</span><span class="disc">'+esc(discLabel(c))+'</span>'
-      +'<span class="badge '+(c.active?'on':'no')+'">'+(c.active?'有効':'停止')+'</span></div>'
+    var camp=isCampaign(c);
+    var remain=(!camp)?Math.max(0,(c.max_uses||0)-(c.used_count||0)):null;
+    var tB=camp?'<span class="badge" style="background:#dbeafe;color:#1e40af">📣 キャンペーン</span>':('<span class="badge" style="background:#fef3c7;color:#92400e">🎫 スポット 残'+remain+'</span>');
+    return '<div class="cp'+(c.active?'':' off')+'">'
+      +'<div class="top"><span class="code">'+esc(c.code)+'</span><span class="disc">'+esc(discLabel(c))+'</span>'+tB
+      +'<span class="badge '+(c.active?'on':'no')+'" style="margin-left:6px">'+(c.active?'有効':'停止')+'</span></div>'
       +'<div class="meta">店舗：<b>'+storeLabel(c.store)+'</b>　使用：<b>'+uses+'</b>'
       +(c.per_email_once?'　<b>1人1回</b>':'')
       +(c.min_amount_yen?'　最低¥'+Number(c.min_amount_yen).toLocaleString():'')
@@ -168,7 +172,10 @@ function renderList(){
       +'<button style="background:#f1f1f1;color:#1a1a1a;" onclick="openForm('+c.id+')">編集</button>'
       +'<button style="background:#fee2e2;color:#991b1b;" onclick="delCoupon('+c.id+",'"+esc(c.code)+"')\">削除</button>"
       +'</div></div>';
-  });
+  }
+  var campA=COUPONS.filter(isCampaign), spotA=COUPONS.filter(function(c){return !isCampaign(c);});
+  if(campA.length){ html+='<div style="font-size:13px;font-weight:900;color:#1e40af;margin:6px 2px 8px">📣 キャンペーン（無制限・中長期）<span style="color:#94a3b8;font-weight:600">　'+campA.length+'件</span></div>'; campA.forEach(function(c){html+=couponCard(c);}); }
+  if(spotA.length){ html+='<div style="font-size:13px;font-weight:900;color:#92400e;margin:14px 2px 8px">🎫 スポット・単発（回数制限あり）<span style="color:#94a3b8;font-weight:600">　'+spotA.length+'件</span></div>'; spotA.forEach(function(c){html+=couponCard(c);}); }
   // 🧾 利用履歴（出口）
   var rlog=REDEMPTIONS.filter(function(x){return KPISTORE==='all'||(x.store||'spk')===KPISTORE;});
   if(rlog.length){
@@ -192,10 +199,11 @@ function renderList(){
 }
 
 // ---- 作成/編集 ----
+function cpPreset(t){var mu=document.getElementById('f_maxuses'),on=document.getElementById('f_once');if(!mu)return;if(t==='campaign'){mu.value='';}else{mu.value='1';}if(on)on.checked=true;}
 function openForm(id){
   var c=id?COUPONS.find(function(x){return x.id===id;}):null;
   c=c||{discount_type:'percent',discount_value:10,store:NEW_STORE,active:true,per_email_once:false,min_amount_yen:0,applies_to:'total'};
-  sheet.innerHTML='<h2>'+(id?'クーポンを編集':'クーポンを発行')+'</h2>'
+  sheet.innerHTML='<h2>'+(id?'クーポンを編集':'クーポンを発行')+'</h2>'+(id?'':'<div style="display:flex;gap:8px;margin-bottom:10px;"><button type="button" onclick="cpPreset(\'campaign\')" style="flex:1;padding:9px;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1e40af;border-radius:9px;font-weight:800;font-size:12px;cursor:pointer">📣 キャンペーン<br><span style="font-size:10px;font-weight:600">無制限・1人1回</span></button><button type="button" onclick="cpPreset(\'spot\')" style="flex:1;padding:9px;border:1.5px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:9px;font-weight:800;font-size:12px;cursor:pointer">🎫 スポット<br><span style="font-size:10px;font-weight:600">1回限り</span></button></div>')
     +'<label>コード（お客様が入力）</label><input id="f_code" value="'+esc(c.code||'')+'" placeholder="WELCOME10" '+(id?'readonly style="background:#f3f4f6;"':'')+'>'
     +'<div class="row"><div><label>割引タイプ</label><select id="f_type"><option value="percent"'+(c.discount_type==='percent'?' selected':'')+'>％（パーセント）</option><option value="fixed"'+(c.discount_type==='fixed'?' selected':'')+'>固定（円）</option></select></div>'
     +'<div><label>値（％ または 円）</label><input id="f_val" type="number" value="'+(c.discount_value||0)+'"></div></div>'
