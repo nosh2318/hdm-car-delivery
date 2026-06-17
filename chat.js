@@ -113,103 +113,82 @@
     });
   }
 
-  function search(query) {
-    var lg = lang(); var list = FAQ[lg] && FAQ[lg].length ? FAQ[lg] : FAQ.ja;
-    var qb = bigrams(expand(norm(query)));
-    var qkeys = Object.keys(qb);
-    if (!qkeys.length) return [];
-    var scored = list.map(function (e) {
-      var hit = 0;
-      var eb = bigrams(e.q + e.q + e.q + ' ' + e.blob); // 質問文を重み付け
-      for (var k = 0; k < qkeys.length; k++) if (eb[qkeys[k]]) hit++;
-      return { e: e, score: hit / Math.max(4, qkeys.length) };
-    }).filter(function (x) { return x.score > 0.18; });
-    scored.sort(function (a, b) { return b.score - a.score; });
-    return scored.slice(0, 4).map(function (x) { return x.e; });
-  }
-
-  // ---- UI ----
+  // ---- UI（アコーディオン式：項目タップ→開く→再タップで閉じる の固定フロー） ----
   function css() {
     if (document.getElementById('kdchat-css')) return;
+    var FF = 'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif';
     var s = document.createElement('style'); s.id = 'kdchat-css';
     s.textContent = [
       '.kd-help-h{cursor:pointer}',
       '@media(max-width:767px){.kd-help-h span{display:none}}',
-      '.kdc-fab{position:fixed;left:14px;bottom:16px;z-index:1500;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#1a1a1a,#333);color:#fff;border:2px solid #FABE00;border-radius:999px;padding:11px 16px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.28);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif}',
+      // フォールバックFAB（ヘッダーが無いページ用）
+      '.kdc-fab{position:fixed;left:14px;bottom:16px;z-index:2147483000;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#1a1a1a,#333);color:#fff;border:2px solid #FABE00;border-radius:999px;padding:11px 16px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.28);' + FF + '}',
       '.kdc-fab:active{transform:scale(.96)}',
-      '.kdc-panel{position:fixed;left:14px;bottom:16px;z-index:1600;width:min(380px,calc(100vw - 28px));height:min(560px,calc(100dvh - 90px));background:#fff;border-radius:18px;box-shadow:0 14px 50px rgba(0,0,0,.32);display:none;flex-direction:column;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif}',
+      // 全面スクリム（背景マップへのタップ貫通・誤操作を防止）
+      '.kdc-scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2147483000;display:none}',
+      '.kdc-scrim.open{display:block}',
+      // パネル
+      '.kdc-panel{position:fixed;left:14px;bottom:16px;z-index:2147483001;width:min(380px,calc(100vw - 28px));height:min(560px,calc(100dvh - 90px));background:#fff;border-radius:18px;box-shadow:0 14px 50px rgba(0,0,0,.4);display:none;flex-direction:column;overflow:hidden;' + FF + '}',
       '.kdc-panel.open{display:flex;animation:kdcUp .22s cubic-bezier(.18,.9,.32,1.1)}',
       '@keyframes kdcUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}',
-      '.kdc-head{background:linear-gradient(135deg,#1a1a1a,#333);color:#fff;padding:13px 15px;display:flex;align-items:center;gap:10px}',
+      '@media(max-width:520px){.kdc-panel{left:0;right:0;bottom:0;top:auto;width:100vw;height:86dvh;border-radius:16px 16px 0 0}}',
+      '.kdc-head{background:linear-gradient(135deg,#1a1a1a,#333);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;flex:none}',
       '.kdc-head .ti{font-weight:800;font-size:15px}.kdc-head .ti .k{color:#FABE00}',
-      '.kdc-head .su{font-size:11px;opacity:.8;margin-top:1px}',
-      '.kdc-x{margin-left:auto;background:none;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;opacity:.85;padding:0 2px}',
-      '.kdc-body{flex:1;overflow-y:auto;padding:14px;background:#f6f7f9;display:flex;flex-direction:column;gap:10px}',
-      '.kdc-msg{max-width:88%;padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.55;word-break:break-word}',
-      '.kdc-bot{align-self:flex-start;background:#fff;color:#1a1a1a;border:1px solid #e5e7eb;border-bottom-left-radius:5px}',
-      '.kdc-user{align-self:flex-end;background:#FABE00;color:#1a1a1a;font-weight:700;border-bottom-right-radius:5px}',
-      '.kdc-bot .a p{margin:0 0 6px}.kdc-bot .a ul,.kdc-bot .a ol{margin:4px 0 6px;padding-left:18px}.kdc-bot .a li{margin:2px 0}',
-      '.kdc-bot .a .ttl{font-weight:800;margin:7px 0 3px}.kdc-bot .a .warn{background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:7px 9px;font-size:12.5px;margin:5px 0}',
-      '.kdc-bot .a .blue,.kdc-bot .a a{color:#2563eb}.kdc-bot .a b{color:#1a1a1a}',
-      '.kdc-q{font-weight:800;font-size:13px;margin:0 0 5px;color:#111}',
-      '.kdc-chips{display:flex;flex-wrap:wrap;gap:7px}',
-      '.kdc-chip{background:#fff;border:1px solid #d1d5db;border-radius:999px;padding:7px 12px;font-size:12.5px;cursor:pointer;color:#1f2937;text-align:left;line-height:1.3}',
-      '.kdc-chip:active{background:#f3f4f6}',
-      '.kdc-lbl{font-size:11.5px;color:#6b7280;font-weight:700;margin:2px 0 -2px}',
-      '.kdc-cta{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}',
-      '.kdc-cta a{flex:1;min-width:120px;text-align:center;text-decoration:none;font-weight:800;font-size:12.5px;padding:9px;border-radius:11px}',
-      '.kdc-cta .line{background:#06c755;color:#fff}.kdc-cta .tel{background:#1a1a1a;color:#fff}'
+      '.kdc-head .su{font-size:11px;opacity:.82;margin-top:2px}',
+      '.kdc-x{margin-left:auto;background:rgba(255,255,255,.14);border:none;color:#fff;font-size:20px;line-height:1;cursor:pointer;width:32px;height:32px;border-radius:50%;flex:none}',
+      // ボディ（アコーディオン一覧）
+      '.kdc-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:#fff}',
+      '.kdc-item{border-bottom:1px solid #eceef1}',
+      '.kdc-item>summary{list-style:none;cursor:pointer;padding:14px 15px;font-size:13.5px;font-weight:700;color:#1a1a1a;display:flex;align-items:flex-start;gap:9px;line-height:1.45}',
+      '.kdc-item>summary::-webkit-details-marker{display:none}',
+      '.kdc-item>summary::before{content:"＋";color:#FABE00;font-weight:900;font-size:15px;line-height:1.35;flex:none}',
+      '.kdc-item[open]>summary{background:#fffdf5}',
+      '.kdc-item[open]>summary::before{content:"－"}',
+      '.kdc-item .a{padding:2px 15px 15px 33px;font-size:13px;line-height:1.65;color:#333}',
+      '.kdc-item .a p{margin:0 0 7px}.kdc-item .a ul,.kdc-item .a ol{margin:5px 0 7px;padding-left:18px}.kdc-item .a li{margin:3px 0}',
+      '.kdc-item .a .ttl{font-weight:800;margin:8px 0 3px;color:#111}',
+      '.kdc-item .a .warn{background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:8px 10px;font-size:12.5px;margin:6px 0}',
+      '.kdc-item .a .blue,.kdc-item .a a{color:#2563eb}.kdc-item .a b{color:#1a1a1a}',
+      '.kdc-item .a .info{background:#f6f7f9;border-radius:10px;padding:10px 12px;margin-top:6px}.kdc-item .a .info .row{display:flex;gap:8px;margin:3px 0;font-size:12.5px}.kdc-item .a .info .k{color:#6b7280;min-width:84px}',
+      '.kdc-empty{padding:24px 16px;text-align:center;color:#6b7280;font-size:13px}'
     ].join('');
     document.head.appendChild(s);
   }
 
-  var bodyEl, inputEl, panelEl;
-  function add(html, who) {
-    var d = document.createElement('div');
-    d.className = 'kdc-msg ' + (who === 'user' ? 'kdc-user' : 'kdc-bot');
-    d.innerHTML = html;
-    bodyEl.appendChild(d);
-    bodyEl.scrollTop = bodyEl.scrollHeight;
-    return d;
-  }
-  function chips(items, onPick) {
-    var wrap = document.createElement('div'); wrap.className = 'kdc-chips';
-    items.forEach(function (it) {
-      var b = document.createElement('button'); b.className = 'kdc-chip'; b.textContent = it.q;
-      b.onclick = function () { onPick(it); };
-      wrap.appendChild(b);
-    });
-    bodyEl.appendChild(wrap); bodyEl.scrollTop = bodyEl.scrollHeight;
-  }
+  var bodyEl, panelEl, scrimEl;
   function allList() {
     var lg = lang(); return FAQ[lg] && FAQ[lg].length ? FAQ[lg] : FAQ.ja;
   }
-  function labelRow(text) {
-    var l = document.createElement('div'); l.className = 'kdc-lbl'; l.textContent = text; bodyEl.appendChild(l);
-  }
-  function answer(entry) {
-    add('<div class="kdc-q">' + entry.q + '</div><div class="a">' + entry.a + '</div>', 'bot');
-    // 関連（同検索の2〜4位）
-    var rel = search(entry.q).filter(function (e) { return e.q !== entry.q; }).slice(0, 3);
-    if (rel.length) { labelRow(L().more); chips(rel, answer); }
-    // ほかの質問へ戻る導線
-    var back = document.createElement('div'); back.className = 'kdc-chips';
-    var b = document.createElement('button'); b.className = 'kdc-chip'; b.textContent = L().list;
-    b.onclick = showList; back.appendChild(b); bodyEl.appendChild(back);
-    bodyEl.scrollTop = bodyEl.scrollHeight;
-  }
-  function showList() {
-    labelRow(L().pick);
-    chips(allList(), answer);
-  }
-  function greet() {
+  function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  // 一覧を描画（各項目＝<details>。タップで開閉。同時に開くのは1つだけ）
+  function renderList() {
     bodyEl.innerHTML = '';
-    add(L().greet, 'bot');
-    if (faqLoaded) chips(allList(), answer);
+    var list = allList();
+    if (!list.length) { var e = document.createElement('div'); e.className = 'kdc-empty'; e.textContent = '…'; bodyEl.appendChild(e); return; }
+    var acc = document.createElement('div');
+    list.forEach(function (it) {
+      var d = document.createElement('details'); d.className = 'kdc-item';
+      d.innerHTML = '<summary>' + esc(it.q) + '</summary><div class="a">' + it.a + '</div>';
+      acc.appendChild(d);
+    });
+    // toggle はバブルしないので capture で受ける → 開いたら他を閉じる（1つだけ開く）
+    acc.addEventListener('toggle', function (ev) {
+      var d = ev.target;
+      if (d && d.tagName === 'DETAILS' && d.open) {
+        acc.querySelectorAll('details[open]').forEach(function (o) { if (o !== d) o.open = false; });
+      }
+    }, true);
+    bodyEl.appendChild(acc);
   }
 
   function buildPanel() {
     css();
+    scrimEl = document.createElement('div');
+    scrimEl.className = 'kdc-scrim';
+    scrimEl.onclick = close;
+    document.body.appendChild(scrimEl);
+
     panelEl = document.createElement('div');
     panelEl.className = 'kdc-panel';
     panelEl.innerHTML =
@@ -244,17 +223,21 @@
     document.body.appendChild(fab);
   }
   function open() {
+    if (!bodyEl.childElementCount) renderList();
+    scrimEl.classList.add('open');
     panelEl.classList.add('open');
-    if (!bodyEl.childElementCount) greet();
   }
-  function close() { panelEl.classList.remove('open'); }
+  function close() {
+    panelEl.classList.remove('open');
+    scrimEl.classList.remove('open');
+  }
 
   function init() {
     buildPanel();
     mountHelpBtn();
     setInterval(mountHelpBtn, 1200); // 再描画でヘッダーが作り直されても❓を再注入
     setTimeout(function () { if (!document.querySelector('.kd-help-h')) buildFab(); }, 3000); // ヘッダーが無いページ用フォールバック
-    loadFAQ().then(function () { if (panelEl.classList.contains('open') && bodyEl.childElementCount <= 1) greet(); })
+    loadFAQ().then(function () { if (panelEl.classList.contains('open')) renderList(); })
       .catch(function () { /* fetch失敗でもUIは出る（一覧が空になるだけ） */ });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
