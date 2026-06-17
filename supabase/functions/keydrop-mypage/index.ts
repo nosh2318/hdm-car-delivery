@@ -116,9 +116,9 @@ async function notifySlack(text: string, channel?: string): Promise<void> {
 //   時刻PATCHのみ正本列名が違う(lend_time→start_time / return_time→end_time)ので lendTimeCol/returnTimeCol で切替。
 const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; lendTimeCol: string; returnTimeCol: string; slackEnv: string; slackDefault: string; sel: string }> = {
   spk: { resv: "reservations", fleet: "fleet", tasks: "tasks", lendTimeCol: "lend_time", returnTimeCol: "return_time", slackEnv: "SLACK_KEYDROP_CHANNEL", slackDefault: "C08TDTPEB36",
-    sel: "id,ota,vehicle,lend_date,return_date,lend_time,return_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,kd_status" },
+    sel: "id,ota,vehicle,lend_date,return_date,lend_time,return_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,kd_status,coupon_code,discount" },
   nha: { resv: "nha_reservations", fleet: "nha_fleet", tasks: "nha_tasks", lendTimeCol: "start_time", returnTimeCol: "end_time", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA", slackDefault: "C06KZ56NTDF",
-    sel: "id,ota,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,kd_status" },
+    sel: "id,ota,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,kd_status,coupon_code,discount" },
 };
 function mkStore(s: string) {
   const m = STORE_MAP[s];
@@ -223,6 +223,8 @@ Deno.serve(async (req) => {
         insurance: r.insurance, del_place: r.del_place, col_place: r.col_place,
         opt_b: r.opt_b || 0, opt_c: r.opt_c || 0, opt_j: r.opt_j || 0, opt_usb: r.opt_usb || 0,
         kd_status: r.kd_status || null,
+        coupon_code: r.coupon_code || null,
+        discount: Number(r.discount) || 0,
         cancel_requested_at: pay[0]?.cancel_requested_at || null,
         cancel_reason: pay[0]?.cancel_reason || null,
         change_req: (cr && cr.status === "pending") ? cr : null,

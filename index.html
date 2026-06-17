@@ -4132,6 +4132,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <div class="mp-detail-row"><span class="mp-detail-row-label">${t('collectionShort')}</span><span class="mp-detail-row-value" style="text-align:right;">${formatDateLabel(r.return_date)} ${r.return_time || r.col_time || ''}<br>${r.col_place ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.col_place)}" target="_blank" rel="noopener" style="font-size:11px;color:#2563eb;text-decoration:underline;">📍 ${r.col_place}</a>` : `<span style="font-size:11px;color:#888;">-</span>`}</span></div>
                     ${r.people ? `<div class="mp-detail-row"><span class="mp-detail-row-label">${t('mpPeople')}</span><span class="mp-detail-row-value">${r.people}${t('meiSuffix')}</span></div>` : ''}
                     <div class="mp-detail-row"><span class="mp-detail-row-label">${t('mpPayStatus')}</span><span class="mp-detail-row-value" style="color:${payColor};font-weight:700;">${payLabel}</span></div>
+                    ${r.coupon_code ? `<div class="mp-detail-row"><span class="mp-detail-row-label">🎟 ${t('mpCoupon')}</span><span class="mp-detail-row-value" style="color:#166534;font-weight:700;">${r.coupon_code}${(+r.discount>0)?(' 　-¥'+Number(r.discount).toLocaleString()):''}</span></div>` : ''}
                     ${r.price ? `<div style="border-top:1px solid #f0f0f0;margin-top:8px;padding-top:8px;"><div class="mp-detail-row"><span class="mp-detail-row-label" style="font-weight:700;">${t('mpPayAmount')}</span><span class="mp-detail-row-value" style="font-size:18px;font-weight:800;color:#1a1a1a;">¥${Number(r.price).toLocaleString()}</span></div></div>` : ''}
                 </div>
             </div>
@@ -4981,7 +4982,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             lineHelpResId: '💬 予約番号がわからない場合は公式LINEへ', mpGuideLink: 'マイページの使い方を見る', noReservationQ: '予約がない場合は',
             mpResInfo: '予約情報', mpBooker: '予約者', samaSuffix: ' 様', mpVehClass: '車両クラス', mpOptionsLabel: 'オプション',
             optCover: '補償：', optBaby: 'ベビーシート×', optUsb: 'USBケーブル', mpPeople: 'ご利用人数', meiSuffix: ' 名',
-            mpPayStatus: '決済状況', mpPayAmount: 'お支払い金額', payPaid: '決済済み', payCancelled: 'キャンセル済み', payPending: 'お支払い待ち（未決済）',
+            mpPayStatus: '決済状況', mpPayAmount: 'お支払い金額', mpCoupon: '利用クーポン', payPaid: '決済済み', payCancelled: 'キャンセル済み', payPending: 'お支払い待ち（未決済）',
             contactLineFull: '💬 確認・お問い合わせ（公式LINE）', resCancelledMsg: 'この予約はキャンセルされました', backToAnotherRes: '← 別の予約を確認する',
             changeApplying: '✏️ 変更申請中', changeDelArrow: 'お届け → ', changeColArrow: '回収 → ',
             changeReceivedBody: '変更リクエストを受け付けました。<b>運営の確認・承認後に反映</b>されます。', changeUrgentLine: 'お急ぎ・取り消しは公式LINEへご連絡ください。',
@@ -5091,7 +5092,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             lineHelpResId: "💬 Don't know your reservation number? Contact us on LINE", mpGuideLink: 'See how to use My Page', noReservationQ: "Don't have a reservation?",
             mpResInfo: 'Reservation Details', mpBooker: 'Booker', samaSuffix: '', mpVehClass: 'Vehicle Class', mpOptionsLabel: 'Options',
             optCover: 'Insurance: ', optBaby: 'Baby seat ×', optUsb: 'USB cable', mpPeople: 'Passengers', meiSuffix: ' ppl',
-            mpPayStatus: 'Payment Status', mpPayAmount: 'Amount Paid', payPaid: 'Paid', payCancelled: 'Cancelled', payPending: 'Awaiting payment (unpaid)',
+            mpPayStatus: 'Payment Status', mpPayAmount: 'Amount Paid', mpCoupon: 'Coupon used', payPaid: 'Paid', payCancelled: 'Cancelled', payPending: 'Awaiting payment (unpaid)',
             contactLineFull: '💬 Questions? Contact us (Official LINE)', resCancelledMsg: 'This reservation has been cancelled', backToAnotherRes: '← Check another reservation',
             changeApplying: '✏️ Change request pending', changeDelArrow: 'Delivery → ', changeColArrow: 'Return → ',
             changeReceivedBody: 'Your change request has been received. <b>It will apply after staff review/approval.</b>', changeUrgentLine: 'For urgent changes or cancellation, please contact us on Official LINE.',
@@ -5201,7 +5202,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             lineHelpResId: '💬 不知道預約編號？請洽官方LINE', mpGuideLink: '查看會員頁面使用方法', noReservationQ: '還沒有預約嗎？',
             mpResInfo: '預約資訊', mpBooker: '預約者', samaSuffix: '', mpVehClass: '車輛車型', mpOptionsLabel: '選項',
             optCover: '補償：', optBaby: '嬰兒座椅×', optUsb: 'USB線', mpPeople: '乘車人數', meiSuffix: ' 人',
-            mpPayStatus: '付款狀態', mpPayAmount: '付款金額', payPaid: '已付款', payCancelled: '已取消', payPending: '待付款（未付款）',
+            mpPayStatus: '付款狀態', mpPayAmount: '付款金額', mpCoupon: '使用優惠券', payPaid: '已付款', payCancelled: '已取消', payPending: '待付款（未付款）',
             contactLineFull: '💬 確認・洽詢（官方LINE）', resCancelledMsg: '此預約已取消', backToAnotherRes: '← 查看其他預約',
             changeApplying: '✏️ 變更申請中', changeDelArrow: '送達 → ', changeColArrow: '回收 → ',
             changeReceivedBody: '已收到您的變更請求。<b>經營方確認・核准後生效。</b>', changeUrgentLine: '如需緊急變更・取消，請洽官方LINE。',
@@ -5311,7 +5312,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             lineHelpResId: '💬 예약 번호를 모르시나요? 공식 LINE으로', mpGuideLink: '마이페이지 사용법 보기', noReservationQ: '예약이 없으신가요?',
             mpResInfo: '예약 정보', mpBooker: '예약자', samaSuffix: ' 님', mpVehClass: '차량 클래스', mpOptionsLabel: '옵션',
             optCover: '보상: ', optBaby: '베이비 시트×', optUsb: 'USB 케이블', mpPeople: '이용 인원', meiSuffix: '명',
-            mpPayStatus: '결제 상태', mpPayAmount: '결제 금액', payPaid: '결제 완료', payCancelled: '취소됨', payPending: '결제 대기 (미결제)',
+            mpPayStatus: '결제 상태', mpPayAmount: '결제 금액', mpCoupon: '사용 쿠폰', payPaid: '결제 완료', payCancelled: '취소됨', payPending: '결제 대기 (미결제)',
             contactLineFull: '💬 확인・문의 (공식 LINE)', resCancelledMsg: '이 예약은 취소되었습니다', backToAnotherRes: '← 다른 예약 확인',
             changeApplying: '✏️ 변경 신청 중', changeDelArrow: '배달 → ', changeColArrow: '회수 → ',
             changeReceivedBody: '변경 요청을 접수했습니다. <b>운영진 확인·승인 후 반영됩니다.</b>', changeUrgentLine: '급한 변경·취소는 공식 LINE으로 연락 주세요.',
