@@ -28,26 +28,22 @@
   }
 
   var UI = {
-    ja: { title: 'KEYDROP サポート', sub: 'よくある質問にお答えします', ph: '質問を入力（例：料金は？）',
-      greet: 'こんにちは！KEYDROPのよくある質問にお答えします🔑 下のボタンか、知りたいことを入力してください。',
-      none: '申し訳ございません、うまく見つかりませんでした。お手数ですが公式LINEまたはお電話でお問い合わせください。',
+    ja: { title: 'KEYDROP サポート', sub: 'よくある質問にお答えします',
+      greet: 'こんにちは！KEYDROPのよくある質問です🔑 知りたい項目をタップしてください。',
       more: 'こちらもよく見られています', line: '公式LINEで質問', tel: '電話する（' + TEL + '）',
-      send: '送信', open: 'チャットで質問', related: 'もしかして：' },
-    en: { title: 'KEYDROP Support', sub: 'We answer common questions', ph: 'Type your question (e.g. price?)',
-      greet: 'Hi! I can answer common KEYDROP questions🔑 Tap a button below or type what you want to know.',
-      none: 'Sorry, I could not find that. Please contact us via Official LINE or phone.',
+      open: 'よくある質問', list: '📋 ほかの質問を見る', pick: '質問をタップしてください' },
+    en: { title: 'KEYDROP Support', sub: 'We answer common questions',
+      greet: 'Hi! Here are common KEYDROP questions🔑 Tap the topic you want to know.',
       more: 'People also ask', line: 'Ask on Official LINE', tel: 'Call (' + TEL + ')',
-      send: 'Send', open: 'Chat with us', related: 'Did you mean:' },
-    zh: { title: 'KEYDROP 客服', sub: '為您解答常見問題', ph: '輸入問題（例：費用？）',
-      greet: '您好！我可以回答KEYDROP的常見問題🔑 請點下方按鈕或輸入您想了解的內容。',
-      none: '抱歉，沒有找到相關內容。請透過官方LINE或電話與我們聯絡。',
+      open: 'FAQ / Help', list: '📋 See other questions', pick: 'Tap a question' },
+    zh: { title: 'KEYDROP 客服', sub: '為您解答常見問題',
+      greet: '您好！這是KEYDROP常見問題🔑 請點選您想了解的項目。',
       more: '其他人也在問', line: '用官方LINE詢問', tel: '撥打電話（' + TEL + '）',
-      send: '送出', open: '線上諮詢', related: '您是不是想問：' },
-    ko: { title: 'KEYDROP 고객지원', sub: '자주 묻는 질문에 답합니다', ph: '질문을 입력（예: 요금?）',
-      greet: '안녕하세요! KEYDROP 자주 묻는 질문에 답해 드립니다🔑 아래 버튼을 누르거나 궁금한 점을 입력하세요.',
-      none: '죄송합니다. 찾지 못했습니다. 공식 LINE 또는 전화로 문의해 주세요.',
+      open: '常見問題', list: '📋 查看其他問題', pick: '請點選問題' },
+    ko: { title: 'KEYDROP 고객지원', sub: '자주 묻는 질문에 답합니다',
+      greet: '안녕하세요! KEYDROP 자주 묻는 질문입니다🔑 원하는 항목을 눌러주세요.',
       more: '이런 질문도 많이 해요', line: '공식 LINE으로 문의', tel: '전화하기（' + TEL + '）',
-      send: '보내기', open: '채팅 문의', related: '혹시 이건가요:' }
+      open: '자주 묻는 질문', list: '📋 다른 질문 보기', pick: '질문을 눌러주세요' }
   };
   function L() { return UI[lang()] || UI.ja; }
 
@@ -137,10 +133,10 @@
     if (document.getElementById('kdchat-css')) return;
     var s = document.createElement('style'); s.id = 'kdchat-css';
     s.textContent = [
-      '.kdc-fab{position:fixed;left:14px;bottom:16px;z-index:1500;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1a1a1a,#333);color:#fff;border:2px solid #FABE00;border-radius:999px;padding:11px 16px 11px 13px;font-weight:800;font-size:13.5px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.28);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif}',
-      '.kdc-fab span.k{color:#FABE00}',
+      '.kd-help-h{cursor:pointer}',
+      '@media(max-width:767px){.kd-help-h span{display:none}}',
+      '.kdc-fab{position:fixed;left:14px;bottom:16px;z-index:1500;display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#1a1a1a,#333);color:#fff;border:2px solid #FABE00;border-radius:999px;padding:11px 16px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.28);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif}',
       '.kdc-fab:active{transform:scale(.96)}',
-      '@media(max-width:520px){.kdc-fab{font-size:0;padding:13px;gap:0}.kdc-fab .lbl{display:none}}',
       '.kdc-panel{position:fixed;left:14px;bottom:16px;z-index:1600;width:min(380px,calc(100vw - 28px));height:min(560px,calc(100dvh - 90px));background:#fff;border-radius:18px;box-shadow:0 14px 50px rgba(0,0,0,.32);display:none;flex-direction:column;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif}',
       '.kdc-panel.open{display:flex;animation:kdcUp .22s cubic-bezier(.18,.9,.32,1.1)}',
       '@keyframes kdcUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}',
@@ -162,11 +158,7 @@
       '.kdc-lbl{font-size:11.5px;color:#6b7280;font-weight:700;margin:2px 0 -2px}',
       '.kdc-cta{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}',
       '.kdc-cta a{flex:1;min-width:120px;text-align:center;text-decoration:none;font-weight:800;font-size:12.5px;padding:9px;border-radius:11px}',
-      '.kdc-cta .line{background:#06c755;color:#fff}.kdc-cta .tel{background:#1a1a1a;color:#fff}',
-      '.kdc-foot{display:flex;gap:8px;padding:10px;border-top:1px solid #eceef1;background:#fff}',
-      '.kdc-foot input{flex:1;border:1.5px solid #d1d5db;border-radius:11px;padding:10px 12px;font-size:16px;outline:none}',
-      '.kdc-foot input:focus{border-color:#FABE00}',
-      '.kdc-foot button{background:#1a1a1a;color:#fff;border:none;border-radius:11px;padding:0 15px;font-weight:800;font-size:13px;cursor:pointer}'
+      '.kdc-cta .line{background:#06c755;color:#fff}.kdc-cta .tel{background:#1a1a1a;color:#fff}'
     ].join('');
     document.head.appendChild(s);
   }
@@ -189,69 +181,81 @@
     });
     bodyEl.appendChild(wrap); bodyEl.scrollTop = bodyEl.scrollHeight;
   }
-  function quickList() {
-    var lg = lang(); var list = FAQ[lg] && FAQ[lg].length ? FAQ[lg] : FAQ.ja;
-    return list.slice(0, 6);
+  function allList() {
+    var lg = lang(); return FAQ[lg] && FAQ[lg].length ? FAQ[lg] : FAQ.ja;
+  }
+  function labelRow(text) {
+    var l = document.createElement('div'); l.className = 'kdc-lbl'; l.textContent = text; bodyEl.appendChild(l);
   }
   function answer(entry) {
     add('<div class="kdc-q">' + entry.q + '</div><div class="a">' + entry.a + '</div>', 'bot');
     // 関連（同検索の2〜4位）
     var rel = search(entry.q).filter(function (e) { return e.q !== entry.q; }).slice(0, 3);
-    if (rel.length) { var l = document.createElement('div'); l.className = 'kdc-lbl'; l.textContent = L().more; bodyEl.appendChild(l); chips(rel, answer); }
+    if (rel.length) { labelRow(L().more); chips(rel, answer); }
+    // ほかの質問へ戻る導線
+    var back = document.createElement('div'); back.className = 'kdc-chips';
+    var b = document.createElement('button'); b.className = 'kdc-chip'; b.textContent = L().list;
+    b.onclick = showList; back.appendChild(b); bodyEl.appendChild(back);
+    bodyEl.scrollTop = bodyEl.scrollHeight;
   }
-  function noResult() {
-    add(L().none, 'bot');
-    var c = document.createElement('div'); c.className = 'kdc-cta';
-    c.innerHTML = '<a class="line" href="' + LINE_URL + '" target="_blank" rel="noopener">' + L().line + '</a>'
-      + '<a class="tel" href="tel:' + TEL.replace(/-/g, '') + '">' + L().tel + '</a>';
-    bodyEl.appendChild(c); bodyEl.scrollTop = bodyEl.scrollHeight;
-  }
-  function ask(q) {
-    add(q.replace(/</g, '&lt;'), 'user');
-    var res = search(q);
-    if (!res.length) { noResult(); return; }
-    answer(res[0]);
+  function showList() {
+    labelRow(L().pick);
+    chips(allList(), answer);
   }
   function greet() {
     bodyEl.innerHTML = '';
     add(L().greet, 'bot');
-    if (faqLoaded) chips(quickList(), answer);
+    if (faqLoaded) chips(allList(), answer);
   }
 
-  function build() {
+  function buildPanel() {
     css();
-    var fab = document.createElement('button');
-    fab.className = 'kdc-fab';
-    fab.innerHTML = '💬 <span class="lbl"><span class="k">?</span> ' + L().open + '</span>';
-    fab.onclick = open;
-    document.body.appendChild(fab);
-
     panelEl = document.createElement('div');
     panelEl.className = 'kdc-panel';
     panelEl.innerHTML =
-      '<div class="kdc-head"><div><div class="ti">KEY<span class="k">DROP</span> ' + L().title.replace(/^KEYDROP\s*/, '') + '</div><div class="su">' + L().sub + '</div></div><button class="kdc-x" aria-label="close">×</button></div>'
-      + '<div class="kdc-body"></div>'
-      + '<div class="kdc-foot"><input type="text" placeholder="' + L().ph + '"><button>' + L().send + '</button></div>';
+      '<div class="kdc-head"><div><div class="ti">KEY<span class="k">DROP</span> ' + L().title + '</div><div class="su">' + L().sub + '</div></div><button class="kdc-x" aria-label="close">×</button></div>'
+      + '<div class="kdc-body"></div>';
     document.body.appendChild(panelEl);
     bodyEl = panelEl.querySelector('.kdc-body');
-    inputEl = panelEl.querySelector('input');
     panelEl.querySelector('.kdc-x').onclick = close;
-    var sendBtn = panelEl.querySelector('.kdc-foot button');
-    function submit() { var v = inputEl.value.trim(); if (!v) return; inputEl.value = ''; ask(v); }
-    sendBtn.onclick = submit;
-    inputEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+  }
+  // ヘッダー（上部バー）の🌐の隣に「❓よくある質問」を常設（スマホで見つけやすい・下部カードと重ならない）
+  function mountHelpBtn() {
+    var boxes = document.querySelectorAll('.header-actions');
+    if (!boxes.length) return false;
+    boxes.forEach(function (box) {
+      if (box.querySelector('.kd-help-h')) return;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'kd-lang-btn kd-help-h';
+      b.innerHTML = '❓ <span>' + L().open + '</span>';
+      b.onclick = function (e) { e.stopPropagation(); open(); };
+      box.insertBefore(b, box.firstChild);
+    });
+    return true;
+  }
+  // ヘッダーが無いページ用フォールバック（エリア選択ゲート等）
+  function buildFab() {
+    if (document.querySelector('.kdc-fab')) return;
+    var fab = document.createElement('button');
+    fab.className = 'kdc-fab';
+    fab.innerHTML = '❓ <span class="lbl">' + L().open + '</span>';
+    fab.onclick = open;
+    document.body.appendChild(fab);
   }
   function open() {
     panelEl.classList.add('open');
     if (!bodyEl.childElementCount) greet();
-    setTimeout(function () { try { inputEl.focus(); } catch (e) {} }, 150);
   }
   function close() { panelEl.classList.remove('open'); }
 
   function init() {
-    build();
-    loadFAQ().then(function () { /* 既に開いていれば quick chips 追加 */ if (panelEl.classList.contains('open') && bodyEl.childElementCount <= 1) greet(); })
-      .catch(function () { /* fetch失敗でもUIは出す（検索は空→LINE誘導） */ });
+    buildPanel();
+    mountHelpBtn();
+    setInterval(mountHelpBtn, 1200); // 再描画でヘッダーが作り直されても❓を再注入
+    setTimeout(function () { if (!document.querySelector('.kd-help-h')) buildFab(); }, 3000); // ヘッダーが無いページ用フォールバック
+    loadFAQ().then(function () { if (panelEl.classList.contains('open') && bodyEl.childElementCount <= 1) greet(); })
+      .catch(function () { /* fetch失敗でもUIは出る（一覧が空になるだけ） */ });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
