@@ -3286,7 +3286,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <!-- 料金明細 -->
                 <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;">
                     <div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
-                        <span>${clsName(state.selectedClass) || (state.selectedClass + t('classSuffix'))} × ${days}${t('daysSuffix')}</span>
+                        <span>${clsName(v?.type) || ((v?.type || state.selectedClass || '') + t('classSuffix'))} × ${days}${t('daysSuffix')}</span>
                         <span>¥${basePrice.toLocaleString()}</span>
                     </div>
                     ${cdwFee > 0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;color:#666;">
