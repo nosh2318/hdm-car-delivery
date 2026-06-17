@@ -2104,6 +2104,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         return `¥${price.toLocaleString()}`;
     }
 
+    // 返却日が貸出日より前なら進めない（同日は返却時刻が貸出時刻より後であること）
+    function dateRangeValid(){
+      var s=state.datetime.startDate,e=state.datetime.endDate,st=state.datetime.startTime,et=state.datetime.endTime;
+      if(!s||!e)return true;
+      if(e<s)return false;
+      if(e===s&&st&&et&&et<=st)return false;
+      return true;
+    }
+    function ensureDateOrder(){ if(!dateRangeValid()){ alert(t('dateOrderErr')); return false; } return true; }
+    function setStartDate(v){ state.datetime.startDate=v; if(state.datetime.endDate&&state.datetime.endDate<v) state.datetime.endDate=v; fetchAvailableVehicles(); }
+    function setEndDate(v){ if(state.datetime.startDate&&v<state.datetime.startDate){ alert(t('dateOrderErr')); render(); return; } state.datetime.endDate=v; fetchAvailableVehicles(); }
     function getDayCount() {
         // 暦日カウント：日を跨いだら +1 日（例 6/13→6/14 = 2日間）。時刻は料金日数に影響しない。
         const d = state.datetime;
@@ -2479,7 +2490,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div class="datetime-grid" style="gap:10px;">
                 <div class="dt-group"><label>${t('delDate')}</label><select onchange="onDeliveryDate(this.value)">${generateDateOptions(state.datetime.startDate)}</select></div>
                 <div class="dt-group"><label>${t('delTime')}</label><select onchange="state.datetime.startTime=this.value; fetchAvailableVehicles();">${generateTimeOptions(state.datetime.startTime)}</select></div>
-                <div class="dt-group"><label>${t('colDate')}</label><select onchange="state.datetime.endDate=this.value; fetchAvailableVehicles();">${generateDateOptions(state.datetime.endDate)}</select></div>
+                <div class="dt-group"><label>${t('colDate')}</label><select onchange="setEndDate(this.value);">${generateDateOptions(state.datetime.endDate)}</select></div>
                 <div class="dt-group"><label>${t('colTime')}</label><select onchange="state.datetime.endTime=this.value; fetchAvailableVehicles();">${generateTimeOptions(state.datetime.endTime)}</select></div>
             </div>
         </div>`;
@@ -2547,7 +2558,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <div class="datetime-grid" style="gap:10px;">
                             <div class="dt-group">
                                 <label>${t('delDate')}</label>
-                                <select onchange="state.datetime.startDate=this.value; fetchAvailableVehicles();">
+                                <select onchange="setStartDate(this.value);">
                                     ${generateDateOptions(state.datetime.startDate)}
                                 </select>
                             </div>
@@ -2559,7 +2570,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             </div>
                             <div class="dt-group">
                                 <label>${t('colDate')}</label>
-                                <select onchange="state.datetime.endDate=this.value; fetchAvailableVehicles();">
+                                <select onchange="setEndDate(this.value);">
                                     ${generateDateOptions(state.datetime.endDate)}
                                 </select>
                             </div>
@@ -2776,6 +2787,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // ここでは再検索しない（selectの値は保持される）。検索ボタンで確定。
     }
     function applyVehDateSearch() {
+        if(!ensureDateOrder())return;
         state.vehDateOpen = false; // 点滅消える
         render();
         fetchAvailableVehicles();
@@ -3431,6 +3443,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // ── Actions ──
     // ════════════════════════════════════════════
     function goToVehicleStep() {
+        if(!ensureDateOrder())return;
         state.screen = 'step_vehicle';
         render();
         fetchAvailableVehicles();
@@ -3673,6 +3686,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         } catch (e) { console.error('square card init', e); }
     }
     async function payWithCard() {
+        if(!dateRangeValid()){ alert(t('dateOrderErr')); return; }
         const btn = document.getElementById('payBtn');
         const errEl = document.getElementById('cardError');
         const reEnable = () => { if (btn) { btn.disabled = false; btn.textContent = '¥' + (state._payTotal || 0).toLocaleString() + ' を支払う'; } };
@@ -4953,7 +4967,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             daysShort: '日', resVehClass: 'ご予約車両クラス', goMypage: '📱 マイページに移動する',
             cardSafeNote: '🔒 カード情報はSquare（決済代行）へ直接送信され、当サイトには保存されません（安全決済）。',
             mypageLoginWarn: '⚠️ マイページのログインには<u>予約番号</u>と<u>ご予約時のメールアドレス</u>が必要となります。予約番号は大切に保管してください。',
-            deliveryShort: 'お届け', collectionShort: '回収', dateNotSet: '日付未選択', searchThisPeriod: '🔍 この日程で検索する',
+            deliveryShort: 'お届け', collectionShort: '回収', dateNotSet: '日付未選択', dateOrderErr: '返却日は貸出日と同じか後の日付にしてください（時間も貸出より後にしてください）。', searchThisPeriod: '🔍 この日程で検索する',
             mapPickDelivery: '📍 下の地図で<b>お届け場所</b>を選ぶ', mapPickCollection: '🏁 下の地図で<b>回収場所</b>を選ぶ',
             mapTapDelivery: '📍 地図でお届け場所をタップ', mapTapCollection: '🏁 地図で回収場所をタップ／右のボタン',
             outOfAreaDefault: '配達エリア外です。エリア内の場所を選び直してください。',
@@ -5063,7 +5077,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             daysShort: ' days', resVehClass: 'Reserved Vehicle Class', goMypage: '📱 Go to My Page',
             cardSafeNote: '🔒 Card details are sent directly to Square (payment processor) and are not stored on this site (secure payment).',
             mypageLoginWarn: '⚠️ Logging in to My Page requires your <u>reservation number</u> and the <u>email used for booking</u>. Please keep your reservation number safe.',
-            deliveryShort: 'Delivery', collectionShort: 'Return', dateNotSet: 'Date not set', searchThisPeriod: '🔍 Search this period',
+            deliveryShort: 'Delivery', collectionShort: 'Return', dateNotSet: 'Date not set', dateOrderErr: 'Return must be the same day or after pickup (and the time after pickup).', searchThisPeriod: '🔍 Search this period',
             mapPickDelivery: '📍 Pick your <b>delivery location</b> on the map below', mapPickCollection: '🏁 Pick your <b>return location</b> on the map below',
             mapTapDelivery: '📍 Tap the map to set the delivery location', mapTapCollection: '🏁 Tap the map or use the button',
             outOfAreaDefault: 'Outside the delivery area. Please choose a location within the area.',
@@ -5173,7 +5187,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             daysShort: '天', resVehClass: '預約車輛車型', goMypage: '📱 前往我的頁面',
             cardSafeNote: '🔒 卡片資訊將直接傳送至Square（金流代理），本網站不會保存（安全付款）。',
             mypageLoginWarn: '⚠️ 登入「我的頁面」需要<u>預約編號</u>與<u>預約時的電子郵件</u>。請妥善保管預約編號。',
-            deliveryShort: '送達', collectionShort: '回收', dateNotSet: '未選擇日期', searchThisPeriod: '🔍 以此日程搜尋',
+            deliveryShort: '送達', collectionShort: '回收', dateNotSet: '未選擇日期', dateOrderErr: '還車日須與取車日相同或之後（時間也須晚於取車）。', searchThisPeriod: '🔍 以此日程搜尋',
             mapPickDelivery: '📍 在下方地圖選擇<b>送達地點</b>', mapPickCollection: '🏁 在下方地圖選擇<b>回收地點</b>',
             mapTapDelivery: '📍 點擊地圖設定送達地點', mapTapCollection: '🏁 點擊地圖或使用右側按鈕',
             outOfAreaDefault: '超出外送範圍，請重新選擇範圍內的地點。',
@@ -5283,7 +5297,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             daysShort: '일', resVehClass: '예약 차량 클래스', goMypage: '📱 마이페이지로 이동',
             cardSafeNote: '🔒 카드 정보는 Square(결제 대행)로 직접 전송되며 본 사이트에는 저장되지 않습니다 (안전 결제).',
             mypageLoginWarn: '⚠️ 마이페이지 로그인에는 <u>예약 번호</u>와 <u>예약 시 이메일 주소</u>가 필요합니다. 예약 번호를 소중히 보관해 주세요.',
-            deliveryShort: '배달', collectionShort: '회수', dateNotSet: '날짜 미선택', searchThisPeriod: '🔍 이 일정으로 검색',
+            deliveryShort: '배달', collectionShort: '회수', dateNotSet: '날짜 미선택', dateOrderErr: '반납일은 대여일과 같거나 이후로 설정하세요(시간도 대여 이후).', searchThisPeriod: '🔍 이 일정으로 검색',
             mapPickDelivery: '📍 아래 지도에서 <b>배달 장소</b>를 선택', mapPickCollection: '🏁 아래 지도에서 <b>회수 장소</b>를 선택',
             mapTapDelivery: '📍 지도를 탭하여 배달 장소 지정', mapTapCollection: '🏁 지도를 탭하거나 오른쪽 버튼',
             outOfAreaDefault: '배달 지역 밖입니다. 지역 내 장소를 다시 선택해 주세요.',
