@@ -5525,6 +5525,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         gtag('event', 'purchase', _ev);
                         gtag('event', 'booking_complete', _ev);
                     }
+                    // ★ 検証用の証跡：決済リダイレクトでTag Assistant/Consoleが切れても発火を後から確認できるよう記録（直近3件）
+                    try {
+                        var _log = JSON.parse(localStorage.getItem('kd_conv_log') || '[]');
+                        _log.unshift({ event: 'booking_complete', firedAt: new Date().toISOString(), dataLayerLen: window.dataLayer.length, gtag: (typeof gtag === 'function'), payload: _ev });
+                        localStorage.setItem('kd_conv_log', JSON.stringify(_log.slice(0, 3)));
+                    } catch (e) {}
                 } catch (e) {}
                 try { localStorage.removeItem('kd_conv'); } catch (e) {}
                 state.screen = 'complete';
