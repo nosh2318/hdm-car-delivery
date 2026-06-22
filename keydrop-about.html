@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KVF3F48X');</script>
+<!-- End Google Tag Manager -->
+
+<!-- Google Analytics 4 (GA4) keydrop.jp -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-N1HJ6WLG2Y"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-N1HJ6WLG2Y');</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<title>KEYDROPとは？｜KEYDROP カーデリバリー</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Helvetica Neue',sans-serif;background:#f5f6f8;color:#1a1a1a;line-height:1.7;padding-bottom:50px;overflow-x:hidden}
+  a{color:#0369a1}
+
+  /* ===== header (guide.html 踏襲) ===== */
+  .hd{background:#0e1116;color:#fff;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30}
+  .hd a.logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+  .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
+  .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
+  .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
+  .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:auto;flex:none}
+
+  /* ===== hero ===== */
+  .hero{background:radial-gradient(1100px 420px at 72% -12%, #2b313d 0%, #11151b 55%, #0b0e13 100%);color:#fff;padding:46px 20px 34px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;left:-40px;top:-40px;width:160px;height:160px;background:repeating-linear-gradient(135deg,#FABE00 0 6px,transparent 6px 14px);opacity:.10;transform:skewX(-12deg)}
+  .hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;color:#FABE00;opacity:.95}
+  .hero h1{font-size:clamp(24px,7vw,33px);font-weight:900;letter-spacing:.02em;margin-top:10px;font-style:italic;line-height:1.35}
+  .hero h1 .y{color:#FABE00}
+  .hero .lead{margin-top:13px;opacity:.85;font-size:14px;max-width:520px;margin-left:auto;margin-right:auto}
+  .hero-map{max-width:340px;margin:22px auto 0;border-radius:18px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,.4);border:3px solid rgba(250,190,0,.35);background:#eaf2fb}
+  .hero-map svg{display:block;width:100%;height:auto}
+
+  /* ===== section ===== */
+  .sec{max-width:780px;margin:0 auto;padding:32px 16px 4px}
+  .sec-h{text-align:center;margin-bottom:18px}
+  .sec-h .tag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.05em;color:#a07c00;background:#fffbf0;border:1px solid #FABE00;border-radius:999px;padding:4px 14px}
+  .sec-h h2{font-size:21px;font-weight:900;margin-top:10px}
+  .sec-h p{color:#7a7f87;font-size:12.5px;margin-top:5px}
+
+  /* card */
+  .card{background:#fff;border:1px solid #eceef1;border-radius:16px;padding:20px 20px;box-shadow:0 8px 24px rgba(14,17,22,.06)}
+  .card+.card{margin-top:14px}
+
+  /* 定義 KEY/DROP */
+  .def{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+  @media(max-width:560px){.def{grid-template-columns:1fr}}
+  .def .box{background:#fffbf0;border:1.5px solid #FABE00;border-radius:14px;padding:16px 18px}
+  .def .box .lbl{font-size:13px;font-weight:900;color:#a07c00;letter-spacing:.04em}
+  .def .box .ttl{font-size:18px;font-weight:900;margin-top:4px}
+  .def .box .ds{font-size:13px;color:#555;margin-top:6px;line-height:1.7}
+  .def-sum{font-size:14px;color:#333;margin-top:14px;line-height:1.8;text-align:center}
+  .def-sum b{color:#1a1a1a}
+
+  /* steps */
+  .steps{counter-reset:st;margin-top:4px}
+  .step{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px dashed #eceef1}
+  .step:last-child{border-bottom:none}
+  .step .num{flex:none;width:34px;height:34px;border-radius:50%;background:#FABE00;color:#1a1a1a;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center}
+  .step.col .num{background:#0e1116;color:#FABE00}
+  .step .t{font-size:15px;font-weight:800}
+  .step .d{font-size:13px;color:#5a6068;margin-top:3px;line-height:1.7}
+  .step .d em{font-style:normal;color:#a07c00;font-weight:800}
+
+  /* phones (双方の目線) */
+  .dual{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+  .phone{width:280px;max-width:90vw;border:8px solid #1e293b;border-radius:28px;background:#1e293b;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+  .scr{background:#fff;border-radius:20px;overflow:hidden}
+  .pbar{font-size:12px;font-weight:900;color:#1a1a1a;text-align:center;padding:9px;background:#FABE00}
+  .pbar.staff{background:#0e1116;color:#FABE00}
+  .status{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:12.5px;font-weight:800}
+  .status.cust{background:#fffbf0;color:#a07c00}.status.staff{background:#f1f5f9;color:#334155}
+  .dot{width:9px;height:9px;border-radius:50%;background:#FABE00;animation:bl 1.2s infinite}
+  .dot.o{background:#0e1116}
+  @keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+  .mapwrap{position:relative;height:260px}
+  .mapwrap svg{display:block;width:100%;height:100%}
+  .pulse{animation:pl 1.8s ease-out infinite}
+  @keyframes pl{0%{r:6;opacity:.6}100%{r:24;opacity:0}}
+  .cardcap{text-align:center;font-size:12.5px;font-weight:800;color:#334155;margin-top:10px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;justify-content:center;font-size:12.5px;color:#444}
+  .legend span{background:#f8fafc;border:1px solid #eceef1;border-radius:10px;padding:7px 12px}
+  .legend b{font-size:15px}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
+  td,th{border:1px solid #eceef1;padding:10px 12px;text-align:left;vertical-align:top}
+  th{background:#fffbf0;font-weight:900;color:#a07c00}
+  .ok{color:#0e9f50;font-weight:900}
+  .tnote{background:#fffbf0;border:1px solid #FABE00;border-radius:12px;padding:12px 16px;font-size:13px;color:#7a5b00;margin-top:12px;line-height:1.75}
+
+  /* chips */
+  .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+  .chip{background:#fffbf0;border:1.5px solid #FABE00;color:#7a5b00;border-radius:11px;padding:10px 15px;font-size:13px;font-weight:800}
+
+  /* CTA + footer */
+  .cta-wrap{max-width:430px;margin:30px auto 6px;padding:0 16px}
+  .cta{display:block;text-align:center;font-weight:900;font-size:15px;padding:15px;border-radius:14px;text-decoration:none;margin-top:11px}
+  .cta.book{background:#FABE00;color:#1a1a1a;box-shadow:0 6px 18px rgba(250,190,0,.4)}
+  .cta.line{background:#06c755;color:#fff;box-shadow:0 6px 18px rgba(6,199,85,.32)}
+  .foot{max-width:430px;margin:18px auto 0;padding:0 16px;text-align:center;color:#9aa0a8;font-size:11.5px;line-height:1.9}
+  .foot b{color:#555}
+  .foot a{color:#0369a1;font-weight:700;text-decoration:none}
+</style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KVF3F48X"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div class="hd">
+  <a class="logo" href="./"><span class="mark"><i></i><i></i><i></i></span><b>KEY<span class="y">DROP</span></b></a>
+  <a class="back" href="./">← TOP</a>
+</div>
+
+<!-- ① ヒーロー -->
+<div class="hero">
+  <div class="eyebrow">WHAT IS KEYDROP</div>
+  <h1>鍵を、あなたの<span class="y">いる場所</span>へ。</h1>
+  <p class="lead">店に行かない。あなたの居場所が、受け渡し場所。<br>地図でお互いの位置を見ながら、待ち合わせて受け渡し。</p>
+  <div class="hero-map">
+    <svg viewBox="0 0 300 230" preserveAspectRatio="xMidYMid meet">
+      <rect width="300" height="230" fill="#eaf2fb"/>
+      <g stroke="#cdd9ea" stroke-width="10">
+        <line x1="0" y1="60" x2="300" y2="60"/><line x1="0" y1="130" x2="300" y2="130"/><line x1="0" y1="195" x2="300" y2="195"/>
+        <line x1="70" y1="0" x2="70" y2="230"/><line x1="170" y1="0" x2="170" y2="230"/><line x1="240" y1="0" x2="240" y2="230"/>
+      </g>
+      <path d="M48,165 C90,115 120,100 168,92" stroke="#FABE00" stroke-width="6" fill="none" stroke-dasharray="9 7" stroke-linecap="round"/>
+      <!-- 待ち合わせ -->
+      <circle cx="168" cy="90" r="13" fill="#FABE00" opacity=".22"/>
+      <text x="168" y="96" font-size="20" text-anchor="middle">📍</text>
+      <rect x="120" y="64" width="96" height="18" rx="5" fill="#fff" stroke="#FABE00"/><text x="168" y="77" font-size="11" font-weight="800" text-anchor="middle" fill="#a07c00">待ち合わせ場所</text>
+      <!-- スタッフ -->
+      <circle class="pulse" cx="48" cy="165" fill="#FABE00"/>
+      <text x="48" y="171" font-size="22" text-anchor="middle">🚗</text>
+      <rect x="8" y="177" width="80" height="18" rx="5" fill="#fff" stroke="#e2e8f0"/><text x="48" y="190" font-size="11" font-weight="800" text-anchor="middle" fill="#1a1a1a">スタッフ</text>
+      <!-- お客様 -->
+      <text x="234" y="200" font-size="20" text-anchor="middle">🧍</text>
+      <rect x="202" y="204" width="62" height="18" rx="5" fill="#fff" stroke="#e2e8f0"/><text x="233" y="217" font-size="11" font-weight="800" text-anchor="middle" fill="#0e9f50">あなた</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ② KEYDROPとは（定義） -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag">DEFINITION</span>
+    <h2>KEYDROP とは？</h2>
+    <p>店舗に行かず、地図で待ち合わせて受け渡すレンタカー</p>
+  </div>
+  <div class="card">
+    <div class="def">
+      <div class="box">
+        <div class="lbl">KEY</div>
+        <div class="ttl">鍵（クルマ）</div>
+        <div class="ds">あなたが乗るレンタカーと、その鍵。</div>
+      </div>
+      <div class="box">
+        <div class="lbl">DROP</div>
+        <div class="ttl">あなたのいる場所へ</div>
+        <div class="ds">店ではなく、あなたの居場所へ届けて、その場で受け渡す。</div>
+      </div>
+    </div>
+    <div class="def-sum">
+      お店のカウンターに並ばない。<b>あなたが今いる場所（ホテル・自宅・駅など）が受け渡し場所</b>になります。<br>
+      地図でお互いの位置を見ながら待ち合わせて、その場で鍵を受け渡す。それが KEYDROP です。
+    </div>
+  </div>
+</div>
+
+<!-- ③ お届けの流れ -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag">DELIVERY</span>
+    <h2>① お届けの流れ</h2>
+    <p>ご予約から受け取りまで</p>
+  </div>
+  <div class="card">
+    <div class="steps">
+      <div class="step"><div class="num">1</div><div><div class="t">ご予約</div><div class="d">車両・日時・受け取りたい場所を指定してご予約。</div></div></div>
+      <div class="step"><div class="num">2</div><div><div class="t">スタッフが「出発」</div><div class="d">出発したスタッフから、<em>メールで地図のリンク</em>が届きます。</div></div></div>
+      <div class="step"><div class="num">3</div><div><div class="t">地図で待ち合わせ場所を確定</div><div class="d">マイページの地図で<em>お互いの位置</em>を見ながら、合流する場所を確定します。</div></div></div>
+      <div class="step"><div class="num">4</div><div><div class="t">その場で受け渡し</div><div class="d">待ち合わせ場所で鍵を受け取り、そのまま出発できます。</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ④ 回収の流れ -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag">COLLECTION</span>
+    <h2>② 回収の流れ</h2>
+    <p>返却も、いる場所で</p>
+  </div>
+  <div class="card">
+    <div class="steps">
+      <div class="step col"><div class="num">1</div><div><div class="t">返却日</div><div class="d">ご返却の日時になったら、回収のご案内が始まります。</div></div></div>
+      <div class="step col"><div class="num">2</div><div><div class="t">スタッフが「回収に向かう」</div><div class="d">スタッフが向かうと、<em>メールで地図のリンク</em>が届きます。</div></div></div>
+      <div class="step col"><div class="num">3</div><div><div class="t">地図で待ち合わせ場所を確定</div><div class="d">地図でお互いの位置を見ながら合流場所を確定。スタッフは徒歩・電車・別車などで向かいます（位置はスタッフのスマホから表示）。</div></div></div>
+      <div class="step col"><div class="num">4</div><div><div class="t">その場で回収</div><div class="d">待ち合わせ場所で鍵をお渡しいただいて完了です。</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ⑤ 画面イメージ（双方の目線） -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag">SCREEN</span>
+    <h2>画面イメージ</h2>
+    <p>お客様の画面 / スタッフの画面</p>
+  </div>
+  <div class="dual">
+    <!-- お客様 -->
+    <div>
+      <div class="phone"><div class="scr">
+        <div class="pbar">KEYDROP マイページ</div>
+        <div class="status cust"><span class="dot"></span>お届け中 ・ あと約 6 分で到着</div>
+        <div class="mapwrap">
+          <svg viewBox="0 0 300 260" preserveAspectRatio="xMidYMid slice">
+            <rect width="300" height="260" fill="#eaf2fb"/>
+            <g stroke="#cdd9ea" stroke-width="10">
+              <line x1="0" y1="70" x2="300" y2="70"/><line x1="0" y1="150" x2="300" y2="150"/><line x1="0" y1="220" x2="300" y2="220"/>
+              <line x1="70" y1="0" x2="70" y2="260"/><line x1="170" y1="0" x2="170" y2="260"/><line x1="240" y1="0" x2="240" y2="260"/>
+            </g>
+            <path d="M48,185 C90,130 120,112 168,104" stroke="#FABE00" stroke-width="5" fill="none" stroke-dasharray="9 7" stroke-linecap="round"/>
+            <circle cx="168" cy="102" r="13" fill="#FABE00" opacity=".2"/>
+            <text x="168" y="108" font-size="20" text-anchor="middle">📍</text>
+            <rect x="120" y="76" width="96" height="18" rx="5" fill="#fff" stroke="#FABE00"/><text x="168" y="89" font-size="11" font-weight="800" text-anchor="middle" fill="#a07c00">待ち合わせ場所</text>
+            <circle class="pulse" cx="48" cy="185" fill="#FABE00"/>
+            <text x="48" y="191" font-size="22" text-anchor="middle">🚗</text>
+            <rect x="8" y="197" width="80" height="18" rx="5" fill="#fff" stroke="#e2e8f0"/><text x="48" y="210" font-size="11" font-weight="800" text-anchor="middle" fill="#1a1a1a">スタッフ(動く)</text>
+            <text x="234" y="232" font-size="20" text-anchor="middle">🧍</text>
+            <rect x="204" y="236" width="60" height="18" rx="5" fill="#fff" stroke="#e2e8f0"/><text x="234" y="249" font-size="11" font-weight="800" text-anchor="middle" fill="#0e9f50">あなた</text>
+          </svg>
+        </div>
+      </div></div>
+      <div class="cardcap">🟡 お客様の画面：スタッフの車が近づくのが見える</div>
+    </div>
+    <!-- スタッフ -->
+    <div>
+      <div class="phone"><div class="scr">
+        <div class="pbar staff">配車アプリ（スタッフ）</div>
+        <div class="status staff"><span class="dot o"></span>お客様まで 案内中 ・ 0.8km</div>
+        <div class="mapwrap">
+          <svg viewBox="0 0 300 260" preserveAspectRatio="xMidYMid slice">
+            <rect width="300" height="260" fill="#f3f5f8"/>
+            <g stroke="#dde2ea" stroke-width="10">
+              <line x1="0" y1="70" x2="300" y2="70"/><line x1="0" y1="150" x2="300" y2="150"/><line x1="0" y1="220" x2="300" y2="220"/>
+              <line x1="70" y1="0" x2="70" y2="260"/><line x1="170" y1="0" x2="170" y2="260"/><line x1="240" y1="0" x2="240" y2="260"/>
+            </g>
+            <path d="M48,185 C90,130 120,112 168,104" stroke="#0e1116" stroke-width="5" fill="none" stroke-dasharray="9 7" stroke-linecap="round"/>
+            <circle cx="168" cy="102" r="13" fill="#FABE00" opacity=".2"/>
+            <text x="168" y="108" font-size="20" text-anchor="middle">📍</text>
+            <rect x="120" y="76" width="96" height="18" rx="5" fill="#fff" stroke="#FABE00"/><text x="168" y="89" font-size="11" font-weight="800" text-anchor="middle" fill="#a07c00">待ち合わせ場所</text>
+            <circle class="pulse" cx="48" cy="185" fill="#0e1116"/>
+            <text x="48" y="191" font-size="22" text-anchor="middle">🚗</text>
+            <rect x="14" y="197" width="68" height="18" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="48" y="210" font-size="11" font-weight="800" text-anchor="middle" fill="#0e1116">自分</text>
+            <text x="234" y="232" font-size="20" text-anchor="middle">🧍</text>
+            <rect x="200" y="236" width="64" height="18" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="232" y="249" font-size="11" font-weight="800" text-anchor="middle" fill="#0e9f50">お客様</text>
+          </svg>
+        </div>
+      </div></div>
+      <div class="cardcap">⚫ スタッフの画面：お客様と待ち合わせ場所が見える</div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><b>🚗</b> スタッフ＝<b>動く</b></span>
+    <span><b>🧍</b> お客様＝待機・任意で共有</span>
+    <span><b>📍</b> 待ち合わせ場所＝目印</span>
+  </div>
+</div>
+
+<!-- ⑥ 誰が共有・誰は見るだけ -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag">FAIR &amp; SIMPLE</span>
+    <h2>誰が“共有”・誰は“見るだけ”</h2>
+    <p>完全対称。映る側だけが準備すればOK</p>
+  </div>
+  <div class="card">
+    <table>
+      <tr><th style="width:34%">見たいもの</th><th>映る側＝共有が必要</th><th>見る側</th></tr>
+      <tr><td>お客様が<b>スタッフのピン</b>を見る</td><td>スタッフ：位置を許可して画面を開く</td><td class="ok">お客様＝不要</td></tr>
+      <tr><td>スタッフが<b>お客様のピン</b>を見る</td><td>お客様：「現在地を共有」を1タップ</td><td class="ok">スタッフ＝不要</td></tr>
+      <tr><td>📍<b>待ち合わせ場所</b></td><td>ご予約の場所から自動表示</td><td class="ok">両者に表示</td></tr>
+    </table>
+    <div class="tnote">お客様の位置共有は<b>任意</b>です。共有しなくても📍待ち合わせ場所のピンは表示されるので、待ち合わせは問題なくできます。共有は「より正確に合流できる」ためのオプションです。</div>
+  </div>
+</div>
+
+<!-- ⑦ 安心設計 -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag">SAFE</span>
+    <h2>安心の設計</h2>
+    <p>“ずっと見られている”にはなりません</p>
+  </div>
+  <div class="card">
+    <div class="chips">
+      <span class="chip">位置を送るのは お届け中／回収中 だけ</span>
+      <span class="chip">見えるのは その予約の当事者だけ</span>
+      <span class="chip">合流・完了で 自動でオフ</span>
+      <span class="chip">ずっと追跡は しません</span>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-wrap">
+  <a class="cta book" href="./">🚗 レンタカーを予約する</a>
+  <a class="cta line" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">💬 公式LINEで相談</a>
+</div>
+<div class="foot">
+  受付・運営 9:00〜19:00（年中無休）<br>
+  <b>KEYDROP</b>（株式会社グローバルラインズ）／ TEL <a href="tel:05017852711">050-1785-2711</a>
+</div>
+
+</body>
+</html>

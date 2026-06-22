@@ -945,6 +945,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                     <div class="menu-section">
                         <div class="menu-section-title">サービス</div>
+                        <a class="menu-item" data-mk="menuAbout" href="keydrop-about.html" target="_blank" rel="noopener">
+                            <span class="menu-item-icon">🔑</span>KEYDROPとは？<span class="menu-item-arrow">→</span>
+                        </a>
                         <a class="menu-item" data-mk="menuUsage" href="guide.html" target="_blank" rel="noopener">
                             <span class="menu-item-icon">📖</span>ご利用方法<span class="menu-item-arrow">→</span>
                         </a>
@@ -2414,6 +2417,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
@@ -2523,6 +2527,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
@@ -2631,6 +2636,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
@@ -2824,6 +2830,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
@@ -3933,6 +3940,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">📍 ${KD_AREAS[KD_STORE].label}${t('navChange')}</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
@@ -4895,7 +4903,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const LANG = {
         ja: {
             menuMypage: '予約を確認する（マイページ）',
-            menuUsage: 'ご利用方法', menuVehicle: '車両と料金', menuInsurance: '保険プラン一覧',
+            menuAbout: 'KEYDROPとは？', menuUsage: 'ご利用方法', menuVehicle: '車両と料金', menuInsurance: '保険プラン一覧',
             menuFaq: 'よくある質問', menuMypageGuide: 'マイページの使い方', menuCouponGuide: 'クーポンの使い方', menuContact: 'お問い合わせ',
             menuClause: '貸渡約款', menuPrivacy: 'プライバシーポリシー', menuLegal: '特定商取引法', menuCompany: '運営会社',
             menuService: 'サービス', menuSupport: 'サポート', menuLegalSection: '法的情報',
@@ -4949,7 +4957,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             emailLoginNote: '⚠️ このメールアドレスはマイページのログインに使用します。予約確認メールもこちらに送信されます。',
             driverNamePh: '佐藤 花子', driverKanaPh: 'サトウ ハナコ',
             confirmProceed: 'オプション確認／予約手続きに進む ›',
-            navBook: '予約', navMypage: 'マイページ', navVehicleP: '車両・料金', navContact: 'お問い合わせ', navUsage: 'ご利用方法', navChange: '（変更）',
+            navBook: '予約', navMypage: 'マイページ', navVehicleP: '車両・料金', navContact: 'お問い合わせ', navUsage: 'ご利用方法', navAbout: 'KEYDROPとは？', navChange: '（変更）',
             areaReselect: 'エリアを選び直す',
             guideStep1: '<b>STEP1</b>：CARデリバリーの<b>お届け日時</b>と<b>場所</b>を決めよう！🔑',
             guideStep2: '<b>STEP2</b>：CARデリバリーの<b>回収日時</b>と<b>場所</b>を決めてね🏁', guideDate: '📍 車両を呼ぶ<b>場所</b>を決めよう！', guideDateCol: '🏁 車両<b>返却場所</b>を決めよう！', guidePickDel: '📍 地図で<b>お届け先</b>を選んでください', guideDecideDel: '📍 お届け場所を決めて「決めるボタン」を押してね！', guideNextDel: '→「回収場所を選ぶ」に進みましょう', guidePickCol: '🏁 回収場所を決めて「決めるボタン」を押してね！', guideNextCol: '→「車両を選ぶ」に進みましょう', guideOOA: '🚫 申し訳ございません、配達エリア外です',
@@ -5011,7 +5019,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         },
         en: {
             menuMypage: 'Check Reservation (My Page)',
-            menuUsage: 'How to Use (Sapporo)', menuVehicle: 'Vehicles & Pricing', menuInsurance: 'Insurance Plans',
+            menuAbout: 'What is KEYDROP?', menuUsage: 'How to Use (Sapporo)', menuVehicle: 'Vehicles & Pricing', menuInsurance: 'Insurance Plans',
             menuFaq: 'FAQ (Sapporo)', menuMypageGuide: 'Using My Page', menuCouponGuide: 'How to use a coupon', menuContact: 'Contact Us',
             menuClause: 'Rental Agreement', menuPrivacy: 'Privacy Policy', menuLegal: 'Legal Notice', menuCompany: 'Company Info',
             menuService: 'Service', menuSupport: 'Support', menuLegalSection: 'Legal',
@@ -5059,7 +5067,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             emailLoginNote: 'This email is used to log in to My Page. Your confirmation email is also sent here.',
             driverNamePh: 'Hanako Sato', driverKanaPh: 'サトウ ハナコ',
             confirmProceed: 'Confirm options / Proceed to booking ›',
-            navBook: 'Book', navMypage: 'My Page', navVehicleP: 'Vehicles', navContact: 'Contact', navUsage: 'How to Use', navChange: '(Change)',
+            navBook: 'Book', navMypage: 'My Page', navVehicleP: 'Vehicles', navContact: 'Contact', navUsage: 'How to Use', navAbout: 'What is KEYDROP?', navChange: '(Change)',
             areaReselect: 'Change area',
             guideStep1: '<b>STEP1</b>: Set the <b>delivery date/time</b> and <b>location</b>! 🔑',
             guideStep2: '<b>STEP2</b>: Set the <b>return date/time</b> and <b>location</b> 🏁', guideDate: '📍 Choose where to <b>call your car</b>!', guideDateCol: '🏁 Choose your <b>return location</b>!', guidePickDel: '📍 Pick your <b>delivery spot</b> on the map', guideDecideDel: '📍 Set your delivery spot, then tap the confirm button!', guideNextDel: '→ Continue to "Choose return location"', guidePickCol: '🏁 Set your return spot, then tap the confirm button!', guideNextCol: '→ Continue to "Choose a car"', guideOOA: '🚫 Sorry, this is outside our delivery area',
@@ -5121,7 +5129,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         },
         zh: {
             menuMypage: '查看預約（我的頁面）',
-            menuUsage: '使用方法', menuVehicle: '車輛與價格', menuInsurance: '保險方案',
+            menuAbout: '什麼是 KEYDROP？', menuUsage: '使用方法', menuVehicle: '車輛與價格', menuInsurance: '保險方案',
             menuFaq: '常見問題', menuMypageGuide: '會員頁面使用方法', menuCouponGuide: '優惠券使用方法', menuContact: '聯絡我們',
             menuClause: '租車條款', menuPrivacy: '隱私政策', menuLegal: '特定商業交易法', menuCompany: '公司概要',
             menuService: '服務', menuSupport: '支援', menuLegalSection: '法律資訊',
@@ -5169,7 +5177,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             emailLoginNote: '⚠️ 此電子郵件用於登入「我的頁面」，確認郵件也會寄送至此。',
             driverNamePh: '佐藤 花子', driverKanaPh: 'サトウ ハナコ',
             confirmProceed: '確認選項／進入預約手續 ›',
-            navBook: '預約', navMypage: '我的頁面', navVehicleP: '車輛・價格', navContact: '聯絡我們', navUsage: '使用方法', navChange: '（變更）',
+            navBook: '預約', navMypage: '我的頁面', navVehicleP: '車輛・價格', navContact: '聯絡我們', navUsage: '使用方法', navAbout: '什麼是 KEYDROP？', navChange: '（變更）',
             areaReselect: '重新選擇地區',
             guideStep1: '<b>STEP1</b>：決定汽車外送的<b>送達日期時間</b>與<b>地點</b>！🔑',
             guideStep2: '<b>STEP2</b>：決定汽車外送的<b>回收日期時間</b>與<b>地點</b>🏁', guideDate: '📍 選擇<b>叫車地點</b>吧！', guideDateCol: '🏁 決定<b>還車地點</b>吧！', guidePickDel: '📍 請在地圖選擇<b>送車地點</b>', guideDecideDel: '📍 決定送車地點後，請按「決定」按鈕！', guideNextDel: '→ 前往「選擇回收地點」', guidePickCol: '🏁 決定回收地點後，請按「決定」按鈕！', guideNextCol: '→ 前往「選擇車輛」', guideOOA: '🚫 抱歉，此處不在配送範圍內',
@@ -5231,7 +5239,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         },
         ko: {
             menuMypage: '예약 확인 (마이페이지)',
-            menuUsage: '이용 방법', menuVehicle: '차량 및 요금', menuInsurance: '보험 플랜',
+            menuAbout: 'KEYDROP이란?', menuUsage: '이용 방법', menuVehicle: '차량 및 요금', menuInsurance: '보험 플랜',
             menuFaq: '자주 묻는 질문', menuMypageGuide: '마이페이지 사용법', menuCouponGuide: '쿠폰 사용법', menuContact: '문의하기',
             menuClause: '대여 약관', menuPrivacy: '개인정보 처리방침', menuLegal: '특정상거래법 표기', menuCompany: '운영 회사',
             menuService: '서비스', menuSupport: '지원', menuLegalSection: '법적 정보',
@@ -5279,7 +5287,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             emailLoginNote: '⚠️ 이 이메일 주소는 마이페이지 로그인에 사용됩니다. 예약 확인 메일도 이곳으로 전송됩니다.',
             driverNamePh: 'Hanako Sato', driverKanaPh: 'サトウ ハナコ',
             confirmProceed: '옵션 확인／예약 절차로 진행 ›',
-            navBook: '예약', navMypage: '마이페이지', navVehicleP: '차량·요금', navContact: '문의하기', navUsage: '이용 방법', navChange: '(변경)',
+            navBook: '예약', navMypage: '마이페이지', navVehicleP: '차량·요금', navContact: '문의하기', navUsage: '이용 방법', navAbout: 'KEYDROP이란?', navChange: '(변경)',
             areaReselect: '지역 다시 선택',
             guideStep1: '<b>STEP1</b>: 차량 배달의 <b>배달 일시</b>와 <b>장소</b>를 정하세요! 🔑',
             guideStep2: '<b>STEP2</b>: 차량 회수의 <b>회수 일시</b>와 <b>장소</b>를 정하세요 🏁', guideDate: '📍 차량을 부를 <b>장소</b>를 정하세요!', guideDateCol: '🏁 차량 <b>반납 장소</b>를 정하세요!', guidePickDel: '📍 지도에서 <b>배달 장소</b>를 선택하세요', guideDecideDel: '📍 배달 장소를 정하고 "결정 버튼"을 눌러주세요!', guideNextDel: '→ "회수 장소 선택"으로 진행', guidePickCol: '🏁 회수 장소를 정하고 "결정 버튼"을 눌러주세요!', guideNextCol: '→ "차량 선택"으로 진행', guideOOA: '🚫 죄송합니다. 배달 지역 밖입니다',
