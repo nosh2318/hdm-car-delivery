@@ -2275,6 +2275,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             requestAnimationFrame(() => { initSquareCard(); });
         }
 
+        // マイページ詳細：delivering/collecting なら track_token を確保＆リアルタイム地図(track.html)をマウント
+        if (state.screen === 'mypage' && mypageState.view === 'detail') {
+            requestAnimationFrame(() => { try { kdMaybeTrack(); kdMountTrackIframe(); } catch (e) {} });
+        } else {
+            // 詳細外（一覧/別画面）に出たら永続iframe参照を破棄（次回 delivering 復帰時に作り直す）
+            _kdTrackIframe = null;
+        }
+
         mountHeaderMascot();
         mountCornerMascot();
         mountLogoTagline();
@@ -3877,7 +3885,70 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         fleet: null,          // assigned vehicle
         loading: false,
         error: '',
+        track: null,          // {resId, token} ＝リアルタイム地図(track.html)用トークン（delivering/collecting時のみ取得）
     };
+
+    // ── リアルタイム地図(track.html)トークン取得（delivering/collecting時のみ） ──
+    // RPC keydrop_mypage_token(p_res, p_mail) → [{kd_status, track_token}]（メール一致時のみ）
+    // 取得できたら mypageState.track にキャッシュし、地図を表示する（失敗/空なら地図を出さない＝従来表示）。
+    async function kdFetchTrackToken(resId, mail) {
+        if (!resId || !mail) return;
+        // 既に同じ予約のトークンを取得済みなら再取得しない（チラつき・無駄fetch防止）
+        if (mypageState.track && mypageState.track.resId === resId && mypageState.track.token) return;
+        try {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/keydrop_mypage_token`, {
+                method: 'POST',
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ p_res: resId, p_mail: mail }),
+            });
+            if (!res.ok) return; // RPC未RUN(404)等→地図は出さない（従来通り動く）
+            const data = await res.json().catch(() => null);
+            const row = Array.isArray(data) ? data[0] : data;
+            const tok = row && row.track_token;
+            if (tok) {
+                mypageState.track = { resId: resId, token: tok };
+                render();
+            }
+        } catch (e) { /* 失敗時は地図を出さない（デグレ無し） */ }
+    }
+
+    // delivering/collecting なら track_token を確保してから地図を出す（詳細を開いた直後に呼ぶ）
+    function kdMaybeTrack() {
+        try {
+            const r = mypageState.reservation;
+            if (!r) return;
+            const st = getDeliveryStatus(r, mypageState.fleet);
+            if (st !== 'delivering' && st !== 'collecting') return;
+            const mail = mypageState.email || localStorage.getItem('hdm_mypage_email') || '';
+            kdFetchTrackToken(r.id, mail);
+        } catch (e) {}
+    }
+
+    // 永続iframe（render()のinnerHTML差し替えで毎回作り直されてチラつくのを防ぐ）。
+    // 同じ src（同じ予約・同じtoken）なら既存iframeを使い回し、再生成しない。
+    var _kdTrackIframe = null;
+    function kdMountTrackIframe() {
+        try {
+            const wrap = document.getElementById('mpTrackWrap');
+            if (!wrap) return;
+            const src = wrap.getAttribute('data-track-src') || '';
+            if (!src) return;
+            // 既存iframeが同じsrc → そのまま流用（リロードしない）
+            if (_kdTrackIframe && _kdTrackIframe.getAttribute('src') === src) {
+                if (_kdTrackIframe.parentNode !== wrap) wrap.appendChild(_kdTrackIframe);
+                return;
+            }
+            // srcが変わった/初回 → iframeを生成（or src差し替え）
+            if (!_kdTrackIframe) {
+                _kdTrackIframe = document.createElement('iframe');
+                _kdTrackIframe.style.cssText = 'width:100%;height:100%;border:0;display:block;';
+                _kdTrackIframe.setAttribute('loading', 'lazy');
+                _kdTrackIframe.setAttribute('title', 'リアルタイム地図');
+            }
+            _kdTrackIframe.setAttribute('src', src);
+            wrap.appendChild(_kdTrackIframe);
+        } catch (e) {}
+    }
 
     // Delivery status definitions
     const DELIVERY_STATUSES = {
@@ -4096,6 +4167,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         else { payLabel = t('payPaid'); payColor = '#16a34a'; }
 
         let html = '';
+
+        // ── リアルタイム地図（お届け中=delivering / 回収中=collecting のとき最上部に自動表示）──
+        // track.html を iframe で再利用。track_token は RPC keydrop_mypage_token で取得済み（mypageState.track）。
+        if ((status === 'delivering' || status === 'collecting')
+            && mypageState.track && mypageState.track.resId === r.id && mypageState.track.token) {
+            const tHdr = status === 'delivering'
+                ? '🚚 お届け中｜スタッフの現在地'
+                : '🧭 回収中｜スタッフの現在地';
+            const trackUrl = 'track.html?r=' + encodeURIComponent(r.id) + '&t=' + encodeURIComponent(mypageState.track.token);
+            html += `
+                <div class="mp-detail-section" style="overflow:hidden;">
+                    <div class="mp-detail-header">${tHdr}</div>
+                    <div id="mpTrackWrap" data-track-src="${trackUrl}" style="height:460px;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;"></div>
+                </div>
+            `;
+        }
 
         // ── ステータス Hero（残す）──
         html += `
