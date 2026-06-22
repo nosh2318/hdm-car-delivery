@@ -217,8 +217,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="sec-h">
     <span class="tag">SCREEN</span>
     <h2>画面イメージ</h2>
-    <p>お客様の画面 / スタッフの画面</p>
+    <p>お届け時・回収時 × お客様／スタッフ の4画面</p>
   </div>
+  <div style="text-align:center;margin:2px 0 14px"><span style="background:#FABE00;color:#1a1a1a;border-radius:9px;padding:4px 16px;font-weight:900;font-size:15px">① お届け時（DEL）</span></div>
   <div class="dual">
     <!-- お客様 -->
     <div>
@@ -273,6 +274,63 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="cardcap">⚫ スタッフの画面：お客様と待ち合わせ場所が見える</div>
     </div>
   </div>
+
+  <div style="text-align:center;margin:24px 0 14px"><span style="background:#1a1a1a;color:#fff;border-radius:9px;padding:4px 16px;font-weight:900;font-size:15px">② 回収時（COL）</span></div>
+  <div class="dual">
+    <!-- 回収 お客様 -->
+    <div>
+      <div class="phone"><div class="scr">
+        <div class="pbar">KEYDROP マイページ</div>
+        <div class="status cust"><span class="dot"></span>🧭 回収に向かっています ・ あと約 6 分</div>
+        <div class="mapwrap">
+          <svg viewBox="0 0 300 260" preserveAspectRatio="xMidYMid slice">
+            <rect width="300" height="260" fill="#eaf2fb"/>
+            <g stroke="#cdd9ea" stroke-width="10">
+              <line x1="0" y1="70" x2="300" y2="70"/><line x1="0" y1="150" x2="300" y2="150"/><line x1="0" y1="220" x2="300" y2="220"/>
+              <line x1="70" y1="0" x2="70" y2="260"/><line x1="170" y1="0" x2="170" y2="260"/><line x1="240" y1="0" x2="240" y2="260"/>
+            </g>
+            <path d="M48,185 C90,130 120,112 168,104" stroke="#FABE00" stroke-width="5" fill="none" stroke-dasharray="9 7" stroke-linecap="round"/>
+            <circle cx="168" cy="102" r="13" fill="#FABE00" opacity=".2"/>
+            <text x="168" y="108" font-size="20" text-anchor="middle">📍</text>
+            <rect x="120" y="76" width="96" height="18" rx="5" fill="#fff" stroke="#FABE00"/><text x="168" y="89" font-size="11" font-weight="800" text-anchor="middle" fill="#a07c00">待ち合わせ場所</text>
+            <circle class="pulse" cx="48" cy="185" fill="#FABE00"/>
+            <text x="48" y="191" font-size="22" text-anchor="middle">🚶</text>
+            <rect x="6" y="197" width="84" height="18" rx="5" fill="#fff" stroke="#e2e8f0"/><text x="48" y="210" font-size="11" font-weight="800" text-anchor="middle" fill="#1a1a1a">スタッフ(動く)</text>
+            <text x="234" y="232" font-size="20" text-anchor="middle">🚗</text>
+            <rect x="196" y="236" width="68" height="18" rx="5" fill="#fff" stroke="#e2e8f0"/><text x="230" y="249" font-size="11" font-weight="800" text-anchor="middle" fill="#0e9f50">あなた(車)</text>
+          </svg>
+        </div>
+      </div></div>
+      <div class="cardcap">🟡 お客様の画面：回収スタッフが近づくのが見える</div>
+    </div>
+    <!-- 回収 スタッフ -->
+    <div>
+      <div class="phone"><div class="scr">
+        <div class="pbar staff">配車アプリ（スタッフ）</div>
+        <div class="status staff"><span class="dot o"></span>お客様(車)まで 回収案内中 ・ 0.8km</div>
+        <div class="mapwrap">
+          <svg viewBox="0 0 300 260" preserveAspectRatio="xMidYMid slice">
+            <rect width="300" height="260" fill="#f3f5f8"/>
+            <g stroke="#dde2ea" stroke-width="10">
+              <line x1="0" y1="70" x2="300" y2="70"/><line x1="0" y1="150" x2="300" y2="150"/><line x1="0" y1="220" x2="300" y2="220"/>
+              <line x1="70" y1="0" x2="70" y2="260"/><line x1="170" y1="0" x2="170" y2="260"/><line x1="240" y1="0" x2="240" y2="260"/>
+            </g>
+            <path d="M48,185 C90,130 120,112 168,104" stroke="#0e1116" stroke-width="5" fill="none" stroke-dasharray="9 7" stroke-linecap="round"/>
+            <circle cx="168" cy="102" r="13" fill="#FABE00" opacity=".2"/>
+            <text x="168" y="108" font-size="20" text-anchor="middle">📍</text>
+            <rect x="120" y="76" width="96" height="18" rx="5" fill="#fff" stroke="#FABE00"/><text x="168" y="89" font-size="11" font-weight="800" text-anchor="middle" fill="#a07c00">待ち合わせ場所</text>
+            <circle class="pulse" cx="48" cy="185" fill="#0e1116"/>
+            <text x="48" y="191" font-size="22" text-anchor="middle">🚶</text>
+            <rect x="14" y="197" width="68" height="18" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="48" y="210" font-size="11" font-weight="800" text-anchor="middle" fill="#0e1116">自分</text>
+            <text x="234" y="232" font-size="20" text-anchor="middle">🚗</text>
+            <rect x="196" y="236" width="68" height="18" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="230" y="249" font-size="11" font-weight="800" text-anchor="middle" fill="#0e9f50">お客様(車)</text>
+          </svg>
+        </div>
+      </div></div>
+      <div class="cardcap">⚫ スタッフの画面：お客様(車)と待ち合わせ場所が見える</div>
+    </div>
+  </div>
+
   <div class="legend">
     <span><b>🚗</b> スタッフ＝<b>動く</b></span>
     <span><b>🧍</b> お客様＝待機・任意で共有</span>
