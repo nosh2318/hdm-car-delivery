@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<title>位置送信（スタッフ用）｜KEYDROP</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Helvetica Neue',sans-serif;background:#f5f6f8;color:#1a1a1a;line-height:1.6;display:flex;flex-direction:column;min-height:100%;overflow-x:hidden}
+
+  .hd{background:#0e1116;color:#fff;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30;flex:none}
+  .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
+  .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
+  .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
+  .hd .tag{margin-left:auto;font-size:11px;font-weight:800;color:#0e1116;background:#FABE00;border-radius:999px;padding:3px 10px}
+
+  .status{padding:14px 16px;flex:none}
+  .status .pill{background:#fff;border:1px solid #eceef1;border-radius:14px;padding:14px 16px;box-shadow:0 6px 18px rgba(14,17,22,.06)}
+  .status .st-line{font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px}
+  .status.delivering .pill{border-color:#FABE00;background:#fffbf0}
+  .status.collecting .pill{border-color:#0369a1;background:#f0f8ff}
+
+  .addr{margin:0 16px 12px;background:#fff;border:1px solid #eceef1;border-radius:14px;padding:12px 16px;flex:none}
+  .addr .lbl{font-size:11px;font-weight:800;color:#a07c00;background:#fffbf0;border:1px solid #FABE00;border-radius:999px;padding:3px 10px;display:inline-block}
+  .addr .val{font-size:14px;font-weight:700;margin-top:7px;word-break:break-word}
+  .addr .map-link{display:inline-flex;align-items:center;gap:6px;margin-top:9px;font-size:13px;font-weight:800;color:#0369a1;text-decoration:none;background:#eef6fc;border:1px solid #cfe5f5;border-radius:10px;padding:7px 11px}
+
+  .send-state{margin:0 16px 10px;padding:12px 16px;border-radius:14px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;flex:none}
+  .send-state.on{background:#e8f7ee;color:#127a3e;border:1px solid #b6e3c6}
+  .send-state.off{background:#f3f4f6;color:#555;border:1px solid #e1e3e7}
+  .send-state.err{background:#fdecec;color:#c0392b;border:1px solid #f5c6c6}
+  .send-state .sub{font-weight:600;font-size:12px;color:inherit;opacity:.85;margin-top:2px}
+
+  .map-wrap{flex:1;display:flex;flex-direction:column;min-height:280px;position:relative}
+  #map{flex:1;min-height:260px;width:100%;background:#e7ebef}
+  .dist-chip{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(14,17,22,.86);color:#fff;font-size:13px;font-weight:800;padding:7px 14px;border-radius:999px;z-index:5;display:none}
+  .dist-chip.show{display:block}
+  .map-fallback{display:none;padding:18px 16px;text-align:center;color:#666;font-size:13px}
+  .map-fallback.show{display:block}
+
+  .bar{padding:14px 16px calc(14px + env(safe-area-inset-bottom));flex:none;background:#fff;border-top:1px solid #eceef1;display:flex;gap:10px}
+  .btn{flex:1;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:900;cursor:pointer}
+  .btn-start{background:#FABE00;color:#1a1a1a;box-shadow:0 6px 18px rgba(250,190,0,.35)}
+  .btn-stop{background:#fff;color:#c0392b;border:2px solid #c0392b}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.5}
+
+  .perm{margin:14px 16px;padding:16px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:14px;font-size:13.5px;color:#5a4a00}
+  .perm b{display:block;font-size:14px;margin-bottom:6px;color:#1a1a1a}
+  .loading{padding:40px 16px;text-align:center;color:#888;font-size:14px}
+</style>
+</head>
+<body>
+  <div class="hd">
+    <span class="mark"><i></i><i></i><i></i></span>
+    <b><span class="y">KEY</span>DROP</b>
+    <span class="tag">スタッフ用</span>
+  </div>
+
+  <div id="root">
+    <div class="loading" id="initLoading">読み込み中…</div>
+  </div>
+
+<script>
+  const SUPABASE_URL = 'https://ckrxttbnawkclshczsia.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+  const GMAPS_KEY = 'AIzaSyCoX1EyEx-N5A0r4vRzC1KmVp3T29HILbI';
+
+  const q = new URLSearchParams(location.search);
+  const R = (q.get('r') || '').toUpperCase().trim();
+  const D = (q.get('d') || '').trim();
+
+  let gmapReady = false, map = null, meMarker = null, custMarker = null;
+  let watchId = null, sending = false;
+  let lastSentAt = 0, lastSentLat = null, lastSentLng = null, myLat = null, myLng = null;
+  let custData = null;
+
+  function rpc(name, body) {
+    return fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null);
+  }
+
+  function loadMaps() {
+    if (window.google && window.google.maps) { gmapReady = true; return; }
+    if (document.getElementById('gmScript')) return;
+    window.__drvMapReady = function () { gmapReady = true; renderMap(); };
+    const s = document.createElement('script');
+    s.id = 'gmScript'; s.async = true;
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAPS_KEY + '&language=ja&region=JP&loading=async&callback=__drvMapReady';
+    s.onerror = function () { gmapReady = false; const fb = document.getElementById('mapFallback'); if (fb) fb.classList.add('show'); };
+    document.head.appendChild(s);
+  }
+
+  function buildScaffold() {
+    const root = document.getElementById('root');
+    root.innerHTML = `
+      <div class="status collecting" id="statusBox">
+        <div class="pill"><div class="st-line" id="stLine">状況を確認中…</div></div>
+      </div>
+      <div class="addr" id="addrBox" style="display:none">
+        <span class="lbl">📍 待ち合わせ場所</span>
+        <div class="val" id="addrVal"></div>
+        <a class="map-link" id="addrLink" target="_blank" rel="noopener">🗺 待ち合わせ住所を地図で開く</a>
+      </div>
+      <div class="perm" id="permBox">
+        <b>📡 位置情報の許可が必要です</b>
+        下の「位置送信を開始」を押すと、端末から位置情報の許可を求められます。許可しないとお客様に現在地を送信できません。
+      </div>
+      <div class="send-state off" id="sendState">
+        <span id="sendIco">■</span>
+        <div><div id="sendTxt">送信は停止中です</div><div class="sub" id="sendSub"></div></div>
+      </div>
+      <div class="map-wrap">
+        <div class="dist-chip" id="distChip"></div>
+        <div id="map"></div>
+        <div class="map-fallback" id="mapFallback">地図を表示できませんでした。送信機能は継続して動作します。</div>
+      </div>
+      <div class="bar">
+        <button class="btn btn-start" id="startBtn">📡 位置送信を開始</button>
+        <button class="btn btn-stop" id="stopBtn" disabled>■ 送信を停止</button>
+      </div>
+    `;
+    document.getElementById('startBtn').addEventListener('click', startSending);
+    document.getElementById('stopBtn').addEventListener('click', stopSending);
+  }
+
+  function applyStatus(d) {
+    const box = document.getElementById('statusBox');
+    const line = document.getElementById('stLine');
+    box.className = 'status collecting';
+    if (d && d.kd_status === 'delivering') {
+      box.className = 'status delivering';
+      line.textContent = '🚚 お客様へお届け中';
+    } else if (d && d.kd_status === 'collecting') {
+      box.className = 'status collecting';
+      line.textContent = '🧭 回収に向かっています';
+    } else {
+      line.textContent = '位置送信モード';
+    }
+  }
+
+  function applyAddr(d) {
+    const box = document.getElementById('addrBox');
+    if (d && d.del_place) {
+      box.style.display = 'block';
+      document.getElementById('addrVal').textContent = d.del_place + (d.cust_name ? '（' + d.cust_name + ' 様）' : '');
+      document.getElementById('addrLink').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.del_place);
+    }
+  }
+
+  // ===== sending =====
+  function setSendState(kind, txt, sub) {
+    const el = document.getElementById('sendState');
+    el.className = 'send-state ' + kind;
+    document.getElementById('sendIco').textContent = kind === 'on' ? '📡' : (kind === 'err' ? '⚠️' : '■');
+    document.getElementById('sendTxt').textContent = txt;
+    document.getElementById('sendSub').textContent = sub || '';
+  }
+
+  function startSending() {
+    if (!navigator.geolocation) {
+      setSendState('err', 'この端末では位置情報を取得できません', '');
+      return;
+    }
+    if (!R || !D) {
+      setSendState('err', 'リンクが正しくありません', 'r / d パラメータを確認してください');
+      return;
+    }
+    document.getElementById('permBox').style.display = 'none';
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+    sending = true;
+    setSendState('on', '位置を送信中…', '初回の位置取得を待っています');
+    watchId = navigator.geolocation.watchPosition(
+      onPos,
+      (err) => {
+        if (err.code === 1) setSendState('err', '位置情報が許可されていません', '端末の設定で位置情報を許可してください');
+        else setSendState('err', '位置を取得できません', '電波・GPSの状況をご確認ください');
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+    );
+  }
+
+  function stopSending() {
+    sending = false;
+    if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+    setSendState('off', '送信を停止しました', '');
+  }
+
+  async function onPos(pos) {
+    myLat = pos.coords.latitude; myLng = pos.coords.longitude;
+    if (!gmapReady) loadMaps(); else renderMap();
+
+    const now = Date.now();
+    const movedFar = (lastSentLat != null) && (haversine(lastSentLat, lastSentLng, myLat, myLng) > 50);
+    const timeUp = (now - lastSentAt) >= 30000;
+    if (lastSentAt === 0 || timeUp || movedFar) {
+      const ok = await rpc('keydrop_track_set_driver', { p_res: R, p_token: D, p_lat: myLat, p_lng: myLng });
+      if (ok === true) {
+        lastSentAt = now; lastSentLat = myLat; lastSentLng = myLng;
+        setSendState('on', '位置を送信中', '最終送信：' + new Date().toLocaleTimeString('ja-JP'));
+      } else if (ok === false) {
+        setSendState('err', '送信先が見つかりません', 'リンク（r / d）をご確認ください');
+      } else {
+        setSendState('on', '位置を送信中（再試行します）', '通信が不安定です：' + new Date().toLocaleTimeString('ja-JP'));
+      }
+    }
+  }
+
+  // ===== cust poll =====
+  async function pollCust() {
+    if (!R || !D) return;
+    const arr = await rpc('keydrop_track_get_staff', { p_res: R, p_token: D });
+    const d = (Array.isArray(arr) && arr.length) ? arr[0] : null;
+    custData = d;
+    applyStatus(d);
+    applyAddr(d);
+    renderMap();
+  }
+
+  // ===== map =====
+  function renderMap() {
+    if (!gmapReady) return;
+    const hasMe = (myLat != null && myLng != null);
+    const hasCust = custData && custData.cust_lat != null && custData.cust_lng != null;
+    if (!hasMe && !hasCust) return;
+
+    if (!map) {
+      const center = hasMe ? { lat: myLat, lng: myLng } : { lat: +custData.cust_lat, lng: +custData.cust_lng };
+      map = new google.maps.Map(document.getElementById('map'), {
+        center, zoom: 15, disableDefaultUI: true, zoomControl: true, gestureHandling: 'greedy'
+      });
+    }
+
+    if (hasMe) {
+      const pos = { lat: myLat, lng: myLng };
+      if (!meMarker) {
+        meMarker = new google.maps.Marker({
+          map, position: pos, title: '自分（スタッフ）', label: { text: '🚗', fontSize: '22px' },
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 16, fillColor: '#FABE00', fillOpacity: 1, strokeColor: '#0e1116', strokeWeight: 2 }
+        });
+      } else meMarker.setPosition(pos);
+    }
+
+    if (hasCust) {
+      const pos = { lat: +custData.cust_lat, lng: +custData.cust_lng };
+      if (!custMarker) {
+        custMarker = new google.maps.Marker({
+          map, position: pos, title: 'お客様', label: { text: '🧍', fontSize: '20px' },
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 14, fillColor: '#0369a1', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+        });
+      } else custMarker.setPosition(pos);
+    }
+
+    if (hasMe && hasCust) {
+      const b = new google.maps.LatLngBounds();
+      b.extend({ lat: myLat, lng: myLng });
+      b.extend({ lat: +custData.cust_lat, lng: +custData.cust_lng });
+      map.fitBounds(b, 80);
+      const dist = haversine(myLat, myLng, +custData.cust_lat, +custData.cust_lng);
+      const chip = document.getElementById('distChip');
+      chip.textContent = 'お客様まで約' + fmtDist(dist);
+      chip.classList.add('show');
+    } else if (hasMe) {
+      map.panTo({ lat: myLat, lng: myLng });
+    }
+  }
+
+  function haversine(la1, lo1, la2, lo2) {
+    const Rr = 6371000, toR = x => x * Math.PI / 180;
+    const dLa = toR(la2 - la1), dLo = toR(lo2 - lo1);
+    const a = Math.sin(dLa / 2) ** 2 + Math.cos(toR(la1)) * Math.cos(toR(la2)) * Math.sin(dLo / 2) ** 2;
+    return 2 * Rr * Math.asin(Math.sqrt(a));
+  }
+  function fmtDist(m) { return m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.round(m / 10) * 10 + 'm'; }
+
+  (function init() {
+    document.getElementById('initLoading') && document.getElementById('initLoading').remove();
+    buildScaffold();
+    if (!R || !D) {
+      setSendState('err', 'リンクが正しくありません', '担当者用リンク（r / d）をご確認ください');
+      return;
+    }
+    pollCust();
+    setInterval(pollCust, 15000);
+  })();
+</script>
+</body>
+</html>
