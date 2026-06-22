@@ -5491,16 +5491,36 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             if (paid) {
                 state._lastResId = paid;
                 saveReservationToLocal(paid);
-                // GA4 予約コンバージョン（purchase=広告連携用 / booking_complete=カスタム）
+                // 予約コンバージョン（GTM=dataLayerイベント / GA4=gtag直送り）
                 try {
                     var _cv = JSON.parse(localStorage.getItem('kd_conv') || 'null');
+                    var _val = (_cv && _cv.id === paid && Number(_cv.amount)) ? Number(_cv.amount) : 0;
                     var _ev = {
                         transaction_id: paid,
                         currency: 'JPY',
-                        value: (_cv && _cv.id === paid && Number(_cv.amount)) ? Number(_cv.amount) : 0,
+                        value: _val,
                         store: (_cv && _cv.store) || '',
                         vehicle_class: (_cv && _cv.cls) || ''
                     };
+                    // ★ GTM用：dataLayerイベント（GTMの「カスタムイベント」トリガー booking_complete が発火＝Google広告/Metaコンバージョンタグを制御）
+                    //   gtagの有無に関係なく必ず push する（GTMはこれを見る）
+                    window.dataLayer = window.dataLayer || [];
+                    window.dataLayer.push({
+                        event: 'booking_complete',
+                        transaction_id: paid,
+                        currency: 'JPY',
+                        value: _val,
+                        store: (_cv && _cv.store) || '',
+                        vehicle_class: (_cv && _cv.cls) || '',
+                        // ecommerce形式も併設（GA4 Ecommerce/拡張コンバージョンを使う場合）
+                        ecommerce: {
+                            transaction_id: paid,
+                            currency: 'JPY',
+                            value: _val,
+                            items: [{ item_name: (_cv && _cv.cls) || 'car_rental', quantity: 1, price: _val }]
+                        }
+                    });
+                    // GA4直送り（gtag.jsがある場合のみ）
                     if (typeof gtag === 'function') {
                         gtag('event', 'purchase', _ev);
                         gtag('event', 'booking_complete', _ev);
