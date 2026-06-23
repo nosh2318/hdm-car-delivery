@@ -72,7 +72,7 @@
   const R = (q.get('r') || '').toUpperCase().trim();
   const D = (q.get('d') || '').trim();
 
-  let gmapReady = false, map = null, meMarker = null, custMarker = null, meIW = null, custIW = null;
+  let gmapReady = false, map = null, meMarker = null, custMarker = null, meIW = null, custIW = null, meetMarker = null, meetAddrDone = '';
   let watchId = null, sending = false;
   let lastSentAt = 0, lastSentLat = null, lastSentLng = null, myLat = null, myLng = null;
   let custData = null;
@@ -279,18 +279,45 @@
       custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' お客様</div>');
     }
 
+    geocodeMeet(custData ? custData.del_place : null);  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
+
+    const chip = document.getElementById('distChip');
     if (hasMe && hasCust) {
-      const b = new google.maps.LatLngBounds();
-      b.extend({ lat: myLat, lng: myLng });
-      b.extend({ lat: +custData.cust_lat, lng: +custData.cust_lng });
-      map.fitBounds(b, 80);
       const dist = haversine(myLat, myLng, +custData.cust_lat, +custData.cust_lng);
-      const chip = document.getElementById('distChip');
       chip.textContent = 'お客様まで約' + fmtDist(dist);
       chip.classList.add('show');
-    } else if (hasMe) {
-      map.panTo({ lat: myLat, lng: myLng });
-    }
+    } else { chip.classList.remove('show'); }
+    fitAll();
+  }
+
+  function fitAll() {
+    if (!map) return;
+    const pts = [];
+    if (meMarker && meMarker.getPosition()) pts.push(meMarker.getPosition());
+    if (custMarker && custMarker.getPosition()) pts.push(custMarker.getPosition());
+    if (meetMarker && meetMarker.getPosition()) pts.push(meetMarker.getPosition());
+    if (pts.length >= 2) { const b = new google.maps.LatLngBounds(); pts.forEach(p => b.extend(p)); map.fitBounds(b, 70); }
+    else if (pts.length === 1) { map.panTo(pts[0]); }
+  }
+
+  function geocodeMeet(addr) {
+    if (!gmapReady || !map || !addr) return;
+    const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
+    if (!clean || clean === meetAddrDone) return;
+    meetAddrDone = clean;
+    fetch('https://maps.googleapis.com/maps/api/geocode/json?language=ja&region=jp&key=' + GMAPS_KEY + '&address=' + encodeURIComponent(clean))
+      .then(r => r.json()).then(j => {
+        if (j && j.status === 'OK' && j.results && j.results[0]) {
+          const loc = j.results[0].geometry.location;
+          if (!meetMarker) {
+            meetMarker = new google.maps.Marker({
+              map, position: loc, title: '待ち合わせ場所', zIndex: 1, label: { text: '📍', fontSize: '22px' },
+              icon: { path: google.maps.SymbolPath.CIRCLE, scale: 13, fillColor: '#7c3aed', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+            });
+          } else meetMarker.setPosition(loc);
+          fitAll();
+        }
+      }).catch(() => {});
   }
 
   function haversine(la1, lo1, la2, lo2) {

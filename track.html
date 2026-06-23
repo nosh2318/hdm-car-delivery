@@ -73,7 +73,7 @@
   const R = (q.get('r') || '').toUpperCase().trim();
   const T = (q.get('t') || '').trim();
 
-  let gmapReady = false, map = null, driverMarker = null, custMarker = null, driverIW = null, custIW = null;
+  let gmapReady = false, map = null, driverMarker = null, custMarker = null, driverIW = null, custIW = null, meetMarker = null, meetAddrDone = '';
   let lastData = null, custShared = false;
 
   function rpc(name, body) {
@@ -148,11 +148,14 @@
     } else if (d.kd_status === 'collecting') {
       box.className = 'status collecting';
       line.textContent = '🧭 回収に向かっています｜お待ちください';
-      sub.textContent = '担当者がお車の回収に向かっています。';
+      sub.innerHTML = '担当者がお車の回収に向かっています。<b>正確な回収場所をお伝えするため、下の「📍今いる場所を共有」をお願いします。</b>';
     } else {
       line.textContent = '現在、位置共有の対象時間外です';
       sub.textContent = '担当者がご案内する時間になりましたら、こちらの地図に表示されます。';
     }
+    // 回収で未共有のときは共有ボタンの文言を強調
+    const sb = document.getElementById('shareBtn');
+    if (sb) sb.textContent = (d.kd_status === 'collecting' && !custShared) ? '📍 今いる場所を共有（回収場所をお伝え）' : '📍 今いる場所を共有';
   }
 
   // ===== meeting address =====
@@ -226,19 +229,45 @@
       custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' お客様（あなた）</div>');
     }
 
+    geocodeMeet(d.del_place);  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
+
+    const chip = document.getElementById('distChip');
     if (hasDriver && hasCust) {
-      const b = new google.maps.LatLngBounds();
-      b.extend({ lat: +d.driver_lat, lng: +d.driver_lng });
-      b.extend({ lat: +d.cust_lat, lng: +d.cust_lng });
-      map.fitBounds(b, 80);
-      // distance chip
       const dist = haversine(+d.driver_lat, +d.driver_lng, +d.cust_lat, +d.cust_lng);
-      const chip = document.getElementById('distChip');
       chip.textContent = 'スタッフは約' + fmtDist(dist) + '先です';
       chip.classList.add('show');
-    } else if (hasDriver) {
-      map.panTo({ lat: +d.driver_lat, lng: +d.driver_lng });
-    }
+    } else { chip.classList.remove('show'); }
+    fitAll();
+  }
+
+  function fitAll() {
+    if (!map) return;
+    const pts = [];
+    if (driverMarker && driverMarker.getPosition()) pts.push(driverMarker.getPosition());
+    if (custMarker && custMarker.getPosition()) pts.push(custMarker.getPosition());
+    if (meetMarker && meetMarker.getPosition()) pts.push(meetMarker.getPosition());
+    if (pts.length >= 2) { const b = new google.maps.LatLngBounds(); pts.forEach(p => b.extend(p)); map.fitBounds(b, 70); }
+    else if (pts.length === 1) { map.panTo(pts[0]); }
+  }
+
+  function geocodeMeet(addr) {
+    if (!gmapReady || !map || !addr) return;
+    const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
+    if (!clean || clean === meetAddrDone) return;
+    meetAddrDone = clean;
+    fetch('https://maps.googleapis.com/maps/api/geocode/json?language=ja&region=jp&key=' + GMAPS_KEY + '&address=' + encodeURIComponent(clean))
+      .then(r => r.json()).then(j => {
+        if (j && j.status === 'OK' && j.results && j.results[0]) {
+          const loc = j.results[0].geometry.location;
+          if (!meetMarker) {
+            meetMarker = new google.maps.Marker({
+              map, position: loc, title: '待ち合わせ場所', zIndex: 1, label: { text: '📍', fontSize: '22px' },
+              icon: { path: google.maps.SymbolPath.CIRCLE, scale: 13, fillColor: '#7c3aed', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+            });
+          } else meetMarker.setPosition(loc);
+          fitAll();
+        }
+      }).catch(() => {});
   }
 
   function smoothMove(marker, target) {
