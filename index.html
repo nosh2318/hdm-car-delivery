@@ -3822,7 +3822,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         id: resId,
                         amount: Number(data.amount) || 0,
                         store: (typeof KD_STORE !== 'undefined' ? KD_STORE : 'spk'),
-                        cls: (state.selectedVehicle && (state.selectedVehicle.type || state.selectedVehicle.class)) || ''
+                        cls: (state.selectedVehicle && (state.selectedVehicle.type || state.selectedVehicle.class)) || '',
+                        // 拡張コンバージョン/Advanced Matching用（GTM側でハッシュ化して送信）
+                        em: (state.formData && state.formData.email) || '',
+                        ph: (state.formData && state.formData.phone) || '',
+                        nm: (state.formData && state.formData.name) || ''
                     }));
                 } catch (e) {}
                 // Square Checkout へリダイレクト（決済完了でwebhookが confirmed 化）
@@ -5607,6 +5611,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         value: _val,
                         store: (_cv && _cv.store) || '',
                         vehicle_class: (_cv && _cv.cls) || '',
+                        // 拡張コンバージョン(Google)/Advanced Matching(Meta)用。GTM側でハッシュ化して送信＝API相当の精度。Meta CAPIとはtransaction_id(=Event ID)で重複排除
+                        user_data: {
+                            email: (_cv && _cv.em) || '',
+                            phone_number: (_cv && _cv.ph) || '',
+                            name: (_cv && _cv.nm) || ''
+                        },
                         // ecommerce形式も併設（GA4 Ecommerce/拡張コンバージョンを使う場合）
                         ecommerce: {
                             transaction_id: paid,
