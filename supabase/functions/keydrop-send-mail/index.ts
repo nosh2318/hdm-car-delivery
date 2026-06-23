@@ -84,6 +84,15 @@ function buildCancelRequest(n: any) {
   return { subject: `【KEY-DROP】キャンセル依頼 予約番号 ${id} / ${p.name || ""}様`, body:
     `顧客がマイページでキャンセルを依頼しました。\nSPK admin で確定処理（承認＝自動返金）をしてください。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\n氏名　　　：${p.name || ""}\n連絡先　　：${p.mail || ""} / ${p.tel || ""}\n車両クラス：${p.vehicleClass || ""}\n期間　　　：${dt(p.lend_date, p.lend_time)} 〜 ${dt(p.return_date, p.return_time)}\nお届け場所：${p.del_place || ""}\n回収場所　：${p.col_place || ""}\n金額　　　：${yen(p.price)}\nキャンセル理由：${p.reason || "（記入なし）"}\n━━━━━━━━━━━━━━━━━━━━\n` };
 }
+function buildTrack(n: any, collecting: boolean) {
+  const p = n.payload || {}, id = n.reservation_id || "", url = p.track_url || mypageLink(n);
+  const head = collecting ? "🧭 回収に向かっています" : "🚚 まもなくお届けです";
+  const lead = collecting
+    ? "スタッフがご返却場所へ向かっています。"
+    : "スタッフがお届けに向かっています。";
+  return { subject: `CARデリバリー KEY-DROP ${head}（予約番号 ${id}）`, body:
+    `${p.name || "お客様"} 様\n\n${lead}\n下のリンクから、地図でスタッフの現在地と待ち合わせ場所をリアルタイムにご確認いただけます（アプリのインストールは不要です）。\n\n▶ 地図を開く\n${url}\n\n・地図で「📍今いる場所を共有」を押していただくと、より正確に合流できます（任意）。\n・マイページからもご確認いただけます：\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）／TEL ${TEL}（9:00〜19:00）\n\nCARデリバリー KEY-DROP\n` };
+}
 function withFooter(m: { subject: string; body: string }) {
   m.body += `\n──────────\n※このメールは送信専用です。ご返信いただいてもお答えできません。\n　お問い合わせは公式LINE（${LINE_ID}）／TEL ${TEL}（9:00〜19:00）へ。\n`;
   return m;
@@ -95,6 +104,8 @@ function buildMail(n: any) {
     case "cancel_done": return withFooter(buildCancelDone(n));
     case "change_done": return withFooter(buildChangeDone(n));
     case "reminder": return withFooter(buildReminder(n));
+    case "track_delivering": return withFooter(buildTrack(n, false));
+    case "track_collecting": return withFooter(buildTrack(n, true));
     default: return buildCancelRequest(n); // 運営向け（cancel_request）はフッター無し
   }
 }
