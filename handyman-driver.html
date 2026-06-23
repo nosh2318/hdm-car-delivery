@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F1F45">
+<title>位置送信（スタッフ用）｜HANDYMAN（HDM Car Delivery）</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Helvetica Neue',sans-serif;background:#f5f6f8;color:#1a1a1a;line-height:1.6;display:flex;flex-direction:column;min-height:100%;overflow-x:hidden}
+
+  .hd{background:#0F1F45;color:#fff;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30;flex:none}
+  .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
+  .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
+  .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
+  .hd .tag{margin-left:auto;font-size:11px;font-weight:800;color:#0F1F45;background:#FABE00;border-radius:999px;padding:3px 10px}
+
+  .status{padding:14px 16px;flex:none}
+  .status .pill{background:#fff;border:1px solid #eceef1;border-radius:14px;padding:14px 16px;box-shadow:0 6px 18px rgba(14,17,22,.06)}
+  .status .st-line{font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px}
+  .status.delivering .pill{border-color:#FABE00;background:#fffbf0}
+  .status.collecting .pill{border-color:#0369a1;background:#f0f8ff}
+
+  .addr{margin:0 16px 12px;background:#fff;border:1px solid #eceef1;border-radius:14px;padding:12px 16px;flex:none}
+  .addr .lbl{font-size:11px;font-weight:800;color:#a07c00;background:#fffbf0;border:1px solid #FABE00;border-radius:999px;padding:3px 10px;display:inline-block}
+  .addr .val{font-size:14px;font-weight:700;margin-top:7px;word-break:break-word}
+  .addr .map-link{display:inline-flex;align-items:center;gap:6px;margin-top:9px;font-size:13px;font-weight:800;color:#0369a1;text-decoration:none;background:#eef6fc;border:1px solid #cfe5f5;border-radius:10px;padding:7px 11px}
+
+  .send-state{margin:0 16px 10px;padding:12px 16px;border-radius:14px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;flex:none}
+  .send-state.on{background:#e8f7ee;color:#127a3e;border:1px solid #b6e3c6}
+  .send-state.off{background:#f3f4f6;color:#555;border:1px solid #e1e3e7}
+  .send-state.err{background:#fdecec;color:#c0392b;border:1px solid #f5c6c6}
+  .send-state .sub{font-weight:600;font-size:12px;color:inherit;opacity:.85;margin-top:2px}
+
+  .map-wrap{flex:1;display:flex;flex-direction:column;min-height:280px;position:relative}
+  #map{flex:1;min-height:260px;width:100%;background:#e7ebef}
+  .dist-chip{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(14,17,22,.86);color:#fff;font-size:13px;font-weight:800;padding:7px 14px;border-radius:999px;z-index:5;display:none}
+  .dist-chip.show{display:block}
+  .map-fallback{display:none;padding:18px 16px;text-align:center;color:#666;font-size:13px}
+  .map-fallback.show{display:block}
+
+  .bar{padding:14px 16px calc(14px + env(safe-area-inset-bottom));flex:none;background:#fff;border-top:1px solid #eceef1;display:flex;gap:10px}
+  .btn{flex:1;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:900;cursor:pointer}
+  .btn-start{background:#FABE00;color:#1a1a1a;box-shadow:0 6px 18px rgba(250,190,0,.35)}
+  .btn-stop{background:#fff;color:#c0392b;border:2px solid #c0392b}
+  .btn:active{transform:translateY(1px)}
+  .modebar{padding:0 16px 4px;flex:none}
+  .modebar .lbl{font-size:12px;font-weight:800;color:#0369a1;display:block;margin-bottom:6px}
+  .modegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .modebtn{border:2px solid #eceef1;background:#fff;border-radius:14px;padding:10px 4px;cursor:pointer;text-align:center;font-weight:800;color:#475569;line-height:1.3}
+  .modebtn .emo{display:block;font-size:24px;margin-bottom:2px}
+  .modebtn .tx{font-size:11px}
+  .modebtn.on{border-color:#0369a1;background:#f0f8ff;color:#0369a1;box-shadow:0 4px 12px rgba(3,105,161,.18)}
+  .modebtn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.5}
+
+  .perm{margin:14px 16px;padding:16px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:14px;font-size:13.5px;color:#5a4a00}
+  .perm b{display:block;font-size:14px;margin-bottom:6px;color:#1a1a1a}
+  .loading{padding:40px 16px;text-align:center;color:#888;font-size:14px}
+</style>
+</head>
+<body>
+  <div class="hd" id="hdBar"><a href="https://rent-handyman.jp" target="_blank" rel="noopener"><img src="hdm-logo.png?v=20260624" alt="HANDYMAN" style="height:24px;display:block"></a><span class="tag">スタッフ用</span></div>
+
+  <div id="root">
+    <div class="loading" id="initLoading">読み込み中…</div>
+  </div>
+
+<script>
+  const SUPABASE_URL = 'https://ckrxttbnawkclshczsia.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+  const GMAPS_KEY = 'AIzaSyCoX1EyEx-N5A0r4vRzC1KmVp3T29HILbI';
+
+  const q = new URLSearchParams(location.search);
+  const R = (q.get('r') || '').toUpperCase().trim();
+  const D = (q.get('d') || '').trim();
+  if(q.get("embed")==="1"){var _h=document.getElementById("hdBar");if(_h)_h.style.display="none";}
+
+  let gmapReady = false, map = null, meMarker = null, custMarker = null, meIW = null, custIW = null, meetMarker = null, meetAddrDone = '';
+  let watchId = null, sending = false;
+  let lastSentAt = 0, lastSentLat = null, lastSentLng = null, myLat = null, myLng = null;
+  let custData = null;
+
+  function rpc(name, body) {
+    return fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null);
+  }
+
+  function loadMaps() {
+    if (window.google && window.google.maps) { gmapReady = true; return; }
+    if (document.getElementById('gmScript')) return;
+    window.__drvMapReady = function () { gmapReady = true; renderMap(); };
+    const s = document.createElement('script');
+    s.id = 'gmScript'; s.async = true;
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAPS_KEY + '&language=ja&region=JP&loading=async&callback=__drvMapReady';
+    s.onerror = function () { gmapReady = false; const fb = document.getElementById('mapFallback'); if (fb) fb.classList.add('show'); };
+    document.head.appendChild(s);
+  }
+
+  function buildScaffold() {
+    const root = document.getElementById('root');
+    root.innerHTML = `
+      <div class="status collecting" id="statusBox">
+        <div class="pill"><div class="st-line" id="stLine">状況を確認中…</div></div>
+      </div>
+      <div class="addr" id="addrBox" style="display:none">
+        <span class="lbl">📍 待ち合わせ場所</span>
+        <div class="val" id="addrVal"></div>
+        <a class="map-link" id="addrLink" target="_blank" rel="noopener">🗺 待ち合わせ住所を地図で開く</a>
+      </div>
+      <div class="modebar" id="modeBar" style="display:none">
+        <span class="lbl">🛞 何で向かいますか？（お客様の地図に表示されます）</span>
+        <div class="modegrid">
+          <div class="modebtn" data-mode="walk"><span class="emo">🚶</span><span class="tx">徒歩</span></div>
+          <div class="modebtn" data-mode="kick"><span class="emo">🛴</span><span class="tx">キックボード</span></div>
+          <div class="modebtn" data-mode="bike"><span class="emo">🚲</span><span class="tx">自転車</span></div>
+          <div class="modebtn" data-mode="car"><span class="emo">🚗</span><span class="tx">回収車</span></div>
+        </div>
+      </div>
+      <div class="perm" id="permBox">
+        <b>📡 位置情報の許可が必要です</b>
+        下の「位置送信を開始」を押すと、端末から位置情報の許可を求められます。許可しないとお客様に現在地を送信できません。
+      </div>
+      <div class="send-state off" id="sendState">
+        <span id="sendIco">■</span>
+        <div><div id="sendTxt">送信は停止中です</div><div class="sub" id="sendSub"></div></div>
+      </div>
+      <div class="map-wrap">
+        <div class="dist-chip" id="distChip"></div>
+        <div id="map"></div>
+        <div class="map-fallback" id="mapFallback">地図を表示できませんでした。送信機能は継続して動作します。</div>
+      </div>
+      <div class="bar">
+        <button class="btn btn-start" id="startBtn">📡 位置送信を開始</button>
+        <button class="btn btn-stop" id="stopBtn" disabled>■ 送信を停止</button>
+      </div>
+    `;
+    document.getElementById('startBtn').addEventListener('click', startSending);
+    document.getElementById('stopBtn').addEventListener('click', stopSending);
+    // 移動手段ボタン
+    document.querySelectorAll('.modebtn').forEach(function (b) {
+      b.addEventListener('click', function () { setMode(b.getAttribute('data-mode')); });
+    });
+    // 前回選択を復元（端末ローカル・予約ごと）
+    try { const saved = localStorage.getItem('kd_mode_' + R); if (saved) markMode(saved); } catch (e) {}
+  }
+
+  let curMode = '';
+  function markMode(m) {
+    curMode = m;
+    document.querySelectorAll('.modebtn').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-mode') === m);
+    });
+  }
+  async function setMode(m) {
+    markMode(m);
+    try { localStorage.setItem('kd_mode_' + R, m); } catch (e) {}
+    // ベストエフォート保存（RPC未デプロイでも送信機能には影響なし）
+    try { await rpc('keydrop_track_set_mode', { p_res: R, p_token: D, p_mode: m }); } catch (e) {}
+  }
+
+  function applyStatus(d) {
+    const box = document.getElementById('statusBox');
+    const line = document.getElementById('stLine');
+    box.className = 'status collecting';
+    if (d && d.kd_status === 'delivering') {
+      box.className = 'status delivering';
+      line.textContent = '🚚 お客様へお届け中';
+    } else if (d && d.kd_status === 'collecting') {
+      box.className = 'status collecting';
+      line.textContent = '🧭 回収に向かっています';
+    } else {
+      line.textContent = '位置送信モード';
+    }
+    // 手段選択は回収時のみ表示（お届けは常に回収車のため不要）
+    const mb = document.getElementById('modeBar');
+    if (mb) mb.style.display = (d && d.kd_status === 'collecting') ? 'block' : 'none';
+  }
+
+  function applyAddr(d) {
+    const box = document.getElementById('addrBox');
+    if (d && d.del_place) {
+      box.style.display = 'block';
+      document.getElementById('addrVal').textContent = d.del_place + (d.cust_name ? '（' + d.cust_name + ' 様）' : '');
+      document.getElementById('addrLink').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.del_place);
+    }
+  }
+
+  // ===== sending =====
+  function setSendState(kind, txt, sub) {
+    const el = document.getElementById('sendState');
+    el.className = 'send-state ' + kind;
+    document.getElementById('sendIco').textContent = kind === 'on' ? '📡' : (kind === 'err' ? '⚠️' : '■');
+    document.getElementById('sendTxt').textContent = txt;
+    document.getElementById('sendSub').textContent = sub || '';
+  }
+
+  function startSending() {
+    if (!navigator.geolocation) {
+      setSendState('err', 'この端末では位置情報を取得できません', '');
+      return;
+    }
+    if (!R || !D) {
+      setSendState('err', 'リンクが正しくありません', 'r / d パラメータを確認してください');
+      return;
+    }
+    document.getElementById('permBox').style.display = 'none';
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+    sending = true;
+    setSendState('on', '位置を送信中…', '初回の位置取得を待っています');
+    watchId = navigator.geolocation.watchPosition(
+      onPos,
+      (err) => {
+        if (err.code === 1) setSendState('err', '位置情報が許可されていません', '端末の設定で位置情報を許可してください');
+        else setSendState('err', '位置を取得できません', '電波・GPSの状況をご確認ください');
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+    );
+    // 止まっていても30秒ごとに現在地を再送（お客様側が「位置更新待ち」のまま固まるのを防ぐ）
+    if (sendHeartbeat) clearInterval(sendHeartbeat);
+    sendHeartbeat = setInterval(function () { if (sending) sendPos(); }, 30000);
+  }
+
+  function stopSending() {
+    sending = false;
+    if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+    if (sendHeartbeat) { clearInterval(sendHeartbeat); sendHeartbeat = null; }
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+    setSendState('off', '送信を停止しました', '');
+  }
+
+  let sendHeartbeat = null;
+  async function sendPos() {
+    if (myLat == null || myLng == null) return;
+    const ok = await rpc('keydrop_track_set_driver', { p_res: R, p_token: D, p_lat: myLat, p_lng: myLng });
+    if (ok === true) {
+      lastSentAt = Date.now(); lastSentLat = myLat; lastSentLng = myLng;
+      setSendState('on', '位置を送信中', '最終送信：' + new Date().toLocaleTimeString('ja-JP'));
+    } else if (ok === false) {
+      setSendState('err', '送信先が見つかりません', 'リンク（r / d）をご確認ください');
+    } else {
+      setSendState('on', '位置を送信中（再試行します）', '通信が不安定です：' + new Date().toLocaleTimeString('ja-JP'));
+    }
+  }
+
+  async function onPos(pos) {
+    myLat = pos.coords.latitude; myLng = pos.coords.longitude;
+    if (!gmapReady) loadMaps(); else renderMap();
+    // 初回 or 50m以上動いたら即送信。止まっていても下の30秒ハートビートで送り続ける
+    const movedFar = (lastSentLat != null) && (haversine(lastSentLat, lastSentLng, myLat, myLng) > 50);
+    if (lastSentAt === 0 || movedFar) sendPos();
+  }
+
+  // ===== cust poll =====
+  async function pollCust() {
+    if (!R || !D) return;
+    const arr = await rpc('keydrop_track_get_staff', { p_res: R, p_token: D });
+    const d = (Array.isArray(arr) && arr.length) ? arr[0] : null;
+    custData = d;
+    applyStatus(d);
+    applyAddr(d);
+    renderMap();
+  }
+
+  // ===== map =====
+  function renderMap() {
+    if (!gmapReady) return;
+    const hasMe = (myLat != null && myLng != null);
+    const hasCust = custData && custData.cust_lat != null && custData.cust_lng != null;
+
+    if (!map) {
+      const center = hasMe ? { lat: myLat, lng: myLng }
+        : (hasCust ? { lat: +custData.cust_lat, lng: +custData.cust_lng } : { lat: 43.0621, lng: 141.3544 });
+      map = new google.maps.Map(document.getElementById('map'), {
+        center, zoom: (hasMe || hasCust) ? 15 : 11, disableDefaultUI: true, zoomControl: true, gestureHandling: 'greedy'
+      });
+    }
+
+    // 回収時はアイコン入替：自分(スタッフ)は🚶、お客様側が🚗（お届け時は自分🚗/お客様🧍）
+    const collecting = (custData && custData.kd_status === 'collecting');
+    const meEmoji = collecting ? '🚶' : '🚗';
+    const custEmoji = collecting ? '🚗' : '🧍';
+
+    if (hasMe) {
+      const pos = { lat: myLat, lng: myLng };
+      if (!meMarker) {
+        meMarker = new google.maps.Marker({
+          map, position: pos, title: '自分（スタッフ）', label: { text: meEmoji, fontSize: '22px' },
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 16, fillColor: '#FABE00', fillOpacity: 1, strokeColor: '#0F1F45', strokeWeight: 2 }
+        });
+      } else { meMarker.setPosition(pos); meMarker.setLabel({ text: meEmoji, fontSize: '22px' }); }
+    }
+
+    if (hasCust) {
+      const pos = { lat: +custData.cust_lat, lng: +custData.cust_lng };
+      if (!custMarker) {
+        custMarker = new google.maps.Marker({
+          map, position: pos, title: 'お客様', label: { text: custEmoji, fontSize: '20px' },
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 14, fillColor: '#0369a1', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+        });
+      } else { custMarker.setPosition(pos); custMarker.setLabel({ text: custEmoji, fontSize: '20px' }); }
+    }
+
+    if (hasMe) {
+      if (!meIW) { meIW = new google.maps.InfoWindow({ disableAutoPan: true }); meIW.open(map, meMarker); }
+      meIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#92400e">' + meEmoji + ' 自分（スタッフ）</div>');
+    }
+    if (hasCust) {
+      if (!custIW) { custIW = new google.maps.InfoWindow({ disableAutoPan: true }); custIW.open(map, custMarker); }
+      custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' お客様</div>');
+    }
+
+    geocodeMeet(custData ? custData.del_place : null);  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
+
+    const chip = document.getElementById('distChip');
+    if (hasMe && hasCust) {
+      const dist = haversine(myLat, myLng, +custData.cust_lat, +custData.cust_lng);
+      chip.textContent = 'お客様まで約' + fmtDist(dist);
+      chip.classList.add('show');
+    } else { chip.classList.remove('show'); }
+    fitAll();
+  }
+
+  function fitAll() {
+    if (!map) return;
+    const pts = [];
+    if (meMarker && meMarker.getPosition()) pts.push(meMarker.getPosition());
+    if (custMarker && custMarker.getPosition()) pts.push(custMarker.getPosition());
+    if (meetMarker && meetMarker.getPosition()) pts.push(meetMarker.getPosition());
+    if (pts.length >= 2) { const b = new google.maps.LatLngBounds(); pts.forEach(p => b.extend(p)); map.fitBounds(b, 70); }
+    else if (pts.length === 1) { map.panTo(pts[0]); }
+  }
+
+  function geocodeMeet(addr) {
+    if (!gmapReady || !map || !addr) return;
+    const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
+    if (!clean || clean === meetAddrDone) return;
+    meetAddrDone = clean;
+    fetch('https://maps.googleapis.com/maps/api/geocode/json?language=ja&region=jp&key=' + GMAPS_KEY + '&address=' + encodeURIComponent(clean))
+      .then(r => r.json()).then(j => {
+        if (j && j.status === 'OK' && j.results && j.results[0]) {
+          const loc = j.results[0].geometry.location;
+          if (!meetMarker) {
+            meetMarker = new google.maps.Marker({
+              map, position: loc, title: '待ち合わせ場所', zIndex: 1, label: { text: '📍', fontSize: '22px' },
+              icon: { path: google.maps.SymbolPath.CIRCLE, scale: 13, fillColor: '#7c3aed', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+            });
+          } else meetMarker.setPosition(loc);
+          fitAll();
+        }
+      }).catch(() => {});
+  }
+
+  function haversine(la1, lo1, la2, lo2) {
+    const Rr = 6371000, toR = x => x * Math.PI / 180;
+    const dLa = toR(la2 - la1), dLo = toR(lo2 - lo1);
+    const a = Math.sin(dLa / 2) ** 2 + Math.cos(toR(la1)) * Math.cos(toR(la2)) * Math.sin(dLo / 2) ** 2;
+    return 2 * Rr * Math.asin(Math.sqrt(a));
+  }
+  function fmtDist(m) { return m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.round(m / 10) * 10 + 'm'; }
+
+  (function init() {
+    document.getElementById('initLoading') && document.getElementById('initLoading').remove();
+    buildScaffold();
+    if (!R || !D) {
+      setSendState('err', 'リンクが正しくありません', '担当者用リンク（r / d）をご確認ください');
+      return;
+    }
+    loadMaps();
+    pollCust();
+    setInterval(pollCust, 15000);
+  })();
+</script>
+</body>
+</html>

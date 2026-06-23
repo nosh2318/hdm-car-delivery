@@ -113,6 +113,12 @@
   .pgnav{max-width:430px;margin:20px auto 0;padding:0 16px;display:flex;gap:10px}
   .pgnav a{flex:1;text-align:center;font-weight:800;font-size:13px;padding:11px;border-radius:12px;text-decoration:none;border:1.5px solid var(--line);color:var(--sub);background:#fff}
   .pgnav a.on{border-color:var(--gold);background:var(--goldl);color:var(--goldd)}
+  /* live map (token時のみ表示・地図メイン) */
+  #liveMap{display:none}
+  #liveMap.on{display:block;border-bottom:3px solid var(--gold)}
+  #liveMap .livebar{background:var(--navy);color:#fff;text-align:center;padding:9px;font-weight:800;font-size:12.5px;letter-spacing:.04em}
+  #liveMap .liveframe{width:100%;height:70vh;min-height:440px;border:0;display:block;background:#eaf2fb}
+  #liveMap .liveguide{display:block;text-align:center;padding:12px;background:var(--goldl);color:var(--goldd);font-weight:800;font-size:13px;text-decoration:none}
 </style>
 </head>
 <body>
@@ -121,6 +127,7 @@
   <a class="logo" href="https://rent-handyman.jp" target="_blank" rel="noopener"><img src="hdm-logo.png?v=20260624" alt="HANDYMAN HDM Car Delivery"></a>
   <a class="back" href="https://rent-handyman.jp" target="_blank" rel="noopener">HANDYMAN →</a>
 </div>
+<div id="liveMap"><div class="livebar">📍 いまの状況（リアルタイム地図）</div><iframe id="liveFrame" class="liveframe" allow="geolocation"></iframe><a class="liveguide" href="#howto">📖 はじめての方へ — 使い方を見る ↓</a></div>
 
 <!-- ① ヒーロー -->
 <div class="hero">
@@ -154,7 +161,7 @@
 </div>
 
 <!-- ② デリバリーシステムとは -->
-<div class="sec">
+<div class="sec" id="howto">
   <div class="sec-h">
     <span class="tag">DELIVERY SYSTEM</span>
     <h2>HANDYMAN デリバリーとは？</h2>
@@ -309,5 +316,8 @@
   TEL <a href="tel:05017246197">050-1724-6197</a>
 </div>
 
+<script>
+(function(){var q=new URLSearchParams(location.search);var R=(q.get("r")||"").trim(),T=(q.get("t")||"").trim();if(R&&T){document.getElementById("liveFrame").src="handyman-track.html?r="+encodeURIComponent(R)+"&t="+encodeURIComponent(T)+"&embed=1";document.getElementById("liveMap").className="on";var h=document.querySelector(".hero");if(h)h.style.display="none";var p=document.querySelector(".pgnav");if(p)p.style.display="none";}})();
+</script>
 </body>
 </html>
