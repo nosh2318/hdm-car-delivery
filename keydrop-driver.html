@@ -45,6 +45,14 @@
   .btn-start{background:#FABE00;color:#1a1a1a;box-shadow:0 6px 18px rgba(250,190,0,.35)}
   .btn-stop{background:#fff;color:#c0392b;border:2px solid #c0392b}
   .btn:active{transform:translateY(1px)}
+  .modebar{padding:0 16px 4px;flex:none}
+  .modebar .lbl{font-size:12px;font-weight:800;color:#0369a1;display:block;margin-bottom:6px}
+  .modegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .modebtn{border:2px solid #eceef1;background:#fff;border-radius:14px;padding:10px 4px;cursor:pointer;text-align:center;font-weight:800;color:#475569;line-height:1.3}
+  .modebtn .emo{display:block;font-size:24px;margin-bottom:2px}
+  .modebtn .tx{font-size:11px}
+  .modebtn.on{border-color:#0369a1;background:#f0f8ff;color:#0369a1;box-shadow:0 4px 12px rgba(3,105,161,.18)}
+  .modebtn:active{transform:translateY(1px)}
   .btn:disabled{opacity:.5}
 
   .perm{margin:14px 16px;padding:16px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:14px;font-size:13.5px;color:#5a4a00}
@@ -107,6 +115,15 @@
         <div class="val" id="addrVal"></div>
         <a class="map-link" id="addrLink" target="_blank" rel="noopener">🗺 待ち合わせ住所を地図で開く</a>
       </div>
+      <div class="modebar" id="modeBar" style="display:none">
+        <span class="lbl">🛞 何で向かいますか？（お客様の地図に表示されます）</span>
+        <div class="modegrid">
+          <div class="modebtn" data-mode="walk"><span class="emo">🚶</span><span class="tx">徒歩</span></div>
+          <div class="modebtn" data-mode="kick"><span class="emo">🛴</span><span class="tx">キックボード</span></div>
+          <div class="modebtn" data-mode="bike"><span class="emo">🚲</span><span class="tx">自転車</span></div>
+          <div class="modebtn" data-mode="car"><span class="emo">🚗</span><span class="tx">回収車</span></div>
+        </div>
+      </div>
       <div class="perm" id="permBox">
         <b>📡 位置情報の許可が必要です</b>
         下の「位置送信を開始」を押すと、端末から位置情報の許可を求められます。許可しないとお客様に現在地を送信できません。
@@ -127,6 +144,26 @@
     `;
     document.getElementById('startBtn').addEventListener('click', startSending);
     document.getElementById('stopBtn').addEventListener('click', stopSending);
+    // 移動手段ボタン
+    document.querySelectorAll('.modebtn').forEach(function (b) {
+      b.addEventListener('click', function () { setMode(b.getAttribute('data-mode')); });
+    });
+    // 前回選択を復元（端末ローカル・予約ごと）
+    try { const saved = localStorage.getItem('kd_mode_' + R); if (saved) markMode(saved); } catch (e) {}
+  }
+
+  let curMode = '';
+  function markMode(m) {
+    curMode = m;
+    document.querySelectorAll('.modebtn').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-mode') === m);
+    });
+  }
+  async function setMode(m) {
+    markMode(m);
+    try { localStorage.setItem('kd_mode_' + R, m); } catch (e) {}
+    // ベストエフォート保存（RPC未デプロイでも送信機能には影響なし）
+    try { await rpc('keydrop_track_set_mode', { p_res: R, p_token: D, p_mode: m }); } catch (e) {}
   }
 
   function applyStatus(d) {
@@ -142,6 +179,9 @@
     } else {
       line.textContent = '位置送信モード';
     }
+    // 手段選択は回収時のみ表示（お届けは常に回収車のため不要）
+    const mb = document.getElementById('modeBar');
+    if (mb) mb.style.display = (d && d.kd_status === 'collecting') ? 'block' : 'none';
   }
 
   function applyAddr(d) {

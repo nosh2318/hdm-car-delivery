@@ -75,6 +75,14 @@
 
   let gmapReady = false, map = null, driverMarker = null, custMarker = null, driverIW = null, custIW = null, meetMarker = null, meetAddrDone = '';
   let lastData = null, custShared = false;
+  let driverMode = '';  // 回収時のスタッフ移動手段: walk/kick/bike/car（空=フォールバック🚶）
+  // 移動手段 → 絵文字・案内文（回収時のみ使用）
+  const MODE_MAP = {
+    walk: { emoji: '🚶', label: '徒歩で向かっています' },
+    kick: { emoji: '🛴', label: 'キックボードで向かっています' },
+    bike: { emoji: '🚲', label: '自転車で向かっています' },
+    car:  { emoji: '🚗', label: '回収車で向かっています' }
+  };
 
   function rpc(name, body) {
     return fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
@@ -147,7 +155,8 @@
       sub.textContent = '担当者の現在地が地図に表示されます。到着までお待ちください。';
     } else if (d.kd_status === 'collecting') {
       box.className = 'status collecting';
-      line.textContent = '🧭 回収に向かっています｜お待ちください';
+      const m = MODE_MAP[driverMode];
+      line.textContent = m ? ('🧭 回収に向かっています｜' + m.emoji + ' ' + m.label) : '🧭 回収に向かっています｜お待ちください';
       sub.innerHTML = '担当者がお車の回収に向かっています。<b>正確な回収場所をお伝えするため、下の「📍今いる場所を共有」をお願いします。</b>';
     } else {
       line.textContent = '現在、位置共有の対象時間外です';
@@ -186,9 +195,11 @@
       });
     }
 
-    // 回収時はアイコンを入替：車はお客様側、動くスタッフは🚶（お届け時は🚗＝スタッフ/🧍＝お客様）
+    // 回収時はアイコンを入替：車はお客様側、動くスタッフは移動手段に応じて 🚶/🛴/🚲/🚗（お届け時は🚗＝スタッフ/🧍＝お客様）
     const collecting = (d.kd_status === 'collecting');
-    const driverEmoji = collecting ? '🚶' : '🚗';
+    const modeInfo = collecting ? MODE_MAP[driverMode] : null;
+    const driverEmoji = collecting ? (modeInfo ? modeInfo.emoji : '🚶') : '🚗';
+    const driverLabel = collecting ? ('スタッフ' + (modeInfo ? '（' + modeInfo.label + '）' : '')) : 'スタッフ';
     const custEmoji = collecting ? '🚗' : '🧍';
 
     if (hasDriver) {
@@ -222,7 +233,7 @@
     // fit bounds when both present
     if (hasDriver) {
       if (!driverIW) { driverIW = new google.maps.InfoWindow({ disableAutoPan: true }); driverIW.open(map, driverMarker); }
-      driverIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#92400e">' + driverEmoji + ' スタッフ</div>');
+      driverIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#92400e">' + driverEmoji + ' ' + driverLabel + '</div>');
     }
     if (hasCust) {
       if (!custIW) { custIW = new google.maps.InfoWindow({ disableAutoPan: true }); custIW.open(map, custMarker); }
@@ -346,6 +357,11 @@
     const arr = await rpc('keydrop_track_get', { p_res: R, p_token: T });
     const d = (Array.isArray(arr) && arr.length) ? arr[0] : null;
     lastData = d;
+    // 回収中のみ移動手段を取得（RPC未適用でも例外を握りつぶしフォールバック🚶）
+    if (d && d.kd_status === 'collecting') {
+      try { const m = await rpc('keydrop_track_get_mode', { p_res: R, p_token: T }); if (typeof m === 'string') driverMode = m; }
+      catch (e) { /* 未デプロイ時は無視＝🚶 */ }
+    } else { driverMode = ''; }
     applyStatus(d);
     applyAddr(d);
     applyStale(d);
