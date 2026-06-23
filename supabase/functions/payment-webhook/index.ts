@@ -27,6 +27,10 @@ const SQUARE_TOKEN = Deno.env.get("SQUARE_ACCESS_TOKEN") || "";
 const SQUARE_API = "https://connect.squareup.com";
 const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";
 const SLACK_CHANNEL = Deno.env.get("SLACK_KEYDROP_CHANNEL") || "";
+// Meta Conversions API（サーバーサイド Purchase・リダイレクト非依存）。トークンはSupabase Secretで管理（コードに直書きしない）
+const META_DATASET_ID = Deno.env.get("META_DATASET_ID") || "";
+const META_CAPI_TOKEN = Deno.env.get("META_CAPI_TOKEN") || "";
+const META_API_VER = Deno.env.get("META_API_VER") || "v21.0";
 
 // --- PostgREST helpers (service_role) ---
 async function sbGet(table: string, query: string): Promise<any[]> {
@@ -85,6 +89,47 @@ async function notifySlack(text: string) {
       body: JSON.stringify({ channel: SLACK_CHANNEL, text }),
     });
   } catch (e) { console.error("[slack]", e); }
+}
+
+// --- Meta Conversions API（サーバーサイド Purchase）---
+async function sha256hex(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s.trim().toLowerCase()));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function normPhoneJP(p: string): string {
+  let d = (p || "").replace(/[^0-9]/g, "");
+  if (!d) return "";
+  if (d.startsWith("0")) d = "81" + d.slice(1); // 国番号付与（日本）
+  return d;
+}
+// Purchase を Meta CAPI へ送信。event_id=予約番号＝ブラウザPixelと重複排除。トークン未設定なら何もしない
+async function sendMetaPurchase(resvId: string, valueYen: number, email: string, phone: string, name: string) {
+  if (!META_DATASET_ID || !META_CAPI_TOKEN) { console.log("[meta-capi] skip (secret未設定)"); return; }
+  try {
+    const ud: Record<string, unknown> = {};
+    if (email) ud.em = [await sha256hex(email)];
+    const ph = normPhoneJP(phone);
+    if (ph) ud.ph = [await sha256hex(ph)];
+    if (name) ud.fn = [await sha256hex(name)];
+    const body = {
+      data: [{
+        event_name: "Purchase",
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: resvId,                 // ★ ブラウザPixelのEvent IDと一致させて重複排除
+        action_source: "website",
+        event_source_url: "https://keydrop.jp/",
+        user_data: ud,
+        custom_data: { currency: "JPY", value: Number(valueYen) || 0, order_id: resvId },
+      }],
+    };
+    const r = await fetch(
+      `https://graph.facebook.com/${META_API_VER}/${META_DATASET_ID}/events?access_token=${encodeURIComponent(META_CAPI_TOKEN)}`,
+      { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) },
+    );
+    const txt = await r.text();
+    if (r.ok) console.log(`[meta-capi] PURCHASE ${resvId} value=${valueYen} ok=${txt.slice(0, 200)}`);
+    else console.error(`[meta-capi] FAIL ${resvId} status=${r.status} ${txt.slice(0, 300)}`);
+  } catch (e) { console.error("[meta-capi]", e); }
 }
 
 // payment.order_id から reference_id(=reservationId) を補助解決（台帳に無い場合の保険）
@@ -184,7 +229,7 @@ Deno.serve(async (req) => {
   let rv: any = null;
   try {
     rv = (await sbGet("reservations",
-      `id=eq.${encodeURIComponent(resvId)}&select=id,name,mail,vehicle,lend_date,return_date,lend_time,del_time,return_time,col_time,del_place,col_place,price,people,insurance`))[0];
+      `id=eq.${encodeURIComponent(resvId)}&select=id,name,mail,tel,vehicle,lend_date,return_date,lend_time,del_time,return_time,col_time,del_place,col_place,price,people,insurance`))[0];
   } catch (e) { console.error("[webhook] fetch reservation:", e); }
 
   // --- 🆕 新規予約（入金確定）を運営Slackへ（車両・日時・場所つき）---
@@ -202,6 +247,12 @@ Deno.serve(async (req) => {
   } else {
     await notifySlack(`🆕 *KEYDROP 新規予約*（入金確認・確定） ${resvId} ${amt}`);
   }
+
+  // --- 📈 Meta Conversions API（サーバーサイドPurchase・決済リダイレクト非依存の確実計測）---
+  try {
+    const convVal = Number(rv?.price ?? ((payment.amount_money?.amount || 0))) || 0;
+    await sendMetaPurchase(resvId, convVal, rv?.mail || "", rv?.tel || "", rv?.name || "");
+  } catch (e) { console.error("[webhook] meta-capi call:", e); }
 
   // --- 予約完了メールをキューに投入（GAS送信ワーカーが reserve@ から顧客へ送信）---
   try {
