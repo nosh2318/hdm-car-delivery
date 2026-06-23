@@ -9,3 +9,8 @@ verify_jwt = false
 # keydrop-budget-watch も pg_cron が x-cron-secret のみ(JWT無し)で日次起動するため verify_jwt=false 固定。
 [functions.keydrop-budget-watch]
 verify_jwt = false
+
+# ⚠️ payment-webhook は Square が JWT無し(HMAC署名のみ)で叩く。verify_jwt=true だとゲートウェイ401で
+#    決済確定が止まる。関数内でHMAC-SHA256署名検証するため verify_jwt=false 固定（本番もfalse）。
+[functions.payment-webhook]
+verify_jwt = false
