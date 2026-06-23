@@ -183,16 +183,22 @@
       });
     }
 
+    // 回収時はアイコンを入替：車はお客様側、動くスタッフは🚶（お届け時は🚗＝スタッフ/🧍＝お客様）
+    const collecting = (d.kd_status === 'collecting');
+    const driverEmoji = collecting ? '🚶' : '🚗';
+    const custEmoji = collecting ? '🚗' : '🧍';
+
     if (hasDriver) {
       const pos = { lat: +d.driver_lat, lng: +d.driver_lng };
       if (!driverMarker) {
         driverMarker = new google.maps.Marker({
           map, position: pos, title: 'スタッフ',
-          label: { text: '🚗', fontSize: '22px' },
+          label: { text: driverEmoji, fontSize: '22px' },
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 16, fillColor: '#FABE00', fillOpacity: 1, strokeColor: '#0e1116', strokeWeight: 2 }
         });
       } else {
         smoothMove(driverMarker, pos);
+        driverMarker.setLabel({ text: driverEmoji, fontSize: '22px' });
       }
     }
 
@@ -201,11 +207,12 @@
       if (!custMarker) {
         custMarker = new google.maps.Marker({
           map, position: pos, title: 'お客様',
-          label: { text: '🧍', fontSize: '20px' },
+          label: { text: custEmoji, fontSize: '20px' },
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 14, fillColor: '#0369a1', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
         });
       } else {
         custMarker.setPosition(pos);
+        custMarker.setLabel({ text: custEmoji, fontSize: '20px' });
       }
     }
 

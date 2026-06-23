@@ -239,24 +239,29 @@
       });
     }
 
+    // 回収時はアイコン入替：自分(スタッフ)は🚶、お客様側が🚗（お届け時は自分🚗/お客様🧍）
+    const collecting = (custData && custData.kd_status === 'collecting');
+    const meEmoji = collecting ? '🚶' : '🚗';
+    const custEmoji = collecting ? '🚗' : '🧍';
+
     if (hasMe) {
       const pos = { lat: myLat, lng: myLng };
       if (!meMarker) {
         meMarker = new google.maps.Marker({
-          map, position: pos, title: '自分（スタッフ）', label: { text: '🚗', fontSize: '22px' },
+          map, position: pos, title: '自分（スタッフ）', label: { text: meEmoji, fontSize: '22px' },
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 16, fillColor: '#FABE00', fillOpacity: 1, strokeColor: '#0e1116', strokeWeight: 2 }
         });
-      } else meMarker.setPosition(pos);
+      } else { meMarker.setPosition(pos); meMarker.setLabel({ text: meEmoji, fontSize: '22px' }); }
     }
 
     if (hasCust) {
       const pos = { lat: +custData.cust_lat, lng: +custData.cust_lng };
       if (!custMarker) {
         custMarker = new google.maps.Marker({
-          map, position: pos, title: 'お客様', label: { text: '🧍', fontSize: '20px' },
+          map, position: pos, title: 'お客様', label: { text: custEmoji, fontSize: '20px' },
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 14, fillColor: '#0369a1', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
         });
-      } else custMarker.setPosition(pos);
+      } else { custMarker.setPosition(pos); custMarker.setLabel({ text: custEmoji, fontSize: '20px' }); }
     }
 
     if (hasMe && hasCust) {
