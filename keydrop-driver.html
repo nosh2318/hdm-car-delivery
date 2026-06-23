@@ -184,34 +184,40 @@
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
     );
+    // 止まっていても30秒ごとに現在地を再送（お客様側が「位置更新待ち」のまま固まるのを防ぐ）
+    if (sendHeartbeat) clearInterval(sendHeartbeat);
+    sendHeartbeat = setInterval(function () { if (sending) sendPos(); }, 30000);
   }
 
   function stopSending() {
     sending = false;
     if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+    if (sendHeartbeat) { clearInterval(sendHeartbeat); sendHeartbeat = null; }
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
     setSendState('off', '送信を停止しました', '');
   }
 
+  let sendHeartbeat = null;
+  async function sendPos() {
+    if (myLat == null || myLng == null) return;
+    const ok = await rpc('keydrop_track_set_driver', { p_res: R, p_token: D, p_lat: myLat, p_lng: myLng });
+    if (ok === true) {
+      lastSentAt = Date.now(); lastSentLat = myLat; lastSentLng = myLng;
+      setSendState('on', '位置を送信中', '最終送信：' + new Date().toLocaleTimeString('ja-JP'));
+    } else if (ok === false) {
+      setSendState('err', '送信先が見つかりません', 'リンク（r / d）をご確認ください');
+    } else {
+      setSendState('on', '位置を送信中（再試行します）', '通信が不安定です：' + new Date().toLocaleTimeString('ja-JP'));
+    }
+  }
+
   async function onPos(pos) {
     myLat = pos.coords.latitude; myLng = pos.coords.longitude;
     if (!gmapReady) loadMaps(); else renderMap();
-
-    const now = Date.now();
+    // 初回 or 50m以上動いたら即送信。止まっていても下の30秒ハートビートで送り続ける
     const movedFar = (lastSentLat != null) && (haversine(lastSentLat, lastSentLng, myLat, myLng) > 50);
-    const timeUp = (now - lastSentAt) >= 30000;
-    if (lastSentAt === 0 || timeUp || movedFar) {
-      const ok = await rpc('keydrop_track_set_driver', { p_res: R, p_token: D, p_lat: myLat, p_lng: myLng });
-      if (ok === true) {
-        lastSentAt = now; lastSentLat = myLat; lastSentLng = myLng;
-        setSendState('on', '位置を送信中', '最終送信：' + new Date().toLocaleTimeString('ja-JP'));
-      } else if (ok === false) {
-        setSendState('err', '送信先が見つかりません', 'リンク（r / d）をご確認ください');
-      } else {
-        setSendState('on', '位置を送信中（再試行します）', '通信が不安定です：' + new Date().toLocaleTimeString('ja-JP'));
-      }
-    }
+    if (lastSentAt === 0 || movedFar) sendPos();
   }
 
   // ===== cust poll =====
