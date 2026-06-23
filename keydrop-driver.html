@@ -72,7 +72,7 @@
   const R = (q.get('r') || '').toUpperCase().trim();
   const D = (q.get('d') || '').trim();
 
-  let gmapReady = false, map = null, meMarker = null, custMarker = null;
+  let gmapReady = false, map = null, meMarker = null, custMarker = null, meIW = null, custIW = null;
   let watchId = null, sending = false;
   let lastSentAt = 0, lastSentLat = null, lastSentLng = null, myLat = null, myLng = null;
   let custData = null;
@@ -262,6 +262,15 @@
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 14, fillColor: '#0369a1', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
         });
       } else { custMarker.setPosition(pos); custMarker.setLabel({ text: custEmoji, fontSize: '20px' }); }
+    }
+
+    if (hasMe) {
+      if (!meIW) { meIW = new google.maps.InfoWindow({ disableAutoPan: true }); meIW.open(map, meMarker); }
+      meIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#92400e">' + meEmoji + ' 自分（スタッフ）</div>');
+    }
+    if (hasCust) {
+      if (!custIW) { custIW = new google.maps.InfoWindow({ disableAutoPan: true }); custIW.open(map, custMarker); }
+      custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' お客様</div>');
     }
 
     if (hasMe && hasCust) {

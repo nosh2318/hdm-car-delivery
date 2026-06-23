@@ -73,7 +73,7 @@
   const R = (q.get('r') || '').toUpperCase().trim();
   const T = (q.get('t') || '').trim();
 
-  let gmapReady = false, map = null, driverMarker = null, custMarker = null;
+  let gmapReady = false, map = null, driverMarker = null, custMarker = null, driverIW = null, custIW = null;
   let lastData = null, custShared = false;
 
   function rpc(name, body) {
@@ -217,6 +217,15 @@
     }
 
     // fit bounds when both present
+    if (hasDriver) {
+      if (!driverIW) { driverIW = new google.maps.InfoWindow({ disableAutoPan: true }); driverIW.open(map, driverMarker); }
+      driverIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#92400e">' + driverEmoji + ' スタッフ</div>');
+    }
+    if (hasCust) {
+      if (!custIW) { custIW = new google.maps.InfoWindow({ disableAutoPan: true }); custIW.open(map, custMarker); }
+      custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' お客様（あなた）</div>');
+    }
+
     if (hasDriver && hasCust) {
       const b = new google.maps.LatLngBounds();
       b.extend({ lat: +d.driver_lat, lng: +d.driver_lng });
