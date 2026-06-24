@@ -113,7 +113,7 @@
       <div class="addr" id="addrBox" style="display:none">
         <span class="lbl">📍 待ち合わせ場所</span>
         <div class="val" id="addrVal"></div>
-        <a class="map-link" id="addrLink" target="_blank" rel="noopener">🗺 待ち合わせ住所を地図で開く</a>
+        <a class="map-link" id="addrLink" target="_blank" rel="noopener">🗺 目的地までナビ（Googleマップで開く）</a>
       </div>
       <div class="modebar" id="modeBar" style="display:none">
         <span class="lbl">🛞 何で向かいますか？（お客様の地図に表示されます）</span>
@@ -189,7 +189,7 @@
     if (d && d.del_place) {
       box.style.display = 'block';
       document.getElementById('addrVal').textContent = d.del_place + (d.cust_name ? '（' + d.cust_name + ' 様）' : '');
-      document.getElementById('addrLink').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.del_place);
+      document.getElementById('addrLink').href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(d.del_place) + '&travelmode=driving';
     }
   }
 
