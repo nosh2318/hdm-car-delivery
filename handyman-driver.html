@@ -173,6 +173,9 @@
     } else if (d && d.kd_status === 'collecting') {
       box.className = 'status collecting';
       line.textContent = '🧭 回収に向かっています';
+    } else if (d && d.kd_status === 'returning') {
+      box.className = 'status collecting';
+      line.textContent = '🔑 お客様の返却を追跡中｜お客様の現在地・到着予定が地図に表示されます';
     } else {
       line.textContent = '位置送信モード';
     }

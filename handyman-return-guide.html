@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F1F45">
+<title>ご返却の流れ｜HANDYMAN デリバリーシステム利用方法</title>
+<style>
+  /* ===== HANDYMAN (HDM Car Delivery) ブランド：ネイビー×イエロー =====
+     配色は下の変数だけ変えれば全ページ一括変更できます。 */
+  :root{
+    --navy:#0F1F45; --navy2:#22386b; --navyd:#0f1d39;
+    --gold:#FABE00; --goldd:#b07d00; --goldl:#fff8e1;
+    --ink:#1b2333; --sub:#6b7280; --line:#e6e9ef; --bg:#f4f6f9;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Helvetica Neue',sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;padding-bottom:50px;overflow-x:hidden}
+  a{color:var(--navy)}
+
+  .hd{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30}
+  .hd .logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+  .hd .logo img{height:30px;display:block}
+  .hd .mark{width:22px;height:16px;display:flex;flex-direction:column;justify-content:space-between;transform:skewX(-12deg)}
+  .hd .mark i{height:3px;background:var(--gold);border-radius:2px;display:block}
+  .hd .mark i:nth-child(2){width:80%}.hd .mark i:nth-child(3){width:60%}
+  .hd b{font-size:19px;font-weight:900;letter-spacing:.04em;color:var(--gold);font-style:italic}
+  .hd .sub{font-size:10px;font-weight:800;color:#cdd6e6;letter-spacing:.06em;font-style:italic}
+  .hd .back{font-size:12px;color:var(--gold);text-decoration:none;font-weight:700;margin-left:auto;flex:none}
+
+  .hero{background:radial-gradient(1100px 420px at 72% -12%, #2a3f6e 0%, #18294f 55%, #0f1d39 100%);color:#fff;padding:42px 20px 34px;text-align:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;left:-40px;top:-40px;width:170px;height:170px;background:repeating-linear-gradient(135deg,var(--gold) 0 6px,transparent 6px 14px);opacity:.12;transform:skewX(-12deg)}
+  .hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.2em;color:var(--gold);opacity:.95}
+  .hero h1{font-size:clamp(23px,7vw,32px);font-weight:900;letter-spacing:.02em;margin-top:10px;font-style:italic;line-height:1.35}
+  .hero h1 .y{color:var(--gold)}
+  .hero .lead{margin-top:13px;opacity:.88;font-size:14px;max-width:520px;margin-left:auto;margin-right:auto}
+  .hero-map{max-width:340px;margin:22px auto 0;border-radius:18px;overflow:hidden;box-shadow:0 14px 36px rgba(0,0,0,.4);border:3px solid rgba(250,190,0,.4);background:#eaf2fb}
+  .hero-map svg{display:block;width:100%;height:auto}
+
+  .sec{max-width:780px;margin:0 auto;padding:32px 16px 4px}
+  .sec-h{text-align:center;margin-bottom:18px}
+  .sec-h .tag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.05em;color:var(--goldd);background:var(--goldl);border:1px solid var(--gold);border-radius:999px;padding:4px 14px}
+  .sec-h h2{font-size:21px;font-weight:900;margin-top:10px}
+  .sec-h p{color:var(--sub);font-size:12.5px;margin-top:5px}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 8px 24px rgba(15,29,57,.07)}
+  .card+.card{margin-top:14px}
+
+  .def{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+  @media(max-width:560px){.def{grid-template-columns:1fr}}
+  .def .box{background:var(--goldl);border:1.5px solid var(--gold);border-radius:14px;padding:16px 18px}
+  .def .box .lbl{font-size:13px;font-weight:900;color:var(--goldd);letter-spacing:.04em}
+  .def .box .ttl{font-size:17px;font-weight:900;margin-top:4px}
+  .def .box .ds{font-size:13px;color:#555;margin-top:6px;line-height:1.7}
+  .def-sum{font-size:14px;color:#333;margin-top:14px;line-height:1.8;text-align:center}
+  .def-sum b{color:var(--ink)}
+
+  .steps{margin-top:4px}
+  .step{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px dashed var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .num{flex:none;width:34px;height:34px;border-radius:50%;background:var(--navy);color:var(--gold);font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center}
+  .step .t{font-size:15px;font-weight:800}
+  .step .d{font-size:13px;color:#5a6068;margin-top:3px;line-height:1.7}
+  .step .d em{font-style:normal;color:var(--goldd);font-weight:800}
+
+  .dual{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+  .phone{width:280px;max-width:90vw;border:8px solid #1e293b;border-radius:28px;background:#1e293b;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+  .scr{background:#fff;border-radius:20px;overflow:hidden}
+  .pbar{font-size:12px;font-weight:900;color:var(--navy);text-align:center;padding:9px;background:var(--gold)}
+  .pbar.staff{background:var(--navy);color:var(--gold)}
+  .status{display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:12.5px;font-weight:800}
+  .status.cust{background:var(--goldl);color:var(--goldd)}.status.staff{background:#eef2f8;color:var(--navy)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);animation:bl 1.2s infinite}
+  .dot.o{background:var(--navy)}
+  @keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+  .mapwrap{position:relative;height:260px}
+  .mapwrap svg{display:block;width:100%;height:100%}
+  .pulse{animation:pl 1.8s ease-out infinite}
+  @keyframes pl{0%{r:6;opacity:.6}100%{r:24;opacity:0}}
+  .cardcap{text-align:center;font-size:12.5px;font-weight:800;color:var(--navy);margin-top:10px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;justify-content:center;font-size:12.5px;color:#444}
+  .legend span{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:7px 12px}
+  .legend b{font-size:15px}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
+  td,th{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  th{background:var(--goldl);font-weight:900;color:var(--goldd)}
+  .ok{color:#0e9f50;font-weight:900}
+  .tnote{background:var(--goldl);border:1px solid var(--gold);border-radius:12px;padding:12px 16px;font-size:13px;color:#7a5b00;margin-top:12px;line-height:1.75}
+
+  .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+  .chip{background:var(--goldl);border:1.5px solid var(--gold);color:#7a5b00;border-radius:11px;padding:10px 15px;font-size:13px;font-weight:800}
+
+  .cta-wrap{max-width:430px;margin:30px auto 6px;padding:0 16px}
+  .cta{display:block;text-align:center;font-weight:900;font-size:15px;padding:15px;border-radius:14px;text-decoration:none;margin-top:11px}
+  .cta.book{background:var(--gold);color:var(--navy);box-shadow:0 6px 18px rgba(250,190,0,.4)}
+  .cta.line{background:#06c755;color:#fff;box-shadow:0 6px 18px rgba(6,199,85,.32)}
+  .foot{max-width:430px;margin:18px auto 0;padding:0 16px;text-align:center;color:#9aa0a8;font-size:11.5px;line-height:1.9}
+  .foot b{color:#555}
+  .foot a{color:var(--navy);font-weight:700;text-decoration:none}
+
+  .pgnav{max-width:430px;margin:20px auto 0;padding:0 16px;display:flex;gap:10px}
+  .pgnav a{flex:1;text-align:center;font-weight:800;font-size:13px;padding:11px;border-radius:12px;text-decoration:none;border:1.5px solid var(--line);color:var(--sub);background:#fff}
+  .pgnav a.on{border-color:var(--gold);background:var(--goldl);color:var(--goldd)}
+  /* live map (token時のみ表示・地図メイン) */
+  #liveMap{display:none}
+  #liveMap.on{display:block;border-bottom:3px solid var(--gold)}
+  #liveMap .livebar{background:var(--navy);color:#fff;text-align:center;padding:9px;font-weight:800;font-size:12.5px;letter-spacing:.04em}
+  #liveMap .liveframe{width:100%;height:70vh;min-height:440px;border:0;display:block;background:#eaf2fb}
+  #liveMap .liveguide{display:block;text-align:center;padding:12px;background:var(--goldl);color:var(--goldd);font-weight:800;font-size:13px;text-decoration:none}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <a class="logo" href="https://rent-handyman.jp" target="_blank" rel="noopener"><img src="hdm-logo.png?v=20260624" alt="HANDYMAN HDM Car Delivery"></a>
+  <a class="back" href="https://rent-handyman.jp" target="_blank" rel="noopener">HANDYMAN →</a>
+</div>
+<div id="liveMap"><div class="livebar">📍 いまの状況（リアルタイム地図）</div><iframe id="liveFrame" class="liveframe" allow="geolocation"></iframe><a class="liveguide" href="#howto">📖 はじめての方へ — 使い方を見る ↓</a></div>
+
+<!-- ① ヒーロー -->
+<div class="hero">
+  <div class="eyebrow">RETURN ｜ 返却</div>
+  <h1>返却も、あなたの<span class="y">いる場所</span>で。</h1>
+  <p class="lead">ご返却の待ち合わせのご案内です。返却場所へ向かう<b style="color:#fff">前</b>に「今いる場所」を共有いただくと、スタッフが到着予定を把握して受け入れ準備をします。<br>地図で返却場所とお互いの位置を確認できます。<b style="color:#fff">アプリ不要・リンクを開くだけ。</b></p>
+  <div class="hero-map">
+    <svg viewBox="0 0 300 230" preserveAspectRatio="xMidYMid meet">
+      <rect width="300" height="230" fill="#eaf2fb"/>
+      <g stroke="#cdd9ea" stroke-width="10">
+        <line x1="0" y1="60" x2="300" y2="60"/><line x1="0" y1="130" x2="300" y2="130"/><line x1="0" y1="195" x2="300" y2="195"/>
+        <line x1="70" y1="0" x2="70" y2="230"/><line x1="170" y1="0" x2="170" y2="230"/><line x1="240" y1="0" x2="240" y2="230"/>
+      </g>
+      <path d="M48,165 C90,115 120,100 168,92" stroke="#0F1F45" stroke-width="6" fill="none" stroke-dasharray="9 7" stroke-linecap="round"/>
+      <circle cx="168" cy="90" r="13" fill="#FABE00" opacity=".25"/>
+      <text x="168" y="96" font-size="20" text-anchor="middle">📍</text>
+      <rect x="120" y="64" width="96" height="18" rx="5" fill="#fff" stroke="#FABE00"/><text x="168" y="77" font-size="11" font-weight="800" text-anchor="middle" fill="#b07d00">待ち合わせ場所</text>
+      <circle class="pulse" cx="48" cy="165" fill="#0F1F45"/>
+      <text x="48" y="171" font-size="22" text-anchor="middle">🚶</text>
+      <rect x="6" y="177" width="84" height="18" rx="5" fill="#fff" stroke="#e2e8f0"/><text x="48" y="190" font-size="11" font-weight="800" text-anchor="middle" fill="#0F1F45">スタッフ</text>
+      <text x="234" y="200" font-size="20" text-anchor="middle">🚗</text>
+      <rect x="198" y="204" width="66" height="18" rx="5" fill="#fff" stroke="#e2e8f0"/><text x="231" y="217" font-size="11" font-weight="800" text-anchor="middle" fill="#0e9f50">あなた(車)</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ページ切替 -->
+<div class="pgnav">
+  <a href="handyman-delivery-guide.html">🚚 お届けの流れ</a>
+  <a class="on" href="handyman-collection-guide.html">🔑 返却の流れ</a>
+</div>
+
+<!-- ② 返却とは -->
+<div class="sec" id="howto">
+  <div class="sec-h">
+    <span class="tag">COLLECTION SYSTEM</span>
+    <h2>HANDYMAN ご返却とは？</h2>
+    <p>店に戻らず、いる場所から返却場所へ。位置共有で到着をお伝え</p>
+  </div>
+  <div class="card">
+    <div class="def">
+      <div class="box">
+        <div class="lbl">店に戻らない</div>
+        <div class="ttl">いる場所で返却</div>
+        <div class="ds">返却時、店舗に戻る必要はありません。あなたがいる場所までスタッフが返却にうかがいます。</div>
+      </div>
+      <div class="box">
+        <div class="lbl">地図で合流</div>
+        <div class="ttl">待ち合わせてお渡し</div>
+        <div class="ds">向かうスタッフの現在地が地図に表示。お互いの位置を見ながら確実に合流できます。</div>
+      </div>
+    </div>
+    <div class="def-sum">
+      返却のために店へ戻らない。<b>あなたが今いる場所で鍵をお渡しいただくだけ</b>。<br>
+      届いた地図リンクを開くだけ。<b>アプリのインストールも、ログインも不要</b>です。
+    </div>
+  </div>
+</div>
+
+<!-- ③ 返却の流れ -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag">HOW IT WORKS</span>
+    <h2>返却の流れ</h2>
+    <p>ご返却 当日の 4ステップ</p>
+  </div>
+  <div class="card">
+    <div class="steps">
+      <div class="step"><div class="num">1</div><div><div class="t">ご返却のご案内</div><div class="d">返却日時が近づくと、スタッフから地図リンクが届きます（メール／LINE）。</div></div></div>
+      <div class="step"><div class="num">2</div><div><div class="t">出発前に「今いる場所を共有」</div><div class="d">返却場所へ向かう前にリンクを開き、<em>「今いる場所を共有」をタップ</em>。「これから向かいます」の合図になります（アプリ不要）。</div></div></div>
+      <div class="step"><div class="num">3</div><div><div class="t">返却場所へ向かう</div><div class="d">地図で返却場所を確認しながら向かいます。共有された現在地から<em>スタッフが到着予定を把握</em>し、受け入れ準備をします。</div></div></div>
+      <div class="step"><div class="num">4</div><div><div class="t">その場で返却</div><div class="d">返却場所でスタッフに鍵をお渡しいただいて完了です。</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ④ 画面イメージ -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag">SCREEN</span>
+    <h2>画面イメージ</h2>
+    <p>返却時 × お客様／スタッフ</p>
+  </div>
+  <div class="dual">
+    <div>
+      <div class="phone"><div class="scr">
+        <div class="pbar">お客様の地図</div>
+        <div class="status cust"><span class="dot"></span>🧭 返却に向かっています ・ あと約 6 分</div>
+        <div class="mapwrap">
+          <svg viewBox="0 0 300 260" preserveAspectRatio="xMidYMid slice">
+            <rect width="300" height="260" fill="#eaf2fb"/>
+            <g stroke="#cdd9ea" stroke-width="10">
+              <line x1="0" y1="70" x2="300" y2="70"/><line x1="0" y1="150" x2="300" y2="150"/><line x1="0" y1="220" x2="300" y2="220"/>
+              <line x1="70" y1="0" x2="70" y2="260"/><line x1="170" y1="0" x2="170" y2="260"/><line x1="240" y1="0" x2="240" y2="260"/>
+            </g>
+            <path d="M48,185 C90,130 120,112 168,104" stroke="#0F1F45" stroke-width="5" fill="none" stroke-dasharray="9 7" stroke-linecap="round"/>
+            <circle cx="168" cy="102" r="13" fill="#FABE00" opacity=".22"/>
+            <text x="168" y="108" font-size="20" text-anchor="middle">📍</text>
+            <rect x="120" y="76" width="96" height="18" rx="5" fill="#fff" stroke="#FABE00"/><text x="168" y="89" font-size="11" font-weight="800" text-anchor="middle" fill="#b07d00">待ち合わせ場所</text>
+            <circle class="pulse" cx="48" cy="185" fill="#0F1F45"/>
+            <text x="48" y="191" font-size="22" text-anchor="middle">🚶</text>
+            <rect x="6" y="197" width="84" height="18" rx="5" fill="#fff" stroke="#e2e8f0"/><text x="48" y="210" font-size="11" font-weight="800" text-anchor="middle" fill="#0F1F45">スタッフ(動く)</text>
+            <text x="234" y="232" font-size="20" text-anchor="middle">🚗</text>
+            <rect x="196" y="236" width="68" height="18" rx="5" fill="#fff" stroke="#e2e8f0"/><text x="230" y="249" font-size="11" font-weight="800" text-anchor="middle" fill="#0e9f50">あなた(車)</text>
+          </svg>
+        </div>
+      </div></div>
+      <div class="cardcap">🟡 お客様の画面：返却スタッフが近づくのが見える</div>
+    </div>
+    <div>
+      <div class="phone"><div class="scr">
+        <div class="pbar staff">配車アプリ（スタッフ）</div>
+        <div class="status staff"><span class="dot o"></span>お客様(車)まで 返却案内中 ・ 0.8km</div>
+        <div class="mapwrap">
+          <svg viewBox="0 0 300 260" preserveAspectRatio="xMidYMid slice">
+            <rect width="300" height="260" fill="#f3f5f8"/>
+            <g stroke="#dde2ea" stroke-width="10">
+              <line x1="0" y1="70" x2="300" y2="70"/><line x1="0" y1="150" x2="300" y2="150"/><line x1="0" y1="220" x2="300" y2="220"/>
+              <line x1="70" y1="0" x2="70" y2="260"/><line x1="170" y1="0" x2="170" y2="260"/><line x1="240" y1="0" x2="240" y2="260"/>
+            </g>
+            <path d="M48,185 C90,130 120,112 168,104" stroke="#0F1F45" stroke-width="5" fill="none" stroke-dasharray="9 7" stroke-linecap="round"/>
+            <circle cx="168" cy="102" r="13" fill="#FABE00" opacity=".22"/>
+            <text x="168" y="108" font-size="20" text-anchor="middle">📍</text>
+            <rect x="120" y="76" width="96" height="18" rx="5" fill="#fff" stroke="#FABE00"/><text x="168" y="89" font-size="11" font-weight="800" text-anchor="middle" fill="#b07d00">待ち合わせ場所</text>
+            <circle class="pulse" cx="48" cy="185" fill="#0F1F45"/>
+            <text x="48" y="191" font-size="22" text-anchor="middle">🚶</text>
+            <rect x="14" y="197" width="68" height="18" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="48" y="210" font-size="11" font-weight="800" text-anchor="middle" fill="#0F1F45">自分</text>
+            <text x="234" y="232" font-size="20" text-anchor="middle">🚗</text>
+            <rect x="196" y="236" width="68" height="18" rx="5" fill="#fff" stroke="#cbd5e1"/><text x="230" y="249" font-size="11" font-weight="800" text-anchor="middle" fill="#0e9f50">お客様(車)</text>
+          </svg>
+        </div>
+      </div></div>
+      <div class="cardcap">🔵 スタッフの画面：お客様(車)と待ち合わせ場所が見える</div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><b>🚶</b> スタッフ＝<b>動く</b>（徒歩/自転車/車）</span>
+    <span><b>🚗</b> お客様＝車で待機・任意で共有</span>
+    <span><b>📍</b> 待ち合わせ場所＝目印</span>
+  </div>
+</div>
+
+<!-- ⑤ 誰が共有・誰は見るだけ -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag">FAIR &amp; SIMPLE</span>
+    <h2>誰が“共有”・誰は“見るだけ”</h2>
+    <p>映る側だけが準備すればOK</p>
+  </div>
+  <div class="card">
+    <table>
+      <tr><th style="width:34%">見たいもの</th><th>映る側＝共有が必要</th><th>見る側</th></tr>
+      <tr><td>お客様が<b>スタッフのピン</b>を見る</td><td>スタッフ：位置を許可して画面を開く</td><td class="ok">お客様＝不要</td></tr>
+      <tr><td>スタッフが<b>お客様のピン</b>を見る</td><td>お客様：「今いる場所を共有」を1タップ</td><td class="ok">スタッフ＝不要</td></tr>
+      <tr><td>📍<b>待ち合わせ場所</b></td><td>ご予約の場所から自動表示</td><td class="ok">両者に表示</td></tr>
+    </table>
+    <div class="tnote">お客様の位置共有は<b>任意</b>です。共有しなくても📍待ち合わせ場所のピンは表示されるので合流できます。共有は「より正確に合流できる」ためのオプションです。</div>
+  </div>
+</div>
+
+<!-- ⑥ 安心設計 -->
+<div class="sec">
+  <div class="sec-h">
+    <span class="tag">SAFE</span>
+    <h2>安心の設計</h2>
+    <p>“ずっと見られている”にはなりません</p>
+  </div>
+  <div class="card">
+    <div class="chips">
+      <span class="chip">位置を送るのは 返却中 だけ</span>
+      <span class="chip">見えるのは その予約の当事者だけ</span>
+      <span class="chip">返却完了で 自動でオフ</span>
+      <span class="chip">ずっと追跡は しません</span>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-wrap">
+  <a class="cta book" href="https://rent-handyman.jp" target="_blank" rel="noopener">🚗 レンタカーを予約する</a>
+  <a class="cta line" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">💬 公式LINEで相談</a>
+</div>
+<div class="foot">
+  受付・運営 9:00〜19:00（年中無休）<br>
+  <b>HANDYMAN（HDM Car Delivery）</b>／株式会社グローバルラインズ<br>
+  TEL <a href="tel:05017246197">050-1724-6197</a>
+</div>
+
+<script>
+(function(){var q=new URLSearchParams(location.search);var R=(q.get("r")||"").trim(),T=(q.get("t")||"").trim();if(R&&T){document.getElementById("liveFrame").src="handyman-track.html?r="+encodeURIComponent(R)+"&t="+encodeURIComponent(T)+"&embed=1";document.getElementById("liveMap").className="on";var h=document.querySelector(".hero");if(h)h.style.display="none";var p=document.querySelector(".pgnav");if(p)p.style.display="none";}})();
+</script>
+</body>
+</html>

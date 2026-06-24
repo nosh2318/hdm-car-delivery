@@ -160,13 +160,17 @@
       const m = MODE_MAP[driverMode];
       line.textContent = m ? ('🧭 回収に向かっています｜' + m.emoji + ' ' + m.label) : '🧭 回収に向かっています｜お待ちください';
       sub.innerHTML = '担当者がお車の回収に向かっています。<b>正確な回収場所をお伝えするため、下の「📍今いる場所を共有」をお願いします。</b>';
+    } else if (d.kd_status === 'returning') {
+      box.className = 'status collecting';
+      line.textContent = '🔑 ご返却の待ち合わせ｜位置情報の共有をお願いします';
+      sub.innerHTML = '<b>📍 返却場所へ向かう前に、下の「今いる場所を共有」を押してください。</b>「これから向かいます」の合図になり、スタッフが到着予定を把握して受け入れ準備をします。';
     } else {
       line.textContent = '現在、位置共有の対象時間外です';
       sub.textContent = '担当者がご案内する時間になりましたら、こちらの地図に表示されます。';
     }
     // 回収で未共有のときは共有ボタンの文言を強調
     const sb = document.getElementById('shareBtn');
-    if (sb) sb.textContent = !custShared ? '📍 今いる場所を共有（スタッフに位置を伝える）' : '✅ 現在地を共有しました';
+    if (sb) sb.textContent = custShared ? '✅ 現在地を共有しました' : (d.kd_status === 'returning' ? '📍 返却に向かう（今いる場所を共有）' : '📍 今いる場所を共有（スタッフに位置を伝える）');
   }
 
   // ===== meeting address =====
@@ -198,7 +202,7 @@
     }
 
     // 回収時はアイコンを入替：車はお客様側、動くスタッフは移動手段に応じて 🚶/🛴/🚲/🚗（お届け時は🚗＝スタッフ/🧍＝お客様）
-    const collecting = (d.kd_status === 'collecting');
+    const collecting = (d.kd_status === 'collecting' || d.kd_status === 'returning');
     const modeInfo = collecting ? MODE_MAP[driverMode] : null;
     const driverEmoji = collecting ? (modeInfo ? modeInfo.emoji : '🚶') : '🚗';
     const driverLabel = collecting ? ('スタッフ' + (modeInfo ? '（' + modeInfo.label + '）' : '')) : 'スタッフ';
