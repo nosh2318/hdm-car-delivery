@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0F1F45">
-<title>ç¾å¨å°ã®ãæ¡åï½HANDYMANï¼HDM Car Deliveryï¼</title>
+<title>現在地のご案内｜HANDYMAN（HDM Car Delivery）</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
@@ -60,7 +60,7 @@
   <div class="hd" id="hdBar"><a href="https://rent-handyman.jp" target="_blank" rel="noopener"><img src="hdm-logo.png?v=20260624" alt="HANDYMAN HDM Car Delivery" style="height:26px;display:block"></a></div>
 
   <div id="root">
-    <div class="loading" id="initLoading">èª­ã¿è¾¼ã¿ä¸­â¦</div>
+    <div class="loading" id="initLoading">読み込み中…</div>
   </div>
 
 <script>
@@ -75,13 +75,13 @@
 
   let gmapReady = false, map = null, driverMarker = null, custMarker = null, driverIW = null, custIW = null, meetMarker = null, meetAddrDone = '';
   let lastData = null, custShared = false;
-  let driverMode = '';  // ååæã®ã¹ã¿ããç§»åææ®µ: walk/kick/bike/carï¼ç©º=ãã©ã¼ã«ããã¯ð¶ï¼
-  // ç§»åææ®µ â çµµæå­ã»æ¡åæï¼ååæã®ã¿ä½¿ç¨ï¼
+  let driverMode = '';  // 回収時のスタッフ移動手段: walk/kick/bike/car（空=フォールバック🚶）
+  // 移動手段 → 絵文字・案内文（回収時のみ使用）
   const MODE_MAP = {
-    walk: { emoji: 'ð¶', label: 'å¾æ­©ã§åãã£ã¦ãã¾ã' },
-    kick: { emoji: 'ð´', label: 'ã­ãã¯ãã¼ãã§åãã£ã¦ãã¾ã' },
-    bike: { emoji: 'ð²', label: 'èªè»¢è»ã§åãã£ã¦ãã¾ã' },
-    car:  { emoji: 'ð', label: 'ååè»ã§åãã£ã¦ãã¾ã' }
+    walk: { emoji: '🚶', label: '徒歩で向かっています' },
+    kick: { emoji: '🛴', label: 'キックボードで向かっています' },
+    bike: { emoji: '🚲', label: '自転車で向かっています' },
+    car:  { emoji: '🚗', label: '回収車で向かっています' }
   };
 
   function rpc(name, body) {
@@ -115,26 +115,26 @@
     root.innerHTML = `
       <div class="status offhours" id="statusBox">
         <div class="pill">
-          <div class="st-line" id="stLine">ç¾å¨ã®ç¶æ³ãç¢ºèªãã¦ãã¾ãâ¦</div>
+          <div class="st-line" id="stLine">現在の状況を確認しています…</div>
           <div class="st-sub" id="stSub"></div>
         </div>
       </div>
       <div class="addr" id="addrBox" style="display:none">
-        <span class="lbl">ð å¾ã¡åããå ´æ</span>
+        <span class="lbl">📍 待ち合わせ場所</span>
         <div class="val" id="addrVal"></div>
-        <a class="map-link" id="addrLink" target="_blank" rel="noopener">ðº å¾ã¡åããä½æãå°å³ã§éã</a>
+        <a class="map-link" id="addrLink" target="_blank" rel="noopener">🗺 待ち合わせ住所を地図で開く</a>
       </div>
       <div class="map-wrap">
         <div class="dist-chip" id="distChip"></div>
-        <div class="stale-chip" id="staleChip">ä½ç½®æ´æ°å¾ã¡â¦</div>
+        <div class="stale-chip" id="staleChip">位置更新待ち…</div>
         <div id="map"></div>
-        <div class="map-fallback" id="mapFallback">å°å³ãè¡¨ç¤ºã§ãã¾ããã§ããããææ°ã§ããç»é¢ãåèª­ã¿è¾¼ã¿ãã¦ãã ããã</div>
+        <div class="map-fallback" id="mapFallback">地図を表示できませんでした。お手数ですが画面を再読み込みしてください。</div>
       </div>
       <div class="share-bar">
-        <div class="share-guide">ð ã¹ã¿ããã¨åæµãããããä¸ã®ãã¿ã³ã§ãä»ããå ´æããå±æãã¦ãã ããï¼ä»»æï¼ã</div>
-        <button class="btn-share" id="shareBtn">ð ä»ããå ´æãå±æ</button>
+        <div class="share-guide">📍 スタッフと合流するため、下のボタンで「今いる場所」を共有してください（任意）。</div>
+        <button class="btn-share" id="shareBtn">📍 今いる場所を共有</button>
         <div class="share-msg" id="shareMsg"></div>
-        <div class="share-safe">ð å±æããä½ç½®ã¯「ãã®äºç´ã®ã¹ã¿ãã」ã ãã«è¡¨ç¤ºããããå±ã／ååã®å®äºæã«èªåã§ãªãã«ãªãã¾ããç¶ç¶çãªè¿½è·¡ã¯ããã¾ããï¼è¦ãã ããªãå±æã¯ä¸è¦ã§ãï¼ã</div>
+        <div class="share-safe">🔒 共有した位置は「この予約のスタッフ」だけに表示され、お届け／回収の完了時に自動でオフになります。継続的な追跡はありません（見るだけなら共有は不要です）。</div>
       </div>
     `;
     document.getElementById('shareBtn').addEventListener('click', shareLocation);
@@ -147,26 +147,26 @@
     const sub = document.getElementById('stSub');
     box.className = 'status offhours';
     if (!d) {
-      line.textContent = 'ç¾å¨ãä½ç½®å±æã®å¯¾è±¡æéå¤ã§ã';
-      sub.textContent = 'æå½èããæ¡åããæéã«ãªãã¾ãããããã¡ãã®å°å³ã«è¡¨ç¤ºããã¾ãã';
+      line.textContent = '現在、位置共有の対象時間外です';
+      sub.textContent = '担当者がご案内する時間になりましたら、こちらの地図に表示されます。';
       return;
     }
     if (d.kd_status === 'delivering') {
       box.className = 'status delivering';
-      line.textContent = 'ð ãå±ãä¸­ï½ã¹ã¿ãããåãã£ã¦ãã¾ã';
-      sub.innerHTML = '<b>ð ä¸ã®ãä»ããå ´æãå±æããæ¼ãã¦ãã ããã</b>ã¹ã¿ãããããªãã®ããå ´æã¾ã§æ­£ç¢ºã«ãå±ããã¾ãã';
+      line.textContent = '🚚 お届け中｜スタッフが向かっています';
+      sub.innerHTML = '<b>📍 下の「今いる場所を共有」を押してください。</b>スタッフがあなたのいる場所まで正確にお届けします。';
     } else if (d.kd_status === 'collecting') {
       box.className = 'status collecting';
       const m = MODE_MAP[driverMode];
-      line.textContent = m ? ('ð§­ ååã«åãã£ã¦ãã¾ãï½' + m.emoji + ' ' + m.label) : 'ð§­ ååã«åãã£ã¦ãã¾ãï½ãå¾ã¡ãã ãã';
-      sub.innerHTML = 'æå½èããè»ã®ååã«åãã£ã¦ãã¾ãã<b>æ­£ç¢ºãªååå ´æããä¼ããããããä¸ã®ãðä»ããå ´æãå±æãããé¡ããã¾ãã</b>';
+      line.textContent = m ? ('🧭 回収に向かっています｜' + m.emoji + ' ' + m.label) : '🧭 回収に向かっています｜お待ちください';
+      sub.innerHTML = '担当者がお車の回収に向かっています。<b>正確な回収場所をお伝えするため、下の「📍今いる場所を共有」をお願いします。</b>';
     } else {
-      line.textContent = 'ç¾å¨ãä½ç½®å±æã®å¯¾è±¡æéå¤ã§ã';
-      sub.textContent = 'æå½èããæ¡åããæéã«ãªãã¾ãããããã¡ãã®å°å³ã«è¡¨ç¤ºããã¾ãã';
+      line.textContent = '現在、位置共有の対象時間外です';
+      sub.textContent = '担当者がご案内する時間になりましたら、こちらの地図に表示されます。';
     }
-    // ååã§æªå±æã®ã¨ãã¯å±æãã¿ã³ã®æè¨ãå¼·èª¿
+    // 回収で未共有のときは共有ボタンの文言を強調
     const sb = document.getElementById('shareBtn');
-    if (sb) sb.textContent = !custShared ? 'ð ä»ããå ´æãå±æï¼ã¹ã¿ããã«ä½ç½®ãä¼ããï¼' : 'â ç¾å¨å°ãå±æãã¾ãã';
+    if (sb) sb.textContent = !custShared ? '📍 今いる場所を共有（スタッフに位置を伝える）' : '✅ 現在地を共有しました';
   }
 
   // ===== meeting address =====
@@ -197,18 +197,18 @@
       });
     }
 
-    // ååæã¯ã¢ã¤ã³ã³ãå¥æ¿ï¼è»ã¯ãå®¢æ§å´ãåãã¹ã¿ããã¯ç§»åææ®µã«å¿ãã¦ ð¶/ð´/ð²/ðï¼ãå±ãæã¯ðï¼ã¹ã¿ãã/ð§ï¼ãå®¢æ§ï¼
+    // 回収時はアイコンを入替：車はお客様側、動くスタッフは移動手段に応じて 🚶/🛴/🚲/🚗（お届け時は🚗＝スタッフ/🧍＝お客様）
     const collecting = (d.kd_status === 'collecting');
     const modeInfo = collecting ? MODE_MAP[driverMode] : null;
-    const driverEmoji = collecting ? (modeInfo ? modeInfo.emoji : 'ð¶') : 'ð';
-    const driverLabel = collecting ? ('ã¹ã¿ãã' + (modeInfo ? 'ï¼' + modeInfo.label + 'ï¼' : '')) : 'ã¹ã¿ãã';
-    const custEmoji = collecting ? 'ð' : 'ð§';
+    const driverEmoji = collecting ? (modeInfo ? modeInfo.emoji : '🚶') : '🚗';
+    const driverLabel = collecting ? ('スタッフ' + (modeInfo ? '（' + modeInfo.label + '）' : '')) : 'スタッフ';
+    const custEmoji = collecting ? '🚗' : '🧍';
 
     if (hasDriver) {
       const pos = { lat: +d.driver_lat, lng: +d.driver_lng };
       if (!driverMarker) {
         driverMarker = new google.maps.Marker({
-          map, position: pos, title: 'ã¹ã¿ãã',
+          map, position: pos, title: 'スタッフ',
           label: { text: driverEmoji, fontSize: '22px' },
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 16, fillColor: '#FABE00', fillOpacity: 1, strokeColor: '#0F1F45', strokeWeight: 2 }
         });
@@ -222,7 +222,7 @@
       const pos = { lat: +d.cust_lat, lng: +d.cust_lng };
       if (!custMarker) {
         custMarker = new google.maps.Marker({
-          map, position: pos, title: 'ãå®¢æ§',
+          map, position: pos, title: 'お客様',
           label: { text: custEmoji, fontSize: '20px' },
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 14, fillColor: '#0369a1', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
         });
@@ -239,15 +239,15 @@
     }
     if (hasCust) {
       if (!custIW) { custIW = new google.maps.InfoWindow({ disableAutoPan: true }); custIW.open(map, custMarker); }
-      custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' ãå®¢æ§ï¼ããªãï¼</div>');
+      custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' お客様（あなた）</div>');
     }
 
-    geocodeMeet(d.del_place);  // å¾ã¡åããä½æãðãã³ã«ï¼ãå®¢æ§ãæªå±æã§ãç®çå°ãè¦ããï¼
+    geocodeMeet(d.del_place);  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
 
     const chip = document.getElementById('distChip');
     if (hasDriver && hasCust) {
       const dist = haversine(+d.driver_lat, +d.driver_lng, +d.cust_lat, +d.cust_lng);
-      chip.textContent = 'ã¹ã¿ããã¯ç´' + fmtDist(dist) + 'åã§ã';
+      chip.textContent = 'スタッフは約' + fmtDist(dist) + '先です';
       chip.classList.add('show');
     } else { chip.classList.remove('show'); }
     fitAll();
@@ -265,7 +265,7 @@
 
   function geocodeMeet(addr) {
     if (!gmapReady || !map || !addr) return;
-    const clean = String(addr).replace(/[ï¼(][^ï¼)]*[ï¼)]/g, '').trim();
+    const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
     if (!clean || clean === meetAddrDone) return;
     meetAddrDone = clean;
     fetch('https://maps.googleapis.com/maps/api/geocode/json?language=ja&region=jp&key=' + GMAPS_KEY + '&address=' + encodeURIComponent(clean))
@@ -274,7 +274,7 @@
           const loc = j.results[0].geometry.location;
           if (!meetMarker) {
             meetMarker = new google.maps.Marker({
-              map, position: loc, title: 'å¾ã¡åããå ´æ', zIndex: 1, label: { text: 'ð', fontSize: '22px' },
+              map, position: loc, title: '待ち合わせ場所', zIndex: 1, label: { text: '📍', fontSize: '22px' },
               icon: { path: google.maps.SymbolPath.CIRCLE, scale: 13, fillColor: '#7c3aed', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
             });
           } else meetMarker.setPosition(loc);
@@ -321,10 +321,10 @@
     const btn = document.getElementById('shareBtn');
     const msg = document.getElementById('shareMsg');
     if (!navigator.geolocation) {
-      msg.className = 'share-msg err'; msg.textContent = 'ãä½¿ãã®ç«¯æ«ã§ã¯ç¾å¨å°ãåå¾ã§ãã¾ããã';
+      msg.className = 'share-msg err'; msg.textContent = 'お使いの端末では現在地を取得できません。';
       return;
     }
-    msg.className = 'share-msg'; msg.textContent = 'ä½ç½®æå ±ãåå¾ä¸­â¦';
+    msg.className = 'share-msg'; msg.textContent = '位置情報を取得中…';
     btn.disabled = true;
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -334,20 +334,20 @@
         if (ok === true || ok === false) {
           if (ok === true) {
             custShared = true;
-            msg.className = 'share-msg ok'; msg.textContent = 'â ç¾å¨å°ãå±æãã¾ãããæå½èããæ¡åãã¾ãã';
+            msg.className = 'share-msg ok'; msg.textContent = '✅ 現在地を共有しました。担当者がご案内します。';
             poll();
           } else {
-            msg.className = 'share-msg err'; msg.textContent = 'å±æã§ãã¾ããã§ããããªã³ã¯ããç¢ºèªãã ããã';
+            msg.className = 'share-msg err'; msg.textContent = '共有できませんでした。リンクをご確認ください。';
           }
         } else {
-          msg.className = 'share-msg err'; msg.textContent = 'éä¿¡ã«å¤±æãã¾ãããé»æ³¢ã®è¯ãå ´æã§ååº¦ãè©¦ããã ããã';
+          msg.className = 'share-msg err'; msg.textContent = '通信に失敗しました。電波の良い場所で再度お試しください。';
         }
       },
       (err) => {
         btn.disabled = false;
         msg.className = 'share-msg err';
-        if (err.code === 1) msg.textContent = 'ä½ç½®æå ±ã®å©ç¨ãè¨±å¯ããã¦ãã¾ãããç«¯æ«ã®è¨­å®ããä½ç½®æå ±ãè¨±å¯ãã¦ãè©¦ããã ããã';
-        else msg.textContent = 'ç¾å¨å°ãåå¾ã§ãã¾ããã§ãããé»æ³¢ã®è¯ãå ´æã§ååº¦ãè©¦ããã ããã';
+        if (err.code === 1) msg.textContent = '位置情報の利用が許可されていません。端末の設定から位置情報を許可してお試しください。';
+        else msg.textContent = '現在地を取得できませんでした。電波の良い場所で再度お試しください。';
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
@@ -359,10 +359,10 @@
     const arr = await rpc('keydrop_track_get', { p_res: R, p_token: T });
     const d = (Array.isArray(arr) && arr.length) ? arr[0] : null;
     lastData = d;
-    // ååä¸­ã®ã¿ç§»åææ®µãåå¾ï¼RPCæªé©ç¨ã§ãä¾å¤ãæ¡ãã¤ã¶ããã©ã¼ã«ããã¯ð¶ï¼
+    // 回収中のみ移動手段を取得（RPC未適用でも例外を握りつぶしフォールバック🚶）
     if (d && d.kd_status === 'collecting') {
       try { const m = await rpc('keydrop_track_get_mode', { p_res: R, p_token: T }); if (typeof m === 'string') driverMode = m; }
-      catch (e) { /* æªããã­ã¤æã¯ç¡è¦ï¼ð¶ */ }
+      catch (e) { /* 未デプロイ時は無視＝🚶 */ }
     } else { driverMode = ''; }
     applyStatus(d);
     applyAddr(d);
@@ -378,7 +378,7 @@
     buildScaffold();
     if (!R || !T) {
       applyStatus(null);
-      document.getElementById('stSub').textContent = 'ãªã³ã¯ãæ­£ããããã¾ãããæå½èãããéããããªã³ã¯ãååº¦ãéããã ããã';
+      document.getElementById('stSub').textContent = 'リンクが正しくありません。担当者からお送りしたリンクを再度お開きください。';
       return;
     }
     poll();
