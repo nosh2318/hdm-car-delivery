@@ -383,6 +383,7 @@
       document.getElementById('stSub').textContent = 'リンクが正しくありません。担当者からお送りしたリンクを再度お開きください。';
       return;
     }
+    loadMaps();
     poll();
     setInterval(poll, 15000);
   })();
