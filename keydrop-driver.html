@@ -325,7 +325,9 @@
     const chip = document.getElementById('distChip');
     if (hasMe && hasCust) {
       const dist = haversine(myLat, myLng, +custData.cust_lat, +custData.cust_lng);
-      chip.textContent = 'お客様まで約' + fmtDist(dist);
+      // お届け=🚗車速度 / 回収=選択中の移動手段（未選択は徒歩で安全側）
+      const etaMode = collecting ? (curMode || 'walk') : 'car';
+      chip.textContent = 'お客様まで約' + fmtDist(dist) + '（あと約' + etaMin(dist, etaMode) + '分）';
       chip.classList.add('show');
     } else { chip.classList.remove('show'); }
     fitAll();
@@ -371,6 +373,12 @@
     return 2 * Rr * Math.asin(Math.sqrt(a));
   }
   function fmtDist(m) { return m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.round(m / 10) * 10 + 'm'; }
+  // ETA（あと約◯分）：お届け=車 / 回収=選択中の移動手段。直線距離は道のりより短いので×1.3補正・最低1分
+  const ETA_SPEED_KMH = { walk: 4.5, kick: 12, bike: 13, car: 18 };
+  function etaMin(distM, mode) {
+    const v = ETA_SPEED_KMH[mode] || ETA_SPEED_KMH.walk;
+    return Math.max(1, Math.round((distM / 1000) * 1.3 / v * 60));
+  }
 
   (function init() {
     document.getElementById('initLoading') && document.getElementById('initLoading').remove();

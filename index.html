@@ -1166,6 +1166,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             .kdg-area.soon-area .nm{color:#cbd5e1;}
             .kdg-area.soon-area .sb{color:#94a3b8;}
             @keyframes kdgGlow{0%,100%{box-shadow:0 0 0 0 rgba(250,190,0,0);}50%{box-shadow:0 0 16px 2px rgba(250,190,0,.55);}}
+            .kdg-how{margin:14px 16px 0;background:#fff;border-radius:16px;padding:13px 10px;box-shadow:0 8px 24px rgba(0,0,0,.18);}
+            .kdg-how-t{font-size:12.5px;font-weight:900;color:#1a1a1a;text-align:center;margin-bottom:11px;}
+            .kdg-how-t b{color:#d97706;}
+            .kdg-how-row{display:flex;align-items:flex-start;justify-content:space-between;gap:2px;}
+            .kdg-how-i{flex:1;min-width:0;text-align:center;}
+            .kdg-how-i .n{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;border-radius:50%;background:#FABE00;color:#1a1a1a;font-weight:900;font-size:13px;margin-bottom:6px;}
+            .kdg-how-i .tx{display:block;font-size:10.5px;font-weight:700;color:#475569;line-height:1.32;padding:0 1px;}
+            .kdg-how-ar{align-self:center;flex:none;color:#cbd5e1;font-weight:900;font-size:15px;padding-top:6px;}
             .kdg-feat{background:#fff;border-radius:18px;margin:16px 16px 0;padding:16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:14px 12px;box-shadow:0 8px 24px rgba(0,0,0,.20);}
             .kdg-feat .fi{display:flex;gap:9px;align-items:flex-start;min-width:0;}
             .kdg-feat .fic{font-size:19px;flex:none;line-height:1.2;}
@@ -1213,6 +1221,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 + '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
                 + '<div class="kdg-wrap">'
                 + '<div class="kdg-hero"><img class="kdg-hero-img" src="' + HEAD + '" alt="KEYDROP"></div>'
+                + '<div class="kdg-how"><div class="kdg-how-t">▶ <b>' + t('gHowTitle') + '</b></div><div class="kdg-how-row">'
+                + '<div class="kdg-how-i"><span class="n">1</span><span class="tx">' + t('gHow1') + '</span></div>'
+                + '<span class="kdg-how-ar">›</span>'
+                + '<div class="kdg-how-i"><span class="n">2</span><span class="tx">' + t('gHow2') + '</span></div>'
+                + '<span class="kdg-how-ar">›</span>'
+                + '<div class="kdg-how-i"><span class="n">3</span><span class="tx">' + t('gHow3') + '</span></div>'
+                + '</div></div>'
                 + '<div class="kdg-areas">'
                 + KD_GATE_AREAS.map(function (a) {
                     var lbl = t('gLbl_' + a.id), sub = t('gSub_' + a.id);
@@ -1227,6 +1242,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 }).join('')
                 + '</div>'
                 + '<div class="kdg-links">'
+                + '<a class="kdg-link" href="keydrop-about.html" target="_blank" rel="noopener"><span class="li">🔑</span><span class="lt">' + t('gAbout') + '</span><span class="lc">›</span></a>'
                 + '<a class="kdg-link" href="./?mypage=1"><span class="li">📱</span><span class="lt">' + t('gMyLogin') + '</span><span class="lc">›</span></a>'
                 + '<a class="kdg-link" href="guide.html" target="_blank" rel="noopener"><span class="li">📖</span><span class="lt">' + t('gGuide') + '</span><span class="lc">›</span></a>'
                 + '</div>'
@@ -5127,7 +5143,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step_confirmed:'予約', step_assigned:'配車', step_preparing:'準備', step_delivering:'お届け', step_active:'利用中', step_completed:'完了',
             gLbl_sapporo:'札幌', gLbl_naha:'那覇', gLbl_sendai:'仙台', gLbl_fukuoka:'福岡', gSub_sapporo:'北海道で受け取る', gSub_naha:'沖縄で受け取る', gSub_sendai:'東北エリア', gSub_fukuoka:'九州エリア', gSoon:'準備中',
             gFeat1t:'どこでも受け取れる', gFeat1s:'全国の主要エリアで受取可能', gFeat2t:'いつでも予約OK', gFeat2s:'24時間いつでもカンタン予約', gFeat3t:'カンタン3ステップ', gFeat3s:'エリア選択→日時選択→予約完了', gFeat4t:'安心のサポート', gFeat4s:'トラブル時もしっかりサポート',
-            gCta1:'あなたの旅を、KEYDROPがサポート！', gCta2:'今すぐエリアを選択して、配達予約をはじめよう。', gMyLogin:'マイページ（予約の確認・変更）', gGuide:'ご利用方法を見る',
+            gCta1:'あなたの旅を、KEYDROPがサポート！', gCta2:'今すぐエリアを選択して、配達予約をはじめよう。', gMyLogin:'マイページ（予約の確認・変更）', gGuide:'ご利用方法を見る', gAbout:'KEYDROPとは？', gHowTitle:'KEYDROPって？30秒でわかる', gHow1:'地図で受取場所を指定', gHow2:'スタッフが車をお届け', gHow3:'好きな場所で返却',
             nogoAirport:'🛫 那覇空港内（空港管内）ではお引き渡しできません。空港外の場所を指定してください。', outOfAreaDist:'配達エリア外です（中心から約{d}km／対応は半径{r}km以内）。エリア内の場所を選び直してください。', outOfAreaCity:'配達対応エリア（{c}）外の住所です。エリア内の場所を選び直してください。', ins_full:'フル', ins_cdw:'免責', ins_none:'なし', ins_noc:'NOC',
             procProcessing:'処理中…', procSending:'送信中…', errNetwork:'通信エラーが発生しました', errCancelFail:'キャンセル依頼に失敗しました', errCancelFailLine:'キャンセル依頼に失敗しました。お手数ですが公式LINEよりご連絡ください。', errChangeFail:'変更リクエストの送信に失敗しました', reqChangeBtn2:'変更をリクエスト',
             vehHintFull:'上の「利用期間」からお届け日時・回収日時を選ぶと、予約できる車両が表示されます。', sorryNoVac:'大変申し訳ございませんが<br>該当日に空車がございません', noVacChange:'下のボタンから<b>お届け／回収の日付</b>を変えると<br>空車が見つかる場合があります。', changeDateBtn:'📅 日付を変更して探す', noVacOtherPre:'別のお届け場所でも空車が出る場合があります。<br>お急ぎは ', noVacOtherSuf:' ください。', classNoVacTitle:'このクラスは現在空きがありません', classNoVacBody:'上の<b>「すべて」や他のクラス</b>をお試しください。',
@@ -5237,7 +5253,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step_confirmed:'Booked', step_assigned:'Assigned', step_preparing:'Prep', step_delivering:'Delivery', step_active:'In use', step_completed:'Done',
             gLbl_sapporo:'Sapporo', gLbl_naha:'Naha', gLbl_sendai:'Sendai', gLbl_fukuoka:'Fukuoka', gSub_sapporo:'Pick up in Hokkaido', gSub_naha:'Pick up in Okinawa', gSub_sendai:'Tohoku area', gSub_fukuoka:'Kyushu area', gSoon:'Coming soon',
             gFeat1t:'Pick up anywhere', gFeat1s:'Available in major areas nationwide', gFeat2t:'Book anytime', gFeat2s:'Easy booking, 24/7', gFeat3t:'3 easy steps', gFeat3s:'Pick area → date → done', gFeat4t:'Reliable support', gFeat4s:'We support you if trouble arises',
-            gCta1:'KEYDROP supports your journey!', gCta2:'Select your area now and start your delivery booking.', gMyLogin:'My Page (check / change booking)', gGuide:'See how to use',
+            gCta1:'KEYDROP supports your journey!', gCta2:'Select your area now and start your delivery booking.', gMyLogin:'My Page (check / change booking)', gGuide:'See how to use', gAbout:'What is KEYDROP?', gHowTitle:'What is KEYDROP? 30-sec intro', gHow1:'Pick a spot on the map', gHow2:'We deliver the car', gHow3:'Return it anywhere',
             nogoAirport:'🛫 Delivery is not available inside Naha Airport grounds. Please choose a location outside the airport.', outOfAreaDist:'Outside the delivery area (about {d}km from the center; we cover within a {r}km radius). Please choose a location within the area.', outOfAreaCity:'This address is outside the delivery area ({c}). Please choose a location within the area.', ins_full:'Full Cover', ins_cdw:'CDW', ins_none:'None', ins_noc:'NOC',
             procProcessing:'Processing…', procSending:'Sending…', errNetwork:'A network error occurred', errCancelFail:'Failed to submit cancellation request', errCancelFailLine:'Failed to submit cancellation request. Please contact us via Official LINE.', errChangeFail:'Failed to send change request', reqChangeBtn2:'Request change',
             vehHintFull:'Select your delivery and return date/time in the “Rental Period” above to see available vehicles.', sorryNoVac:'We are very sorry,<br>no vehicles are available for those dates', noVacChange:'Changing the <b>delivery/return dates</b> with the button below<br>may reveal available vehicles.', changeDateBtn:'📅 Change dates and search', noVacOtherPre:'A different delivery location may also have availability.<br>In a hurry? ', noVacOtherSuf:'.', classNoVacTitle:'This class is currently unavailable', classNoVacBody:'Please try <b>“All” or another class</b> above.',
@@ -5347,7 +5363,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step_confirmed:'預約', step_assigned:'配車', step_preparing:'準備', step_delivering:'送達', step_active:'使用中', step_completed:'完成',
             gLbl_sapporo:'札幌', gLbl_naha:'那霸', gLbl_sendai:'仙台', gLbl_fukuoka:'福岡', gSub_sapporo:'在北海道取車', gSub_naha:'在沖繩取車', gSub_sendai:'東北地區', gSub_fukuoka:'九州地區', gSoon:'準備中',
             gFeat1t:'隨處取車', gFeat1s:'全國主要地區皆可取車', gFeat2t:'隨時預約', gFeat2s:'24小時隨時輕鬆預約', gFeat3t:'簡單3步驟', gFeat3s:'選地區→選日期→完成', gFeat4t:'安心支援', gFeat4s:'發生問題也有完善支援',
-            gCta1:'KEYDROP 支援您的旅程！', gCta2:'立即選擇地區，開始外送預約。', gMyLogin:'會員頁面（確認・變更預約）', gGuide:'查看使用方法',
+            gCta1:'KEYDROP 支援您的旅程！', gCta2:'立即選擇地區，開始外送預約。', gMyLogin:'會員頁面（確認・變更預約）', gGuide:'查看使用方法', gAbout:'KEYDROP是什麼？', gHowTitle:'KEYDROP是什麼？30秒了解', gHow1:'在地圖上指定取車地點', gHow2:'工作人員把車送達', gHow3:'在喜歡的地點還車',
             nogoAirport:'🛫 那霸機場區域內無法交車。請指定機場外的地點。', outOfAreaDist:'超出外送範圍（距中心約{d}km／僅服務半徑{r}km內）。請重新選擇範圍內的地點。', outOfAreaCity:'此地址超出外送範圍（{c}）。請重新選擇範圍內的地點。', ins_full:'安心套餐', ins_cdw:'免責補償', ins_none:'無', ins_noc:'NOC',
             procProcessing:'處理中…', procSending:'傳送中…', errNetwork:'發生通訊錯誤', errCancelFail:'取消請求送出失敗', errCancelFailLine:'取消請求送出失敗。煩請透過官方LINE與我們聯絡。', errChangeFail:'變更請求送出失敗', reqChangeBtn2:'提出變更請求',
             vehHintFull:'在上方「租用期間」選擇送達與回收的日期時間後，即會顯示可預約的車輛。', sorryNoVac:'非常抱歉，<br>該日期沒有可用車輛', noVacChange:'透過下方按鈕更改<b>送達／回收日期</b>，<br>或許能找到可用車輛。', changeDateBtn:'📅 更改日期再搜尋', noVacOtherPre:'其他送達地點也可能有空車。<br>如有急需 ', noVacOtherSuf:'。', classNoVacTitle:'此車型目前無可用車輛', classNoVacBody:'請試試上方的<b>「全部」或其他車型</b>。',
@@ -5457,7 +5473,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step_confirmed:'예약', step_assigned:'배차', step_preparing:'준비', step_delivering:'배달', step_active:'이용 중', step_completed:'완료',
             gLbl_sapporo:'삿포로', gLbl_naha:'나하', gLbl_sendai:'센다이', gLbl_fukuoka:'후쿠오카', gSub_sapporo:'홋카이도에서 받기', gSub_naha:'오키나와에서 받기', gSub_sendai:'도호쿠 지역', gSub_fukuoka:'규슈 지역', gSoon:'준비 중',
             gFeat1t:'어디서나 받기', gFeat1s:'전국 주요 지역에서 수령 가능', gFeat2t:'언제든 예약', gFeat2s:'24시간 언제든 간편 예약', gFeat3t:'간단 3단계', gFeat3s:'지역 선택→일시 선택→예약 완료', gFeat4t:'안심 서포트', gFeat4s:'문제 발생 시에도 든든한 지원',
-            gCta1:'KEYDROP가 당신의 여행을 서포트!', gCta2:'지금 지역을 선택하고 배달 예약을 시작하세요.', gMyLogin:'마이페이지(예약 확인・변경)', gGuide:'이용 방법 보기',
+            gCta1:'KEYDROP가 당신의 여행을 서포트!', gCta2:'지금 지역을 선택하고 배달 예약을 시작하세요.', gMyLogin:'마이페이지(예약 확인・변경)', gGuide:'이용 방법 보기', gAbout:'KEYDROP란?', gHowTitle:'KEYDROP란? 30초 소개', gHow1:'지도에서 받을 장소 지정', gHow2:'직원이 차를 배달', gHow3:'원하는 장소에서 반납',
             nogoAirport:'🛫 나하공항 구내에서는 인도할 수 없습니다. 공항 외 장소를 지정해 주세요.', outOfAreaDist:'배달 지역 밖입니다(중심에서 약 {d}km／반경 {r}km 이내 대응). 지역 내 장소를 다시 선택해 주세요.', outOfAreaCity:'배달 대응 지역({c}) 밖 주소입니다. 지역 내 장소를 다시 선택해 주세요.', ins_full:'안심 패키지', ins_cdw:'면책', ins_none:'없음', ins_noc:'NOC',
             procProcessing:'처리 중…', procSending:'전송 중…', errNetwork:'통신 오류가 발생했습니다', errCancelFail:'취소 요청에 실패했습니다', errCancelFailLine:'취소 요청에 실패했습니다. 번거로우시겠지만 공식 LINE으로 연락 주세요.', errChangeFail:'변경 요청 전송에 실패했습니다', reqChangeBtn2:'변경 요청',
             vehHintFull:'위 「이용 기간」에서 배달·회수 일시를 선택하면 예약 가능한 차량이 표시됩니다.', sorryNoVac:'대단히 죄송하지만<br>해당일에 이용 가능한 차량이 없습니다', noVacChange:'아래 버튼에서 <b>배달／회수 날짜</b>를 변경하면<br>이용 가능한 차량이 나올 수 있습니다.', changeDateBtn:'📅 날짜를 변경해 검색', noVacOtherPre:'다른 배달 장소에서도 차량이 나올 수 있습니다.<br>급하시면 ', noVacOtherSuf:' 주세요.', classNoVacTitle:'이 클래스는 현재 이용할 수 없습니다', classNoVacBody:'위의 <b>「전체」나 다른 클래스</b>를 시도해 보세요.',
