@@ -2175,6 +2175,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const app = document.getElementById('app');
         if (!app) return;
 
+        // ── GA4 ファネル計測：画面が変わった時だけ送信（再描画では送らない）──
+        try {
+            if (state.screen && window._kdLastStep !== state.screen) {
+                window._kdLastStep = state.screen;
+                var _scr = state.screen;
+                var _stepNo = ({ top: 1, step_location: 2, step_vehicle: 3, options: 4, form: 5, confirm: 6, terms: 7, payment: 8, complete: 9 })[_scr] || 0;
+                var _store = (state.area || '');
+                if (typeof gtag === 'function') {
+                    gtag('event', 'page_view', { page_title: 'KEYDROP | ' + _scr, page_location: location.origin + location.pathname + '#' + _scr, page_path: '/' + _scr });
+                    gtag('event', 'funnel_step', { step: _scr, step_number: _stepNo, store: _store });
+                }
+                window.dataLayer = window.dataLayer || [];
+                window.dataLayer.push({ event: 'funnel_step', step: _scr, step_number: _stepNo, store: _store });
+            }
+        } catch (e) {}
+
         let html = '';
         try {
         switch (state.screen) {
