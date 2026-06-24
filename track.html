@@ -85,6 +85,15 @@
     bike: { emoji: '🚲', label: '自転車で向かっています' },
     car:  { emoji: '🚗', label: '回収車で向かっています' }
   };
+  // ETA（あと約◯分）の想定速度 km/h（市街地・安全め）。直線距離は道のりより短いので DETOUR で補正。
+  const SPEED_KMH = { walk: 4.5, kick: 12, bike: 13, car: 18 };
+  const ETA_DETOUR = 1.3;
+  // distM=メートル, mode=walk/kick/bike/car → あと約◯分（最低1分・少し多めに丸め）
+  function etaMin(distM, mode) {
+    const v = SPEED_KMH[mode] || SPEED_KMH.walk;
+    const min = (distM / 1000) * ETA_DETOUR / v * 60;
+    return Math.max(1, Math.round(min));
+  }
 
   function rpc(name, body) {
     return fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
@@ -249,7 +258,10 @@
     const chip = document.getElementById('distChip');
     if (hasDriver && hasCust) {
       const dist = haversine(+d.driver_lat, +d.driver_lng, +d.cust_lat, +d.cust_lng);
-      chip.textContent = 'スタッフは約' + fmtDist(dist) + '先です';
+      // お届け中=🚗車速度 / 回収中=その時の移動手段の速度（手段不明は徒歩で安全側）
+      const etaMode = collecting ? (driverMode || 'walk') : 'car';
+      const mins = etaMin(dist, etaMode);
+      chip.textContent = 'スタッフは約' + fmtDist(dist) + '先（あと約' + mins + '分）';
       chip.classList.add('show');
     } else { chip.classList.remove('show'); }
     fitAll();
