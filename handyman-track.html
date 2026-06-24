@@ -361,7 +361,8 @@
   async function poll() {
     if (!R || !T) return;
     const arr = await rpc('keydrop_track_get', { p_res: R, p_token: T });
-    const d = (Array.isArray(arr) && arr.length) ? arr[0] : null;
+    let d = (Array.isArray(arr) && arr.length) ? arr[0] : null;
+    if(d && d.kd_status_at){ const _age=(Date.now()-new Date(d.kd_status_at).getTime())/3600000; if(_age>6){ d=null; } }  // 6時間で自動オフ(放置・完了忘れ対策)
     lastData = d;
     // 回収中のみ移動手段を取得（RPC未適用でも例外を握りつぶしフォールバック🚶）
     if (d && d.kd_status === 'collecting') {
