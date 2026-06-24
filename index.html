@@ -1166,7 +1166,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             .kdg-area.soon-area .nm{color:#cbd5e1;}
             .kdg-area.soon-area .sb{color:#94a3b8;}
             @keyframes kdgGlow{0%,100%{box-shadow:0 0 0 0 rgba(250,190,0,0);}50%{box-shadow:0 0 16px 2px rgba(250,190,0,.55);}}
-            .kdg-how{margin:14px 16px 0;background:#fff;border-radius:16px;padding:13px 10px;box-shadow:0 8px 24px rgba(0,0,0,.18);}
             .kdg-how-t{font-size:12.5px;font-weight:900;color:#1a1a1a;text-align:center;margin-bottom:11px;}
             .kdg-how-t b{color:#d97706;}
             .kdg-how-row{display:flex;align-items:flex-start;justify-content:space-between;gap:2px;}
@@ -1174,11 +1173,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             .kdg-how-i .n{display:inline-flex;align-items:center;justify-content:center;width:25px;height:25px;border-radius:50%;background:#FABE00;color:#1a1a1a;font-weight:900;font-size:13px;margin-bottom:6px;}
             .kdg-how-i .tx{display:block;font-size:10.5px;font-weight:700;color:#475569;line-height:1.32;padding:0 1px;}
             .kdg-how-ar{align-self:center;flex:none;color:#cbd5e1;font-weight:900;font-size:15px;padding-top:6px;}
-            .kdg-feat{background:#fff;border-radius:18px;margin:16px 16px 0;padding:16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:14px 12px;box-shadow:0 8px 24px rgba(0,0,0,.20);}
-            .kdg-feat .fi{display:flex;gap:9px;align-items:flex-start;min-width:0;}
-            .kdg-feat .fic{font-size:19px;flex:none;line-height:1.2;}
-            .kdg-feat .ft{font-size:12.5px;font-weight:800;color:#1a1a1a;}
-            .kdg-feat .fs{font-size:10.5px;font-weight:600;color:#888;margin-top:1px;line-height:1.35;}
+            /* 統合カード：3ステップ＋区切り＋4特徴を1箇所に */
+            .kdg-info{background:#fff;border-radius:18px;margin:16px 16px 0;padding:16px 14px;box-shadow:0 8px 24px rgba(0,0,0,.20);}
+            .kdg-info-div{height:1px;background:#eef0f3;margin:14px 0;}
+            .kdg-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px;}
+            .kdg-info .fi{display:flex;gap:9px;align-items:flex-start;min-width:0;}
+            .kdg-info .fic{font-size:19px;flex:none;line-height:1.2;}
+            .kdg-info .ft{font-size:12.5px;font-weight:800;color:#1a1a1a;}
+            .kdg-info .fs{font-size:10.5px;font-weight:600;color:#888;margin-top:1px;line-height:1.35;}
             .kdg-cta{margin:13px 16px 0;border-radius:18px;background:linear-gradient(135deg,#FABE00,#f59e0b);padding:15px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 8px 24px rgba(245,158,11,.35);}
             .kdg-cta img{width:50px;flex:none;}
             .kdg-cta .ct1{font-size:14px;font-weight:900;color:#1a1a1a;line-height:1.3;}
@@ -1197,7 +1199,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               .kdg-robot{max-width:175px;width:15%;}
               .kdg-areas{grid-template-columns:1fr 1fr 1fr 1fr;padding:16px 16px 4px;}
               .kdg-area{padding:16px 18px;}
-              .kdg-feat{grid-template-columns:1fr 1fr 1fr 1fr;margin:18px 16px 0;padding:18px 20px;}
+              .kdg-info{margin:18px 16px 0;padding:18px 20px;}
+              .kdg-fgrid{grid-template-columns:1fr 1fr 1fr 1fr;}
             }
             `;
             document.head.appendChild(st);
@@ -1221,13 +1224,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 + '<button class="kdg-skip" id="kdg-skip">SKIP ✕</button>'
                 + '<div class="kdg-wrap">'
                 + '<div class="kdg-hero"><img class="kdg-hero-img" src="' + HEAD + '" alt="KEYDROP"></div>'
-                + '<div class="kdg-how"><div class="kdg-how-t">▶ <b>' + t('gHowTitle') + '</b></div><div class="kdg-how-row">'
-                + '<div class="kdg-how-i"><span class="n">1</span><span class="tx">' + t('gHow1') + '</span></div>'
-                + '<span class="kdg-how-ar">›</span>'
-                + '<div class="kdg-how-i"><span class="n">2</span><span class="tx">' + t('gHow2') + '</span></div>'
-                + '<span class="kdg-how-ar">›</span>'
-                + '<div class="kdg-how-i"><span class="n">3</span><span class="tx">' + t('gHow3') + '</span></div>'
-                + '</div></div>'
                 + '<div class="kdg-areas">'
                 + KD_GATE_AREAS.map(function (a) {
                     var lbl = t('gLbl_' + a.id), sub = t('gSub_' + a.id);
@@ -1236,10 +1232,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         : '<div class="kdg-area soon-area"><span class="pin">📍</span><span style="min-width:0;"><span class="nm">' + lbl + '</span><br><span class="sb">' + sub + '</span></span><span class="soon">' + t('gSoon') + '</span></div>';
                 }).join('')
                 + '</div>'
-                + '<div class="kdg-feat">'
+                + '<div class="kdg-info">'
+                + '<div class="kdg-how-t">▶ <b>' + t('gHowTitle') + '</b></div>'
+                + '<div class="kdg-how-row">'
+                + '<div class="kdg-how-i"><span class="n">1</span><span class="tx">' + t('gHow1') + '</span></div>'
+                + '<span class="kdg-how-ar">›</span>'
+                + '<div class="kdg-how-i"><span class="n">2</span><span class="tx">' + t('gHow2') + '</span></div>'
+                + '<span class="kdg-how-ar">›</span>'
+                + '<div class="kdg-how-i"><span class="n">3</span><span class="tx">' + t('gHow3') + '</span></div>'
+                + '</div>'
+                + '<div class="kdg-info-div"></div>'
+                + '<div class="kdg-fgrid">'
                 + [['🚗', 1], ['🕐', 2], ['🗓️', 3], ['🛡️', 4]].map(function (f) {
                     return '<div class="fi"><span class="fic">' + f[0] + '</span><span style="min-width:0;"><span class="ft">' + t('gFeat' + f[1] + 't') + '</span><div class="fs">' + t('gFeat' + f[1] + 's') + '</div></span></div>';
                 }).join('')
+                + '</div>'
                 + '</div>'
                 + '<div class="kdg-links">'
                 + '<a class="kdg-link" href="keydrop-about.html" target="_blank" rel="noopener"><span class="li">🔑</span><span class="lt">' + t('gAbout') + '</span><span class="lc">›</span></a>'
