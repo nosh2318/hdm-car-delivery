@@ -183,7 +183,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-lang-pop button:hover { background: #f5f5f7; }
         /* スマホのヘッダーに「エリア選択」ボタン（PCはpc-navにあるのでスマホのみ表示） */
         .kd-area-m { display: none; align-items: center; gap: 2px; padding: 5px 10px; background: #FABE00; color: #1a1a1a; border: none; border-radius: 14px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; max-width: 34vw; overflow: hidden; text-overflow: ellipsis; }
-        @media (max-width: 767px) { .kd-area-m { display: inline-flex; } }
+        @media (max-width: 767px) {
+            .kd-area-m { display: inline-flex; max-width: 26vw; }
+            /* ☰が画面外に押し出される対策：右側グループを詰めて☰を必ず表示 */
+            .app-header .header-actions { display: flex; align-items: center; gap: 6px; min-width: 0; }
+            .app-header .app-logo { min-width: 0; }
+            .hamburger-btn { flex: none; }
+            /* 言語ボタンはモバイルでは🌐アイコンのみ（テキスト/▾を隠して幅節約・切替はメニュー内でも可） */
+            .kd-lang-btn { gap: 0; padding: 6px 8px; }
+            .kd-lang-btn span, .kd-lang-btn i { display: none; }
+        }
         .mypage-header-btn { display: flex; align-items: center; gap: 2px; padding: 4px 8px; background: white; color: #1a1a1a; border: 1.5px solid #1a1a1a; border-radius: 14px; font-size: 10px; font-weight: 700; cursor: pointer; transition: all .2s; }
         .mypage-header-btn:hover { background: #FABE00; border-color: #FABE00; }
 
@@ -1019,8 +1028,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // 顧客LP1サイトで2地域。公開ビューは店舗別(_v=札幌 / _nha_v=那覇)、予約/マイページはEdge Functionにstore('spk'|'nha')を渡す。
     const KD_AREAS = {
         // bbox=検索を絞る地域範囲 [minLon,minLat,maxLon,maxLat]（他地域＝那覇/東京等を結果に出さない）
-        sapporo: { label: '札幌', api: 'spk', geo: '札幌', center: '札幌駅', bbox: [140.85, 42.65, 141.85, 43.45] },
-        naha:    { label: '沖縄（那覇）', api: 'nha', geo: '沖縄 那覇', center: '那覇空港', bbox: [127.40, 25.95, 128.05, 26.60] },
+        sapporo: { label: '札幌', short: '札幌', api: 'spk', geo: '札幌', center: '札幌駅', bbox: [140.85, 42.65, 141.85, 43.45] },
+        naha:    { label: '沖縄（那覇）', short: '那覇', api: 'nha', geo: '沖縄 那覇', center: '那覇空港', bbox: [127.40, 25.95, 128.05, 26.60] },
     };
     let KD_STORE = ((new URLSearchParams(location.search).get('area') || '').toLowerCase() === 'naha') ? 'naha' : 'sapporo';
     // エリアに入った時点で必ず保存（別ページ vehicles.html 等が同一オリジンのlocalStorageでエリアを判定できるように）
@@ -2445,7 +2454,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
@@ -2555,7 +2564,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
@@ -2664,7 +2673,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
@@ -2858,7 +2867,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
                 </div>
             </div>
             <div class="screen-fade" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
@@ -4035,7 +4044,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
