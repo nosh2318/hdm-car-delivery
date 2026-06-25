@@ -1084,10 +1084,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // 対応エリア（管理画面で設定した対応可能の市）をお届け日付の上に表示
     function renderAreaInfo() {
         var cs = kdTargetCities(); if (!cs.length) return '';
-        return '<div style="display:flex;align-items:center;gap:6px;padding:8px 14px 0;font-size:11.5px;font-weight:800;">'
+        var minP = 0; try { if (PRICE_DATA && PRICE_DATA.prices) { var _v = Object.keys(PRICE_DATA.prices).map(function(k){return priceOf(k);}).filter(function(v){return v>0;}); if (_v.length) minP = Math.min.apply(null,_v); } } catch(e){}
+        var priceLine = minP>0 ? ('<span style="flex:none;color:#0F1F45;background:#FFF3CC;border:1px solid #FABE00;border-radius:8px;padding:2px 8px;">💴 1日 ¥' + minP.toLocaleString() + '〜</span>') : '';
+        return '<div style="margin:8px 14px 0;background:#0F1F45;color:#fff;border-radius:12px;padding:10px 14px;">'
+            + '<div style="font-size:13.5px;font-weight:900;">🚗 ご指定の場所まで、車をお届け</div>'
+            + '<div style="font-size:11px;color:#FABE00;font-weight:800;margin-top:2px;letter-spacing:.02em;">NO PICKUP, JUST DELIVERY ・ 最短当日 ・ アプリ不要</div>'
+            + '</div>'
+            + '<div style="display:flex;align-items:center;gap:8px;padding:8px 14px 0;font-size:11.5px;font-weight:800;flex-wrap:wrap;">'
             + '<span style="flex:none;color:#16a34a;">📍 ' + t('areaLabel') + '</span>'
-            + '<span style="flex:1;min-width:0;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + cs.join('・') + '</span>'
-            + '</div>';
+            + '<span style="flex:1;min-width:120px;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + cs.join('・') + '</span>'
+            + priceLine
+            + '</div>'
+            + '<div style="padding:6px 14px 0;font-size:10.5px;color:#64748b;font-weight:700;line-height:1.5;">✓ 傷チェックはオンライン　✓ 当日は本人確認のみ（貸渡約款はオンライン契約）</div>';
     }
     function kdPointInPoly(lat, lng, p) {
         let inside = false;
