@@ -114,17 +114,19 @@ async function load(){
   // step0(着地)はstore未確定なので全体共通。store絞り時は0は全体値を使う
   if(STORE!=='all'){ let z=0; funnel.forEach(r=>{if(r.step_number===0)z+=r.sessions}); reach[0]=z; }
 
-  const visit=reach[0]||reach[1]||0, cv=reach[9]||0;
+  // ゲート廃止済み＝入口はTOP(step1)。step0(着地)は使わない
+  const ENTRY=1;
+  const visit=reach[ENTRY]||0, cv=reach[9]||0;
   document.getElementById('mVisit').textContent=visit;
   document.getElementById('mCv').textContent=cv;
   document.getElementById('mCvr').textContent='CVR '+(visit?pct(cv/visit):'–');
 
-  // funnel render
-  const base=Math.max(reach[0],reach[1],1);
+  // funnel render（TOP→完了）
+  const base=Math.max(reach[ENTRY],1);
   let leakStep=-1,leakLost=-1;
-  for(let i=0;i<9;i++){ if(reach[i]>=3){const lost=reach[i]-reach[i+1]; if(lost>leakLost){leakLost=lost;leakStep=i;}} }
+  for(let i=ENTRY;i<9;i++){ if(reach[i]>=3){const lost=reach[i]-reach[i+1]; if(lost>leakLost){leakLost=lost;leakStep=i;}} }
   let fh='';
-  for(let i=0;i<=9;i++){
+  for(let i=ENTRY;i<=9;i++){
     const w=Math.max(2,Math.round(reach[i]/base*100));
     let drop='';
     if(i<9){ const d=reach[i]?(reach[i]-reach[i+1])/reach[i]:0; drop='<span class="fdrop '+(d>=0.4?'bad':'ok')+'">▼'+pct(d)+'</span>'; }
