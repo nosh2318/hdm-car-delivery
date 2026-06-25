@@ -1039,6 +1039,41 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     //   area/mypage/paid のいずれかがあれば「アプリ文脈」=初期化する。無ければゲートのみ（軽い）。
     window.__kdAppCtx = true; /* ゲート廃止：常にマップ(アプリ)文脈で起動 */
     function KD_API_STORE() { return KD_AREAS[KD_STORE].api; }          // 'spk' | 'nha'（Edge Functionへ）
+    // ── 自社ファネル計測（どこから入り/どこに止まり/どこで離脱）。匿名・PIIなし ──
+    function kdSource() {
+        try {
+            var s = sessionStorage.getItem('kd_src'); if (s) return s;
+            var qp = new URLSearchParams(location.search);
+            var src = (qp.get('utm_source') || '').toLowerCase().trim();
+            if (!src) {
+                var r = (document.referrer || '').toLowerCase();
+                if (!r) src = 'direct';
+                else if (/instagram|l\.instagram|ig\./.test(r)) src = 'instagram';
+                else if (/facebook|fb\.|fbcdn/.test(r)) src = 'facebook';
+                else if (/tiktok/.test(r)) src = 'tiktok';
+                else if (/google\./.test(r)) src = 'google';
+                else if (/yahoo\./.test(r)) src = 'yahoo';
+                else if (/lin\.ee|line\./.test(r)) src = 'line';
+                else if (/keydrop\.jp/.test(r)) src = 'internal';
+                else src = 'other';
+            }
+            if (/insta/.test(src)) src = 'instagram'; if (/face|fb/.test(src)) src = 'facebook'; if (/tik/.test(src)) src = 'tiktok';
+            sessionStorage.setItem('kd_src', src); return src;
+        } catch (e) { return 'unknown'; }
+    }
+    function kdFunnelLog(step, stepNo, storeArg) {
+        try {
+            var sid = sessionStorage.getItem('kd_fsid');
+            if (!sid) { sid = 'fs_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sessionStorage.setItem('kd_fsid', sid); }
+            var store = (storeArg !== undefined) ? storeArg : '';
+            if (storeArg === undefined) { try { store = KD_API_STORE(); } catch (e) { store = ''; } }
+            fetch(SUPABASE_URL + '/rest/v1/kd_funnel_log', {
+                method: 'POST', keepalive: true,
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ session_id: sid, step: step, step_number: stepNo, store: store, referrer: kdSource() })
+            }).catch(function () { });
+        } catch (e) { }
+    }
     // マイページ系は「ブラウズ中エリア」ではなく予約番号の接頭辞で店舗を決める（KDN-=那覇 / KD-=札幌）。
     // これで那覇エリアからKD-（札幌）予約を開いても正しく札幌テーブルを参照する。
     function kdStoreForRes(id) { return /^KDN-/i.test(String(id || '')) ? 'nha' : 'spk'; }
@@ -1150,6 +1185,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const qs = new URLSearchParams(location.search);
         if (window.__kdAppCtx) return; // area/mypage/paid あり＝アプリ文脈→ゲート不要
         if (!document.body || document.getElementById('kd-area-gate')) return;
+        // step0=着地（ゲート表示＝全訪問者の母数）。1セッション1回だけ。store未確定なので空。
+        try { if (!sessionStorage.getItem('kd_landed')) { sessionStorage.setItem('kd_landed', '1'); kdFunnelLog('landing', 0, ''); } } catch (e) { }
         // ※ 再訪スキップ（30日）は当面 無効化＝素のkeydrop.jpでは常にエリア選択画面を表示する。
         //   将来 有効化する場合は ?remember=1 のときのみ自動遷移するなど条件を限定する。
         // （旧：保存済みエリアがあれば location.replace(?area=) でスキップ → 選択画面が出ない問題のため停止）
@@ -2237,16 +2274,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 }
                 window.dataLayer = window.dataLayer || [];
                 window.dataLayer.push({ event: 'funnel_step', step: _scr, step_number: _stepNo, store: _store });
-                // ── 自社DBへ匿名ログ（GA4非依存で離脱分析を内製・fire-and-forget）──
-                try {
-                    var _fsid = sessionStorage.getItem('kd_fsid');
-                    if (!_fsid) { _fsid = 'fs_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sessionStorage.setItem('kd_fsid', _fsid); }
-                    fetch(SUPABASE_URL + '/rest/v1/kd_funnel_log', {
-                        method: 'POST', keepalive: true,
-                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-                        body: JSON.stringify({ session_id: _fsid, step: _scr, step_number: _stepNo, store: _store })
-                    }).catch(function () { });
-                } catch (e) { }
+                // 自社DBへ匿名ログ（GA4非依存・離脱分析の内製）
+                kdFunnelLog(_scr, _stepNo);
             }
         } catch (e) {}
 
