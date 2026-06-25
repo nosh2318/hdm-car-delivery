@@ -1031,14 +1031,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         sapporo: { label: '札幌', short: '札幌', api: 'spk', geo: '札幌', center: '札幌駅', bbox: [140.85, 42.65, 141.85, 43.45] },
         naha:    { label: '沖縄（那覇）', short: '那覇', api: 'nha', geo: '沖縄 那覇', center: '那覇空港', bbox: [127.40, 25.95, 128.05, 26.60] },
     };
-    let KD_STORE = ((new URLSearchParams(location.search).get('area') || '').toLowerCase() === 'naha') ? 'naha' : 'sapporo';
+    let KD_STORE = (function(){ var a=(new URLSearchParams(location.search).get('area')||'').toLowerCase(); if(a==='naha')return 'naha'; if(a==='sapporo'||a==='spk')return 'sapporo'; try{var s=JSON.parse(localStorage.getItem('kd_selectedArea')||'null'); if(s&&(s.area==='naha'||s.area==='sapporo'))return s.area;}catch(e){} return 'sapporo'; })();
     // エリアに入った時点で必ず保存（別ページ vehicles.html 等が同一オリジンのlocalStorageでエリアを判定できるように）
     try { if (new URLSearchParams(location.search).get('area')) localStorage.setItem('kd_selectedArea', JSON.stringify({ area: KD_STORE, ts: Date.now() })); } catch (e) {}
     // 静的リンク（メニュー/フッターの「車両と料金」=?area無し）に現在エリアを必ず付与（別ページが確実に那覇/札幌で開くように）
     (function () { function fixv() { try { document.querySelectorAll('a[href="vehicles.html"]').forEach(function (a) { a.setAttribute('href', 'vehicles.html?area=' + KD_STORE); }); } catch (e) {} } if (document.readyState !== 'loading') fixv(); else document.addEventListener('DOMContentLoaded', fixv); })();
     // 起動高速化フラグ：エリア未選択（ゲート表示）のときは予約アプリの重い初期化を行わない。
     //   area/mypage/paid のいずれかがあれば「アプリ文脈」=初期化する。無ければゲートのみ（軽い）。
-    window.__kdAppCtx = (function () { const q = new URLSearchParams(location.search); return !!(q.get('area') || q.get('mypage') || q.get('paid')); })();
+    window.__kdAppCtx = true; /* ゲート廃止：常にマップ(アプリ)文脈で起動 */
     function KD_API_STORE() { return KD_AREAS[KD_STORE].api; }          // 'spk' | 'nha'（Edge Functionへ）
     // マイページ系は「ブラウズ中エリア」ではなく予約番号の接頭辞で店舗を決める（KDN-=那覇 / KD-=札幌）。
     // これで那覇エリアからKD-（札幌）予約を開いても正しく札幌テーブルを参照する。
@@ -1125,9 +1125,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         location.search = sp.toString();
     }
     // エリア選択画面に戻る（?area= を外す→入口のエリア選択を再表示）
+    function kdSwitchArea(area){
+        var a=(area==='naha')?'naha':'sapporo';
+        try{ localStorage.setItem('kd_selectedArea', JSON.stringify({area:a,ts:Date.now()})); }catch(e){}
+        var sp=new URLSearchParams(location.search); sp.set('area', a); sp.delete('mypage'); sp.delete('paid');
+        location.search = sp.toString();
+    }
+    window.kdSwitchArea = kdSwitchArea;
     function kdBackToAreaSelect() {
-        try { localStorage.removeItem('kd_selectedArea'); } catch (e) {}
-        location.href = location.pathname;
+        if (document.getElementById('kd-areapop')) return;
+        var cur=(typeof KD_STORE!=='undefined')?KD_STORE:'sapporo';
+        function btn(a,label){ return '<button onclick="kdSwitchArea(\''+a+'\')" style="width:100%;max-width:340px;padding:16px;border-radius:14px;border:none;font-size:16px;font-weight:900;cursor:pointer;background:'+(cur===a?'#FABE00':'#fff')+';color:#1a1a1a;">\ud83d\udccd '+label+(cur===a?'（表示中）':'')+'</button>'; }
+        var o=document.createElement('div'); o.id='kd-areapop';
+        o.style.cssText='position:fixed;inset:0;z-index:100001;background:rgba(6,33,58,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+        o.innerHTML='<div style="color:#fff;font-weight:900;font-size:18px;margin-bottom:4px">エリアを選択</div>'
+          + btn('sapporo','札幌') + btn('naha','沖縄（那覇）')
+          + '<div style="color:#9fb3c8;font-size:13px;margin-top:2px">仙台・福岡は準備中です</div>'
+          + '<button onclick="var e=document.getElementById(\'kd-areapop\');if(e)e.remove();" style="margin-top:10px;background:transparent;border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:999px;padding:8px 22px;font-size:13px;cursor:pointer;">閉じる</button>';
+        o.addEventListener('click',function(e){ if(e.target===o) o.remove(); });
+        document.body.appendChild(o);
     }
     window.kdBackToAreaSelect = kdBackToAreaSelect;
     async function kdShowAreaGate() {
@@ -2477,7 +2493,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label} ▾</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
@@ -2587,7 +2603,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label} ▾</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
@@ -2696,7 +2712,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label} ▾</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
@@ -2890,7 +2906,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label} ▾</button><button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
                 </div>
             </div>
             <div class="screen-fade" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
@@ -4067,7 +4083,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
                     </nav>
-                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label}</button><button class="hamburger-btn" onclick="openMenu()">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">📍${KD_AREAS[KD_STORE].short||KD_AREAS[KD_STORE].label} ▾</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
                 </div>
