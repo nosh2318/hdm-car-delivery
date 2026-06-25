@@ -1185,8 +1185,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const qs = new URLSearchParams(location.search);
         if (window.__kdAppCtx) return; // area/mypage/paid あり＝アプリ文脈→ゲート不要
         if (!document.body || document.getElementById('kd-area-gate')) return;
-        // step0=着地（ゲート表示＝全訪問者の母数）。1セッション1回だけ。store未確定なので空。
-        try { if (!sessionStorage.getItem('kd_landed')) { sessionStorage.setItem('kd_landed', '1'); kdFunnelLog('landing', 0, ''); } } catch (e) { }
+        // ※ゲートは廃止済み(マップ直行)＝ここは通常実行されない。ファネル入口はTOP(step1)。
         // ※ 再訪スキップ（30日）は当面 無効化＝素のkeydrop.jpでは常にエリア選択画面を表示する。
         //   将来 有効化する場合は ?remember=1 のときのみ自動遷移するなど条件を限定する。
         // （旧：保存済みエリアがあれば location.replace(?area=) でスキップ → 選択画面が出ない問題のため停止）
