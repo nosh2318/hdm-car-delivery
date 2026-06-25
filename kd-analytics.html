@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>KEYDROP Pulse — 内製アナリティクス</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,"Hiragino Sans",sans-serif;background:#0b0e14;color:#e7edf3;padding:14px 12px 60px;max-width:760px;margin:0 auto}
+  h1{font-size:17px;font-weight:900;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+  h1 .bars{display:inline-block;width:16px;height:13px;background:repeating-linear-gradient(#FABE00 0 3px,transparent 3px 6px);transform:skewX(-12deg)}
+  .sub{font-size:11px;color:#8b97a6;margin:2px 0 14px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .card{background:#141a24;border:1px solid #1f2733;border-radius:14px;padding:13px 14px;flex:1;min-width:0}
+  .card h2{font-size:11px;color:#8b97a6;font-weight:800;letter-spacing:.04em;margin-bottom:8px;text-transform:uppercase}
+  .big{font-size:26px;font-weight:900;line-height:1}
+  .big.y{color:#FABE00}.big.g{color:#34d399}.big.r{color:#f87171}
+  .mut{font-size:11px;color:#8b97a6;margin-top:3px}
+  .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#34d399;margin-right:6px;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  /* funnel */
+  .fstep{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #1a212c}
+  .fstep:last-child{border-bottom:0}
+  .fname{width:96px;flex:none;font-size:12px;font-weight:700}
+  .fnum{font-size:10px;color:#5b6675;font-weight:800;margin-right:2px}
+  .fbarwrap{flex:1;height:22px;background:#0e131b;border-radius:6px;overflow:hidden;position:relative;min-width:0}
+  .fbar{height:100%;background:linear-gradient(90deg,#2563eb,#3b82f6);border-radius:6px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:800;color:#fff;white-space:nowrap}
+  .fdrop{width:78px;flex:none;text-align:right;font-size:11px;font-weight:800}
+  .fdrop.bad{color:#f87171}.fdrop.ok{color:#8b97a6}
+  .leak{outline:2px solid #f87171;border-radius:8px;background:#1c1417}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:11.5px}
+  th,td{padding:6px 5px;text-align:right;border-bottom:1px solid #1a212c;white-space:nowrap}
+  th{color:#8b97a6;font-weight:800;font-size:10px;text-transform:uppercase}
+  td.l,th.l{text-align:left}
+  .pill{display:inline-block;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:800}
+  /* insight */
+  .insight{background:#141a24;border:1px solid #1f2733;border-radius:14px;padding:14px;margin-bottom:12px}
+  .ins-item{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid #1a212c;font-size:13px;line-height:1.5}
+  .ins-item:last-child{border-bottom:0}
+  .ins-ic{flex:none;font-size:16px}
+  .ins-item b{color:#fff}.ins-item .up{color:#34d399;font-weight:900}.ins-item .dn{color:#f87171;font-weight:900}
+  .foot{font-size:10px;color:#5b6675;text-align:center;margin-top:16px;line-height:1.6}
+  .err{background:#3a1d1d;border:1px solid #6b2b2b;color:#fca5a5;border-radius:12px;padding:12px;font-size:12px;line-height:1.6;margin-bottom:12px}
+  .seg{display:flex;gap:6px;margin-bottom:12px}
+  .seg button{flex:1;background:#141a24;border:1px solid #1f2733;color:#8b97a6;border-radius:10px;padding:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit}
+  .seg button.on{background:#FABE00;color:#0b0e14;border-color:#FABE00}
+</style>
+</head>
+<body>
+  <h1><span class="bars"></span>KEYDROP Pulse</h1>
+  <div class="sub">内製アナリティクス｜どこから入り・どこで止まり・どこで離脱したか（過去30日・匿名）</div>
+
+  <div id="errbox"></div>
+
+  <div class="seg" id="storeSeg">
+    <button data-s="all" class="on">全体</button>
+    <button data-s="spk">札幌</button>
+    <button data-s="nha">那覇</button>
+  </div>
+
+  <div class="row">
+    <div class="card"><h2><span class="live-dot"></span>今このとき</h2><div class="big g" id="mLive">–</div><div class="mut">直近30分の訪問</div></div>
+    <div class="card"><h2>流入(30日)</h2><div class="big" id="mVisit">–</div><div class="mut">全訪問セッション</div></div>
+    <div class="card"><h2>完了CV</h2><div class="big y" id="mCv">–</div><div class="mut" id="mCvr">CVR –</div></div>
+  </div>
+
+  <div class="insight">
+    <h2 style="font-size:11px;color:#8b97a6;font-weight:800;letter-spacing:.04em;margin-bottom:4px;text-transform:uppercase">🧠 自動インサイト（改善の優先順位）</h2>
+    <div id="insights"><div class="ins-item"><span class="ins-ic">⏳</span><span>集計中…</span></div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <h2>🔻 ファネル（着地→完了）どこで離脱したか</h2>
+    <div id="funnel"><div class="mut">読み込み中…</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <h2>🟣 流入元別 ＝ どこから来た人がCVするか</h2>
+    <div style="overflow-x:auto"><table id="srcTbl"><thead><tr>
+      <th class="l">流入元</th><th>訪問</th><th>進入</th><th>決済到達</th><th>完了</th><th>CVR</th>
+    </tr></thead><tbody><tr><td class="l mut" colspan="6">読み込み中…</td></tr></tbody></table></div>
+    <div class="mut" style="margin-top:6px">CVR＝完了÷訪問。高い流入に予算を寄せ、低い流入はLP/期待値ズレを疑う。</div>
+  </div>
+
+  <div class="foot" id="foot">— 自動更新中 —</div>
+
+<script>
+const SB='https://ckrxttbnawkclshczsia.supabase.co';
+const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+const H={apikey:AK,Authorization:'Bearer '+AK};
+const STEPS=['着地','TOP','場所選択','車両選択','オプション','情報入力','確認','約款','決済','完了'];
+let STORE='all';
+
+async function q(v){const r=await fetch(SB+'/rest/v1/'+v,{headers:H});if(!r.ok)throw new Error(v+' '+r.status);return r.json();}
+function pct(n){return (n*100).toFixed(n>=0.1?0:1)+'%';}
+function esc(s){return (s==null?'':String(s))}
+
+async function load(){
+  let funnel,src;
+  try{ funnel=await q('public_kd_funnel_v?select=*'); src=await q('public_kd_source_v?select=*'); }
+  catch(e){
+    document.getElementById('errbox').innerHTML='<div class="err">⚠️ 集計ビューがまだありません（<b>028 SQL未適用</b>）。Supabase SQL Editorで 028_kd_funnel_views.sql を1回RUNしてください。<br>'+esc(e.message)+'</div>';
+    return;
+  }
+  document.getElementById('errbox').innerHTML='';
+  // live
+  try{const lv=await q('public_kd_live_v?select=*');document.getElementById('mLive').textContent=(lv[0]?lv[0].active_30m:0);}catch(e){}
+
+  // funnel reach[step] (store filter)
+  const reach={};for(let i=0;i<=9;i++)reach[i]=0;
+  funnel.forEach(r=>{ if(STORE==='all'||r.store===STORE||(STORE!=='all'&&r.step_number===0)) reach[r.step_number]+=r.sessions; });
+  // step0(着地)はstore未確定なので全体共通。store絞り時は0は全体値を使う
+  if(STORE!=='all'){ let z=0; funnel.forEach(r=>{if(r.step_number===0)z+=r.sessions}); reach[0]=z; }
+
+  const visit=reach[0]||reach[1]||0, cv=reach[9]||0;
+  document.getElementById('mVisit').textContent=visit;
+  document.getElementById('mCv').textContent=cv;
+  document.getElementById('mCvr').textContent='CVR '+(visit?pct(cv/visit):'–');
+
+  // funnel render
+  const base=Math.max(reach[0],reach[1],1);
+  let leakStep=-1,leakLost=-1;
+  for(let i=0;i<9;i++){ if(reach[i]>=3){const lost=reach[i]-reach[i+1]; if(lost>leakLost){leakLost=lost;leakStep=i;}} }
+  let fh='';
+  for(let i=0;i<=9;i++){
+    const w=Math.max(2,Math.round(reach[i]/base*100));
+    let drop='';
+    if(i<9){ const d=reach[i]?(reach[i]-reach[i+1])/reach[i]:0; drop='<span class="fdrop '+(d>=0.4?'bad':'ok')+'">▼'+pct(d)+'</span>'; }
+    else drop='<span class="fdrop ok">CV</span>';
+    fh+='<div class="fstep '+(i===leakStep?'leak':'')+'"><div class="fname"><span class="fnum">'+i+'</span>'+STEPS[i]+'</div>'
+       +'<div class="fbarwrap"><div class="fbar" style="width:'+w+'%">'+reach[i]+'</div></div>'+drop+'</div>';
+  }
+  document.getElementById('funnel').innerHTML=fh;
+
+  // source table
+  src.sort((a,b)=>b.sessions-a.sessions);
+  let sh='';
+  src.forEach(s=>{ const cvr=s.sessions?s.completed/s.sessions:0;
+    sh+='<tr><td class="l"><span class="pill" style="background:#1f2733">'+esc(s.src)+'</span></td>'
+      +'<td>'+s.sessions+'</td><td>'+s.entered_app+'</td><td>'+s.reached_payment+'</td><td>'+s.completed+'</td>'
+      +'<td style="color:'+(cvr>=0.02?'#34d399':'#8b97a6')+';font-weight:800">'+(s.sessions?pct(cvr):'–')+'</td></tr>'; });
+  document.querySelector('#srcTbl tbody').innerHTML=sh||'<tr><td class="l mut" colspan="6">データなし</td></tr>';
+
+  // insights（改善の優先順位＋仮説）
+  const ins=[];
+  if(visit<10){ ins.push(['📊','まだ母数が少（訪問'+visit+'）。<b>傾向は参考値</b>。流入が増えるほど精度が上がります。']); }
+  if(leakStep>=0){
+    const d=reach[leakStep]?(reach[leakStep]-reach[leakStep+1])/reach[leakStep]:0;
+    ins.push(['🔴','<b>最大の穴＝「'+STEPS[leakStep]+'→'+STEPS[leakStep+1]+'」</b>で <span class="dn">'+pct(d)+'離脱</span>（'+leakLost+'人ロスト）。<b>ここが改善の最優先</b>。']);
+    // 仮説：この穴を半減できたら下流CVがどれだけ増えるか
+    const downCvr = reach[leakStep+1]? cv/reach[leakStep+1] : 0;
+    const recover = Math.round(leakLost*0.5);
+    const gain = (downCvr*recover);
+    if(downCvr>0) ins.push(['🧪','<b>仮説</b>：この離脱を半分に減らすと、約'+recover+'人が先へ進み、下流CVR('+pct(downCvr)+')換算で <span class="up">CV +'+gain.toFixed(1)+'件/30日</span> 見込み。']);
+  }
+  // どのページに送り込めばCVするか（各ステップ到達者のCV率）
+  let bestStep=-1,bestCvr=-1;
+  for(let i=1;i<=8;i++){ if(reach[i]>=3){const c=cv/reach[i]; if(c>bestCvr){bestCvr=c;bestStep=i;}} }
+  if(bestStep>=0&&cv>0){ ins.push(['🎯','<b>'+STEPS[bestStep]+'</b>まで来た人のCV率は <span class="up">'+pct(bestCvr)+'</span>。<b>ここに送り込むほどCVが伸びる</b>＝広告/導線はこのページ到達を増やす設計に。']); }
+  if(!ins.length) ins.push(['⏳','データ集計待ち。']);
+  document.getElementById('insights').innerHTML=ins.map(x=>'<div class="ins-item"><span class="ins-ic">'+x[0]+'</span><span>'+x[1]+'</span></div>').join('');
+
+  document.getElementById('foot').textContent='更新: '+new Date().toLocaleTimeString('ja-JP')+'｜15秒ごと自動更新';
+}
+
+document.querySelectorAll('#storeSeg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#storeSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');STORE=b.getAttribute('data-s');load();
+});
+load(); setInterval(load,15000);
+</script>
+</body>
+</html>
