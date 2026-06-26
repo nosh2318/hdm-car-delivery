@@ -1927,7 +1927,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <div class="vc-name" title="${locModel(cls.vehicles)}">${locModel(cls.vehicles)}</div>
                         <div class="vc-specs">
                             <span>👥 ${seats}${t('seats')}</span>
-                            <span>🚗 ${availCount}${t('available')}</span>
+                            <span style="font-weight:700;color:${availCount >= 5 ? '#16a34a' : '#ea580c'}">${availCount >= 5 ? '◯ ' + t('availMany') : '△ ' + t('availFew')}</span>
                         </div>
                         ${providers ? `<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">🏢 ${t('providedShort')}: ${providers}</div>` : ''}
                     </div>
@@ -5160,7 +5160,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: '上のフォームで日時を選択', step2sub: 'マップをタップしてピンを置く',
             deliverable: '台デリバリー可能', classes: 'クラス', noVehicle: '該当する車両がありません',
             noVehicleSub: '日程やクラスを変更してお試しください', searching: '車両を検索中...',
-            seats: '人乗り', available: '台空き', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決める', decideDeliverHere: '✓ お届け場所をこの場所に決める', decideCollectHere: '✓ 回収場所をこの場所に決める',
+            seats: '人乗り', available: '台空き', availMany: '空きあり', availFew: '残りわずか', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決める', decideDeliverHere: '✓ お届け場所をこの場所に決める', decideCollectHere: '✓ 回収場所をこの場所に決める',
             noAddress: '該当する住所が見つかりません',
             // Confirm
             confirmTitle: '予約内容の確認', estimate: 'お支払い見積もり', taxIncl: '税込',
@@ -5276,7 +5276,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: 'Select dates above', step2sub: 'Tap the map to place a pin',
             deliverable: ' available for delivery', classes: ' classes', noVehicle: 'No vehicles available',
             noVehicleSub: 'Try changing dates or class', searching: 'Searching...',
-            seats: ' seats', available: ' avail.', days: ' days', select: 'Select', deliveryPlace: 'Delivery Location', decideHere: '✓ Set this location', decideDeliverHere: '✓ Set this delivery spot', decideCollectHere: '✓ Set this return spot',
+            seats: ' seats', available: ' avail.', availMany: 'Available', availFew: 'Few left', days: ' days', select: 'Select', deliveryPlace: 'Delivery Location', decideHere: '✓ Set this location', decideDeliverHere: '✓ Set this delivery spot', decideCollectHere: '✓ Set this return spot',
             noAddress: 'No matching address found',
             confirmTitle: 'Booking Confirmation', estimate: 'Estimated Total', taxIncl: 'incl. tax',
             baseFee: 'Base fee', deliveryFee: 'Delivery fee', proceed: 'Proceed to Book', backToSelect: 'Back to Vehicle Selection',
@@ -5386,7 +5386,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: '在上方選擇日期', step2sub: '點擊地圖放置標記',
             deliverable: '輛可送達', classes: '個車型', noVehicle: '沒有符合的車輛',
             noVehicleSub: '請嘗試更改日期或車型', searching: '搜尋中...',
-            seats: '人座', available: '輛可用', days: '天', select: '選擇', deliveryPlace: '送車地點', decideHere: '✓ 設為此地點', decideDeliverHere: '✓ 設為此送車地點', decideCollectHere: '✓ 設為此回收地點',
+            seats: '人座', available: '輛可用', availMany: '有空車', availFew: '剩餘不多', days: '天', select: '選擇', deliveryPlace: '送車地點', decideHere: '✓ 設為此地點', decideDeliverHere: '✓ 設為此送車地點', decideCollectHere: '✓ 設為此回收地點',
             noAddress: '找不到符合的地址',
             confirmTitle: '預約內容確認', estimate: '預估費用', taxIncl: '含稅',
             baseFee: '基本費用', deliveryFee: '配送費', proceed: '進入預約手續', backToSelect: '返回車輛選擇',
@@ -5496,7 +5496,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: '위 양식에서 일시 선택', step2sub: '지도를 탭하여 핀을 놓기',
             deliverable: '대 배달 가능', classes: '클래스', noVehicle: '해당하는 차량이 없습니다',
             noVehicleSub: '일정이나 클래스를 변경해 보세요', searching: '차량 검색 중...',
-            seats: '인승', available: '대 가능', days: '일간', select: '선택', deliveryPlace: '배달 장소', decideHere: '✓ 이 위치로 결정', decideDeliverHere: '✓ 이곳을 배달 장소로', decideCollectHere: '✓ 이곳을 회수 장소로',
+            seats: '인승', available: '대 가능', availMany: '여유 있음', availFew: '잔여 적음', days: '일간', select: '선택', deliveryPlace: '배달 장소', decideHere: '✓ 이 위치로 결정', decideDeliverHere: '✓ 이곳을 배달 장소로', decideCollectHere: '✓ 이곳을 회수 장소로',
             noAddress: '해당하는 주소를 찾을 수 없습니다',
             confirmTitle: '예약 내용 확인', estimate: '결제 예상 금액', taxIncl: '세금 포함',
             baseFee: '기본 요금', deliveryFee: '배송료', proceed: '예약 절차로 진행', backToSelect: '차량 선택으로 돌아가기',
