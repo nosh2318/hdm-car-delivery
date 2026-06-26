@@ -532,6 +532,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .vc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
         .vc-price { font-size: 15px; font-weight: 800; color: #1a1a1a; }
         .vc-price-unit { font-size: 10px; color: #888; font-weight: 500; }
+        #kdCpnPromo{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);z-index:1300;display:none;max-width:92%;background:linear-gradient(135deg,#FABE00,#f59e0b);color:#1a1a1a;font-weight:900;font-size:13px;padding:11px 16px;border-radius:999px;box-shadow:0 8px 22px rgba(245,158,11,.45);border:2px solid #fff;cursor:pointer;text-align:center;line-height:1.35;animation:kdCpnPulse 1.8s ease-in-out infinite;}
+        #kdCpnPromo.show{display:block}
+        #kdCpnPromo.done{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;cursor:default;animation:none}
+        @keyframes kdCpnPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.05)}}
         .vc-select-btn {
             padding: 5px 14px; background: #FABE00; color: #1a1a1a; border: none;
             border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .15s;
@@ -1932,7 +1936,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         ${providers ? `<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">🏢 ${t('providedShort')}: ${providers}</div>` : ''}
                     </div>
                     <div class="vc-right">
-                        <div class="vc-price">¥${totalPrice.toLocaleString()}</div>
+                        ${promoOn()
+                          ? `<div style="font-size:10px;color:#999;text-decoration:line-through;font-weight:600;line-height:1;">¥${totalPrice.toLocaleString()}</div>
+                             <div class="vc-price" style="color:#dc2626;">¥${(totalPrice-promoOff(totalPrice)).toLocaleString()}</div>
+                             <div style="font-size:9px;color:#dc2626;font-weight:900;line-height:1;">🎟10%OFF適用中</div>`
+                          : `<div class="vc-price">¥${totalPrice.toLocaleString()}</div>`}
                         <div class="vc-price-unit">${days}${t('daysSuffix')}</div>
                         <button class="vc-select-btn" onclick="event.stopPropagation(); selectClass('${type}')">${t('select')}</button>
                     </div>
@@ -2365,6 +2373,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // TOP(場所選択)画面だけモバイルで自然高さ＋スクロール化（下部CTAクリップ防止）。車両画面は従来挙動を維持
             _cont.classList.toggle('kd-top', (state.screen === 'top' || state.screen === 'step_location'));
         }
+        try { updatePromoBubble(); } catch (e) {}
 
         // Add screen fade animation
         const screenEl = app.querySelector('.screen-fade');
@@ -3128,7 +3137,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
                 <div class="confirm-total">
                     <div class="confirm-total-label">${t('baseFee')}（${days}${t('daysSuffix')}）</div>
-                    <div class="confirm-total-price">¥${totalPrice.toLocaleString()}<span style="font-size:12px;font-weight:400;color:#666;">（${t('taxIncl')}）</span></div>
+                    ${promoOn()
+                      ? `<div style="font-size:14px;color:#999;text-decoration:line-through;font-weight:700;">¥${totalPrice.toLocaleString()}</div>
+                         <div class="confirm-total-price" style="color:#dc2626;">¥${(totalPrice-promoOff(totalPrice)).toLocaleString()}<span style="font-size:12px;font-weight:400;color:#666;">（${t('taxIncl')}）</span></div>
+                         <div style="margin-top:5px;font-size:12px;font-weight:800;color:#dc2626;">🎟 10%OFFクーポン適用中（決済時に確定）</div>`
+                      : `<div class="confirm-total-price">¥${totalPrice.toLocaleString()}<span style="font-size:12px;font-weight:400;color:#666;">（${t('taxIncl')}）</span></div>`}
                 </div>
                 <button class="btn-primary" onclick="state.screen='options'; render();">${t('confirmProceed')}</button>
             </div>
@@ -3417,8 +3430,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function cp(k){ var d=CP[state.lang]||CP.ja; return d[k]||CP.ja[k]||k; }
     function couponReasonMsg(reason){ var d=CP[state.lang]||CP.ja; return d[reason]||d.ng; }
     async function applyCoupon(){
-      var el=document.getElementById('couponInput'), msg=document.getElementById('couponMsg');
-      var code=((el&&el.value)||'').trim().toUpperCase();
+      var el=document.getElementById('couponInput');
+      return applyCouponCode(((el&&el.value)||'').trim().toUpperCase());
+    }
+    async function applyCouponCode(code){
+      var msg=document.getElementById('couponMsg');
+      code=(code||'').trim().toUpperCase();
       if(!code){ if(msg){msg.style.color='#dc2626';msg.textContent=cp('empty');} return; }
       if(msg){msg.style.color='#777';msg.textContent='…';}
       try{
@@ -3430,6 +3447,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }catch(e){ if(msg){msg.style.color='#dc2626';msg.textContent=cp('err');} }
     }
     function removeCoupon(){ state.couponCode=null; state.couponDiscount=0; state.couponAmount=null; render(); }
+
+    // ===== TOP 10%OFFクーポン予告 → 車両/予約内容で割引表示 → 決済で自動適用 =====
+    var KD_PROMO_CODE='NSMESN-02318', KD_PROMO_PCT=10;
+    function promoOn(){ return state.promoApplied===true; }
+    function promoOff(amount){ return promoOn()? Math.floor((amount||0)*KD_PROMO_PCT/100) : 0; }
+    function applyPromo(){
+      if(promoOn()) return;
+      state.promoApplied=true;
+      try{ kdFunnelLog('coupon_tap',9); }catch(e){}
+      render();
+    }
+    function ensurePromoBubble(){
+      var ps=document.getElementById('phoneScreen'); if(!ps) return null;
+      var b=document.getElementById('kdCpnPromo');
+      if(!b){ b=document.createElement('div'); b.id='kdCpnPromo'; b.onclick=function(){ if(!promoOn()) applyPromo(); }; ps.appendChild(b); }
+      return b;
+    }
+    function updatePromoBubble(){
+      var b=ensurePromoBubble(); if(!b) return;
+      var onMap=(state.screen==='top'||state.screen==='step_location'||state.screen==='step_vehicle');
+      var isCol=(state.locStep==='collection' && (state.screen==='top'||state.screen==='step_location'));
+      if(onMap && !isCol){
+        if(promoOn()){ b.className='show done'; b.innerHTML='✅ 10%OFFクーポン適用中！このまま進むと割引価格に🎉'; }
+        else { b.className='show'; b.innerHTML='🎟 10%OFFクーポン配布中！タップで適用'; }
+      } else { b.className=''; }
+    }
 
     function renderPaymentScreen() {
         const v = state.selectedVehicle;
@@ -3443,6 +3486,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         state._payBase = totalPrice;
         // オプション変更等で合計が変わったらクーポン解除（適用時金額と不一致）
         if (state.couponCode && state.couponAmount != null && state.couponAmount !== totalPrice) { state.couponCode = null; state.couponDiscount = 0; state.couponAmount = null; }
+        // TOPで受け取った10%OFFクーポンを決済画面で自動適用（手入力不要）
+        if (promoOn() && !state.couponCode) { setTimeout(function(){ applyCouponCode(KD_PROMO_CODE); }, 0); }
         const couponDiscount = state.couponCode ? (state.couponDiscount || 0) : 0;
         const finalTotal = Math.max(0, totalPrice - couponDiscount);
         state._payTotal = finalTotal;
