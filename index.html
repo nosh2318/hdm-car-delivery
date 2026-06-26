@@ -1549,6 +1549,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             endDate: '',
             endTime: '',
         },
+        dateDefault: false, // お届け日時をデフォルト値で先入力したか（true=未確定の暫定値→枠は点滅継続）
         dateExpanded: true, // 既定で日付選択を開いた状態に（選びやすく・値は空欄）
         // Vehicles
         vehicles: [],        // From Supabase
@@ -2893,7 +2894,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:#f1f1f1;color:#bbb;">🚗 車両</span></div>`;
     }
     // 上部：ステップpill＋日付＋時間（場所＝下のマップ）
+    // お届け日時を“暫定デフォルト”で先入力（最初の一歩を軽く）。最早=48時間後・10:00。未確定なので枠は点滅継続。
+    function kdEnsureDefaultDate() {
+        try {
+            if (!state.datetime.startDate) {
+                var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 2);
+                state.datetime.startDate = localYMD(d);
+                state.datetime.startTime = '10:00';
+                state.dateDefault = true;
+            }
+        } catch (e) { }
+    }
     function renderStepDateStrip() {
+        if (state.locStep !== 'collection') kdEnsureDefaultDate();
         const dt = state.datetime;
         // ステップpillは廃止（ガイド帯がステップを示すため冗長）
         if (state.locStep === 'collection') {
@@ -2908,7 +2921,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 : '';
             return `<div style="padding:5px 14px 4px;">${delRefDt}${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', t('colDate'), t('colTime'))}</div>`;
         }
-        return `<div style="padding:6px 14px 4px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', t('delDate'), t('delTime'))}</div>`;
+        return `<div style="padding:6px 14px 4px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', t('delDate'), t('delTime'), state.dateDefault)}</div>`;
     }
     function nextToCollection() {
         state.locStep = 'collection';
@@ -2929,8 +2942,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     // ステップ内の日付/時間（お届け＝STEP1 / 回収＝STEP2）
     // お届け日時は自動補完しない＝回収の日付/時間は空のまま点滅で入力を促す（回収もFIXさせる）。回収日が過去なら解除
-    function onStepDelDate(v) { state.datetime.startDate=v; if(state.datetime.endDate && state.datetime.endDate<v) state.datetime.endDate=''; renderLocPanel(); fetchAvailableVehicles(); }
-    function onStepDelTime(v) { state.datetime.startTime=v; renderLocPanel(); fetchAvailableVehicles(); }
+    function onStepDelDate(v) { state.dateDefault=false; state.datetime.startDate=v; if(state.datetime.endDate && state.datetime.endDate<v) state.datetime.endDate=''; renderLocPanel(); fetchAvailableVehicles(); }
+    function onStepDelTime(v) { state.dateDefault=false; state.datetime.startTime=v; renderLocPanel(); fetchAvailableVehicles(); }
     function onStepColDate(v) { state.datetime.endDate=v; renderLocPanel(); fetchAvailableVehicles(); }
     function onStepColTime(v) { state.datetime.endTime=v; renderLocPanel(); fetchAvailableVehicles(); }
     // 車両画面で日付/時間を変更（空車なし時の再検索用）
@@ -2946,9 +2959,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         render();
         fetchAvailableVehicles();
     }
-    function stepDateTimeRow(dateVal, timeVal, dateFn, timeFn, dateLbl, timeLbl) {
-        // 未入力枠は点滅（kd-need）で入力を促す
-        const dNeed = dateVal ? '' : 'kd-need', tNeed = timeVal ? '' : 'kd-need';
+    function stepDateTimeRow(dateVal, timeVal, dateFn, timeFn, dateLbl, timeLbl, forceBlink) {
+        // 未入力枠は点滅（kd-need）。forceBlink=暫定デフォルト中は値が入っていても点滅継続（確認を促す）。
+        const dNeed = (dateVal && !forceBlink) ? '' : 'kd-need', tNeed = (timeVal && !forceBlink) ? '' : 'kd-need';
         return `<div class="datetime-grid" style="gap:8px;margin-bottom:0;">
             <div class="dt-group ${dNeed?'kd-need-wrap':''}"><label>${dateLbl}</label><select class="${dNeed}" onchange="${dateFn}(this.value)">${generateDateOptions(dateVal)}</select></div>
             <div class="dt-group ${tNeed?'kd-need-wrap':''}"><label>${timeLbl}</label><select class="${tNeed}" onchange="${timeFn}(this.value)">${generateTimeOptions(timeVal)}</select></div>
