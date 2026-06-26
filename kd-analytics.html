@@ -77,6 +77,12 @@
   </div>
 
   <div class="card" style="margin-bottom:12px">
+    <h2>🎟 クーポン効果（タップ数 / タップ後の進行率）</h2>
+    <div id="coupon"><div class="mut">読み込み中…（031 SQL適用後に表示）</div></div>
+    <div class="mut" style="margin-top:6px">お届けマップの10%OFF予告をタップした人が、その後どれだけ車両選択・完了へ進んだか。全体の進行率と比べて効果を見る。</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
     <h2>📅 バイオリズム（訪問・CVの推移）</h2>
     <div class="seg" id="trendSeg" style="margin:6px 0 10px">
       <button data-t="day" class="on">日別</button>
@@ -187,6 +193,23 @@ async function load(){
        +'<div class="fbarwrap"><div class="fbar" style="width:'+w+'%">'+reach[i]+'</div></div>'+drop+'</div>';
   }
   document.getElementById('funnel').innerHTML=fh;
+
+  // クーポン効果（coupon_tap → その後の進行）
+  try{
+    const cpRows=await q('public_kd_coupon_v?select=*');
+    let t={taps:0,rv:0,rp:0,cv:0};
+    cpRows.forEach(r=>{ if(STORE!=='all'&&r.store!==STORE) return; t.taps+=(+r.taps||0); t.rv+=(+r.reached_vehicle||0); t.rp+=(+r.reached_payment||0); t.cv+=(+r.completed||0); });
+    const tapRate=visit? t.taps/visit:0, tapVeh=t.taps? t.rv/t.taps:0, tapCv=t.taps? t.cv/t.taps:0;
+    const allVeh=reach[1]? reach[2]/reach[1]:0;
+    let cmp='';
+    if(t.taps>=3){ cmp='<div class="mut" style="margin-top:8px">'+(tapVeh>allVeh?'🟢 タップした人の方が車両選択へ進む率が高い（クーポン有効の兆候）':'⚪ まだ明確な差は出ていません（母数を増やして再評価）')+'</div>'; }
+    document.getElementById('coupon').innerHTML=
+      '<div class="row" style="margin:0">'
+      +'<div class="card" style="background:#0e131b"><h2>タップ数</h2><div class="big y">'+t.taps+'</div><div class="mut">タップ率 '+(visit?pct(tapRate):'–')+'（÷訪問'+visit+'）</div></div>'
+      +'<div class="card" style="background:#0e131b"><h2>タップ後 車両到達</h2><div class="big">'+t.rv+'</div><div class="mut">'+(t.taps?pct(tapVeh):'–')+' ／ 全体 '+(reach[1]?pct(allVeh):'–')+'</div></div>'
+      +'<div class="card" style="background:#0e131b"><h2>タップ後 完了</h2><div class="big '+(t.cv?'g':'r')+'">'+t.cv+'</div><div class="mut">CVR '+(t.taps?pct(tapCv):'–')+'</div></div>'
+      +'</div>'+cmp;
+  }catch(e){ document.getElementById('coupon').innerHTML='<div class="mut">031 SQL未適用（クーポンビュー）。Supabase SQL Editorで 031_keydrop_coupon_view.sql をRUNしてください。</div>'; }
 
   // source table
   src.sort((a,b)=>b.sessions-a.sessions);
