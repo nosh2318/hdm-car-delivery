@@ -3025,7 +3025,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             else if (ymd === dp.start) cls += ' sel s';
             else if (ymd === dp.end) cls += ' sel e';
             else if (dp.start && dp.end && ymd > dp.start && ymd < dp.end) cls += ' btw';
-            html += '<span class="' + cls + '"' + (dis ? '' : ' onclick="kdDpPick(\'' + ymd + '\')"') + '>' + day + (ymd === dp.start ? '<i>開始</i>' : '') + (ymd === dp.end ? '<i>終了</i>' : '') + '</span>';
+            var badge = (ymd === dp.start) ? '<i>開始</i>' : ((ymd === dp.end) ? '<i>終了</i>' : '');
+            html += '<span class="' + cls + '"' + (dis ? '' : ' onclick="kdDpPick(\'' + ymd + '\')"') + '>' + day + badge + '</span>';
         }
         return html + '</div>';
     }
