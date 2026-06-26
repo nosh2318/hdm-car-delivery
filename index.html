@@ -537,13 +537,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .vc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
         .vc-price { font-size: 15px; font-weight: 800; color: #1a1a1a; }
         .vc-price-unit { font-size: 10px; color: #888; font-weight: 500; }
-        #kdCpnPromo{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);z-index:1300;display:none;max-width:92%;background:linear-gradient(135deg,#FABE00,#f59e0b);color:#1a1a1a;font-weight:900;font-size:13px;padding:11px 16px;border-radius:999px;box-shadow:0 8px 22px rgba(245,158,11,.45);border:2px solid #fff;cursor:pointer;text-align:center;line-height:1.35;animation:kdCpnPulse 1.8s ease-in-out infinite;}
+        #kdCpnPromo{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);z-index:1300;display:none;max-width:92%;background:linear-gradient(135deg,#FABE00,#f59e0b);color:#1a1a1a;font-weight:900;font-size:13px;padding:11px 16px;border-radius:999px;box-shadow:0 8px 22px rgba(245,158,11,.45);border:2px solid #fff;cursor:pointer;text-align:center;line-height:1.35;animation:kdAreaBlink 1.3s ease-in-out infinite;}
         #kdCpnPromo.show{display:block}
         #kdCpnPromo.done{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;cursor:default;animation:none}
         /* PC(2カラム/分割)では全幅中央だと左キービジュアル境界に被るため、右コンテンツ側=右下に寄せる */
-        @media (min-width: 900px){ #kdCpnPromo{ left:auto; right:32px; transform:none; max-width:360px; animation:kdCpnPulsePC 1.8s ease-in-out infinite; } }
+        @media (min-width: 900px){ #kdCpnPromo{ left:auto; right:32px; transform:none; max-width:360px; } }
         /* スマホ：小さく右下に出し、タップで全文展開（住所欄/CTAへの被り防止） */
-        #kdCpnPromo.collapsed{ left:auto; right:10px; bottom:calc(120px + env(safe-area-inset-bottom)); transform:none; max-width:none; padding:8px 13px; font-size:12px; animation:kdCpnPulsePC 1.8s ease-in-out infinite; }
+        #kdCpnPromo.collapsed{ left:auto; right:10px; bottom:calc(120px + env(safe-area-inset-bottom)); transform:none; max-width:none; padding:8px 13px; font-size:12px; }
         #kdCpnPromo .kdcpn-x{ display:inline-block; margin-left:10px; width:17px; height:17px; line-height:15px; text-align:center; font-size:11px; font-weight:900; border:1px solid rgba(0,0,0,.3); border-radius:50%; opacity:.65; }
         @keyframes kdCpnPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.05)}}
         /* PCは右寄せ配置(translateX無し)なので、脈動はscaleのみ（translateXで中央へ引き戻されるのを防ぐ） */
@@ -1165,6 +1165,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     // TOP「選べる車」ストリップ：クラス名のみ・価格なし・人気順。タップで全車種(vehicles.html)へ。
     function renderCarStrip() {
+        if (state.locStep === 'collection') return ''; // 回収場所ステップでは車ストリップを出さない（スッキリ）
         var cls = [['A', 'プレミアム'], ['S', 'SUV'], ['B', 'ミニバン'], ['C', 'コンパクトSUV'], ['F', 'コンパクト'], ['H', 'セダン']];
         var store = (typeof KD_STORE !== 'undefined') ? KD_STORE : 'sapporo';
         var cards = cls.map(function (c) {
@@ -1996,7 +1997,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 // ✅ 確定した回収場所を表示 → 「車両を見る」で次画面へ
                 ov.innerHTML =
                     `<div class="kp-row"><span class="kp-ic">✅</span><div class="kp-body"><div class="kp-lbl">${t('collectionPlaceL')}</div><div class="kp-addr">${state.collectionAddr}</div></div></div>` +
-                    `<button class="kp-go kd-cta-blink" onclick="goToVehicleStep()">${t('collectionCTA')} ›</button>` +
+                    `<button class="kp-go kd-cta-blink" onclick="collectionDoneGo()">${t('next')} ›</button>` +
                     `<button onclick="reopenCollection()" style="margin-top:6px;width:100%;padding:6px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
                 return;
             }
@@ -2011,7 +2012,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     : `<div class="kp-opt kp-opt-dim"><b>①</b> 📍 ${t('orPickOnMap')}</div>`;
                 h += `<button class="kp-opt kd-cta-blink" onclick="sameCollectionGo()"><b>②</b> ${t('sameAsDeliveryBtn')}${state.deliveryAddr ? `<div class="kp-opt-sub">${state.deliveryAddr}</div>` : ''}</button>`;
             }
-            h += `<button onclick="backToDelivery()" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('deliveryDest')}（${t('back')}）</button>`;
+            h += `<button onclick="state.screen='options'; render();" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
             ov.innerHTML = h;
             return;
         }
@@ -2036,7 +2037,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         ov.innerHTML = html;
     }
     // お届け：決定＝そのまま回収画面へ移動（確定表示はしない）
-    function deliveryDecideGo() { state.deliveryConfirmed = true; nextToCollection(); }
+    // お届け場所を決めたら→そのまま車へ（回収場所は車を選んだ後＝オプションの次に聞く）
+    function deliveryDecideGo() { state.deliveryConfirmed = true; goToVehicleStep(); }
+    // オプションの次＝回収場所ステップ（マップ）を開く。回収ピンはお届け地点に初期配置（同じならそのまま）。
+    function enterCollectionStep() {
+        state.locStep = 'collection';
+        state.collectionConfirmed = false;
+        if (!state.collectionLat && state.deliveryLat) { try { setCollectionPin(state.deliveryLat, state.deliveryLng); } catch (e) {} }
+        state.screen = 'top';
+        render();
+    }
+    // 回収場所を決めたら→お客様情報フォームへ
+    function collectionDoneGo() { if (!ensureDateOrder()) return; state.screen = 'form'; render(); }
     // 回収：①②を押したら「確定場所」を表示→「車両を見る」で次画面へ
     function collectionDecideGo() { state.collectionConfirmed = true; renderLocPanel(); }
     function sameCollectionGo() { useSameCollection(); state.collectionConfirmed = true; renderLocPanel(); }
@@ -2924,6 +2936,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 state.datetime.startTime = '10:00';
                 state.dateDefault = true;
             }
+            // 返却もデフォルト（同日18:00）＝車を価格付きで先に見せられる。回収ステップで変更可。
+            if (!state.datetime.endDate) {
+                state.datetime.endDate = state.datetime.startDate;
+                if (!state.datetime.endTime) state.datetime.endTime = '18:00';
+            }
         } catch (e) { }
     }
     function renderStepDateStrip() {
@@ -3359,7 +3376,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
                 ` : ''}
 
-                <button class="btn-primary" onclick="state.screen='form'; render();">${t('next')}</button>
+                <button class="btn-primary" onclick="enterCollectionStep();">${t('next')}</button>
                 <button class="btn-secondary" onclick="state.screen='confirm'; render();">${t('back')}</button>
             </div>
         `;
