@@ -72,7 +72,7 @@
   </div>
 
   <div class="card" style="margin-bottom:12px">
-    <h2>🔻 ファネル（着地→完了）どこで離脱したか</h2>
+    <h2>🔻 ファネル（TOP→完了）どこで離脱したか</h2>
     <div id="funnel"><div class="mut">読み込み中…</div></div>
   </div>
 
@@ -90,7 +90,8 @@
 const SB='https://ckrxttbnawkclshczsia.supabase.co';
 const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
 const H={apikey:AK,Authorization:'Bearer '+AK};
-const STEPS=['着地','TOP','場所選択','車両選択','オプション','情報入力','確認','約款','決済','完了'];
+const STEPS=['','TOP(マップ)','車両選択','オプション','情報入力','確認','約款','決済','完了'];
+const MAXSTEP=8;
 let STORE='all';
 
 async function q(v){const r=await fetch(SB+'/rest/v1/'+v,{headers:H});if(!r.ok)throw new Error(v+' '+r.status);return r.json();}
@@ -109,14 +110,14 @@ async function load(){
   try{const lv=await q('public_kd_live_v?select=*');document.getElementById('mLive').textContent=(lv[0]?lv[0].active_30m:0);}catch(e){}
 
   // funnel reach[step] (store filter)
-  const reach={};for(let i=0;i<=9;i++)reach[i]=0;
+  const reach={};for(let i=0;i<=MAXSTEP;i++)reach[i]=0;
   funnel.forEach(r=>{ if(STORE==='all'||r.store===STORE||(STORE!=='all'&&r.step_number===0)) reach[r.step_number]+=r.sessions; });
   // step0(着地)はstore未確定なので全体共通。store絞り時は0は全体値を使う
   if(STORE!=='all'){ let z=0; funnel.forEach(r=>{if(r.step_number===0)z+=r.sessions}); reach[0]=z; }
 
   // ゲート廃止済み＝入口はTOP(step1)。step0(着地)は使わない
   const ENTRY=1;
-  const visit=reach[ENTRY]||0, cv=reach[9]||0;
+  const visit=reach[ENTRY]||0, cv=reach[MAXSTEP]||0;
   document.getElementById('mVisit').textContent=visit;
   document.getElementById('mCv').textContent=cv;
   document.getElementById('mCvr').textContent='CVR '+(visit?pct(cv/visit):'–');
@@ -124,12 +125,12 @@ async function load(){
   // funnel render（TOP→完了）
   const base=Math.max(reach[ENTRY],1);
   let leakStep=-1,leakLost=-1;
-  for(let i=ENTRY;i<9;i++){ if(reach[i]>=3){const lost=reach[i]-reach[i+1]; if(lost>leakLost){leakLost=lost;leakStep=i;}} }
+  for(let i=ENTRY;i<MAXSTEP;i++){ if(reach[i]>=3){const lost=reach[i]-reach[i+1]; if(lost>leakLost){leakLost=lost;leakStep=i;}} }
   let fh='';
-  for(let i=ENTRY;i<=9;i++){
+  for(let i=ENTRY;i<=MAXSTEP;i++){
     const w=Math.max(2,Math.round(reach[i]/base*100));
     let drop='';
-    if(i<9){ const d=reach[i]?(reach[i]-reach[i+1])/reach[i]:0; drop='<span class="fdrop '+(d>=0.4?'bad':'ok')+'">▼'+pct(d)+'</span>'; }
+    if(i<MAXSTEP){ const d=reach[i]?(reach[i]-reach[i+1])/reach[i]:0; drop='<span class="fdrop '+(d>=0.4?'bad':'ok')+'">▼'+pct(d)+'</span>'; }
     else drop='<span class="fdrop ok">CV</span>';
     fh+='<div class="fstep '+(i===leakStep?'leak':'')+'"><div class="fname"><span class="fnum">'+i+'</span>'+STEPS[i]+'</div>'
        +'<div class="fbarwrap"><div class="fbar" style="width:'+w+'%">'+reach[i]+'</div></div>'+drop+'</div>';
@@ -159,7 +160,7 @@ async function load(){
   }
   // どのページに送り込めばCVするか（各ステップ到達者のCV率）
   let bestStep=-1,bestCvr=-1;
-  for(let i=1;i<=8;i++){ if(reach[i]>=3){const c=cv/reach[i]; if(c>bestCvr){bestCvr=c;bestStep=i;}} }
+  for(let i=1;i<MAXSTEP;i++){ if(reach[i]>=3){const c=cv/reach[i]; if(c>bestCvr){bestCvr=c;bestStep=i;}} }
   if(bestStep>=0&&cv>0){ ins.push(['🎯','<b>'+STEPS[bestStep]+'</b>まで来た人のCV率は <span class="up">'+pct(bestCvr)+'</span>。<b>ここに送り込むほどCVが伸びる</b>＝広告/導線はこのページ到達を増やす設計に。']); }
   if(!ins.length) ins.push(['⏳','データ集計待ち。']);
   document.getElementById('insights').innerHTML=ins.map(x=>'<div class="ins-item"><span class="ins-ic">'+x[0]+'</span><span>'+x[1]+'</span></div>').join('');
