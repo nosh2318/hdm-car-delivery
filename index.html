@@ -193,6 +193,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-area-m { display: none; align-items: center; gap: 2px; padding: 5px 10px; background: #FABE00; color: #1a1a1a; border: none; border-radius: 14px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; max-width: 34vw; overflow: hidden; text-overflow: ellipsis; animation: kdAreaBlink 1.3s ease-in-out infinite; }
         /* エリア選択ボタンの枠を常時点滅（注目させる脈動リング・レイアウトに影響しないbox-shadow） */
         @keyframes kdAreaBlink { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,.75); } 70% { box-shadow: 0 0 0 8px rgba(220,38,38,0); } 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } }
+        /* PCナビのエリア選択も黄色ピル枠にして常時点滅 */
+        .pc-nav a.kd-area-pc { display: inline-flex; align-items: center; gap: 3px; padding: 6px 14px; border-radius: 14px; background: #FABE00; color: #1a1a1a; font-weight: 800; animation: kdAreaBlink 1.3s ease-in-out infinite; }
+        .pc-nav a.kd-area-pc:hover { background: #f0b400; }
         @media (max-width: 767px) {
             .kd-area-m { display: inline-flex; max-width: 26vw; }
             /* ☰が画面外に押し出される対策：右側グループを詰めて☰を必ず表示 */
@@ -2579,7 +2582,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
-                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">🗺 エリア選択（札幌/那覇）</a>
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
                         <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
@@ -2690,7 +2693,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
-                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">🗺 エリア選択（札幌/那覇）</a>
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
                         <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
@@ -2799,7 +2802,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
-                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">🗺 エリア選択（札幌/那覇）</a>
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
                         <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
@@ -3007,7 +3010,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
-                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">🗺 エリア選択（札幌/那覇）</a>
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
                         <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
@@ -4226,7 +4229,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
                 <div class="header-actions">
                     <nav class="pc-nav">
-                        <a href="#" onclick="kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">🗺 エリア選択（札幌/那覇）</a>
+                        <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
                         <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
                         <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
