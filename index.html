@@ -535,6 +535,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         #kdCpnPromo{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);z-index:1300;display:none;max-width:92%;background:linear-gradient(135deg,#FABE00,#f59e0b);color:#1a1a1a;font-weight:900;font-size:13px;padding:11px 16px;border-radius:999px;box-shadow:0 8px 22px rgba(245,158,11,.45);border:2px solid #fff;cursor:pointer;text-align:center;line-height:1.35;animation:kdCpnPulse 1.8s ease-in-out infinite;}
         #kdCpnPromo.show{display:block}
         #kdCpnPromo.done{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;cursor:default;animation:none}
+        /* PC(2カラム/分割)では全幅中央だと左キービジュアル境界に被るため、右コンテンツ側=右下に寄せる */
+        @media (min-width: 900px){ #kdCpnPromo{ left:auto; right:24px; transform:none; max-width:360px; } }
         @keyframes kdCpnPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.05)}}
         .vc-select-btn {
             padding: 5px 14px; background: #FABE00; color: #1a1a1a; border: none;
