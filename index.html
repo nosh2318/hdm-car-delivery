@@ -190,7 +190,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-lang-pop button.on { background: #fffbf0; color: #a07c00; }
         .kd-lang-pop button:hover { background: #f5f5f7; }
         /* スマホのヘッダーに「エリア選択」ボタン（PCはpc-navにあるのでスマホのみ表示） */
-        .kd-area-m { display: none; align-items: center; gap: 2px; padding: 5px 10px; background: #FABE00; color: #1a1a1a; border: none; border-radius: 14px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; max-width: 34vw; overflow: hidden; text-overflow: ellipsis; }
+        .kd-area-m { display: none; align-items: center; gap: 2px; padding: 5px 10px; background: #FABE00; color: #1a1a1a; border: none; border-radius: 14px; font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap; max-width: 34vw; overflow: hidden; text-overflow: ellipsis; animation: kdAreaBlink 1.3s ease-in-out infinite; }
+        /* エリア選択ボタンの枠を常時点滅（注目させる脈動リング・レイアウトに影響しないbox-shadow） */
+        @keyframes kdAreaBlink { 0% { box-shadow: 0 0 0 0 rgba(220,38,38,.75); } 70% { box-shadow: 0 0 0 8px rgba(220,38,38,0); } 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); } }
         @media (max-width: 767px) {
             .kd-area-m { display: inline-flex; max-width: 26vw; }
             /* ☰が画面外に押し出される対策：右側グループを詰めて☰を必ず表示 */
