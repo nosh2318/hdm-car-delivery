@@ -95,6 +95,12 @@
   </div>
 
   <div class="card" style="margin-bottom:12px">
+    <h2>📦 Meta広告（有料・全プレースメント合算）</h2>
+    <div id="metaSum"><div class="mut">読み込み中…（030 SQL適用後に表示）</div></div>
+    <div class="mut" style="margin-top:6px">an(FB)・ig(Instagram)・th(Threads)・facebook は<b>同一Metaキャンペーンの配置違い</b>。バラさず「Meta広告1本」として見る。</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
     <h2>📣 流入の詳細（媒体・キャンペーン・参照元）＝「an」等の正体</h2>
     <div style="overflow-x:auto"><table id="campTbl"><thead><tr>
       <th class="l">source</th><th class="l">medium</th><th class="l">campaign</th><th class="l">referrer</th><th>訪問</th><th>車両到達</th><th>完了</th>
@@ -173,7 +179,9 @@ async function load(){
   for(let i=ENTRY;i<=MAXSTEP;i++){
     const w=Math.max(2,Math.round(reach[i]/base*100));
     let drop='';
-    if(i<MAXSTEP){ const d=reach[i]?(reach[i]-reach[i+1])/reach[i]:0; drop='<span class="fdrop '+(d>=0.4?'bad':'ok')+'">▼'+pct(d)+'</span>'; }
+    if(i<MAXSTEP){ const d=reach[i]?(reach[i]-reach[i+1])/reach[i]:0;
+      if(d<0) drop='<span class="fdrop ok">—</span>';
+      else drop='<span class="fdrop '+(d>=0.4?'bad':'ok')+'">▼'+pct(d)+'</span>'; }
     else drop='<span class="fdrop ok">CV</span>';
     fh+='<div class="fstep '+(i===leakStep?'leak':'')+'"><div class="fname"><span class="fnum">'+i+'</span>'+STEPS[i]+'</div>'
        +'<div class="fbarwrap"><div class="fbar" style="width:'+w+'%">'+reach[i]+'</div></div>'+drop+'</div>';
@@ -195,7 +203,19 @@ async function load(){
     camp.sort((a,b)=>b.sessions-a.sessions);
     let ch=camp.map(c=>'<tr><td class="l"><b>'+esc(c.src)+'</b></td><td class="l">'+esc(c.medium)+'</td><td class="l">'+esc(c.campaign)+'</td><td class="l mut">'+esc(c.ref_host)+'</td><td>'+c.sessions+'</td><td>'+c.reached_vehicle+'</td><td>'+c.completed+'</td></tr>').join('');
     document.querySelector('#campTbl tbody').innerHTML=ch||'<tr><td class="l mut" colspan="7">データなし</td></tr>';
-  }catch(e){ document.querySelector('#campTbl tbody').innerHTML='<tr><td class="l mut" colspan="7">030 SQL未適用（utm列・campaignビュー）</td></tr>'; }
+    // Meta有料 全プレースメント合算（medium=paid）
+    const mp=camp.filter(c=>String(c.medium).toLowerCase()==='paid');
+    const ms=mp.reduce((a,c)=>({v:a.v+(+c.sessions||0),rv:a.rv+(+c.reached_vehicle||0),cv:a.cv+(+c.completed||0)}),{v:0,rv:0,cv:0});
+    const places=[...new Set(mp.map(c=>c.src))].join(' / ');
+    const mcvr=ms.v?ms.cv/ms.v:0;
+    document.getElementById('metaSum').innerHTML=
+      '<div class="row" style="margin:0">'
+      +'<div class="card" style="background:#0e131b"><h2>訪問</h2><div class="big">'+ms.v+'</div></div>'
+      +'<div class="card" style="background:#0e131b"><h2>車両到達</h2><div class="big">'+ms.rv+'</div></div>'
+      +'<div class="card" style="background:#0e131b"><h2>完了CV</h2><div class="big '+(ms.cv?'g':'r')+'">'+ms.cv+'</div><div class="mut">CVR '+(ms.v?pct(mcvr):'–')+'</div></div>'
+      +'</div>'
+      +'<div class="mut" style="margin-top:6px">配置: '+(places||'–')+'｜キャンペーンID: '+(mp[0]?esc(mp[0].campaign):'–')+'（全店合算）</div>';
+  }catch(e){ document.querySelector('#campTbl tbody').innerHTML='<tr><td class="l mut" colspan="7">030 SQL未適用（utm列・campaignビュー）</td></tr>'; document.getElementById('metaSum').innerHTML='<div class="mut">030 SQL未適用（campaignビュー）</div>'; }
 
   // insights（改善の優先順位＋仮説）
   const ins=[];
