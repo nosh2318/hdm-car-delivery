@@ -1067,7 +1067,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 else src = 'other';
             }
             if (/insta/.test(src)) src = 'instagram'; if (/face|fb/.test(src)) src = 'facebook'; if (/tik/.test(src)) src = 'tiktok';
-            sessionStorage.setItem('kd_src', src); return src;
+            sessionStorage.setItem('kd_src', src);
+            // 媒体/キャンペーン/生referrerも1セッション1回だけ保持（流入の正体を後から特定できるように）
+            try {
+                sessionStorage.setItem('kd_med', (qp.get('utm_medium') || '').toLowerCase().trim().slice(0, 60));
+                sessionStorage.setItem('kd_camp', (qp.get('utm_campaign') || qp.get('utm_content') || '').toLowerCase().trim().slice(0, 80));
+                var rh = ''; try { rh = document.referrer ? new URL(document.referrer).hostname.replace(/^www\./, '') : ''; } catch (e2) { rh = ''; }
+                sessionStorage.setItem('kd_refhost', rh.slice(0, 80));
+            } catch (e3) { }
+            return src;
         } catch (e) { return 'unknown'; }
     }
     function kdFunnelLog(step, stepNo, storeArg) {
@@ -1076,10 +1084,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             if (!sid) { sid = 'fs_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sessionStorage.setItem('kd_fsid', sid); }
             var store = (storeArg !== undefined) ? storeArg : '';
             if (storeArg === undefined) { try { store = KD_API_STORE(); } catch (e) { store = ''; } }
+            var ref = kdSource();
             fetch(SUPABASE_URL + '/rest/v1/kd_funnel_log', {
                 method: 'POST', keepalive: true,
                 headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-                body: JSON.stringify({ session_id: sid, step: step, step_number: stepNo, store: store, referrer: kdSource() })
+                body: JSON.stringify({
+                    session_id: sid, step: step, step_number: stepNo, store: store, referrer: ref,
+                    utm_medium: sessionStorage.getItem('kd_med') || '',
+                    utm_campaign: sessionStorage.getItem('kd_camp') || '',
+                    ref_host: sessionStorage.getItem('kd_refhost') || ''
+                })
             }).catch(function () { });
         } catch (e) { }
     }

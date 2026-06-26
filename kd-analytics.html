@@ -84,6 +84,14 @@
     <div class="mut" style="margin-top:6px">CVR＝完了÷訪問。高い流入に予算を寄せ、低い流入はLP/期待値ズレを疑う。</div>
   </div>
 
+  <div class="card" style="margin-bottom:12px">
+    <h2>📣 流入の詳細（媒体・キャンペーン・参照元）＝「an」等の正体</h2>
+    <div style="overflow-x:auto"><table id="campTbl"><thead><tr>
+      <th class="l">source</th><th class="l">medium</th><th class="l">campaign</th><th class="l">referrer</th><th>訪問</th><th>車両到達</th><th>完了</th>
+    </tr></thead><tbody><tr><td class="l mut" colspan="7">読み込み中…（030 SQL適用後に表示）</td></tr></tbody></table></div>
+    <div class="mut" style="margin-top:6px">utm_source/medium/campaign と参照元ホストを記録。広告タグ(an 等)がどの媒体・どのキャンペーンか一目で分かる。</div>
+  </div>
+
   <div class="foot" id="foot">— 自動更新中 —</div>
 
 <script>
@@ -145,6 +153,14 @@ async function load(){
       +'<td>'+s.sessions+'</td><td>'+s.entered_app+'</td><td>'+s.reached_payment+'</td><td>'+s.completed+'</td>'
       +'<td style="color:'+(cvr>=0.02?'#34d399':'#8b97a6')+';font-weight:800">'+(s.sessions?pct(cvr):'–')+'</td></tr>'; });
   document.querySelector('#srcTbl tbody').innerHTML=sh||'<tr><td class="l mut" colspan="6">データなし</td></tr>';
+
+  // 流入の詳細（媒体・キャンペーン）＝「an」等の正体
+  try{
+    const camp=await q('public_kd_campaign_v?select=*');
+    camp.sort((a,b)=>b.sessions-a.sessions);
+    let ch=camp.map(c=>'<tr><td class="l"><b>'+esc(c.src)+'</b></td><td class="l">'+esc(c.medium)+'</td><td class="l">'+esc(c.campaign)+'</td><td class="l mut">'+esc(c.ref_host)+'</td><td>'+c.sessions+'</td><td>'+c.reached_vehicle+'</td><td>'+c.completed+'</td></tr>').join('');
+    document.querySelector('#campTbl tbody').innerHTML=ch||'<tr><td class="l mut" colspan="7">データなし</td></tr>';
+  }catch(e){ document.querySelector('#campTbl tbody').innerHTML='<tr><td class="l mut" colspan="7">030 SQL未適用（utm列・campaignビュー）</td></tr>'; }
 
   // insights（改善の優先順位＋仮説）
   const ins=[];
