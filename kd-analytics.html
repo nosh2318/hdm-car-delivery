@@ -77,6 +77,16 @@
   </div>
 
   <div class="card" style="margin-bottom:12px">
+    <h2>📅 バイオリズム（訪問・CVの推移）</h2>
+    <div class="seg" id="trendSeg" style="margin:6px 0 10px">
+      <button data-t="day" class="on">日別</button>
+      <button data-t="month">月別</button>
+    </div>
+    <div id="trend"><div class="mut">読み込み中…</div></div>
+    <div class="mut" style="margin-top:6px">棒＝訪問(TOP)。右に 🚗車両到達 / 💳決済到達 / ✅完了。曜日・月の谷山（バイオリズム）と広告投下日を重ねて見る。日別は直近30日。</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
     <h2>🟣 流入元別 ＝ どこから来た人がCVするか</h2>
     <div style="overflow-x:auto"><table id="srcTbl"><thead><tr>
       <th class="l">流入元</th><th>訪問</th><th>進入</th><th>決済到達</th><th>完了</th><th>CVR</th>
@@ -101,10 +111,35 @@ const H={apikey:AK,Authorization:'Bearer '+AK};
 const STEPS=['','TOP(マップ)','車両選択','オプション','情報入力','確認','約款','決済','完了'];
 const MAXSTEP=8;
 let STORE='all';
+let TREND='day';
 
 async function q(v){const r=await fetch(SB+'/rest/v1/'+v,{headers:H});if(!r.ok)throw new Error(v+' '+r.status);return r.json();}
 function pct(n){return (n*100).toFixed(n>=0.1?0:1)+'%';}
 function esc(s){return (s==null?'':String(s))}
+
+async function renderTrend(){
+  const box=document.getElementById('trend'); if(!box) return;
+  const view = TREND==='day' ? 'public_kd_daily_v' : 'public_kd_monthly_v';
+  const key  = TREND==='day' ? 'day' : 'month';
+  let rows;
+  try{ rows = await q(view+'?select=*'); }
+  catch(e){ box.innerHTML='<div class="mut">📅 推移ビュー未適用：Supabase SQL Editorで <b>029_keydrop_analytics_timeseries.sql</b> を1回RUNしてください。</div>'; return; }
+  const agg={};
+  rows.forEach(r=>{ if(STORE!=='all' && r.store!==STORE) return;
+    const k=r[key]; if(!k) return; if(!agg[k]) agg[k]={v:0,rv:0,rp:0,cv:0};
+    agg[k].v+=(+r.visits||0); agg[k].rv+=(+r.reached_vehicle||0); agg[k].rp+=(+r.reached_payment||0); agg[k].cv+=(+r.completed||0); });
+  let keys=Object.keys(agg).sort();
+  if(TREND==='day') keys=keys.slice(-30);
+  if(!keys.length){ box.innerHTML='<div class="mut">この期間のデータはまだありません。</div>'; return; }
+  const max=Math.max(1,...keys.map(k=>agg[k].v));
+  let h='';
+  keys.forEach(k=>{ const a=agg[k]; const w=Math.max(2,Math.round(a.v/max*100));
+    const label=TREND==='day'?k.slice(5):k;
+    h+='<div class="fstep"><div class="fname" style="width:58px;font-size:11px">'+esc(label)+'</div>'
+      +'<div class="fbarwrap"><div class="fbar" style="width:'+w+'%">'+a.v+'</div></div>'
+      +'<div class="fdrop ok" style="width:104px;font-size:10px">🚗'+a.rv+' 💳'+a.rp+' ✅'+a.cv+'</div></div>'; });
+  box.innerHTML=h;
+}
 
 async function load(){
   let funnel,src;
@@ -181,8 +216,15 @@ async function load(){
   if(!ins.length) ins.push(['⏳','データ集計待ち。']);
   document.getElementById('insights').innerHTML=ins.map(x=>'<div class="ins-item"><span class="ins-ic">'+x[0]+'</span><span>'+x[1]+'</span></div>').join('');
 
+  try{ await renderTrend(); }catch(e){}
+
   document.getElementById('foot').textContent='更新: '+new Date().toLocaleTimeString('ja-JP')+'｜15秒ごと自動更新';
 }
+
+document.querySelectorAll('#trendSeg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#trendSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); TREND=b.getAttribute('data-t'); renderTrend();
+});
 
 document.querySelectorAll('#storeSeg button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#storeSeg button').forEach(x=>x.classList.remove('on'));
