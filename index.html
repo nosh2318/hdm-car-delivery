@@ -44,6 +44,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         #app { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
         /* TOP/場所/車両画面の本文ラッパー（renderTopScreenのflex:1 overflow:hidden をクラス化） */
         .top-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        /* TOP「選べる車」ストリップ（クラス名のみ・価格なし・横スクロール） */
+        .kd-cstrip { padding: 7px 0 5px; flex: none; }
+        .kd-cs-t { font-size: 11px; font-weight: 900; color: #1a1a1a; padding: 4px 14px 6px; }
+        .kd-cs-t small { font-size: 9px; color: #999; font-weight: 700; }
+        .kd-cs-row { display: flex; gap: 8px; overflow-x: auto; padding: 0 14px 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .kd-cs-row::-webkit-scrollbar { display: none; }
+        .kd-cs-card { flex: none; width: 84px; text-align: center; text-decoration: none; }
+        .kd-cs-card img { width: 84px; height: 50px; object-fit: cover; border-radius: 9px; border: 1px solid #edeff2; display: block; background: #f2f4f7; }
+        .kd-cs-cl { display: block; font-size: 10px; font-weight: 800; color: #1a1a1a; margin-top: 4px; line-height: 1.15; }
         /* PCのみ1画面固定（2カラム）。flex:1のマップが画面を埋める（min-heightだと下に白が出るflexの罠を回避） */
         @media (min-width: 900px) {
             .app-container.kd-mapscreen { height: 100vh; height: 100dvh; overflow: hidden; }
@@ -1123,6 +1132,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             + '<span style="flex:none;color:#16a34a;">📍 ' + t('areaLabel') + '</span>'
             + '<span style="flex:1;min-width:0;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + cs.join('・') + '</span>'
             + '</div>';
+    }
+    // TOP「選べる車」ストリップ：クラス名のみ・価格なし・人気順。タップで全車種(vehicles.html)へ。
+    function renderCarStrip() {
+        var cls = [['A', 'プレミアム'], ['S', 'SUV'], ['B', 'ミニバン'], ['C', 'コンパクトSUV'], ['F', 'コンパクト'], ['H', 'セダン']];
+        var store = (typeof KD_STORE !== 'undefined') ? KD_STORE : 'sapporo';
+        var cards = cls.map(function (c) {
+            return '<a class="kd-cs-card" href="vehicles.html?area=' + store + '" target="_blank" rel="noopener">'
+                + '<img src="' + kdImg('images/class_' + c[0] + '.png') + '" alt="' + c[1] + '" onerror="this.onerror=null;this.src=\'images/class_' + c[0] + '.png\'">'
+                + '<span class="kd-cs-cl">' + c[1] + '</span></a>';
+        }).join('');
+        return '<div class="kd-cstrip"><div class="kd-cs-t">選べる車 <small>タップで全車種 ›</small></div><div class="kd-cs-row">' + cards + '</div></div>';
     }
     function kdPointInPoly(lat, lng, p) {
         let inside = false;
@@ -2556,6 +2576,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <!-- 右：機能（縦フロー：日付/時間→マップ→確定） -->
                 <div class="kd-flow">
                     <div id="areaInfo">${renderAreaInfo()}</div>
+                    <div id="carStrip">${renderCarStrip()}</div>
                     <div id="dateStrip">${renderStepDateStrip()}</div>
                     <div id="mapWrap" class="kd-mapwrap">
                         <div id="map" style="height:100%;"></div>
@@ -2816,6 +2837,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         updateAreaAlert();
         const ai = document.getElementById('areaInfo');
         if (ai) ai.innerHTML = renderAreaInfo();
+        const cstr = document.getElementById('carStrip');
+        if (cstr) cstr.innerHTML = renderCarStrip();
         const ds = document.getElementById('dateStrip');
         if (ds) ds.innerHTML = renderStepDateStrip();
         if (typeof updateGuide === 'function') updateGuide();
