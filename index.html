@@ -537,6 +537,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         #kdCpnPromo.done{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;cursor:default;animation:none}
         /* PC(2カラム/分割)では全幅中央だと左キービジュアル境界に被るため、右コンテンツ側=右下に寄せる */
         @media (min-width: 900px){ #kdCpnPromo{ left:auto; right:24px; transform:none; max-width:360px; } }
+        /* スマホ：小さく右下に出し、タップで全文展開（住所欄/CTAへの被り防止） */
+        #kdCpnPromo.collapsed{ left:auto; right:10px; transform:none; max-width:none; padding:8px 13px; font-size:12px; }
+        #kdCpnPromo .kdcpn-x{ display:inline-block; margin-left:10px; width:17px; height:17px; line-height:15px; text-align:center; font-size:11px; font-weight:900; border:1px solid rgba(0,0,0,.3); border-radius:50%; opacity:.65; }
         @keyframes kdCpnPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.05)}}
         .vc-select-btn {
             padding: 5px 14px; background: #FABE00; color: #1a1a1a; border: none;
@@ -3463,7 +3466,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function ensurePromoBubble(){
       var ps=document.getElementById('phoneScreen'); if(!ps) return null;
       var b=document.getElementById('kdCpnPromo');
-      if(!b){ b=document.createElement('div'); b.id='kdCpnPromo'; b.onclick=function(){ if(!promoOn()) applyPromo(); }; ps.appendChild(b); }
+      if(!b){ b=document.createElement('div'); b.id='kdCpnPromo'; b.onclick=function(ev){
+        if(ev&&ev.target&&ev.target.classList&&ev.target.classList.contains('kdcpn-x')){ state.promoExpanded=false; updatePromoBubble(); return; } // ✕で小チップに戻す
+        if(promoOn()) return;
+        if(!isPC() && !state.promoExpanded){ state.promoExpanded=true; updatePromoBubble(); return; } // スマホ小チップ→全文展開
+        applyPromo();
+      }; ps.appendChild(b); }
       return b;
     }
     function updatePromoBubble(){
@@ -3472,7 +3480,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       var isCol=(state.locStep==='collection' && (state.screen==='top'||state.screen==='step_location'));
       if(onMap && !isCol){
         if(promoOn()){ b.className='show done'; b.innerHTML='✅ 10%OFFクーポン適用中！このまま進むと割引価格に🎉'; }
-        else { b.className='show'; b.innerHTML='🎟 10%OFFクーポン配布中！タップで適用'; }
+        else if(!isPC() && !state.promoExpanded){ b.className='show collapsed'; b.innerHTML='🎟 10%OFF'; }
+        else { b.className='show'; b.innerHTML='🎟 10%OFFクーポン配布中！タップで適用'+(!isPC()?'<span class="kdcpn-x" aria-label="閉じる">✕</span>':''); }
       } else { b.className=''; }
     }
 
