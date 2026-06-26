@@ -538,7 +538,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         /* PC(2カラム/分割)では全幅中央だと左キービジュアル境界に被るため、右コンテンツ側=右下に寄せる */
         @media (min-width: 900px){ #kdCpnPromo{ left:auto; right:32px; transform:none; max-width:360px; animation:kdCpnPulsePC 1.8s ease-in-out infinite; } }
         /* スマホ：小さく右下に出し、タップで全文展開（住所欄/CTAへの被り防止） */
-        #kdCpnPromo.collapsed{ left:auto; right:10px; transform:none; max-width:none; padding:8px 13px; font-size:12px; animation:kdCpnPulsePC 1.8s ease-in-out infinite; }
+        #kdCpnPromo.collapsed{ left:auto; right:10px; bottom:calc(120px + env(safe-area-inset-bottom)); transform:none; max-width:none; padding:8px 13px; font-size:12px; animation:kdCpnPulsePC 1.8s ease-in-out infinite; }
         #kdCpnPromo .kdcpn-x{ display:inline-block; margin-left:10px; width:17px; height:17px; line-height:15px; text-align:center; font-size:11px; font-weight:900; border:1px solid rgba(0,0,0,.3); border-radius:50%; opacity:.65; }
         @keyframes kdCpnPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.05)}}
         /* PCは右寄せ配置(translateX無し)なので、脈動はscaleのみ（translateXで中央へ引き戻されるのを防ぐ） */
