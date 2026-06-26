@@ -53,6 +53,41 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-cs-card { flex: none; width: 84px; text-align: center; text-decoration: none; }
         .kd-cs-card img { width: 84px; height: 50px; object-fit: cover; border-radius: 9px; border: 1px solid #edeff2; display: block; background: #f2f4f7; }
         .kd-cs-cl { display: block; font-size: 10px; font-weight: 800; color: #1a1a1a; margin-top: 4px; line-height: 1.15; }
+        /* 日程 範囲バー（タップでピッカー） */
+        .kd-datebar { display: flex; align-items: center; gap: 8px; border: 2px solid #FABE00; background: #fffdf5; border-radius: 12px; padding: 9px 12px; cursor: pointer; }
+        .kd-db-col { display: flex; flex-direction: column; min-width: 0; }
+        .kd-db-lbl { font-size: 9px; color: #a07c00; font-weight: 800; }
+        .kd-db-v { font-size: 15px; font-weight: 900; color: #1a1a1a; white-space: nowrap; }
+        .kd-db-v small { font-size: 11px; color: #555; font-weight: 700; }
+        .kd-db-mid { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+        .kd-db-dur { font-size: 10px; font-weight: 800; color: #16a34a; }
+        .kd-db-ar { font-size: 13px; color: #cbd5e1; font-weight: 900; }
+        .kd-db-edit { font-size: 16px; flex: none; }
+        /* 範囲ピッカー（モーダル） */
+        .kd-datepop { display: none; position: fixed; inset: 0; z-index: 100001; background: rgba(0,0,0,.5); align-items: flex-end; justify-content: center; }
+        @media (min-width: 600px) { .kd-datepop { align-items: center; } }
+        .kd-dp-card { background: #fff; width: 100%; max-width: 460px; border-radius: 18px 18px 0 0; padding: 14px; max-height: 92vh; overflow-y: auto; }
+        @media (min-width: 600px) { .kd-dp-card { border-radius: 18px; } }
+        .kd-dp-head { display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 900; color: #1a1a1a; margin-bottom: 8px; }
+        .kd-dp-x { background: none; border: none; font-size: 18px; cursor: pointer; color: #888; }
+        .kd-dp-nav { display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 14px; font-weight: 900; color: #1a1a1a; margin-bottom: 6px; }
+        .kd-dp-nav button { background: #f1f1f4; border: none; width: 30px; height: 30px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .kd-dp-nav button:disabled { opacity: .3; }
+        .kd-dp-dow { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; font-size: 10px; color: #999; font-weight: 700; margin-bottom: 2px; }
+        .kd-dp-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+        .kd-dp-day { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #1a1a1a; border-radius: 9px; cursor: pointer; }
+        .kd-dp-day.dis { color: #d0d4da; cursor: default; }
+        .kd-dp-day.btw { background: #fff4d6; border-radius: 0; }
+        .kd-dp-day.sel { background: #1a1a1a; color: #fff; font-weight: 900; }
+        .kd-dp-day i { position: absolute; top: -7px; left: 50%; transform: translateX(-50%); background: #FABE00; color: #1a1a1a; font-size: 7px; font-weight: 900; padding: 1px 4px; border-radius: 999px; font-style: normal; white-space: nowrap; }
+        .kd-dp-empty { aspect-ratio: 1; }
+        .kd-dp-times { display: flex; gap: 10px; margin: 12px 0 6px; }
+        .kd-dp-t { flex: 1; }
+        .kd-dp-t label { font-size: 10px; color: #888; font-weight: 700; display: block; margin-bottom: 3px; }
+        .kd-dp-t select { width: 100%; border: 2px solid #FABE00; border-radius: 10px; padding: 10px; font-size: 15px; font-weight: 800; background: #fffdf5; }
+        .kd-dp-dur { text-align: center; font-size: 13px; font-weight: 900; color: #16a34a; margin: 6px 0 10px; }
+        .kd-dp-ok { width: 100%; background: linear-gradient(135deg,#FABE00,#f59e0b); color: #1a1a1a; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 900; cursor: pointer; }
+        .kd-dp-ok:disabled { opacity: .4; cursor: default; }
         /* PCのみ1画面固定（2カラム）。flex:1のマップが画面を埋める（min-heightだと下に白が出るflexの罠を回避） */
         @media (min-width: 900px) {
             .app-container.kd-mapscreen { height: 100vh; height: 100dvh; overflow: hidden; }
@@ -2950,6 +2985,70 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         } catch (e) { }
     }
+    // ── 日程 範囲ピッカー（competitor型：1カレンダーで お届け〜返却＋時間）──
+    function kdDateBar() {
+        var d = state.datetime;
+        var s = d.startDate ? formatDateLabel(d.startDate) : '日付';
+        var e = d.endDate ? formatDateLabel(d.endDate) : '日付';
+        var blink = state.dateDefault ? ' kd-cta-blink' : '';
+        return '<div class="kd-datebar' + blink + '" onclick="openDatePicker()">'
+            + '<div class="kd-db-col"><span class="kd-db-lbl">' + t('delDate') + '</span><span class="kd-db-v">' + s + '<small>' + (d.startTime ? ' ' + d.startTime : '') + '</small></span></div>'
+            + '<div class="kd-db-mid"><span class="kd-db-dur">' + getDayCount() + '日間</span><span class="kd-db-ar">→</span></div>'
+            + '<div class="kd-db-col"><span class="kd-db-lbl">' + t('colDate') + '</span><span class="kd-db-v">' + e + '<small>' + (d.endTime ? ' ' + d.endTime : '') + '</small></span></div>'
+            + '<span class="kd-db-edit">📅</span></div>';
+    }
+    function kdDpEarliest() { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 2); return d; }
+    function openDatePicker() {
+        var d = state.datetime;
+        state._dp = { start: d.startDate || '', end: d.endDate || '', st: d.startTime || '10:00', et: d.endTime || '18:00', mo: 0 };
+        var pop = document.getElementById('kdDatePop');
+        if (!pop) { pop = document.createElement('div'); pop.id = 'kdDatePop'; pop.className = 'kd-datepop'; document.body.appendChild(pop); }
+        kdDpRender(); pop.style.display = 'flex';
+    }
+    function closeDatePicker() { var p = document.getElementById('kdDatePop'); if (p) p.style.display = 'none'; }
+    function kdDpNav(dir) { var dp = state._dp; dp.mo = Math.max(0, Math.min(3, dp.mo + dir)); kdDpRender(); }
+    function kdDpPick(ymd) { var dp = state._dp; if (!dp.start || (dp.start && dp.end)) { dp.start = ymd; dp.end = ''; } else if (ymd >= dp.start) { dp.end = ymd; } else { dp.start = ymd; dp.end = ''; } kdDpRender(); }
+    function kdDpTime(which, v) { state._dp[which] = v; kdDpRender(); }
+    function kdDpTimeOpts(sel) { var h = ''; for (var hh = 9; hh <= 19; hh++) { for (var k = 0; k < 2; k++) { var mm = k ? '30' : '00'; if (hh === 19 && mm === '30') continue; var v = (hh < 10 ? '0' + hh : hh) + ':' + mm; h += '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + v + '</option>'; } } return h; }
+    function kdDpValid() { var dp = state._dp; if (!dp || !dp.start || !dp.end) return false; if (dp.end < dp.start) return false; if (dp.end === dp.start && dp.et <= dp.st) return false; return true; }
+    function kdDpDur() { var dp = state._dp; if (!dp.start || !dp.end) return '日付を選んでください'; var s = new Date(dp.start + 'T00:00:00'), e = new Date(dp.end + 'T00:00:00'); return (Math.round((e - s) / 86400000) + 1) + '日間'; }
+    function kdDpCalGrid(mDate) {
+        var dp = state._dp, earliest = kdDpEarliest();
+        var limit = new Date(); limit.setHours(0, 0, 0, 0); limit.setMonth(limit.getMonth() + 4);
+        var y = mDate.getFullYear(), m = mDate.getMonth();
+        var startDow = new Date(y, m, 1).getDay(), daysIn = new Date(y, m + 1, 0).getDate();
+        var html = '<div class="kd-dp-dow">' + ['日', '月', '火', '水', '木', '金', '土'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="kd-dp-grid">';
+        for (var i = 0; i < startDow; i++) html += '<span class="kd-dp-empty"></span>';
+        for (var day = 1; day <= daysIn; day++) {
+            var cur = new Date(y, m, day), ymd = localYMD(cur), dis = cur < earliest || cur > limit, cls = 'kd-dp-day';
+            if (dis) cls += ' dis';
+            else if (ymd === dp.start) cls += ' sel s';
+            else if (ymd === dp.end) cls += ' sel e';
+            else if (dp.start && dp.end && ymd > dp.start && ymd < dp.end) cls += ' btw';
+            html += '<span class="' + cls + '"' + (dis ? '' : ' onclick="kdDpPick(\'' + ymd + '\')"') + '>' + day + (ymd === dp.start ? '<i>開始</i>' : '') + (ymd === dp.end ? '<i>終了</i>' : '') + '</span>';
+        }
+        return html + '</div>';
+    }
+    function kdDpRender() {
+        var pop = document.getElementById('kdDatePop'); if (!pop) return;
+        var dp = state._dp, base = kdDpEarliest(), mDate = new Date(base.getFullYear(), base.getMonth() + dp.mo, 1), ok = kdDpValid();
+        pop.innerHTML = '<div class="kd-dp-card">'
+            + '<div class="kd-dp-head"><b>日程を選択</b><button class="kd-dp-x" onclick="closeDatePicker()">✕</button></div>'
+            + '<div class="kd-dp-nav"><button onclick="kdDpNav(-1)"' + (dp.mo <= 0 ? ' disabled' : '') + '>‹</button><span>' + mDate.getFullYear() + '年' + (mDate.getMonth() + 1) + '月</span><button onclick="kdDpNav(1)"' + (dp.mo >= 3 ? ' disabled' : '') + '>›</button></div>'
+            + kdDpCalGrid(mDate)
+            + '<div class="kd-dp-times"><div class="kd-dp-t"><label>' + t('delTime') + '</label><select onchange="kdDpTime(\'st\',this.value)">' + kdDpTimeOpts(dp.st) + '</select></div><div class="kd-dp-t"><label>' + t('colTime') + '</label><select onchange="kdDpTime(\'et\',this.value)">' + kdDpTimeOpts(dp.et) + '</select></div></div>'
+            + '<div class="kd-dp-dur">' + kdDpDur() + '</div>'
+            + '<button class="kd-dp-ok"' + (ok ? '' : ' disabled') + ' onclick="applyDatePicker()">確認</button>'
+            + '</div>';
+    }
+    function applyDatePicker() {
+        if (!kdDpValid()) return;
+        var dp = state._dp;
+        state.datetime.startDate = dp.start; state.datetime.startTime = dp.st;
+        state.datetime.endDate = dp.end; state.datetime.endTime = dp.et;
+        state.dateDefault = false;
+        closeDatePicker(); render(); fetchAvailableVehicles();
+    }
     function renderStepDateStrip() {
         if (state.locStep !== 'collection') kdEnsureDefaultDate();
         const dt = state.datetime;
@@ -2964,9 +3063,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                        ${state.deliveryAddr ? `<span style="flex:1;min-width:0;font-size:11.5px;font-weight:700;color:#555;overflow:hidden;text-overflow:ellipsis;">${state.deliveryAddr}</span>` : ''}
                    </div>`
                 : '';
-            return `<div style="padding:5px 14px 4px;">${delRefDt}${stepDateTimeRow(dt.endDate, dt.endTime, 'onStepColDate', 'onStepColTime', t('colDate'), t('colTime'))}</div>`;
+            return `<div style="padding:5px 14px 4px;">${delRefDt}</div>`;
         }
-        return `<div style="padding:6px 14px 4px;">${stepDateTimeRow(dt.startDate, dt.startTime, 'onStepDelDate', 'onStepDelTime', t('delDate'), t('delTime'), state.dateDefault)}</div>`;
+        return `<div style="padding:6px 14px 4px;">${kdDateBar()}</div>`;
     }
     function nextToCollection() {
         state.locStep = 'collection';
@@ -3919,7 +4018,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // ── 埋め込み型カード決済（Square Web Payments SDK）──
     const SQUARE_APP_ID = 'sq0idp-C0XgrzYXhgIEbE7G8GGgpA';
     const SQUARE_LOCATION_ID = 'L8N7J9RKPN3WH';
-    let sqPayments = null, sqCard = null, _sqInitTries = 0;
+    let sqPayments = null, sqCard = null, _sqInitTries = 0, _sqInitting = false, _sqInitQueued = false;
     async function initSquareCard() {
         const container = document.getElementById('card-container');
         if (!container) return;
@@ -3928,14 +4027,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             else { container.innerHTML = '<div style="font-size:12px;color:#dc2626;padding:8px;">決済フォームの読込に失敗しました。再読み込みしてください。</div>'; }
             return;
         }
-        _sqInitTries = 0;
+        // ★ 再入防止：初期化中に再描画(クーポン自動適用等)で再度呼ばれてもカード欄が二重生成されないようにする
+        if (_sqInitting) { _sqInitQueued = true; return; }
+        _sqInitting = true; _sqInitTries = 0;
         try {
             if (sqCard) { try { await sqCard.destroy(); } catch (e) {} sqCard = null; }
             container.innerHTML = '';
             if (!sqPayments) sqPayments = window.Square.payments(SQUARE_APP_ID, SQUARE_LOCATION_ID);
-            sqCard = await sqPayments.card();
-            await sqCard.attach('#card-container');
+            const card = await sqPayments.card();
+            const cont2 = document.getElementById('card-container'); // await中にDOMが差し替わっている可能性
+            if (cont2) { cont2.innerHTML = ''; await card.attach('#card-container'); sqCard = card; }
+            else { try { await card.destroy(); } catch (e) {} }
         } catch (e) { console.error('square card init', e); }
+        _sqInitting = false;
+        if (_sqInitQueued) { _sqInitQueued = false; setTimeout(initSquareCard, 0); } // 初期化中に再描画→最新コンテナで1回だけ作り直し
     }
     async function payWithCard() {
         if(!dateRangeValid()){ alert(t('dateOrderErr')); return; }
