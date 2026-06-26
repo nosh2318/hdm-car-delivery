@@ -545,6 +545,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         /* スマホ：小さく右下に出し、タップで全文展開（住所欄/CTAへの被り防止） */
         #kdCpnPromo.collapsed{ left:auto; right:10px; bottom:calc(120px + env(safe-area-inset-bottom)); transform:none; max-width:none; padding:8px 13px; font-size:12px; }
         #kdCpnPromo .kdcpn-x{ display:inline-block; margin-left:10px; width:17px; height:17px; line-height:15px; text-align:center; font-size:11px; font-weight:900; border:1px solid rgba(0,0,0,.3); border-radius:50%; opacity:.65; }
+        /* 車両一覧の先頭に出す全幅クーポンバナー（全車対象が一目で分かる・カードに被らない） */
+        .kd-cpn-list{ margin:8px 0 4px; padding:11px 14px; border-radius:12px; background:linear-gradient(135deg,#FABE00,#f59e0b); color:#1a1a1a; font-weight:900; font-size:13px; text-align:center; cursor:pointer; border:2px solid #fff; box-shadow:0 3px 10px rgba(245,158,11,.35); animation:kdAreaBlink 1.3s ease-in-out infinite; }
+        .kd-cpn-list.done{ background:linear-gradient(135deg,#16a34a,#22c55e); color:#fff; cursor:default; animation:none; }
         @keyframes kdCpnPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.05)}}
         /* PCは右寄せ配置(translateX無し)なので、脈動はscaleのみ（translateXで中央へ引き戻されるのを防ぐ） */
         @keyframes kdCpnPulsePC{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
@@ -1922,6 +1925,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const filteredClasses = state.selectedClass ? [state.selectedClass] : classOrder;
 
         html += `<div class="vehicle-count-banner">${t('availableCarBanner')}</div>`;
+        // クーポンは全車対象 → 一覧先頭に全幅バナー（適用で全カードに割引が反映される）
+        html += promoOn()
+          ? `<div class="kd-cpn-list done">✅ 全車両 10%OFFクーポン適用中（下の全車が割引価格）</div>`
+          : `<div class="kd-cpn-list" onclick="applyPromo()">🎟 全車両 10%OFFクーポン配布中！タップで全車に適用</div>`;
 
         html += `<div class="vehicle-list">`;
         let idx = 0, shown = 0;
@@ -3500,7 +3507,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     function updatePromoBubble(){
       var b=ensurePromoBubble(); if(!b) return;
-      var onMap=(state.screen==='top'||state.screen==='step_location'||state.screen==='step_vehicle');
+      var onMap=(state.screen==='top'||state.screen==='step_location'); // 車両一覧は一覧先頭バナーで案内（浮遊チップがカードに被るのを防ぐ）
       var isCol=(state.locStep==='collection' && (state.screen==='top'||state.screen==='step_location'));
       if(onMap && !isCol){
         if(promoOn()){ b.className='show done'; b.innerHTML='✅ 10%OFFクーポン適用中！このまま進むと割引価格に🎉'; }
