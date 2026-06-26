@@ -77,9 +77,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-dp-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
         .kd-dp-day { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #1a1a1a; border-radius: 9px; cursor: pointer; }
         .kd-dp-day.dis { color: #d0d4da; cursor: default; }
-        .kd-dp-day.btw { background: #fff4d6; border-radius: 0; }
-        .kd-dp-day.sel { background: #1a1a1a; color: #fff; font-weight: 900; }
-        .kd-dp-day i { position: absolute; top: -7px; left: 50%; transform: translateX(-50%); background: #FABE00; color: #1a1a1a; font-size: 7px; font-weight: 900; padding: 1px 4px; border-radius: 999px; font-style: normal; white-space: nowrap; }
+        .kd-dp-day.btw { background: #dcfce7; border-radius: 0; color: #15803d; }
+        .kd-dp-day.sel { color: #fff; font-weight: 900; }
+        .kd-dp-day.sel.s { background: #16a34a; border-radius: 10px 0 0 10px; }
+        .kd-dp-day.sel.e { background: #d97706; border-radius: 0 10px 10px 0; }
+        .kd-dp-day.sel.s.e { background: #16a34a; border-radius: 10px; }
+        .kd-dp-day i { position: absolute; top: -7px; left: 50%; transform: translateX(-50%); background: #FABE00; color: #1a1a1a; font-size: 7.5px; font-weight: 900; padding: 1px 5px; border-radius: 999px; font-style: normal; white-space: nowrap; }
+        .kd-dp-day i.bs, .kd-dp-day i.b1 { background: #16a34a; color: #fff; }
+        .kd-dp-day i.be { background: #d97706; color: #fff; }
         .kd-dp-empty { aspect-ratio: 1; }
         .kd-dp-times { display: flex; gap: 10px; margin: 12px 0 6px; }
         .kd-dp-t { flex: 1; }
@@ -3021,11 +3026,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         for (var i = 0; i < startDow; i++) html += '<span class="kd-dp-empty"></span>';
         for (var day = 1; day <= daysIn; day++) {
             var cur = new Date(y, m, day), ymd = localYMD(cur), dis = cur < earliest || cur > limit, cls = 'kd-dp-day';
+            var isS = dp.start && ymd === dp.start, isE = dp.end && ymd === dp.end;
             if (dis) cls += ' dis';
-            else if (ymd === dp.start) cls += ' sel s';
-            else if (ymd === dp.end) cls += ' sel e';
+            else if (isS && isE) cls += ' sel s e';
+            else if (isS) cls += ' sel s';
+            else if (isE) cls += ' sel e';
             else if (dp.start && dp.end && ymd > dp.start && ymd < dp.end) cls += ' btw';
-            var badge = (ymd === dp.start) ? '<i>開始</i>' : ((ymd === dp.end) ? '<i>終了</i>' : '');
+            var badge = (isS && isE) ? '<i class="b1">1日</i>' : (isS ? '<i class="bs">開始</i>' : (isE ? '<i class="be">終了</i>' : ''));
             html += '<span class="' + cls + '"' + (dis ? '' : ' onclick="kdDpPick(\'' + ymd + '\')"') + '>' + day + badge + '</span>';
         }
         return html + '</div>';
