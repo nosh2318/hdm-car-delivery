@@ -3509,11 +3509,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       var b=ensurePromoBubble(); if(!b) return;
       var onMap=(state.screen==='top'||state.screen==='step_location'); // 車両一覧は一覧先頭バナーで案内（浮遊チップがカードに被るのを防ぐ）
       var isCol=(state.locStep==='collection' && (state.screen==='top'||state.screen==='step_location'));
-      if(onMap && !isCol){
-        if(promoOn()){ b.className='show done'; b.innerHTML='✅ 10%OFFクーポン適用中！このまま進むと割引価格に🎉'; }
-        else if(!isPC() && !state.promoExpanded){ b.className='show collapsed'; b.innerHTML='🎟 10%OFF'; }
-        else { b.className='show'; b.innerHTML='🎟 10%OFFクーポン配布中！タップで適用'+(!isPC()?'<span class="kdcpn-x" aria-label="閉じる">✕</span>':''); }
-      } else { b.className=''; }
+      // 浮遊チップは廃止：クーポンは車両一覧先頭の全幅バナー(.kd-cpn-list)に一本化（全車対象・カード非干渉・PC/モバイル共通）
+      b.className='';
     }
 
     function renderPaymentScreen() {
