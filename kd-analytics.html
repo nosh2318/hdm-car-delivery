@@ -72,6 +72,15 @@
   </div>
 
   <div class="card" style="margin-bottom:12px">
+    <h2>🎯 施策ログ（やろうとしてること → 実績）</h2>
+    <div id="actHero" class="mut" style="margin:4px 0 10px">–</div>
+    <div style="overflow-x:auto"><table id="actTbl"><thead><tr>
+      <th class="l">日付</th><th class="l">施策（やること）</th><th class="l">狙い・仮説</th><th class="l">対象KPI</th><th>状態</th><th class="l">メモ</th>
+    </tr></thead><tbody><tr><td class="l mut" colspan="6">読み込み中…</td></tr></tbody></table></div>
+    <div class="mut" style="margin-top:6px">「何を狙って何を変えたか」と「効いたか」をここに記録。判定＝◯効果あり／△不明／×逆効果。観察中は対象KPIの推移を見て後で確定する。</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
     <h2>🔻 ファネル（TOP→完了）どこで離脱したか</h2>
     <div id="funnel"><div class="mut">読み込み中…</div></div>
   </div>
@@ -122,6 +131,31 @@ const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6I
 const H={apikey:AK,Authorization:'Bearer '+AK};
 const STEPS=['','TOP(マップ)','車両選択','オプション','情報入力','確認','約款','決済','完了'];
 const MAXSTEP=8;
+
+// ===== 🎯 施策ログ（狙い→実績）＝ここを編集して記録を増やす。状態: 計画/観察/完了/◯/△/× =====
+const ACTIONS=[
+  {d:'2026-06-27', t:'日程ピッカー刷新（範囲選択カレンダー）', aim:'日程入力の離脱を減らす', kpi:'TOP→車両選択', st:'観察', note:'競合mimo型。開始=緑/回収=橙・未選択から選ばせる'},
+  {d:'2026-06-27', t:'車ストリップ（PC TOPに車種を先見せ）', aim:'車を先に見せて動機づけ', kpi:'TOP→車両選択', st:'観察', note:'スマホは情報過多で非表示に変更'},
+  {d:'2026-06-27', t:'フロー入替（回収場所を車選択の後へ）', aim:'お届けだけで車へ進ませ初動負荷を下げる', kpi:'TOP→車両選択', st:'観察', note:'お届け≠回収が多い実績で回収は残す'},
+  {d:'2026-06-27', t:'クーポンを車両一覧の先頭バナーに一本化', aim:'全車対象を明確化・カード非干渉', kpi:'クーポンCVR', st:'観察', note:'TOP地図の浮遊チップ廃止'},
+  {d:'2026-06-25', t:'GTM一本化・gtag.js削除', aim:'GA4二重計測の停止', kpi:'計測整合', st:'完了', note:''},
+  {d:'計画', t:'TOPの価値伝達強化（使い方/信頼/価格チラ見せ）', aim:'冷たい全国旅行者を3秒でオンボード', kpi:'TOP→車両選択', st:'計画', note:'97%離脱の本丸'},
+  {d:'計画', t:'TOP着地 vs 車両一覧着地 A/B', aim:'着地先で通過率が変わるか検証', kpi:'TOP→車両選択', st:'計画', note:'代理店のサイトリンク/着地分岐と整合'},
+];
+const STCHIP={'完了':['#16a34a','✓ 完了'],'観察':['#d97706','👀 観察中'],'計画':['#64748b','📋 計画'],'◯':['#16a34a','◯ 効果あり'],'△':['#64748b','△ 不明'],'×':['#dc2626','× 逆効果']};
+function renderActions(reach){
+  let hero='–';
+  if(reach && reach[1]){ const top=reach[1], passed=reach[2]||0, p=top?passed/top:0;
+    hero='🎯 いま動かしたい指標：<b>TOP→車両選択 通過率</b> ＝ <b style="color:'+(p>=0.1?'#16a34a':'#dc2626')+'">'+pct(p)+'</b>（'+passed+'/'+top+'）　※下の施策の多くはこの数字を上げるため';
+  }
+  var hEl=document.getElementById('actHero'); if(hEl) hEl.innerHTML=hero;
+  let h=''; ACTIONS.forEach(a=>{ const c=STCHIP[a.st]||['#64748b',a.st];
+    h+='<tr><td class="l mut">'+esc(a.d)+'</td><td class="l"><b>'+esc(a.t)+'</b></td><td class="l mut">'+esc(a.aim)+'</td><td class="l">'+esc(a.kpi)+'</td>'
+      +'<td><span style="display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#fff;background:'+c[0]+'">'+esc(c[1])+'</span></td>'
+      +'<td class="l mut">'+esc(a.note||'')+'</td></tr>';
+  });
+  var tb=document.querySelector('#actTbl tbody'); if(tb) tb.innerHTML=h;
+}
 let STORE='all';
 let TREND='day';
 
@@ -176,6 +210,7 @@ async function load(){
   document.getElementById('mVisit').textContent=visit;
   document.getElementById('mCv').textContent=cv;
   document.getElementById('mCvr').textContent='CVR '+(visit?pct(cv/visit):'–');
+  renderActions(reach);
 
   // funnel render（TOP→完了）
   const base=Math.max(reach[ENTRY],1);
