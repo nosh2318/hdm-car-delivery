@@ -3016,7 +3016,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function kdDpTime(which, v) { state._dp[which] = v; kdDpRender(); }
     function kdDpTimeOpts(sel) { var h = ''; for (var hh = 9; hh <= 19; hh++) { for (var k = 0; k < 2; k++) { var mm = k ? '30' : '00'; if (hh === 19 && mm === '30') continue; var v = (hh < 10 ? '0' + hh : hh) + ':' + mm; h += '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + v + '</option>'; } } return h; }
     function kdDpValid() { var dp = state._dp; if (!dp || !dp.start || !dp.end) return false; if (dp.end < dp.start) return false; if (dp.end === dp.start && dp.et <= dp.st) return false; return true; }
-    function kdDpDur() { var dp = state._dp; if (!dp.start || !dp.end) return '日付を選んでください'; var s = new Date(dp.start + 'T00:00:00'), e = new Date(dp.end + 'T00:00:00'); return (Math.round((e - s) / 86400000) + 1) + '日間'; }
+    function kdDpDur() {
+        var dp = state._dp;
+        if (!dp.start) return '<span style="color:#16a34a;">📅 お届けの日付を選んでください</span>';
+        if (!dp.end) return '<span style="color:#d97706;">🏁 回収の日付を選んでください</span>';
+        var s = new Date(dp.start + 'T00:00:00'), e = new Date(dp.end + 'T00:00:00');
+        return (Math.round((e - s) / 86400000) + 1) + '日間';
+    }
     function kdDpCalGrid(mDate) {
         var dp = state._dp, earliest = kdDpEarliest();
         var limit = new Date(); limit.setHours(0, 0, 0, 0); limit.setMonth(limit.getMonth() + 4);
