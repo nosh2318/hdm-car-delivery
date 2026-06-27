@@ -262,19 +262,21 @@ async function load(){
   document.getElementById('mCvr').textContent='CVR '+(visit?pct(cv/visit):'–');
   window.__lastReach=reach; await actLoad(); renderActions(reach);
 
-  // funnel render（TOP→完了）
-  const base=Math.max(reach[ENTRY],1);
-  let leakStep=-1,leakLost=-1;
-  for(let i=ENTRY;i<MAXSTEP;i++){ if(reach[i]>=3){const lost=reach[i]-reach[i+1]; if(lost>leakLost){leakLost=lost;leakStep=i;}} }
+  // funnel render（TOP→完了）※実際の遷移順で並べる（step番号順ではない）
+  // 実順: TOP→車両選択→確認→オプション→情報入力→約款→決済→完了。confirmはstep5だが実際はstep_vehicleの直後。
+  const FLOW=[1,2,5,3,4,6,7,8];
+  const base=Math.max(reach[FLOW[0]],1);
+  let leakStep=-1,leakNext=-1,leakLost=-1;
+  for(let k=0;k<FLOW.length-1;k++){ const a=reach[FLOW[k]],b=reach[FLOW[k+1]]; if(a>=3){const lost=a-b; if(lost>leakLost){leakLost=lost;leakStep=FLOW[k];leakNext=FLOW[k+1];}} }
   let fh='';
-  for(let i=ENTRY;i<=MAXSTEP;i++){
+  for(let k=0;k<FLOW.length;k++){ const i=FLOW[k];
     const w=Math.max(2,Math.round(reach[i]/base*100));
     let drop='';
-    if(i<MAXSTEP){ const d=reach[i]?(reach[i]-reach[i+1])/reach[i]:0;
+    if(k<FLOW.length-1){ const nx=reach[FLOW[k+1]]; const d=reach[i]?(reach[i]-nx)/reach[i]:0;
       if(d<0) drop='<span class="fdrop ok">—</span>';
       else drop='<span class="fdrop '+(d>=0.4?'bad':'ok')+'">▼'+pct(d)+'</span>'; }
     else drop='<span class="fdrop ok">CV</span>';
-    fh+='<div class="fstep '+(i===leakStep?'leak':'')+'"><div class="fname"><span class="fnum">'+i+'</span>'+STEPS[i]+'</div>'
+    fh+='<div class="fstep '+(i===leakStep?'leak':'')+'"><div class="fname"><span class="fnum">'+(k+1)+'</span>'+STEPS[i]+'</div>'
        +'<div class="fbarwrap"><div class="fbar" style="width:'+w+'%">'+reach[i]+'</div></div>'+drop+'</div>';
   }
   document.getElementById('funnel').innerHTML=fh;
@@ -329,10 +331,10 @@ async function load(){
   const ins=[];
   if(visit<10){ ins.push(['📊','まだ母数が少（訪問'+visit+'）。<b>傾向は参考値</b>。流入が増えるほど精度が上がります。']); }
   if(leakStep>=0){
-    const d=reach[leakStep]?(reach[leakStep]-reach[leakStep+1])/reach[leakStep]:0;
-    ins.push(['🔴','<b>最大の穴＝「'+STEPS[leakStep]+'→'+STEPS[leakStep+1]+'」</b>で <span class="dn">'+pct(d)+'離脱</span>（'+leakLost+'人ロスト）。<b>ここが改善の最優先</b>。']);
+    const d=reach[leakStep]?(reach[leakStep]-reach[leakNext])/reach[leakStep]:0;
+    ins.push(['🔴','<b>最大の穴＝「'+STEPS[leakStep]+'→'+STEPS[leakNext]+'」</b>で <span class="dn">'+pct(d)+'離脱</span>（'+leakLost+'人ロスト）。<b>ここが改善の最優先</b>。']);
     // 仮説：この穴を半減できたら下流CVがどれだけ増えるか
-    const downCvr = reach[leakStep+1]? cv/reach[leakStep+1] : 0;
+    const downCvr = reach[leakNext]? cv/reach[leakNext] : 0;
     const recover = Math.round(leakLost*0.5);
     const gain = (downCvr*recover);
     if(downCvr>0) ins.push(['🧪','<b>仮説</b>：この離脱を半分に減らすと、約'+recover+'人が先へ進み、下流CVR('+pct(downCvr)+')換算で <span class="up">CV +'+gain.toFixed(1)+'件/30日</span> 見込み。']);
