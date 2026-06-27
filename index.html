@@ -88,7 +88,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-dp-empty { aspect-ratio: 1; }
         .kd-dp-times { display: flex; gap: 10px; margin: 12px 0 6px; }
         .kd-dp-t { flex: 1; }
-        .kd-dp-t label { font-size: 10px; color: #888; font-weight: 700; display: block; margin-bottom: 3px; }
+        .kd-dp-t label { font-size: 13px; font-weight: 900; display: block; margin-bottom: 4px; letter-spacing: .3px; }
+        .kd-dp-t.s label { color: #16a34a; }
+        .kd-dp-t.e label { color: #d97706; }
         .kd-dp-t select { width: 100%; border: 2px solid #FABE00; border-radius: 10px; padding: 10px; font-size: 15px; font-weight: 800; background: #fffdf5; }
         .kd-dp-dur { text-align: center; font-size: 13px; font-weight: 900; color: #16a34a; margin: 6px 0 10px; }
         .kd-dp-ok { width: 100%; background: linear-gradient(135deg,#FABE00,#f59e0b); color: #1a1a1a; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 900; cursor: pointer; }
@@ -3051,7 +3053,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             + '<div class="kd-dp-head"><b>日程を選択</b><button class="kd-dp-x" onclick="closeDatePicker()">✕</button></div>'
             + '<div class="kd-dp-nav"><button onclick="kdDpNav(-1)"' + (dp.mo <= 0 ? ' disabled' : '') + '>‹</button><span>' + mDate.getFullYear() + '年' + (mDate.getMonth() + 1) + '月</span><button onclick="kdDpNav(1)"' + (dp.mo >= 3 ? ' disabled' : '') + '>›</button></div>'
             + kdDpCalGrid(mDate)
-            + '<div class="kd-dp-times"><div class="kd-dp-t"><label>' + t('delTime') + '</label><select onchange="kdDpTime(\'st\',this.value)">' + kdDpTimeOpts(dp.st) + '</select></div><div class="kd-dp-t"><label>' + t('colTime') + '</label><select onchange="kdDpTime(\'et\',this.value)">' + kdDpTimeOpts(dp.et) + '</select></div></div>'
+            + '<div class="kd-dp-times"><div class="kd-dp-t s"><label>🚚 ' + t('delTime') + '</label><select onchange="kdDpTime(\'st\',this.value)">' + kdDpTimeOpts(dp.st) + '</select></div><div class="kd-dp-t e"><label>🏁 ' + t('colTime') + '</label><select onchange="kdDpTime(\'et\',this.value)">' + kdDpTimeOpts(dp.et) + '</select></div></div>'
             + '<div class="kd-dp-dur">' + kdDpDur() + '</div>'
             + '<button class="kd-dp-ok"' + (ok ? '' : ' disabled') + ' onclick="applyDatePicker()">確認</button>'
             + '</div>';
