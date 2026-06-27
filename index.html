@@ -3005,7 +3005,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function kdDpEarliest() { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 2); return d; }
     function openDatePicker() {
         var d = state.datetime;
-        state._dp = { start: d.startDate || '', end: d.endDate || '', st: d.startTime || '10:00', et: d.endTime || '18:00', mo: 0 };
+        // 開いた時は“未選択”から始める＝まず「お届けの日付」を自分で選ぶ流れ（色は押したら入る）。時間は既定値のまま。
+        state._dp = { start: '', end: '', st: d.startTime || '10:00', et: d.endTime || '18:00', mo: 0 };
         var pop = document.getElementById('kdDatePop');
         if (!pop) { pop = document.createElement('div'); pop.id = 'kdDatePop'; pop.className = 'kd-datepop'; document.body.appendChild(pop); }
         kdDpRender(); pop.style.display = 'flex';
