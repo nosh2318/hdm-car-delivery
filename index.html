@@ -54,15 +54,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-cs-card img { width: 84px; height: 50px; object-fit: cover; border-radius: 9px; border: 1px solid #edeff2; display: block; background: #f2f4f7; }
         .kd-cs-cl { display: block; font-size: 10px; font-weight: 800; color: #1a1a1a; margin-top: 4px; line-height: 1.15; }
         /* 日程 範囲バー（タップでピッカー） */
-        .kd-datebar { display: flex; align-items: center; gap: 8px; border: 2px solid #FABE00; background: #fffdf5; border-radius: 12px; padding: 9px 12px; cursor: pointer; }
-        .kd-db-col { display: flex; flex-direction: column; min-width: 0; }
-        .kd-db-lbl { font-size: 9px; color: #a07c00; font-weight: 800; }
-        .kd-db-v { font-size: 15px; font-weight: 900; color: #1a1a1a; white-space: nowrap; }
-        .kd-db-v small { font-size: 11px; color: #555; font-weight: 700; }
-        .kd-db-mid { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
-        .kd-db-dur { font-size: 10px; font-weight: 800; color: #16a34a; }
-        .kd-db-ar { font-size: 13px; color: #cbd5e1; font-weight: 900; }
-        .kd-db-edit { font-size: 16px; flex: none; }
+        .kd-datebar { position: relative; display: flex; align-items: stretch; gap: 6px; border: 2px solid #FABE00; background: linear-gradient(180deg,#fffefb,#fff8e6); border-radius: 14px; padding: 9px 8px 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(250,190,0,.14); }
+        .kd-db-card { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; background: #fff; border: 1.5px solid #eee; border-radius: 10px; padding: 7px 4px; }
+        .kd-db-card.s { border-color: #bbf7d0; }
+        .kd-db-card.e { border-color: #fed7aa; }
+        .kd-db-lbl { font-size: 10px; font-weight: 900; letter-spacing: .2px; }
+        .kd-db-card.s .kd-db-lbl { color: #16a34a; }
+        .kd-db-card.e .kd-db-lbl { color: #d97706; }
+        .kd-db-v { font-size: 16px; font-weight: 900; color: #1a1a1a; white-space: nowrap; }
+        .kd-db-tm { font-size: 12px; font-weight: 800; color: #475569; background: #f1f5f9; border-radius: 6px; padding: 1px 8px; }
+        .kd-db-mid { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; padding: 0 1px; }
+        .kd-db-dur { font-size: 10px; font-weight: 900; color: #fff; background: #16a34a; border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+        .kd-db-ar { font-size: 15px; color: #FABE00; font-weight: 900; margin-top: 3px; }
+        .kd-db-edit { position: absolute; top: -10px; right: 12px; font-size: 10px; font-weight: 800; color: #a07c00; background: #fff8e6; border: 1px solid #FABE00; border-radius: 999px; padding: 1px 9px; }
         /* 範囲ピッカー（モーダル） */
         .kd-datepop { display: none; position: fixed; inset: 0; z-index: 100001; background: rgba(0,0,0,.5); align-items: flex-end; justify-content: center; }
         @media (min-width: 600px) { .kd-datepop { align-items: center; } }
@@ -1211,6 +1215,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     // TOP「選べる車」ストリップ：クラス名のみ・価格なし・人気順。タップで全車種(vehicles.html)へ。
     function renderCarStrip() {
+        if (!isPC()) return ''; // スマホは情報過多になるため車ストリップ非表示（PCのみ表示）。エリア案内行(#areaInfo)は別なので残る
         if (state.locStep === 'collection') return ''; // 回収場所ステップでは車ストリップを出さない（スッキリ）
         var cls = [['A', 'プレミアム'], ['S', 'SUV'], ['B', 'ミニバン'], ['C', 'コンパクトSUV'], ['F', 'コンパクト'], ['H', 'セダン']];
         var store = (typeof KD_STORE !== 'undefined') ? KD_STORE : 'sapporo';
@@ -3000,10 +3005,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         var e = d.endDate ? formatDateLabel(d.endDate) : '日付';
         var blink = state.dateDefault ? ' kd-cta-blink' : '';
         return '<div class="kd-datebar' + blink + '" onclick="openDatePicker()">'
-            + '<div class="kd-db-col"><span class="kd-db-lbl">' + t('delDate') + '</span><span class="kd-db-v">' + s + '<small>' + (d.startTime ? ' ' + d.startTime : '') + '</small></span></div>'
-            + '<div class="kd-db-mid"><span class="kd-db-dur">' + getDayCount() + '日間</span><span class="kd-db-ar">→</span></div>'
-            + '<div class="kd-db-col"><span class="kd-db-lbl">' + t('colDate') + '</span><span class="kd-db-v">' + e + '<small>' + (d.endTime ? ' ' + d.endTime : '') + '</small></span></div>'
-            + '<span class="kd-db-edit">📅</span></div>';
+            + '<span class="kd-db-edit">📅 変更</span>'
+            + '<div class="kd-db-card s"><span class="kd-db-lbl">🚚 ' + t('delDate') + '</span><span class="kd-db-v">' + s + '</span><span class="kd-db-tm">' + (d.startTime || '--:--') + '</span></div>'
+            + '<div class="kd-db-mid"><span class="kd-db-dur">' + getDayCount() + '日間</span><span class="kd-db-ar">➜</span></div>'
+            + '<div class="kd-db-card e"><span class="kd-db-lbl">🏁 ' + t('colDate') + '</span><span class="kd-db-v">' + e + '</span><span class="kd-db-tm">' + (d.endTime || '--:--') + '</span></div>'
+            + '</div>';
     }
     function kdDpEarliest() { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 2); return d; }
     function openDatePicker() {
