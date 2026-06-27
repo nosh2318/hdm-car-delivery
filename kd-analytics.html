@@ -79,7 +79,7 @@
   <div class="card" style="margin-bottom:12px">
     <h2>🎟 クーポン効果（タップ数 / タップ後の進行率）</h2>
     <div id="coupon"><div class="mut">読み込み中…（031 SQL適用後に表示）</div></div>
-    <div class="mut" style="margin-top:6px">お届けマップの10%OFF予告をタップした人が、その後どれだけ車両選択・完了へ進んだか。全体の進行率と比べて効果を見る。</div>
+    <div class="mut" style="margin-top:6px">車両一覧の先頭にある「全車10%OFF」バナーをタップした人が、その後どれだけ決済・完了へ進んだか。クーポンが背中を押せているかを CVR で見る。</div>
   </div>
 
   <div class="card" style="margin-bottom:12px">
@@ -199,14 +199,14 @@ async function load(){
     const cpRows=await q('public_kd_coupon_v?select=*');
     let t={taps:0,rv:0,rp:0,cv:0};
     cpRows.forEach(r=>{ if(STORE!=='all'&&r.store!==STORE) return; t.taps+=(+r.taps||0); t.rv+=(+r.reached_vehicle||0); t.rp+=(+r.reached_payment||0); t.cv+=(+r.completed||0); });
-    const tapRate=visit? t.taps/visit:0, tapVeh=t.taps? t.rv/t.taps:0, tapCv=t.taps? t.cv/t.taps:0;
-    const allVeh=reach[1]? reach[2]/reach[1]:0;
+    const tapRate=visit? t.taps/visit:0, tapPay=t.taps? t.rp/t.taps:0, tapCv=t.taps? t.cv/t.taps:0;
+    const allPay=reach[1]? (reach[7]||0)/reach[1]:0;
     let cmp='';
-    if(t.taps>=3){ cmp='<div class="mut" style="margin-top:8px">'+(tapVeh>allVeh?'🟢 タップした人の方が車両選択へ進む率が高い（クーポン有効の兆候）':'⚪ まだ明確な差は出ていません（母数を増やして再評価）')+'</div>'; }
+    if(t.taps>=3){ cmp='<div class="mut" style="margin-top:8px">'+(tapCv>0?'🟢 クーポンをタップした人から完了が出ている（後押し効果あり）':(tapPay>allPay?'🟡 タップした人の方が決済まで進む率が高い（完了はまだ・母数を増やす）':'⚪ まだ明確な差は出ていません（母数を増やして再評価）'))+'</div>'; }
     document.getElementById('coupon').innerHTML=
       '<div class="row" style="margin:0">'
       +'<div class="card" style="background:#0e131b"><h2>タップ数</h2><div class="big y">'+t.taps+'</div><div class="mut">タップ率 '+(visit?pct(tapRate):'–')+'（÷訪問'+visit+'）</div></div>'
-      +'<div class="card" style="background:#0e131b"><h2>タップ後 車両到達</h2><div class="big">'+t.rv+'</div><div class="mut">'+(t.taps?pct(tapVeh):'–')+' ／ 全体 '+(reach[1]?pct(allVeh):'–')+'</div></div>'
+      +'<div class="card" style="background:#0e131b"><h2>タップ後 決済到達</h2><div class="big">'+t.rp+'</div><div class="mut">'+(t.taps?pct(tapPay):'–')+' ／ 全体 '+(reach[1]?pct(allPay):'–')+'</div></div>'
       +'<div class="card" style="background:#0e131b"><h2>タップ後 完了</h2><div class="big '+(t.cv?'g':'r')+'">'+t.cv+'</div><div class="mut">CVR '+(t.taps?pct(tapCv):'–')+'</div></div>'
       +'</div>'+cmp;
   }catch(e){ document.getElementById('coupon').innerHTML='<div class="mut">031 SQL未適用（クーポンビュー）。Supabase SQL Editorで 031_keydrop_coupon_view.sql をRUNしてください。</div>'; }
