@@ -93,6 +93,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-dp-t.e label { color: #d97706; }
         .kd-dp-t select { width: 100%; border: 2px solid #FABE00; border-radius: 10px; padding: 10px; font-size: 15px; font-weight: 800; background: #fffdf5; }
         .kd-dp-dur { text-align: center; font-size: 13px; font-weight: 900; color: #16a34a; margin: 6px 0 10px; }
+        .kd-dp-clear { display: inline-block; margin-left: 6px; font-size: 12px; font-weight: 800; color: #2563eb; text-decoration: underline; cursor: pointer; }
         .kd-dp-ok { width: 100%; background: linear-gradient(135deg,#FABE00,#f59e0b); color: #1a1a1a; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 900; cursor: pointer; }
         .kd-dp-ok:disabled { opacity: .4; cursor: default; }
         /* PCのみ1画面固定（2カラム）。flex:1のマップが画面を埋める（min-heightだと下に白が出るflexの罠を回避） */
@@ -3015,7 +3016,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     function closeDatePicker() { var p = document.getElementById('kdDatePop'); if (p) p.style.display = 'none'; }
     function kdDpNav(dir) { var dp = state._dp; dp.mo = Math.max(0, Math.min(3, dp.mo + dir)); kdDpRender(); }
-    function kdDpPick(ymd) { var dp = state._dp; if (!dp.start || (dp.start && dp.end)) { dp.start = ymd; dp.end = ''; } else if (ymd >= dp.start) { dp.end = ymd; } else { dp.start = ymd; dp.end = ''; } kdDpRender(); }
+    function kdDpPick(ymd) {
+        var dp = state._dp;
+        if (!dp.start) { dp.start = ymd; dp.end = ''; }            // 1回目＝お届け日
+        else if (!dp.end) {
+            if (ymd === dp.start) { dp.start = ''; }                // 同じ日をもう一度＝解除
+            else if (ymd > dp.start) { dp.end = ymd; }              // 後の日＝回収日
+            else { dp.start = ymd; }                               // 前の日＝お届け日を移動
+        } else {
+            if (ymd === dp.end) { dp.end = ''; }                    // 回収日をもう一度＝回収だけ解除
+            else { dp.start = ymd; dp.end = ''; }                  // それ以外＝最初から選び直し
+        }
+        kdDpRender();
+    }
+    function kdDpClear() { var dp = state._dp; dp.start = ''; dp.end = ''; kdDpRender(); }
     function kdDpTime(which, v) { state._dp[which] = v; kdDpRender(); }
     function kdDpTimeOpts(sel) { var h = ''; for (var hh = 9; hh <= 19; hh++) { for (var k = 0; k < 2; k++) { var mm = k ? '30' : '00'; if (hh === 19 && mm === '30') continue; var v = (hh < 10 ? '0' + hh : hh) + ':' + mm; h += '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + v + '</option>'; } } return h; }
     function kdDpValid() { var dp = state._dp; if (!dp || !dp.start || !dp.end) return false; if (dp.end < dp.start) return false; if (dp.end === dp.start && dp.et <= dp.st) return false; return true; }
@@ -3054,7 +3068,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             + '<div class="kd-dp-nav"><button onclick="kdDpNav(-1)"' + (dp.mo <= 0 ? ' disabled' : '') + '>‹</button><span>' + mDate.getFullYear() + '年' + (mDate.getMonth() + 1) + '月</span><button onclick="kdDpNav(1)"' + (dp.mo >= 3 ? ' disabled' : '') + '>›</button></div>'
             + kdDpCalGrid(mDate)
             + '<div class="kd-dp-times"><div class="kd-dp-t s"><label>🚚 ' + t('delTime') + '</label><select onchange="kdDpTime(\'st\',this.value)">' + kdDpTimeOpts(dp.st) + '</select></div><div class="kd-dp-t e"><label>🏁 ' + t('colTime') + '</label><select onchange="kdDpTime(\'et\',this.value)">' + kdDpTimeOpts(dp.et) + '</select></div></div>'
-            + '<div class="kd-dp-dur">' + kdDpDur() + '</div>'
+            + '<div class="kd-dp-dur">' + kdDpDur() + (dp.start ? ' <a class="kd-dp-clear" onclick="kdDpClear()">↺ やり直す</a>' : '') + '</div>'
             + '<button class="kd-dp-ok"' + (ok ? '' : ' disabled') + ' onclick="applyDatePicker()">確認</button>'
             + '</div>';
     }
