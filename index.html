@@ -1752,7 +1752,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         } else if (map) {
             deliveryMarker = new google.maps.Marker({
                 position: { lat: lat, lng: lng }, map: map, draggable: true,
-                icon: { url: 'images/mascot_pin.png', scaledSize: new google.maps.Size(40, 62), anchor: new google.maps.Point(20, 60) },
+                icon: { url: 'images/icon_car_pin.svg', scaledSize: new google.maps.Size(44, 68), anchor: new google.maps.Point(22, 66) },
                 title: 'お届け場所',
             });
             deliveryMarker.addListener('dragend', function () {
@@ -1944,7 +1944,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         // 空車0：チップ/見出しは出さず謝罪＋日付変更のみ（スッキリ）
         const apologyHtml = `<div style="padding:30px 18px 24px;text-align:center;color:#888;">
-                <img src="images/mascot_head.png" alt="" style="height:72px;width:auto;margin-bottom:10px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.16));">
+                <img src="images/icon_car_badge.svg" alt="" style="height:72px;width:auto;margin-bottom:10px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.16));">
                 <div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:10px;line-height:1.6;">${t('sorryNoVac')}</div>
                 <div style="font-size:12.5px;line-height:1.8;margin-bottom:18px;">${t('noVacChange')}</div>
                 <button onclick="state.vehDateOpen=true; render(); var e=document.querySelector('.app-header'); if(e)e.scrollIntoView({behavior:'smooth',block:'start'});" style="background:#FABE00;color:#1a1a1a;border:none;border-radius:11px;padding:14px 26px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(250,190,0,.45);">${t('changeDateBtn')}</button>
@@ -2577,7 +2577,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         var ex2 = document.getElementById('kdMapGuide'); if (ex2) ex2.remove();
         updateMascotBubble();
     }
-    // ── 中央のマスコット（地図ピン mascot_pin.png）の真上に吹き出しを出して喋らせる ──
+    // ── 中央のお届けマーカー（地図ピン icon_car_pin.svg）の真上に吹き出しを出して喋らせる ──
     var mascotBubble = null;
     function ensureMascotBubble() {
         if (!window.google || !google.maps || !map) return null;
@@ -3150,7 +3150,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // マスコットがステップを案内する吹き出し（お届け=黄/回収=黒）
     function mascotSay(msg, dark) {
         return `<div style="display:flex;align-items:flex-end;gap:8px;padding:12px 16px 2px;">
-            <img src="images/mascot_head.png" alt="" style="height:48px;width:auto;flex:none;animation:kdFloat 3s ease-in-out infinite;-webkit-user-drag:none;">
+            <img src="images/icon_car_badge.svg" alt="" style="height:48px;width:auto;flex:none;animation:kdFloat 3s ease-in-out infinite;-webkit-user-drag:none;">
             <div style="position:relative;background:${dark?'#1a1a1a':'#FABE00'};color:${dark?'#fff':'#1a1a1a'};font-size:12.5px;font-weight:800;padding:9px 13px;border-radius:14px 14px 14px 3px;line-height:1.55;box-shadow:0 3px 10px rgba(0,0,0,.14);margin-bottom:4px;">${msg}</div>
         </div>`;
     }
