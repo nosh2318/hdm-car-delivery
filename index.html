@@ -85,7 +85,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-dp-day.sel { color: #fff; font-weight: 900; }
         .kd-dp-day.sel.s { background: #16a34a; border-radius: 10px 0 0 10px; }
         .kd-dp-day.sel.e { background: #d97706; border-radius: 0 10px 10px 0; }
-        .kd-dp-day.sel.s.e { background: #16a34a; border-radius: 10px; }
+        .kd-dp-day.sel.s.e { background: linear-gradient(90deg,#16a34a 0 50%,#d97706 50% 100%); border-radius: 10px; }
         .kd-dp-day i { position: absolute; top: -7px; left: 50%; transform: translateX(-50%); background: #FABE00; color: #1a1a1a; font-size: 7.5px; font-weight: 900; padding: 1px 5px; border-radius: 999px; font-style: normal; white-space: nowrap; }
         .kd-dp-day i.bs, .kd-dp-day i.b1 { background: #16a34a; color: #fff; }
         .kd-dp-day i.be { background: #d97706; color: #fff; }
@@ -3041,8 +3041,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function kdDpDur() {
         var dp = state._dp;
         if (!dp.start) return '<span style="color:#16a34a;">📅 お届けの日付を選んでください</span>';
-        if (!dp.end) return '<span style="color:#d97706;">🏁 回収の日付を選んでください</span>';
+        if (!dp.end) return '<span style="color:#d97706;">🏁 回収の日付を選んでください<br><span style="font-size:11px;color:#888;font-weight:600;">※日帰り(同日返却)は「お届け日」をもう一度タップ</span></span>';
         var s = new Date(dp.start + 'T00:00:00'), e = new Date(dp.end + 'T00:00:00');
+        if (dp.start === dp.end) return '<span style="color:#16a34a;font-weight:900;">🚗 日帰り（同日返却・1日）</span>';
         return (Math.round((e - s) / 86400000) + 1) + '日間';
     }
     function kdDpCalGrid(mDate) {
@@ -3060,7 +3061,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             else if (isS) cls += ' sel s';
             else if (isE) cls += ' sel e';
             else if (dp.start && dp.end && ymd > dp.start && ymd < dp.end) cls += ' btw';
-            var badge = (isS && isE) ? '<i class="b1">1日</i>' : (isS ? '<i class="bs">開始</i>' : (isE ? '<i class="be">終了</i>' : ''));
+            var badge = (isS && isE) ? '<i class="b1">日帰り</i>' : (isS ? '<i class="bs">開始</i>' : (isE ? '<i class="be">終了</i>' : ''));
             html += '<span class="' + cls + '"' + (dis ? '' : ' onclick="kdDpPick(\'' + ymd + '\')"') + '>' + day + badge + '</span>';
         }
         return html + '</div>';
