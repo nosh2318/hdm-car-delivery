@@ -3026,13 +3026,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         var dp = state._dp;
         if (!dp.start) { dp.start = ymd; dp.end = ''; }            // 1回目＝お届け日
         else if (!dp.end) {
-            if (ymd === dp.start) { dp.start = ''; }                // 同じ日をもう一度＝解除
-            else if (ymd > dp.start) { dp.end = ymd; }              // 後の日＝回収日
-            else { dp.start = ymd; }                               // 前の日＝お届け日を移動
+            if (ymd < dp.start) { dp.start = ymd; }                 // 前の日＝お届け日を移動
+            else { dp.end = ymd; }                                  // 同日or後の日＝回収日（同日=1日間OK）
         } else {
-            if (ymd === dp.end) { dp.end = ''; }                    // 回収日をもう一度＝回収だけ解除
-            else { dp.start = ymd; dp.end = ''; }                  // それ以外＝最初から選び直し
+            dp.start = ymd; dp.end = '';                            // 確定済みから再タップ＝最初から選び直し
         }
+        // 解除は「↺ やり直す」ボタンで（同日タップで解除しない＝同日レンタルを選べるように）
         kdDpRender();
     }
     function kdDpClear() { var dp = state._dp; dp.start = ''; dp.end = ''; kdDpRender(); }
