@@ -4,96 +4,87 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache">
-<title>KEYDROP TOP 価値ブロック モック（確認用）</title>
+<title>KEYDROP TOP 価値ブロック モック（最小案）</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;background:#eef1f4;color:#1a1a1a;-webkit-font-smoothing:antialiased}
+  body{font-family:-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;background:#eef1f4;color:#1a1a1a;-webkit-font-smoothing:antialiased;padding-bottom:30px}
   .note{background:#1a1a1a;color:#FABE00;font-size:11px;font-weight:800;text-align:center;padding:6px 10px}
-  .phone{max-width:430px;margin:0 auto;background:#fff;min-height:100vh}
-  .hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #f0f0f0}
-  .hdr img{height:24px}
-  .hdr .menu{font-size:20px;color:#888}
+  .vlabel{max-width:430px;margin:14px auto 0;padding:0 16px;font-size:11px;font-weight:900;color:#888;letter-spacing:.05em}
+  .phone{max-width:430px;margin:6px auto 0;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.08)}
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f0f0f0}
+  .hdr img{height:22px}.hdr .menu{font-size:18px;color:#999}
 
-  /* ===== 🆕 価値ブロック（提案） ===== */
-  .vhero{padding:16px 16px 10px}
-  .vlead{font-size:21px;font-weight:900;line-height:1.35;letter-spacing:-.01em}
+  /* 価値ブロック（最小） */
+  .vhero{padding:15px 16px 12px}
+  .vlead{font-size:20px;font-weight:900;line-height:1.4;letter-spacing:-.01em}
   .vlead .mk{background:linear-gradient(transparent 62%,#FFE89A 62%)}
-  .vsub{margin-top:6px;font-size:12.5px;color:#666;font-weight:600;line-height:1.5}
 
-  .steps{display:flex;gap:7px;margin:14px 0 4px}
-  .step{flex:1;background:#fffdf3;border:1.5px solid #f3e6b0;border-radius:12px;padding:10px 6px;text-align:center}
-  .step .ic{font-size:22px;line-height:1}
-  .step .no{display:inline-block;margin-top:5px;font-size:10px;font-weight:900;color:#fff;background:#FABE00;border-radius:999px;padding:1px 7px}
-  .step .tx{margin-top:5px;font-size:11.5px;font-weight:800;color:#1a1a1a;line-height:1.3}
+  /* コンパクト3STEP（横1行・アイコン＋短語） */
+  .steps{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:12px}
+  .st{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:54px}
+  .st .ic{font-size:20px;line-height:1}
+  .st .tx{font-size:11px;font-weight:800;color:#444}
+  .arw{color:#FABE00;font-weight:900;font-size:14px;margin-bottom:14px}
 
-  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-  .bdg{font-size:11px;font-weight:800;color:#1a1a1a;background:#f5f7f9;border:1px solid #e7ebef;border-radius:999px;padding:5px 10px}
-  .bdg b{color:#c79200}
+  /* 価格（小さく1行） */
+  .price{display:flex;align-items:center;justify-content:space-between;margin-top:13px}
+  .price .pv{font-size:18px;font-weight:900}.price .pv small{font-size:12px;font-weight:800;color:#888}
+  .price .pbtn{font-size:12px;font-weight:900;color:#1a1a1a;background:#FABE00;border-radius:10px;padding:8px 14px}
 
-  .price{display:flex;align-items:center;justify-content:space-between;margin-top:13px;background:#1a1a1a;border-radius:14px;padding:12px 15px}
-  .price .pl{font-size:11px;font-weight:800;color:#cbd2da}
-  .price .pv{font-size:24px;font-weight:900;color:#fff;line-height:1}
-  .price .pv small{font-size:12px;font-weight:800;color:#FABE00}
-  .price .pbtn{font-size:12px;font-weight:900;color:#1a1a1a;background:#FABE00;border-radius:10px;padding:9px 14px;white-space:nowrap}
-
-  /* ===== 既存UI（イメージ・触らない） ===== */
-  .exarea{margin:16px 16px 0;font-size:12.5px;font-weight:800;color:#1a1a1a}
-  .exarea .pin{color:#e8443b}
-  .exarea .tag{background:#fff7d6;color:#a07c00;border-radius:6px;padding:1px 7px;font-size:11px;font-weight:900;margin-left:4px}
-  .datebar{margin:10px 16px 0;display:flex;align-items:stretch;gap:6px;border:2px solid #FABE00;background:linear-gradient(180deg,#fffefb,#fff8e6);border-radius:14px;padding:9px 8px 8px;position:relative}
-  .dbedit{position:absolute;top:-10px;right:12px;font-size:10px;font-weight:800;color:#a07c00;background:#fff8e6;border:1px solid #FABE00;border-radius:999px;padding:1px 9px}
-  .dbcard{flex:1;background:#fff;border:1.5px solid #eee;border-radius:10px;padding:7px 4px;text-align:center}
+  /* 既存UI（イメージ・触らない） */
+  .datebar{margin:13px 16px 0;display:flex;gap:6px;border:2px solid #FABE00;background:linear-gradient(180deg,#fffefb,#fff8e6);border-radius:12px;padding:8px}
+  .dbcard{flex:1;background:#fff;border:1.5px solid #eee;border-radius:9px;padding:6px 4px;text-align:center}
   .dbcard.s{border-color:#bbf7d0}.dbcard.e{border-color:#fed7aa}
-  .dbl{font-size:10px;font-weight:900}.dbcard.s .dbl{color:#16a34a}.dbcard.e .dbl{color:#d97706}
-  .dbv{font-size:15px;font-weight:900}
-  .dbmid{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 1px}
-  .dbdur{font-size:10px;font-weight:900;color:#fff;background:#16a34a;border-radius:999px;padding:2px 8px}
-  .map{margin:12px 16px 20px;height:200px;border-radius:14px;background:
-       linear-gradient(135deg,#dfe7ee,#eef2f6);
-       border:1px solid #e2e8ee;display:flex;align-items:center;justify-content:center;color:#9aa6b2;font-size:12px;font-weight:800;position:relative}
-  .map::after{content:"📍";position:absolute;font-size:30px;top:48%;left:50%;transform:translate(-50%,-90%)}
-  .cap{font-size:10.5px;color:#9aa6b2;text-align:center;padding:0 16px 30px}
+  .dbl{font-size:9px;font-weight:900}.dbcard.s .dbl{color:#16a34a}.dbcard.e .dbl{color:#d97706}
+  .dbv{font-size:14px;font-weight:900}
+  .dbmid{display:flex;align-items:center;padding:0 1px}.dbdur{font-size:9px;font-weight:900;color:#fff;background:#16a34a;border-radius:999px;padding:2px 7px}
+  .map{margin:11px 16px 16px;height:150px;border-radius:12px;background:linear-gradient(135deg,#dfe7ee,#eef2f6);border:1px solid #e2e8ee;display:flex;align-items:center;justify-content:center;color:#9aa6b2;font-size:11px;font-weight:800;position:relative}
+  .map::after{content:"📍";position:absolute;font-size:26px;top:46%;left:50%;transform:translate(-50%,-90%)}
+  .cap{max-width:430px;margin:8px auto 0;padding:0 18px;font-size:10.5px;color:#9aa6b2;text-align:center}
 </style>
 </head>
 <body>
-  <div class="note">📱 モック（確認用・本番には未反映）｜🆕＝今回の提案ブロック / その下＝既存UIのイメージ</div>
+  <div class="note">📱 モック（確認用・本番未反映）｜情報を絞った2案。お好みのレベルを選んでください</div>
+
+  <!-- 案A：最小（見出し＋価格だけ） -->
+  <div class="vlabel">案A ── 最小（見出し＋価格だけ）</div>
   <div class="phone">
     <div class="hdr"><img src="images/logo_header.png" alt="KEYDROP"><span class="menu">☰</span></div>
-
-    <!-- 🆕 提案：価値ブロック -->
     <div class="vhero">
-      <div class="vlead">地図にピンを落とすだけ。<br><span class="mk">車が、あなたの居る場所に来る。</span></div>
-      <div class="vsub">レンタカー店に行かない。ホテル・駅・自宅など<b>ご指定の場所までお届け＆回収</b>。手続きはスマホで完結。</div>
-
-      <div class="steps">
-        <div class="step"><div class="ic">📍</div><div class="no">STEP 1</div><div class="tx">場所を<br>指定</div></div>
-        <div class="step"><div class="ic">🚗</div><div class="no">STEP 2</div><div class="tx">車を<br>選ぶ</div></div>
-        <div class="step"><div class="ic">🔑</div><div class="no">STEP 3</div><div class="tx">受け取る<br>だけ</div></div>
-      </div>
-
-      <div class="badges">
-        <div class="bdg">🚚 指定場所へお届け＆回収</div>
-        <div class="bdg">🛡 <b>補償オプション</b>あり</div>
-        <div class="bdg">📱 スマホで完結</div>
-        <div class="bdg">🎟 <b>全車10%OFF</b>配布中</div>
-      </div>
-
-      <div class="price">
-        <div><div class="pl">ご利用料金</div><div class="pv">¥2,600<small>〜/日</small></div></div>
-        <div class="pbtn">空き状況・車を見る ›</div>
-      </div>
+      <div class="vlead">地図にピンを落とすだけ。<br><span class="mk">車が、その場所に来る。</span></div>
+      <div class="price"><div class="pv">¥2,600<small>〜/日</small></div><div class="pbtn">車を見る ›</div></div>
     </div>
-
-    <!-- 既存UI（イメージ・触らない部分） -->
-    <div class="exarea">🚗 ご指定場所に車をお届け　<span class="pin">📍</span> 対応エリア<span class="tag">那覇市・豊見城市</span></div>
     <div class="datebar">
-      <div class="dbedit">📅 変更</div>
-      <div class="dbcard s"><div class="dbl">🚚 お届け日</div><div class="dbv">7/1（火）</div></div>
-      <div class="dbmid"><div class="dbdur">1日間</div></div>
-      <div class="dbcard e"><div class="dbl">🏁 回収日</div><div class="dbv">7/1（火）</div></div>
+      <div class="dbcard s"><div class="dbl">🚚 お届け</div><div class="dbv">7/1（火）</div></div>
+      <div class="dbmid"><div class="dbdur">1日</div></div>
+      <div class="dbcard e"><div class="dbl">🏁 回収</div><div class="dbv">7/1（火）</div></div>
     </div>
-    <div class="map">（地図：ピンをドロップしてお届け場所を指定）</div>
-    <div class="cap">※ 価格「¥2,600〜」と各バッジ文言は仮置き。実価格・実サービス内容に合わせて差し替えます。地図・日程バーは既存のまま、上に価値ブロックを足すだけ＝フローは壊しません。</div>
+    <div class="map">（地図：ピンでお届け場所を指定）</div>
   </div>
+
+  <!-- 案B：最小＋使い方3STEP（横1行） -->
+  <div class="vlabel">案B ── 最小＋使い方（3STEPを横1行で）</div>
+  <div class="phone">
+    <div class="hdr"><img src="images/logo_header.png" alt="KEYDROP"><span class="menu">☰</span></div>
+    <div class="vhero">
+      <div class="vlead">地図にピンを落とすだけ。<br><span class="mk">車が、その場所に来る。</span></div>
+      <div class="steps">
+        <div class="st"><div class="ic">📍</div><div class="tx">場所</div></div>
+        <div class="arw">›</div>
+        <div class="st"><div class="ic">🚗</div><div class="tx">車を選ぶ</div></div>
+        <div class="arw">›</div>
+        <div class="st"><div class="ic">🔑</div><div class="tx">受け取る</div></div>
+      </div>
+      <div class="price"><div class="pv">¥2,600<small>〜/日</small></div><div class="pbtn">車を見る ›</div></div>
+    </div>
+    <div class="datebar">
+      <div class="dbcard s"><div class="dbl">🚚 お届け</div><div class="dbv">7/1（火）</div></div>
+      <div class="dbmid"><div class="dbdur">1日</div></div>
+      <div class="dbcard e"><div class="dbl">🏁 回収</div><div class="dbv">7/1（火）</div></div>
+    </div>
+    <div class="map">（地図：ピンでお届け場所を指定）</div>
+  </div>
+
+  <div class="cap">※「¥2,600〜」は仮置き（実最安/日を教えてください）。地図・日程バーは既存のまま、上に1ブロック足すだけ＝フローは壊しません。</div>
 </body>
 </html>
