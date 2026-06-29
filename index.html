@@ -1010,6 +1010,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             /* PC：地図を固定高にして、決定パネルは地図の"下"に静的配置＝地図を覆わない */
             .kd-top .kd-mapwrap { flex: none; height: 44vh; min-height: 300px; }
             .kd-top .kd-pin-overlay { position: static; left: auto; right: auto; bottom: auto; margin: 10px 0 4px; max-height: none; box-shadow: 0 2px 12px rgba(20,24,29,.1); }
+            /* PC：[日程 | 決定ボタン] を横一列に */
+            .kd-pin-overlay .kd-od-row { display: flex; gap: 10px; align-items: stretch; }
+            .kd-pin-overlay .kd-od-row .kd-od-date { flex: 1; margin: 0; min-width: 0; }
+            .kd-pin-overlay .kd-od-row .kp-confirm { flex: none; width: auto; margin: 0; align-self: stretch; padding: 11px 28px; white-space: nowrap; }
         }
         .kd-mapwrap { position: relative; flex: 1 1 auto; min-height: 220px; }
         #locPanel { flex: none; display: flex; flex-direction: column; }
@@ -2177,11 +2181,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         let html = (_taxi && !ng ? '<div class="kd-q">📍 下記指定場所にお届けします</div>' : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
             // taxiUI(スマホ)＝下段集約／PC＝浮きパネルに日程を内包（既存の日程バーを流用）
-            if (_taxi || _wide) html += `<div class="kd-od-date">${kdDateBar()}</div>`;
+            const _dateHtml = (_taxi || _wide) ? `<div class="kd-od-date">${kdDateBar()}</div>` : '';
             // 決定ボタンは「枠だけ点滅（塗りなし）」＝①②と統一。日時未設定はdisabled
-            html += dateOk
+            const _btnHtml = dateOk
                 ? `<button class="kp-confirm kd-cta-blink" onclick="deliveryDecideGo()">${_delCta}</button>`
                 : `<button class="kp-confirm" disabled>${_delCta}</button>`;
+            // PCは [日程 | 決定ボタン] を横一列に（バランス改善）。スマホは縦積み
+            html += _wide ? `<div class="kd-od-row">${_dateHtml}${_btnHtml}</div>` : (_dateHtml + _btnHtml);
         }
         ov.innerHTML = html;
     }
