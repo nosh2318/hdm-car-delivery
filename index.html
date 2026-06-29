@@ -896,7 +896,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         #kdMapGuide .kd-mg-bubble b { color:inherit; }
         #kdMapGuide .kd-mg-bubble.col b { color:#FABE00; }
         /* 中央ピン・マスコットの真上に出る吹き出し（OverlayViewでピンに追従） */
-        .kd-mascot-bubble { position:absolute; transform:translate(-50%, calc(-100% - 58px)); background:#16181d; color:#ffffff; font-size:12.5px; font-weight:800; padding:9px 15px; border-radius:999px; line-height:1.3; text-align:center; white-space:nowrap; box-shadow:0 5px 16px rgba(0,0,0,.32); pointer-events:none; z-index:5; }
+        .kd-mascot-bubble { position:absolute; transform:translate(-50%, calc(-100% - 56px)); background:#16181d; color:#ffffff; font-size:12.5px; font-weight:800; padding:9px 15px; border-radius:14px; line-height:1.35; text-align:center; max-width:260px; box-shadow:0 5px 16px rgba(0,0,0,.32); pointer-events:none; z-index:5; }
         .kd-mascot-bubble::after { content:''; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%); width:0; height:0; border:7px solid transparent; border-top-color:#16181d; border-bottom:0; }
         .kd-mascot-bubble.col { background:#2563eb; color:#fff; }
         .kd-mascot-bubble.col::after { border-top-color:#2563eb; }
@@ -993,6 +993,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-stp::before { content: ''; position: absolute; top: 11px; right: 50%; width: 100%; height: 2px; background: #eceff3; z-index: 0; }
         .kd-stp:first-child::before { display: none; }
         .kd-stp.on::before, .kd-stp.done::before { background: #16a34a; }
+        /* 🚕 taxiUI 下段：質問見出し＋日程内包／日程の別stripは隠す／決定ボタンは画面最下部に独立固定 */
+        html.taxiui .kd-top #dateStrip { display: none; }
+        .kd-q { font-size: 15.5px; font-weight: 900; color: #16181d; margin: 1px 0 10px; }
+        .kd-od-date { margin: 11px 0 4px; }
+        html.taxiui .kd-pin-overlay { padding-bottom: 12px; }
+        html.taxiui .kd-pin-overlay .kp-confirm { position: fixed; left: 0; right: 0; bottom: 0; margin: 0; border-radius: 0; padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); z-index: 60; box-shadow: 0 -4px 16px rgba(0,0,0,.2); }
         .kd-mapwrap { position: relative; flex: 1 1 auto; min-height: 220px; }
         #locPanel { flex: none; display: flex; flex-direction: column; }
         @media (min-width: 768px) {
@@ -2112,9 +2118,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const ic  = ng ? '🚫' : '📍';
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         const _taxi = kdTaxiOn();
-        const _delCta = _taxi ? '次へすすむ ›' : t('decideDeliverHere');
-        let html = (_taxi ? kdTaxiStepBar(1) : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
+        const _delCta = _taxi ? 'お届け場所と日時を決定' : t('decideDeliverHere');
+        let html = (_taxi && !ng ? '<div class="kd-q">📍 どこにお届けしますか？</div>' : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
+            // taxiUI: 日程・時間を同じシート内に（既存の日程バーを流用）
+            if (_taxi) html += `<div class="kd-od-date">${kdDateBar()}</div>`;
             // 決定ボタンは「枠だけ点滅（塗りなし）」＝①②と統一。日時未設定はdisabled
             html += dateOk
                 ? `<button class="kp-confirm kd-cta-blink" onclick="deliveryDecideGo()">${_delCta}</button>`
@@ -2600,6 +2608,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (state.outOfArea) return { msg: t('guideOOA'), dark: false };
         if (!(dt.startDate && dt.startTime)) return { msg: t('guideDate'), dark: false };
         if (!state.deliveryAddr)             return { msg: t('guidePickDel'), dark: false };
+        // taxiUI: 吹き出しにピン留め位置の住所を全表示
+        if (kdTaxiOn()) return { msg: '📍 ' + state.deliveryAddr, dark: false };
         return { msg: t('guideDecideDel'), dark: false };
     }
     function mountHeaderMascot() {
