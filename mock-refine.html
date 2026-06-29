@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache">
-<title>KEYDROP TOP リファイン（黒基調）</title>
+<title>KEYDROP TOP 最小リファイン（日程バーは据え置き）</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;background:#e9edf1;color:#16181d;-webkit-font-smoothing:antialiased;padding-bottom:30px}
   .note{background:#1a1a1a;color:#FABE00;font-size:11px;font-weight:800;text-align:center;padding:7px 10px}
-  .phone{max-width:412px;margin:14px auto 0;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 6px 26px rgba(20,24,29,.14)}
+  .phone{max-width:412px;margin:14px auto 0;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 6px 26px rgba(20,24,29,.12)}
 
-  /* ヘッダー：白地・ロゴ＋極細ライン */
+  /* ヘッダー：黄色い下線 → 細いグレー線（ここだけ変更） */
   .hd{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #eef1f4}
   .hd .lg img{height:21px;display:block}
   .hd .lg div{font-size:8px;font-weight:800;letter-spacing:.22em;color:#9aa3ad;margin-top:2px}
@@ -23,16 +23,17 @@
   .arearow .l .city{color:#6b7681;font-weight:700}
   .arearow .chg{font-size:11px;font-weight:800;color:#9aa3ad}
 
-  /* 日程バー：白基調で締める（黄色なし・1トーン枠・色ドット）。黒は差し色のみ */
-  .dates{margin:11px 16px 0;display:flex;align-items:stretch;border-radius:13px;overflow:hidden;background:#fff;border:1px solid #e7ebef;box-shadow:0 2px 10px rgba(20,24,29,.07)}
-  .dcard{flex:1;padding:11px 13px}
-  .dcard .lb{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#8b95a0;margin-bottom:3px}
-  .dot{width:7px;height:7px;border-radius:50%}
-  .dot.g{background:#16a34a}.dot.o{background:#d97706}
-  .dcard .v{font-size:16px;font-weight:900;letter-spacing:-.01em;color:#16181d}
-  .dcard .v small{font-size:12px;font-weight:800;color:#6b7681;margin-left:3px}
-  .dmid{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 13px;border-left:1px solid #f0f2f5;border-right:1px solid #f0f2f5}
-  .dmid .n{font-size:13px;font-weight:900;color:#fff;background:#16181d;border-radius:999px;padding:1px 7px}.dmid .u{font-size:9px;font-weight:800;color:#8b95a0;margin-top:2px}
+  /* 日程バー：★現状のまま据え置き（黄色枠・緑/橙カード）★ */
+  .dates{position:relative;margin:18px 16px 0;display:flex;align-items:stretch;gap:6px;border:2px solid #FABE00;background:linear-gradient(180deg,#fffefb,#fff8e6);border-radius:14px;padding:9px 8px 8px;box-shadow:0 2px 8px rgba(250,190,0,.14)}
+  .dedit{position:absolute;top:-10px;right:12px;font-size:10px;font-weight:800;color:#a07c00;background:#fff8e6;border:1px solid #FABE00;border-radius:999px;padding:1px 9px}
+  .dcard{flex:1;background:#fff;border:1.5px solid #eee;border-radius:10px;padding:7px 4px;text-align:center}
+  .dcard.s{border-color:#bbf7d0}.dcard.e{border-color:#fed7aa}
+  .dl{font-size:10px;font-weight:900}.dcard.s .dl{color:#16a34a}.dcard.e .dl{color:#d97706}
+  .dv{font-size:16px;font-weight:900;color:#1a1a1a}.dv small{font-size:12px;color:#475569;font-weight:800}
+  .dtm{display:inline-block;font-size:12px;font-weight:800;color:#475569;background:#f1f5f9;border-radius:6px;padding:1px 8px;margin-top:2px}
+  .dmid{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 2px}
+  .ddur{font-size:10px;font-weight:900;color:#fff;background:#16a34a;border-radius:999px;padding:2px 8px}
+  .dar{font-size:15px;color:#FABE00;font-weight:900;margin-top:3px}
 
   .search{margin:11px 16px 0;display:flex;align-items:center;gap:9px;border:1px solid #e7ebef;border-radius:11px;padding:11px 13px}
   .search .i{color:#aeb6bf;font-size:15px}.search .t{font-size:13px;color:#aeb6bf;font-weight:600}
@@ -41,19 +42,19 @@
   .map .grid{position:absolute;inset:0;background-image:linear-gradient(#fff7 1px,transparent 1px),linear-gradient(90deg,#fff7 1px,transparent 1px);background-size:36px 36px;opacity:.6}
   .pin{position:absolute;left:50%;top:52%;transform:translate(-50%,-100%)}
   .pin img{width:38px;display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+  /* マップ吹き出し：黄バブル＋「押してね！」→ 濃色チップ＋丁寧文（ここだけ変更） */
   .tip{position:absolute;left:50%;top:15px;transform:translateX(-50%);background:rgba(22,24,29,.92);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:999px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.2)}
 
   .addr{margin:0 16px;font-size:11px;font-weight:700;color:#8b95a0}
   .addr b{display:block;font-size:13.5px;font-weight:900;color:#16181d;margin-top:2px}
-  /* CTA：黒基調＝黒ボタン＋黄アクセント文字（高級感） */
-  .cta{margin:12px 16px 4px;background:#16181d;color:#fff;text-align:center;font-size:15px;font-weight:900;padding:15px;border-radius:13px;box-shadow:0 6px 16px rgba(20,24,29,.3);border:1.5px solid #16181d}
-  .cta .ac{color:#FABE00}
+  /* CTA：現状のまま黄色 */
+  .cta{margin:12px 16px 4px;background:#FABE00;color:#1a1a1a;text-align:center;font-size:15px;font-weight:900;padding:15px;border-radius:13px;box-shadow:0 6px 16px rgba(250,190,0,.4)}
 
   .cap{max-width:412px;margin:10px auto 0;padding:0 20px;font-size:10.5px;color:#9aa3ad;text-align:center;line-height:1.6}
 </style>
 </head>
 <body>
-  <div class="note">📱 リファイン（黒基調）｜日程バー=黒地白文字／CTA=黒×黄アクセント／吹き出し上品に</div>
+  <div class="note">📱 最小リファイン｜日程バー・CTAは据え置き。変えるのは ①ヘッダー黄下線→グレー ②吹き出し のみ</div>
   <div class="phone">
     <div class="hd">
       <div class="lg"><img src="images/logo_header.png" alt="KEYDROP"><div>CAR DELIVERY SERVICE</div></div>
@@ -66,9 +67,10 @@
     </div>
 
     <div class="dates">
-      <div class="dcard"><div class="lb"><span class="dot g"></span>お届け</div><div class="v">7/1<small>（水）10:00</small></div></div>
-      <div class="dmid"><div class="n">1</div><div class="u">日間</div></div>
-      <div class="dcard"><div class="lb"><span class="dot o"></span>回収</div><div class="v">7/1<small>（水）18:00</small></div></div>
+      <div class="dedit">📅 変更</div>
+      <div class="dcard s"><div class="dl">🚚 お届け日</div><div class="dv">7/1<small>（水）</small></div><div class="dtm">10:00</div></div>
+      <div class="dmid"><div class="ddur">1日間</div><div class="dar">➜</div></div>
+      <div class="dcard e"><div class="dl">🏁 回収日</div><div class="dv">7/1<small>（水）</small></div><div class="dtm">18:00</div></div>
     </div>
 
     <div class="search"><span class="i">🔍</span><span class="t">ホテル名・住所で検索</span></div>
@@ -80,8 +82,8 @@
     </div>
 
     <div class="addr">お届け場所<b>北海道札幌市中央区北3条東2</b></div>
-    <div class="cta">この場所に<span class="ac">決める</span></div>
+    <div class="cta">この場所に決める</div>
   </div>
-  <div class="cap">黒基調：①日程バー＝黒地×白文字＋色ドット ②CTA＝黒ボタン×黄アクセント文字 ③吹き出し＝濃色チップ＋丁寧文 ④黄色は"差し色"に限定。<br>＝黒×白×黄の規律で高級感と締まりを出す。</div>
+  <div class="cap">変更は2点だけ：①ヘッダーの黄色い下線 → 細いグレー線　②マップ吹き出し（黄バブル＋「押してね！」）→ 濃色チップ＋「お届け場所を選んでください」。<br>日程バー・CTAは現状のまま。地図ピンは反映済み。</div>
 </body>
 </html>
