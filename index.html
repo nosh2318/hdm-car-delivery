@@ -1002,26 +1002,23 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         html.taxiui .kd-pin-overlay .kp-confirm { width: 100%; margin-top: 11px; border-radius: 13px; padding: 15px; box-shadow: 0 4px 14px rgba(20,24,29,.25); }
         /* 🖥 PC幅(≥768)：タクシーUIのreorderは無効化(スマホ専用)。ただし日程は浮きパネルに統合するので上の#dateStripは隠す。回収①②は横一列 */
         @media (min-width: 768px) {
-            /* 🖥 PC：KVビジュアルは左に残し、右側(.kd-flow)をさらに[地図｜操作]の2分割グリッドに */
+            /* 🖥 PC：KVは左。右側(.kd-flow)＝上段に操作(車種・住所・日程・場所ボタン)、その下にマップを横いっぱいに伸ばす */
             .kd-top #dateStrip { display: none; }
+            .kd-top #locPanel { display: none; }
             .kd-top .kd-flow {
-                display: grid;
-                grid-template-columns: 1.5fr 1fr;
-                grid-template-rows: auto auto auto 1fr;
-                column-gap: 18px;
+                display: flex;
+                flex-direction: column;
                 height: 100%;
                 box-sizing: border-box;
-                padding: 12px 18px;
-                max-width: 1280px;
-                margin: 0 auto;
+                padding: 10px 16px 14px;
+                gap: 7px;
                 overflow: hidden;
             }
-            .kd-top #mapWrap { grid-column: 1; grid-row: 1 / 5; height: 100%; min-height: 0; margin: 0; border-radius: 14px; overflow: hidden; }
-            .kd-top #areaInfo { grid-column: 2; grid-row: 1; align-self: start; }
-            .kd-top #carStrip { grid-column: 2; grid-row: 2; align-self: start; }
-            .kd-top #pinOverlay { grid-column: 2; grid-row: 3; align-self: start; }
-            .kd-top #locPanel { display: none; }
-            .kd-top .kd-pin-overlay { position: static; left: auto; right: auto; bottom: auto; margin: 8px 0 0; max-height: none; box-shadow: 0 2px 12px rgba(20,24,29,.1); }
+            .kd-top #areaInfo { order: 1; flex: none; }
+            .kd-top #carStrip { order: 2; flex: none; }
+            .kd-top #pinOverlay { order: 3; flex: none; }
+            .kd-top #mapWrap { order: 4; flex: 1 1 auto; min-height: 240px; width: 100%; margin: 4px 0 0; border-radius: 14px; overflow: hidden; }
+            .kd-top .kd-pin-overlay { position: static; left: auto; right: auto; bottom: auto; margin: 0; max-height: none; box-shadow: 0 2px 12px rgba(20,24,29,.1); }
             /* 回収①②を横一列 */
             .kd-pin-overlay .kd-col-opts { display: flex; gap: 8px; }
             .kd-pin-overlay .kd-col-opts > * { flex: 1; margin-top: 0 !important; min-width: 0; }
