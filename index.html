@@ -1021,19 +1021,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             .kd-top #pinOverlay { grid-column: 1 / -1; grid-row: 2; align-self: start; min-width: 0; }
             .kd-top #mapWrap { grid-column: 1 / -1; grid-row: 3; min-height: 240px; width: 100%; margin: 0; border-radius: 14px; overflow: hidden; }
             .kd-top .kd-pin-overlay { position: static; left: auto; right: auto; bottom: auto; margin: 0; max-height: none; box-shadow: 0 2px 12px rgba(20,24,29,.1); }
-            /* PC：パネルを [住所 ｜ 日付 ｜ 決定ボタン] の横一列に最適化 */
-            .kd-top .kd-pin-overlay { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 13px 16px; }
-            .kd-top .kd-pin-overlay .kp-row { flex: 1 1 200px; margin: 0; min-width: 0; }
-            .kd-top .kd-pin-overlay .kd-od-row { flex: 2 1 360px; margin: 0; align-items: center; }
-            .kd-top .kd-pin-overlay .kd-od-row .kd-od-date { flex: 1 1 0; margin: 0; min-width: 0; }
-            .kd-top .kd-pin-overlay .kd-od-row .kp-confirm { flex: none; width: auto; margin: 0; padding: 13px 24px; white-space: nowrap; }
+            /* PC：住所=上、その下に [日付 ｜ 場所ボタン] の横一列。ボタンは縦に伸ばさず中央寄せで適正サイズ */
+            .kd-top .kd-pin-overlay { padding: 12px 14px; }
+            .kd-top .kd-pin-overlay .kp-row { margin: 0 0 2px; }
             /* 回収①②を横一列 */
             .kd-pin-overlay .kd-col-opts { display: flex; gap: 8px; }
             .kd-pin-overlay .kd-col-opts > * { flex: 1; margin-top: 0 !important; min-width: 0; }
-            /* [日程 | 決定ボタン] を横一列 */
-            .kd-pin-overlay .kd-od-row { display: flex; gap: 10px; align-items: stretch; }
+            /* [日程 ｜ 決定ボタン] 横一列・ボタンは中央寄せ */
+            .kd-pin-overlay .kd-od-row { display: flex; gap: 12px; align-items: center; }
             .kd-pin-overlay .kd-od-row .kd-od-date { flex: 1; margin: 0; min-width: 0; }
-            .kd-pin-overlay .kd-od-row .kp-confirm { flex: none; width: auto; margin: 0; align-self: stretch; padding: 11px 28px; white-space: nowrap; }
+            .kd-pin-overlay .kd-od-row .kp-confirm { flex: none; width: auto; margin: 0; align-self: center; padding: 14px 26px; white-space: nowrap; }
         }
         .kd-mapwrap { position: relative; flex: 1 1 auto; min-height: 220px; }
         #locPanel { flex: none; display: flex; flex-direction: column; }
