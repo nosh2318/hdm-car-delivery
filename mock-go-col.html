@@ -4,23 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache">
-<title>KEYDROP TOP 配車アプリ風（下段集約＋大きいピン吹き出し）</title>
+<title>KEYDROP 回収モード（配車アプリ風）＋エリアピル</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;background:#e9edf1;color:#16181d;-webkit-font-smoothing:antialiased;padding-bottom:24px}
   .note{background:#1a1a1a;color:#FABE00;font-size:11px;font-weight:800;text-align:center;padding:7px 10px}
   .phone{max-width:412px;margin:14px auto 0;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 30px rgba(20,24,29,.16);position:relative}
 
-  /* 地図＝主役（大きく） */
   .map{height:560px;background:linear-gradient(135deg,#dfe7ee,#eef2f6);position:relative;overflow:hidden}
   .map .grid{position:absolute;inset:0;background-image:linear-gradient(#fff7 1px,transparent 1px),linear-gradient(90deg,#fff7 1px,transparent 1px);background-size:38px 38px;opacity:.6}
-  /* 浮きボタン（丸・ソフト影） */
   .fab{position:absolute;width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:0 3px 12px rgba(20,24,29,.18);display:flex;align-items:center;justify-content:center;font-size:17px;color:#3a4048}
   .fab.menu{left:14px;top:14px}
   .fab.loc{right:14px;top:14px}
+  /* ① エリアピル（ヘッダーのエリア切替を地図上へ） */
+  .areapill{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fff;box-shadow:0 3px 12px rgba(20,24,29,.16);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:900;color:#16181d;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .areapill .pin{color:#d6453b}.areapill .car{color:#9aa3ad;font-weight:800}
 
-  /* 大きいピン吹き出し（情報カード） */
-  .callout{position:absolute;left:50%;top:120px;transform:translateX(-50%);width:248px;background:#16181d;color:#fff;border-radius:16px;padding:13px 15px;box-shadow:0 8px 22px rgba(0,0,0,.3);text-align:left}
+  /* 大きいピン吹き出し（回収モード） */
+  .callout{position:absolute;left:50%;top:120px;transform:translateX(-50%);width:252px;background:#16181d;color:#fff;border-radius:16px;padding:13px 15px;box-shadow:0 8px 22px rgba(0,0,0,.3);text-align:left}
   .callout::after{content:'';position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);border:9px solid transparent;border-top-color:#16181d;border-bottom:0}
   .callout .ttl{font-size:11px;font-weight:800;color:#9aa3ad;display:flex;align-items:center;gap:5px}
   .callout .adr{font-size:15px;font-weight:900;margin-top:3px;line-height:1.4}
@@ -28,73 +29,62 @@
   .pin{position:absolute;left:50%;top:240px;transform:translate(-50%,-100%)}
   .pin img{width:42px;display:block;filter:drop-shadow(0 5px 7px rgba(0,0,0,.28))}
 
-  /* 下段シート＝入力を1か所に集約 */
   .sheet{position:relative;margin-top:-26px;background:#fff;border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(20,24,29,.1);padding:8px 16px 18px}
   .grab{width:38px;height:4px;border-radius:999px;background:#e2e7ec;margin:4px auto 12px}
+  .step{font-size:11px;font-weight:900;color:#d97706;letter-spacing:.04em;margin-bottom:8px}
   .row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid #f1f4f7}
   .row .ic{width:26px;text-align:center;font-size:16px;flex:none}
   .row .bd{flex:1;min-width:0}
   .row .lb{font-size:10.5px;font-weight:800;color:#8b95a0}
   .row .vl{font-size:15px;font-weight:900;color:#16181d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .row .chg{font-size:11px;font-weight:800;color:#9aa3ad;flex:none}
-  /* 日付・時間＝既存デザインのまま（黄色枠・緑/橙カード） */
-  .edate{position:relative;margin:14px 0 2px;display:flex;align-items:stretch;gap:6px;border:2px solid #FABE00;background:linear-gradient(180deg,#fffefb,#fff8e6);border-radius:14px;padding:9px 8px 8px;box-shadow:0 2px 8px rgba(250,190,0,.14)}
-  .edate-edit{position:absolute;top:-10px;right:12px;font-size:10px;font-weight:800;color:#a07c00;background:#fff8e6;border:1px solid #FABE00;border-radius:999px;padding:1px 9px}
-  .ecard{flex:1;background:#fff;border:1.5px solid #eee;border-radius:10px;padding:7px 4px;text-align:center}
-  .ecard.s{border-color:#bbf7d0}.ecard.e{border-color:#fed7aa}
-  .el{font-size:10px;font-weight:900}.ecard.s .el{color:#16a34a}.ecard.e .el{color:#d97706}
-  .ev{font-size:16px;font-weight:900;color:#1a1a1a}.ev small{font-size:12px;color:#475569;font-weight:800}
-  .etm{display:inline-block;font-size:12px;font-weight:800;color:#475569;background:#f1f5f9;border-radius:6px;padding:1px 8px;margin-top:2px}
-  .emid{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 2px}
-  .edur{font-size:10px;font-weight:900;color:#fff;background:#16a34a;border-radius:999px;padding:2px 8px}
-  .ear{font-size:15px;color:#FABE00;font-weight:900;margin-top:3px}
 
   .quick{display:flex;gap:7px;overflow-x:auto;padding:12px 0 2px}
   .qchip{flex:none;font-size:12px;font-weight:800;color:#3a4048;background:#f3f6f9;border:1px solid #e7ebef;border-radius:999px;padding:7px 13px;white-space:nowrap}
+  .qchip.same{color:#1a1a1a;background:#fff3cf;border-color:#FABE00}
 
   .cta{margin-top:14px;background:#FABE00;color:#1a1a1a;text-align:center;font-size:16px;font-weight:900;padding:16px;border-radius:14px;box-shadow:0 6px 16px rgba(250,190,0,.4)}
+  .cta small{display:block;font-size:11px;font-weight:800;color:#6b5a16;margin-top:2px}
 
   .cap{max-width:412px;margin:10px auto 0;padding:0 20px;font-size:10.5px;color:#9aa3ad;text-align:center;line-height:1.6}
 </style>
 </head>
 <body>
-  <div class="note">📱 配車アプリ風モック｜地図=主役／ピン吹き出し=大きい情報カード／下段=入力を1か所に集約</div>
+  <div class="note">📱 回収モード モック｜① 地図上にエリアピル（ヘッダーのエリア切替を移設）② 回収場所＝車選択の後</div>
   <div class="phone">
     <div class="map">
       <div class="grid"></div>
       <div class="fab menu">☰</div>
       <div class="fab loc">📍</div>
+      <!-- ① ヘッダーのエリア切替をここへ（タップで札幌/那覇 切替） -->
+      <div class="areapill"><span class="pin">📍</span> 対応エリア <span class="car">札幌市・北広島市</span> ▾</div>
+
+      <!-- 大きいピン吹き出し（回収モード＝橙系の意味付け） -->
       <div class="callout">
-        <div class="ttl">📍 お届け場所をご確認ください</div>
-        <div class="adr">北海道札幌市中央区北3条東2</div>
-        <div class="meta">🚚 デリバリー無料・スマホで完結</div>
+        <div class="ttl">🏁 回収場所をご確認ください</div>
+        <div class="adr">北海道札幌市中央区南2条西3</div>
+        <div class="meta">🔁 お届けと別の場所もOK</div>
       </div>
       <div class="pin"><img src="images/pin_kd.svg" alt="pin"></div>
     </div>
 
     <div class="sheet">
       <div class="grab"></div>
+      <div class="step">STEP ｜ 🏁 回収場所を選ぶ（車・オプションの後）</div>
 
       <div class="row">
         <div class="ic">🔍</div>
-        <div class="bd"><div class="lb">お届け場所</div><div class="vl">北海道札幌市中央区北3条東2</div></div>
+        <div class="bd"><div class="lb">回収場所</div><div class="vl">北海道札幌市中央区南2条西3</div></div>
         <div class="chg">検索 ›</div>
       </div>
 
-      <div class="edate">
-        <div class="edate-edit">📅 変更</div>
-        <div class="ecard s"><div class="el">🚚 お届け日</div><div class="ev">7/1<small>（水）</small></div><div class="etm">10:00</div></div>
-        <div class="emid"><div class="edur">1日間</div><div class="ear">➜</div></div>
-        <div class="ecard e"><div class="el">🏁 回収日</div><div class="ev">7/1<small>（水）</small></div><div class="etm">18:00</div></div>
-      </div>
-
       <div class="quick">
-        <span class="qchip">🏨 ホテル</span><span class="qchip">🏠 自宅</span><span class="qchip">📍 那覇</span><span class="qchip">🕘 履歴</span>
+        <span class="qchip same">🔁 お届けと同じ</span><span class="qchip">🏨 ホテル</span><span class="qchip">🏠 自宅</span><span class="qchip">🕘 履歴</span>
       </div>
 
-      <div class="cta">✓ この場所に決める</div>
+      <div class="cta">✓ この場所に決める<small>→ お客様情報の入力へ</small></div>
     </div>
   </div>
-  <div class="cap">GO方式：①地図を大きく主役に ②ピンの吹き出しを"大きい情報カード"(住所＋お届け確認＋訴求)に ③お届け場所・日程・確定を下段1枚に集約＋クイック選択。<br>＝入力が散らばらず、配車アプリの完成度に近づく。色味は黒×白×黄で締める。</div>
+  <div class="cap">回収モード＝お届けと同じGO風レイアウトを再利用。違いは ①吹き出し/STEPが「🏁回収」 ②クイックに「🔁お届けと同じ」 ③確定後はお客様情報へ。<br>エリア切替は place-chips に混ぜず、地図上のピルに分離（用途を分ける）。</div>
 </body>
 </html>
