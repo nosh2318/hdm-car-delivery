@@ -996,6 +996,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         /* 🚕 taxiUI 下段：質問見出し＋日程内包／日程の別stripは隠す／決定ボタンは画面最下部に独立固定 */
         html.taxiui .kd-top #dateStrip { display: none; }
         .kd-q { font-size: 15.5px; font-weight: 900; color: #16181d; margin: 1px 0 10px; }
+        html.taxiui .kd-pin-overlay .kp-opt.kd-same { border: 2px solid #FABE00; background: #fffbeb; }
         .kd-od-date { margin: 11px 0 6px; }
         /* 決定ボタン＝シート最下部の独立ボタン（端まで伸ばさず左右余白・角丸） */
         html.taxiui .kd-pin-overlay .kp-confirm { width: 100%; margin-top: 11px; border-radius: 13px; padding: 15px; box-shadow: 0 4px 14px rgba(20,24,29,.25); }
@@ -2098,6 +2099,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     `<button onclick="reopenCollection()" style="margin-top:6px;width:100%;padding:6px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
                 return;
             }
+            // taxiUI: お届けと同じ clean sheet（質問見出し＋お届けと同じ＋住所＋決定）
+            if (kdTaxiOn()) {
+                const _cc = !!state.collectionAddr && !state.sameCollection;
+                let th = '<div class="kd-q">🏁 下記指定場所で回収します</div>';
+                if (state.deliveryAddr) th += `<button class="kp-opt kd-same kd-cta-blink" onclick="sameCollectionGo()">🔁 ${t('sameAsDeliveryBtn')}<div class="kp-opt-sub">${state.deliveryAddr}</div></button>`;
+                th += `<div class="kp-row"><span class="kp-ic">📍</span><div class="kp-body"><div class="kp-lbl">${t('collectionPlaceL')}</div><div class="kp-addr">${state.collectionAddr || t('orPickOnMap')}</div></div></div>`;
+                th += (_cc && dateOk)
+                    ? `<button class="kp-confirm kd-cta-blink" onclick="collectionDecideGo()">回収場所を決定</button>`
+                    : `<button class="kp-confirm" disabled>回収場所を決定</button>`;
+                th += `<button onclick="state.screen='options'; render();" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
+                ov.innerHTML = th;
+                return;
+            }
             const custom = !!state.collectionAddr && !state.sameCollection;
             let h = `<div class="kp-lbl" style="margin-bottom:2px;">🏁 ${t('collectionPlaceL')}</div>`;
             if (!dateOk) {
@@ -2610,7 +2624,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (state.locStep === 'collection') {
             if (!(dt.endDate && dt.endTime)) return { msg: t('guideDateCol'), dark: true };
             if (state.collectionConfirmed)   return { msg: t('guideNextCol'), dark: true };
-            return { msg: t('guidePickCol'), dark: true };
+            return { msg: kdTaxiOn() ? '回収先を指定してください' : t('guidePickCol'), dark: true };
         }
         if (state.outOfArea) return { msg: t('guideOOA'), dark: false };
         if (!(dt.startDate && dt.startTime)) return { msg: t('guideDate'), dark: false };
