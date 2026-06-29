@@ -1193,8 +1193,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     function kdFunnelLog(step, stepNo, storeArg) {
         try {
+            // 内部/テスト端末は ?internal=1 で記憶し、session_id を selftest_ 接頭辞にする＝集計ビュー(session_id not like 'selftest%')から自動除外（実顧客の数字を汚さない）
+            var _internal = false;
+            try {
+                var _s = location.search || '';
+                if (/[?&]internal=1/.test(_s)) localStorage.setItem('kd_internal', '1');
+                if (/[?&]internal=0/.test(_s)) localStorage.removeItem('kd_internal');
+                _internal = localStorage.getItem('kd_internal') === '1';
+            } catch (e) { }
             var sid = sessionStorage.getItem('kd_fsid');
-            if (!sid) { sid = 'fs_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sessionStorage.setItem('kd_fsid', sid); }
+            if (!sid || (_internal && sid.indexOf('selftest_') !== 0)) {
+                sid = (_internal ? 'selftest_' : 'fs_') + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+                sessionStorage.setItem('kd_fsid', sid);
+            }
             var store = (storeArg !== undefined) ? storeArg : '';
             if (storeArg === undefined) { try { store = KD_API_STORE(); } catch (e) { store = ''; } }
             var ref = kdSource();
