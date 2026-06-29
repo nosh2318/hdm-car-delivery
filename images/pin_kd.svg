@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" width="48" height="64">
+  <!-- shadow on ground -->
+  <ellipse cx="24" cy="60.5" rx="6.5" ry="2" fill="#000" opacity=".2"/>
+  <!-- pin body -->
+  <path d="M24 1.5 C12.4 1.5 3 10.9 3 22.5 C3 35.5 20 57.5 23 61.5 C23.5 62.2 24.5 62.2 25 61.5 C28 57.5 45 35.5 45 22.5 C45 10.9 35.6 1.5 24 1.5 Z"
+        fill="#FABE00" stroke="#1a1a1a" stroke-width="2.5"/>
+  <!-- inner dot -->
+  <circle cx="24" cy="22.5" r="7.5" fill="#1a1a1a"/>
+</svg>
