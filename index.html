@@ -1002,8 +1002,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         html.taxiui .kd-pin-overlay .kp-confirm { width: 100%; margin-top: 11px; border-radius: 13px; padding: 15px; box-shadow: 0 4px 14px rgba(20,24,29,.25); }
         /* 🖥 PC幅(≥768)：タクシーUIのreorderは無効化(スマホ専用)。ただし日程は浮きパネルに統合するので上の#dateStripは隠す。回収①②は横一列 */
         @media (min-width: 768px) {
-            /* 🖥 PC：左にマップ／右に操作(車種・住所・日程・決定)。予約フロー中はKV(.top-visual)非表示にして.kd-flowを全幅グリッドに */
-            .kd-top .top-visual { display: none; }
+            /* 🖥 PC：KVビジュアルは左に残し、右側(.kd-flow)をさらに[地図｜操作]の2分割グリッドに */
             .kd-top #dateStrip { display: none; }
             .kd-top .kd-flow {
                 display: grid;
