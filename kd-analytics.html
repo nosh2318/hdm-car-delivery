@@ -107,6 +107,12 @@
   </div>
 
   <div class="card" style="margin-bottom:12px">
+    <h2>📂 メニュー項目タップ（〜とは/ご利用方法/車両/保険 等）</h2>
+    <div id="menuTaps"><div class="mut">読み込み中…（032 SQL適用後に表示）</div></div>
+    <div class="mut" style="margin-top:6px">ハンバーガーメニューの各項目が何回タップされたか。よく見られている情報＝関心の所在。0回が続く項目は導線/必要性を見直し。</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
     <h2>📅 バイオリズム（訪問・CVの推移）</h2>
     <div class="seg" id="trendSeg" style="margin:6px 0 10px">
       <button data-t="day" class="on">日別</button>
@@ -297,6 +303,15 @@ async function load(){
       +'<div class="card" style="background:#0e131b"><h2>タップ後 完了</h2><div class="big '+(t.cv?'g':'r')+'">'+t.cv+'</div><div class="mut">CVR '+(t.taps?pct(tapCv):'–')+'</div></div>'
       +'</div>'+cmp;
   }catch(e){ document.getElementById('coupon').innerHTML='<div class="mut">031 SQL未適用（クーポンビュー）。Supabase SQL Editorで 031_keydrop_coupon_view.sql をRUNしてください。</div>'; }
+
+  // メニュー項目タップ
+  try{
+    const MLABEL={menuAbout:'KEYDROPとは',menuUsage:'ご利用方法',menuVehicle:'車両と料金',menuInsurance:'保険プラン',menuFaq:'よくある質問',menuMypageGuide:'マイページの使い方',menuCouponGuide:'クーポンの使い方',menuContact:'お問い合わせ',menuClause:'約款',menuPrivacy:'プライバシー',menuLegal:'特商法',menuCompany:'会社情報',menuAreaReselect:'エリア選び直す'};
+    const mt=await q('public_kd_menu_v?select=*');
+    mt.sort((a,b)=>b.taps-a.taps);
+    let mh=mt.length?'<table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr><th class="l">項目</th><th>タップ</th><th>人数</th></tr></thead><tbody>'+mt.map(r=>'<tr><td class="l">'+esc(MLABEL[r.menu_key]||r.menu_key)+'</td><td style="text-align:right;font-weight:800">'+r.taps+'</td><td style="text-align:right">'+r.sessions+'</td></tr>').join('')+'</tbody></table>':'<div class="mut">まだタップがありません</div>';
+    document.getElementById('menuTaps').innerHTML=mh;
+  }catch(e){ document.getElementById('menuTaps').innerHTML='<div class="mut">032 SQL未適用（メニュービュー）。Supabase SQL Editorで 032_keydrop_menu_view.sql をRUNしてください。</div>'; }
 
   // source table
   src.sort((a,b)=>b.sessions-a.sessions);

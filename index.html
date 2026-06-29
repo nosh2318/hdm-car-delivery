@@ -5977,6 +5977,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const iconText = icon ? icon.textContent : '';
             const arrowText = arrow ? arrow.outerHTML : '';
             item.innerHTML = `<span class="menu-item-icon">${iconText}</span>${t(k)}${arrowText}`;
+            // ★ メニュー項目タップを計測（どの項目がどれだけ踏まれたか／kd_funnel_log step='menu:<key>'）
+            if (!item._mkTrack) { item._mkTrack = true; item.addEventListener('click', function () { try { kdFunnelLog('menu:' + k, 0); } catch (e) {} }); }
         });
     }
 
