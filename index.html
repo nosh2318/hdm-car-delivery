@@ -1000,38 +1000,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-od-date { margin: 11px 0 6px; }
         /* 決定ボタン＝シート最下部の独立ボタン（端まで伸ばさず左右余白・角丸） */
         html.taxiui .kd-pin-overlay .kp-confirm { width: 100%; margin-top: 11px; border-radius: 13px; padding: 15px; box-shadow: 0 4px 14px rgba(20,24,29,.25); }
-        /* 🖥 PC幅(≥768)：タクシーUIのreorderは無効化(スマホ専用)。ただし日程は浮きパネルに統合するので上の#dateStripは隠す。回収①②は横一列 */
-        @media (min-width: 768px) {
-            /* 🖥 PC：KVは左。右側(.kd-flow)＝上段に[車両｜日付・場所ボタン]を"横一列"、その下にマップが残り高さを埋めてワイドに */
-            .kd-top #dateStrip { display: none; }
-            .kd-top #locPanel { display: none; }
-            .kd-top .kd-flow {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                grid-template-rows: auto auto 1fr;
-                column-gap: 10px;
-                row-gap: 8px;
-                height: 100%;
-                box-sizing: border-box;
-                padding: 8px 16px 12px;
-                overflow: hidden;
-            }
-            .kd-top #carStrip { display: none; }  /* PCの予約フローでは車両ストリップ非表示 */
-            .kd-top #areaInfo { grid-column: 1 / -1; grid-row: 1; align-self: start; }
-            .kd-top #pinOverlay { grid-column: 1 / -1; grid-row: 2; align-self: start; min-width: 0; }
-            .kd-top #mapWrap { grid-column: 1 / -1; grid-row: 3; min-height: 240px; width: 100%; margin: 0; border-radius: 14px; overflow: hidden; }
-            .kd-top .kd-pin-overlay { position: static; left: auto; right: auto; bottom: auto; margin: 0; max-height: none; box-shadow: 0 2px 12px rgba(20,24,29,.1); }
-            /* PC：住所=上、その下に [日付 ｜ 場所ボタン] の横一列。ボタンは縦に伸ばさず中央寄せで適正サイズ */
-            .kd-top .kd-pin-overlay { padding: 12px 14px; }
-            .kd-top .kd-pin-overlay .kp-row { margin: 0 0 2px; }
-            /* 回収①②を横一列 */
-            .kd-pin-overlay .kd-col-opts { display: flex; gap: 8px; }
-            .kd-pin-overlay .kd-col-opts > * { flex: 1; margin-top: 0 !important; min-width: 0; }
-            /* [日程 ｜ 決定ボタン] 横一列・ボタンは中央寄せ */
-            .kd-pin-overlay .kd-od-row { display: flex; gap: 12px; align-items: center; }
-            .kd-pin-overlay .kd-od-row .kd-od-date { flex: 1; margin: 0; min-width: 0; }
-            .kd-pin-overlay .kd-od-row .kp-confirm { flex: none; width: auto; margin: 0; align-self: center; padding: 14px 26px; white-space: nowrap; }
-        }
+        /* (PC向けタクシー風レイアウトは撤去＝タクシーUI前のシンプルなPCに戻す。タクシーUI/スプラッシュはスマホで維持) */
         .kd-mapwrap { position: relative; flex: 1 1 auto; min-height: 220px; }
         #locPanel { flex: none; display: flex; flex-direction: column; }
         @media (min-width: 768px) {
@@ -2135,8 +2104,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const dt = state.datetime;
         let ov = document.getElementById('pinOverlay');
         // PC(≥768)はパネルを地図の"下"(列の流れ)に置く＝地図を覆わない。スマホは従来通り地図上に浮かせる
-        const _ovParent = ((window.innerWidth || 0) >= 768 && wrap.parentNode) ? wrap.parentNode : wrap;
-        if (ov && ov.parentNode && ov.parentNode !== _ovParent) _ovParent.appendChild(ov);
+        const _ovParent = wrap; // 常に地図内に浮かせる（PC専用の地図下移動は撤去）
+        if (ov && ov.parentNode && ov.parentNode !== wrap) wrap.appendChild(ov);
 
         // ── 回収ステップ ──
         if (isCol) {
@@ -2193,18 +2162,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const ic  = ng ? '🚫' : '📍';
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         const _taxi = kdTaxiOn();
-        const _wide = (window.innerWidth || 0) >= 768; // PCは日程＋住所＋決定を1パネルにまとめる
         const _delCta = _taxi ? 'お届け場所と日時を決定' : t('decideDeliverHere');
         let html = (_taxi && !ng ? '<div class="kd-q">📍 下記指定場所にお届けします</div>' : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
-            // taxiUI(スマホ)＝下段集約／PC＝浮きパネルに日程を内包（既存の日程バーを流用）
-            const _dateHtml = (_taxi || _wide) ? `<div class="kd-od-date">${kdDateBar()}</div>` : '';
+            // taxiUI(スマホ)＝下段に日程バーを内包。PC/従来はオーバーレイに日程を入れない(日程は上の#dateStrip)
+            const _dateHtml = _taxi ? `<div class="kd-od-date">${kdDateBar()}</div>` : '';
             // 決定ボタンは「枠だけ点滅（塗りなし）」＝①②と統一。日時未設定はdisabled
             const _btnHtml = dateOk
                 ? `<button class="kp-confirm kd-cta-blink" onclick="deliveryDecideGo()">${_delCta}</button>`
                 : `<button class="kp-confirm" disabled>${_delCta}</button>`;
-            // PCは [日程 | 決定ボタン] を横一列に（バランス改善）。スマホは縦積み
-            html += _wide ? `<div class="kd-od-row">${_dateHtml}${_btnHtml}</div>` : (_dateHtml + _btnHtml);
+            html += _taxi ? `<div class="kd-od-row">${_dateHtml}${_btnHtml}</div>` : _btnHtml;
         }
         ov.innerHTML = html;
     }
