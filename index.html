@@ -29,7 +29,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <!-- Square Web Payments SDK（本番）＝サイト内カード入力フォーム用 -->
     <script src="https://web.squarecdn.com/v1/square.js" defer></script>
     <!-- 🚕 タクシーアプリ風UI＝本番デフォルト（2026-06-29 全公開）。?ui=classic で従来UIに退避(端末保持)／?ui=taxi で既定に戻す。全撤去はタグ pre-taxiui-20260629 -->
-    <script>(function(){try{var s=location.search||'';if(/[?&]ui=classic/.test(s))localStorage.setItem('kd_ui','classic');if(/[?&]ui=taxi/.test(s))localStorage.removeItem('kd_ui');if(localStorage.getItem('kd_ui')!=='classic')document.documentElement.classList.add('taxiui');}catch(e){document.documentElement.classList.add('taxiui');}})();</script>
+    <script>(function(){try{var s=location.search||'';if(/[?&]ui=classic/.test(s))localStorage.setItem('kd_ui','classic');if(/[?&]ui=taxi/.test(s))localStorage.removeItem('kd_ui');var mob=(window.innerWidth||document.documentElement.clientWidth||0)<768;if(localStorage.getItem('kd_ui')!=='classic'&&mob)document.documentElement.classList.add('taxiui');}catch(e){try{if((window.innerWidth||0)<768)document.documentElement.classList.add('taxiui');}catch(_){}}})();</script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
