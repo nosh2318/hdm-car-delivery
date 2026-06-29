@@ -27,7 +27,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <link rel="preconnect" href="https://maps.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
     <!-- Square Web Payments SDK（本番）＝サイト内カード入力フォーム用 -->
-    <script src="https://web.squarecdn.com/v1/square.js"></script>
+    <script src="https://web.squarecdn.com/v1/square.js" defer></script>
     <!-- 🚕 タクシーアプリ風UI＝本番デフォルト（2026-06-29 全公開）。?ui=classic で従来UIに退避(端末保持)／?ui=taxi で既定に戻す。全撤去はタグ pre-taxiui-20260629 -->
     <script>(function(){try{var s=location.search||'';if(/[?&]ui=classic/.test(s))localStorage.setItem('kd_ui','classic');if(/[?&]ui=taxi/.test(s))localStorage.removeItem('kd_ui');if(localStorage.getItem('kd_ui')!=='classic')document.documentElement.classList.add('taxiui');}catch(e){document.documentElement.classList.add('taxiui');}})();</script>
     <style>
@@ -1032,9 +1032,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   var force=/[?&]splash=1/.test(s);
   if(!force && sessionStorage.getItem('kd_splash')){ sp.remove(); return; }
   try{ sessionStorage.setItem('kd_splash','1'); }catch(e){}
-  var done=false; function hide(){ if(done||!sp)return; done=true; sp.style.opacity='0'; setTimeout(function(){ if(sp){sp.remove();sp=null;} },480); }
+  var done=false; function hide(){ if(done||!sp)return; done=true; sp.style.opacity='0'; setTimeout(function(){ if(sp){sp.remove();sp=null;} },350); }
   sp.addEventListener('click',hide);
-  setTimeout(hide,2000);
+  // 立ち上がり高速化: 最大1秒、ページ読込完了なら0.3sで早期終了（スマホで待たせない）
+  setTimeout(hide,1000);
+  window.addEventListener('load',function(){ setTimeout(hide,300); });
 }catch(e){ var x=document.getElementById('kdSplash'); if(x)x.remove(); }})();</script>
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KVF3F48X"
