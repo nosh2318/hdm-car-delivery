@@ -1000,6 +1000,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-od-date { margin: 11px 0 6px; }
         /* 決定ボタン＝シート最下部の独立ボタン（端まで伸ばさず左右余白・角丸） */
         html.taxiui .kd-pin-overlay .kp-confirm { width: 100%; margin-top: 11px; border-radius: 13px; padding: 15px; box-shadow: 0 4px 14px rgba(20,24,29,.25); }
+        /* 🖥 PC幅(≥768)ではタクシーUIのCSSを無効化＝タクシーUIはスマホ専用・PCは従来レイアウト（クラスが残っても崩さない） */
+        @media (min-width: 768px) {
+            html.taxiui .kd-top #areaInfo, html.taxiui .kd-top #carStrip, html.taxiui .kd-top #mapWrap, html.taxiui .kd-top #dateStrip, html.taxiui .kd-top #locPanel { order: 0; }
+            html.taxiui .kd-top #dateStrip { display: block; }
+            html.taxiui .kd-top #mapWrap { min-height: 0; }
+        }
         .kd-mapwrap { position: relative; flex: 1 1 auto; min-height: 220px; }
         #locPanel { flex: none; display: flex; flex-direction: column; }
         @media (min-width: 768px) {
@@ -2070,7 +2076,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         return html;
     }
 
-    function kdTaxiOn() { try { return document.documentElement.classList.contains('taxiui'); } catch (e) { return false; } }
+    function kdTaxiOn() { try { return document.documentElement.classList.contains('taxiui') && (window.innerWidth || document.documentElement.clientWidth || 0) < 768; } catch (e) { return false; } }
+    // 幅が768跨ぎでリサイズしたらtaxiui判定を更新して再描画（PC↔スマホでレイアウトを正しく切替）
+    (function () { try { var _rt; window.addEventListener('resize', function () { clearTimeout(_rt); _rt = setTimeout(function () { try { var want = (localStorage.getItem('kd_ui') !== 'classic') && ((window.innerWidth || 0) < 768); var has = document.documentElement.classList.contains('taxiui'); if (want !== has) { document.documentElement.classList.toggle('taxiui', want); if (typeof render === 'function') render(); } } catch (e) {} }, 180); }); } catch (e) {} })();
     // taxiUI: 下段シートが地図下部を覆うので、ピンを「見える範囲の中央」へ上に寄せる
     function kdTaxiPanUp() {
         if (!kdTaxiOn() || !map) return;
