@@ -1797,7 +1797,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             fetchFullAddress(lat, lng).then(r => { if (r && r.full) { state.deliveryAddrCanon = r.full; if (typeof updateAreaAlert === 'function') updateAreaAlert(); if (typeof renderLocPanel === 'function') renderLocPanel(); } }).catch(() => {});
         }
         else { state.deliveryAddrCanon = ''; reverseGeocode(lat, lng); }
-        if (map) map.panTo({ lat: lat, lng: lng });
+        if (map) { map.panTo({ lat: lat, lng: lng }); kdTaxiPanUp(); }
     }
 
     // 回収場所ピン（お届けとは別色🏁）
@@ -1821,7 +1821,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
         if (addr) { state.collectionAddr = addr; state.collectionAddrFull = addr; renderLocationBadge(); renderLocPanel(); }
         else { renderLocationBadge(); reverseGeocodeCollection(lat, lng); }
-        if (map) map.panTo({ lat: lat, lng: lng });
+        if (map) { map.panTo({ lat: lat, lng: lng }); kdTaxiPanUp(); }
     }
 
     // 地図再生成後にstateからピンを復元（逆ジオで住所を上書きしないようaddrを渡す）
@@ -2054,6 +2054,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     function kdTaxiOn() { try { return document.documentElement.classList.contains('taxiui'); } catch (e) { return false; } }
+    // taxiUI: 下段シートが地図下部を覆うので、ピンを「見える範囲の中央」へ上に寄せる
+    function kdTaxiPanUp() {
+        if (!kdTaxiOn() || !map) return;
+        setTimeout(function () {
+            try { var ov = document.getElementById('pinOverlay'); var h = ov ? ov.offsetHeight : 0; if (h && map) map.panBy(0, Math.round(h / 2)); } catch (e) {}
+        }, 70);
+    }
     function kdTaxiStepBar(active) {
         var steps = ['場所', '日程', '車', '情報', '決済'];
         var h = '<div class="kd-steps">';
