@@ -1023,6 +1023,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </style>
 </head>
 <body>
+<!-- 🎬 起動スプラッシュ（2秒・タップでスキップ・セッション1回／?splash=1で強制表示・?splash=0で無効） -->
+<div id="kdSplash" style="position:fixed;inset:0;z-index:2147483600;background:#123a5e url('images/splash_go.jpg') center center / cover no-repeat;opacity:1;transition:opacity .45s ease;cursor:pointer;"></div>
+<script>(function(){try{
+  var sp=document.getElementById('kdSplash'); if(!sp) return;
+  var s=location.search||'';
+  if(/[?&]splash=0/.test(s)){ sp.remove(); return; }
+  var force=/[?&]splash=1/.test(s);
+  if(!force && sessionStorage.getItem('kd_splash')){ sp.remove(); return; }
+  try{ sessionStorage.setItem('kd_splash','1'); }catch(e){}
+  var done=false; function hide(){ if(done||!sp)return; done=true; sp.style.opacity='0'; setTimeout(function(){ if(sp){sp.remove();sp=null;} },480); }
+  sp.addEventListener('click',hide);
+  setTimeout(hide,2000);
+}catch(e){ var x=document.getElementById('kdSplash'); if(x)x.remove(); }})();</script>
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KVF3F48X"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
