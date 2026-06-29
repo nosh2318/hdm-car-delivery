@@ -1000,11 +1000,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-od-date { margin: 11px 0 6px; }
         /* 決定ボタン＝シート最下部の独立ボタン（端まで伸ばさず左右余白・角丸） */
         html.taxiui .kd-pin-overlay .kp-confirm { width: 100%; margin-top: 11px; border-radius: 13px; padding: 15px; box-shadow: 0 4px 14px rgba(20,24,29,.25); }
-        /* 🖥 PC幅(≥768)ではタクシーUIのCSSを無効化＝タクシーUIはスマホ専用・PCは従来レイアウト（クラスが残っても崩さない） */
+        /* 🖥 PC幅(≥768)：タクシーUIのreorderは無効化(スマホ専用)。ただし日程は浮きパネルに統合するので上の#dateStripは隠す。回収①②は横一列 */
         @media (min-width: 768px) {
             html.taxiui .kd-top #areaInfo, html.taxiui .kd-top #carStrip, html.taxiui .kd-top #mapWrap, html.taxiui .kd-top #dateStrip, html.taxiui .kd-top #locPanel { order: 0; }
-            html.taxiui .kd-top #dateStrip { display: block; }
             html.taxiui .kd-top #mapWrap { min-height: 0; }
+            .kd-top #dateStrip { display: none; }
+            .kd-pin-overlay .kd-col-opts { display: flex; gap: 8px; }
+            .kd-pin-overlay .kd-col-opts > * { flex: 1; margin-top: 0 !important; min-width: 0; }
         }
         .kd-mapwrap { position: relative; flex: 1 1 auto; min-height: 220px; }
         #locPanel { flex: none; display: flex; flex-direction: column; }
@@ -2137,7 +2139,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 return;
             }
             const custom = !!state.collectionAddr && !state.sameCollection;
-            let h = `<div class="kp-lbl" style="margin-bottom:2px;">🏁 ${t('collectionPlaceL')}</div>`;
+            let h = `<div class="kp-lbl" style="margin-bottom:2px;">🏁 ${t('collectionPlaceL')}</div>` + '<div class="kd-col-opts">';
             if (!dateOk) {
                 h += `<div class="kp-opt kp-opt-dim"><b>①</b> 📍 ${t('orPickOnMap')}</div>`;
                 h += `<button class="kp-opt kp-opt-dim" disabled><b>②</b> ${t('sameAsDeliveryBtn')}</button>`;
@@ -2147,6 +2149,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     : `<div class="kp-opt kp-opt-dim"><b>①</b> 📍 ${t('orPickOnMap')}</div>`;
                 h += `<button class="kp-opt kd-cta-blink" onclick="sameCollectionGo()"><b>②</b> ${t('sameAsDeliveryBtn')}${state.deliveryAddr ? `<div class="kp-opt-sub">${state.deliveryAddr}</div>` : ''}</button>`;
             }
+            h += '</div>';
             h += `<button onclick="state.screen='options'; render();" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
             ov.innerHTML = h;
             return;
@@ -2163,11 +2166,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const ic  = ng ? '🚫' : '📍';
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         const _taxi = kdTaxiOn();
+        const _wide = (window.innerWidth || 0) >= 768; // PCは日程＋住所＋決定を1パネルにまとめる
         const _delCta = _taxi ? 'お届け場所と日時を決定' : t('decideDeliverHere');
         let html = (_taxi && !ng ? '<div class="kd-q">📍 下記指定場所にお届けします</div>' : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
-            // taxiUI: 日程・時間を同じシート内に（既存の日程バーを流用）
-            if (_taxi) html += `<div class="kd-od-date">${kdDateBar()}</div>`;
+            // taxiUI(スマホ)＝下段集約／PC＝浮きパネルに日程を内包（既存の日程バーを流用）
+            if (_taxi || _wide) html += `<div class="kd-od-date">${kdDateBar()}</div>`;
             // 決定ボタンは「枠だけ点滅（塗りなし）」＝①②と統一。日時未設定はdisabled
             html += dateOk
                 ? `<button class="kp-confirm kd-cta-blink" onclick="deliveryDecideGo()">${_delCta}</button>`
