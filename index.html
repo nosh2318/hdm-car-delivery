@@ -1001,6 +1001,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         /* 決定ボタン＝シート最下部の独立ボタン（端まで伸ばさず左右余白・角丸） */
         html.taxiui .kd-pin-overlay .kp-confirm { width: 100%; margin-top: 11px; border-radius: 13px; padding: 15px; box-shadow: 0 4px 14px rgba(20,24,29,.25); }
         /* (PC向けタクシー風レイアウトは撤去＝タクシーUI前のシンプルなPCに戻す。タクシーUI/スプラッシュはスマホで維持) */
+        /* PC：地図下の住所＋決定パネルは半幅（左寄せ）にしてスッキリ */
+        @media (min-width: 768px) {
+            .kd-top .kd-pin-overlay { right: auto; width: 50%; min-width: 280px; max-width: 440px; }
+        }
         .kd-mapwrap { position: relative; flex: 1 1 auto; min-height: 220px; }
         #locPanel { flex: none; display: flex; flex-direction: column; }
         @media (min-width: 768px) {
