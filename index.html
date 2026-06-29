@@ -1007,6 +1007,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             .kd-top #dateStrip { display: none; }
             .kd-pin-overlay .kd-col-opts { display: flex; gap: 8px; }
             .kd-pin-overlay .kd-col-opts > * { flex: 1; margin-top: 0 !important; min-width: 0; }
+            /* PC：地図を固定高にして、決定パネルは地図の"下"に静的配置＝地図を覆わない */
+            .kd-top .kd-mapwrap { flex: none; height: 44vh; min-height: 300px; }
+            .kd-top .kd-pin-overlay { position: static; left: auto; right: auto; bottom: auto; margin: 10px 0 4px; max-height: none; box-shadow: 0 2px 12px rgba(20,24,29,.1); }
         }
         .kd-mapwrap { position: relative; flex: 1 1 auto; min-height: 220px; }
         #locPanel { flex: none; display: flex; flex-direction: column; }
@@ -2110,10 +2113,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const isCol = state.locStep === 'collection';
         const dt = state.datetime;
         let ov = document.getElementById('pinOverlay');
+        // PC(≥768)はパネルを地図の"下"(列の流れ)に置く＝地図を覆わない。スマホは従来通り地図上に浮かせる
+        const _ovParent = ((window.innerWidth || 0) >= 768 && wrap.parentNode) ? wrap.parentNode : wrap;
+        if (ov && ov.parentNode && ov.parentNode !== _ovParent) _ovParent.appendChild(ov);
 
         // ── 回収ステップ ──
         if (isCol) {
-            if (!ov) { ov = document.createElement('div'); ov.id = 'pinOverlay'; ov.className = 'kd-pin-overlay'; wrap.appendChild(ov); }
+            if (!ov) { ov = document.createElement('div'); ov.id = 'pinOverlay'; ov.className = 'kd-pin-overlay'; _ovParent.appendChild(ov); }
             ov.className = 'kd-pin-overlay';
             ov.style.display = 'block';
             const dateOk = !!(dt.endDate && dt.endTime);
@@ -2158,7 +2164,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // ── お届けステップ ──
         const addr = state.deliveryAddr;
         if (!addr) { if (ov) ov.style.display = 'none'; return; }
-        if (!ov) { ov = document.createElement('div'); ov.id = 'pinOverlay'; ov.className = 'kd-pin-overlay'; wrap.appendChild(ov); }
+        if (!ov) { ov = document.createElement('div'); ov.id = 'pinOverlay'; ov.className = 'kd-pin-overlay'; _ovParent.appendChild(ov); }
         const ng = state.outOfArea;
         const dateOk = !!(dt.startDate && dt.startTime);
         ov.className = 'kd-pin-overlay' + (ng ? ' ng' : '');
