@@ -981,6 +981,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         html.taxiui .kd-top #mapWrap  { order: 3; min-height: 320px; }
         html.taxiui .kd-top #dateStrip{ order: 4; flex: none; box-shadow: 0 -5px 18px rgba(20,24,29,.08); position: relative; z-index: 3; }
         html.taxiui .kd-top #locPanel { order: 5; flex: none; background: #fff; }
+        /* 🚕 ステップバー（?ui=taxi のみ・pinOverlay先頭に差し込み） */
+        .kd-steps { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); align-items: start; width: 100%; margin: 0 0 11px; }
+        .kd-stp { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; }
+        .kd-stp .n { width: 22px; height: 22px; border-radius: 50%; background: #eceff3; color: #9aa3ad; font-size: 10.5px; font-weight: 900; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
+        .kd-stp.on .n { background: #16181d; color: #fff; }
+        .kd-stp.done .n { background: #16a34a; color: #fff; }
+        .kd-stp .t { font-size: 9.5px; font-weight: 800; color: #aab2bb; }
+        .kd-stp.on .t { color: #16181d; }
+        .kd-stp.done .t { color: #16a34a; }
+        .kd-stp::before { content: ''; position: absolute; top: 11px; right: 50%; width: 100%; height: 2px; background: #eceff3; z-index: 0; }
+        .kd-stp:first-child::before { display: none; }
+        .kd-stp.on::before, .kd-stp.done::before { background: #16a34a; }
         .kd-mapwrap { position: relative; flex: 1 1 auto; min-height: 220px; }
         #locPanel { flex: none; display: flex; flex-direction: column; }
         @media (min-width: 768px) {
@@ -2035,6 +2047,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         return html;
     }
 
+    function kdTaxiOn() { try { return document.documentElement.classList.contains('taxiui'); } catch (e) { return false; } }
+    function kdTaxiStepBar(active) {
+        var steps = ['場所', '日程', '車', '情報', '決済'];
+        var h = '<div class="kd-steps">';
+        for (var i = 0; i < 5; i++) {
+            var no = i + 1, cls = no < active ? 'done' : (no === active ? 'on' : '');
+            h += '<div class="kd-stp ' + cls + '"><div class="n">' + (no < active ? '✓' : no) + '</div><div class="t">' + steps[i] + '</div></div>';
+        }
+        return h + '</div>';
+    }
     function renderLocationBadge() {
         // 旧バッジ掃除
         const existing = document.getElementById('locationBadge');
@@ -2089,12 +2111,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         ov.style.display = 'block';
         const ic  = ng ? '🚫' : '📍';
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
-        let html = `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
+        const _taxi = kdTaxiOn();
+        const _delCta = _taxi ? '次へすすむ ›' : t('decideDeliverHere');
+        let html = (_taxi ? kdTaxiStepBar(1) : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
             // 決定ボタンは「枠だけ点滅（塗りなし）」＝①②と統一。日時未設定はdisabled
             html += dateOk
-                ? `<button class="kp-confirm kd-cta-blink" onclick="deliveryDecideGo()">${t('decideDeliverHere')}</button>`
-                : `<button class="kp-confirm" disabled>${t('decideDeliverHere')}</button>`;
+                ? `<button class="kp-confirm kd-cta-blink" onclick="deliveryDecideGo()">${_delCta}</button>`
+                : `<button class="kp-confirm" disabled>${_delCta}</button>`;
         }
         ov.innerHTML = html;
     }
