@@ -2119,7 +2119,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         const _taxi = kdTaxiOn();
         const _delCta = _taxi ? 'お届け場所と日時を決定' : t('decideDeliverHere');
-        let html = (_taxi && !ng ? '<div class="kd-q">📍 どこにお届けしますか？</div>' : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
+        let html = (_taxi && !ng ? '<div class="kd-q">📍 下記指定場所にお届けします</div>' : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
             // taxiUI: 日程・時間を同じシート内に（既存の日程バーを流用）
             if (_taxi) html += `<div class="kd-od-date">${kdDateBar()}</div>`;
@@ -2609,7 +2609,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (!(dt.startDate && dt.startTime)) return { msg: t('guideDate'), dark: false };
         if (!state.deliveryAddr)             return { msg: t('guidePickDel'), dark: false };
         // taxiUI: 吹き出しにピン留め位置の住所を全表示
-        if (kdTaxiOn()) return { msg: '📍 ' + state.deliveryAddr, dark: false };
+        if (kdTaxiOn()) return { msg: 'お届け先を指定してください', dark: false };
         return { msg: t('guideDecideDel'), dark: false };
     }
     function mountHeaderMascot() {
