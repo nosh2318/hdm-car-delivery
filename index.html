@@ -1002,15 +1002,31 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         html.taxiui .kd-pin-overlay .kp-confirm { width: 100%; margin-top: 11px; border-radius: 13px; padding: 15px; box-shadow: 0 4px 14px rgba(20,24,29,.25); }
         /* 🖥 PC幅(≥768)：タクシーUIのreorderは無効化(スマホ専用)。ただし日程は浮きパネルに統合するので上の#dateStripは隠す。回収①②は横一列 */
         @media (min-width: 768px) {
-            html.taxiui .kd-top #areaInfo, html.taxiui .kd-top #carStrip, html.taxiui .kd-top #mapWrap, html.taxiui .kd-top #dateStrip, html.taxiui .kd-top #locPanel { order: 0; }
-            html.taxiui .kd-top #mapWrap { min-height: 0; }
+            /* 🖥 PC：左にマップ／右に操作(車種・住所・日程・決定)。予約フロー中はKV非表示にして.kd-flowを全幅グリッドに */
+            .kd-top .kv-mobile { display: none; }
             .kd-top #dateStrip { display: none; }
+            .kd-top .kd-flow {
+                display: grid;
+                grid-template-columns: 1.5fr 1fr;
+                grid-template-rows: auto auto auto 1fr;
+                column-gap: 18px;
+                height: 100%;
+                box-sizing: border-box;
+                padding: 12px 18px;
+                max-width: 1280px;
+                margin: 0 auto;
+                overflow: hidden;
+            }
+            .kd-top #mapWrap { grid-column: 1; grid-row: 1 / 5; height: 100%; min-height: 0; margin: 0; border-radius: 14px; overflow: hidden; }
+            .kd-top #areaInfo { grid-column: 2; grid-row: 1; align-self: start; }
+            .kd-top #carStrip { grid-column: 2; grid-row: 2; align-self: start; }
+            .kd-top #pinOverlay { grid-column: 2; grid-row: 3; align-self: start; }
+            .kd-top #locPanel { display: none; }
+            .kd-top .kd-pin-overlay { position: static; left: auto; right: auto; bottom: auto; margin: 8px 0 0; max-height: none; box-shadow: 0 2px 12px rgba(20,24,29,.1); }
+            /* 回収①②を横一列 */
             .kd-pin-overlay .kd-col-opts { display: flex; gap: 8px; }
             .kd-pin-overlay .kd-col-opts > * { flex: 1; margin-top: 0 !important; min-width: 0; }
-            /* PC：地図を固定高にして、決定パネルは地図の"下"に静的配置＝地図を覆わない */
-            .kd-top .kd-mapwrap { flex: none; height: 44vh; min-height: 300px; }
-            .kd-top .kd-pin-overlay { position: static; left: auto; right: auto; bottom: auto; margin: 10px 0 4px; max-height: none; box-shadow: 0 2px 12px rgba(20,24,29,.1); }
-            /* PC：[日程 | 決定ボタン] を横一列に */
+            /* [日程 | 決定ボタン] を横一列 */
             .kd-pin-overlay .kd-od-row { display: flex; gap: 10px; align-items: stretch; }
             .kd-pin-overlay .kd-od-row .kd-od-date { flex: 1; margin: 0; min-width: 0; }
             .kd-pin-overlay .kd-od-row .kp-confirm { flex: none; width: auto; margin: 0; align-self: stretch; padding: 11px 28px; white-space: nowrap; }
