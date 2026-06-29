@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>KEYDROP TOP リファイン案（締まり版）</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;background:#e9edf1;color:#16181d;-webkit-font-smoothing:antialiased;padding-bottom:30px}
+  .note{background:#1a1a1a;color:#FABE00;font-size:11px;font-weight:800;text-align:center;padding:7px 10px}
+  .phone{max-width:412px;margin:14px auto 0;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 6px 26px rgba(20,24,29,.12)}
+
+  /* ヘッダー：黄帯やめて黒ロゴ＋極細ライン。締める */
+  .hd{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #eef1f4}
+  .hd .lg img{height:21px;display:block}
+  .hd .lg div{font-size:8px;font-weight:800;letter-spacing:.22em;color:#9aa3ad;margin-top:2px}
+  .hd .rt{display:flex;align-items:center;gap:15px;color:#3a4048;font-size:13px;font-weight:700}
+  .hd .area{display:flex;align-items:center;gap:4px;font-size:12px;color:#16181d;font-weight:800}
+  .hd .area b{color:#16181d}
+
+  /* エリア行：黄タグやめて控えめ */
+  .arearow{display:flex;align-items:center;justify-content:space-between;padding:11px 16px 0}
+  .arearow .l{font-size:12.5px;font-weight:800;color:#16181d}
+  .arearow .l .pin{color:#16181d}
+  .arearow .l .city{color:#6b7681;font-weight:700}
+  .arearow .chg{font-size:11px;font-weight:800;color:#9aa3ad}
+
+  /* 日程バー：白カード・1トーン枠・黄は使わない。色は小ドットだけ */
+  .dates{margin:11px 16px 0;display:flex;align-items:stretch;border:1px solid #e7ebef;border-radius:13px;overflow:hidden;background:#fff}
+  .dcard{flex:1;padding:11px 12px}
+  .dcard .lb{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;color:#8b95a0;margin-bottom:3px}
+  .dot{width:7px;height:7px;border-radius:50%}
+  .dot.g{background:#16a34a}.dot.o{background:#d97706}
+  .dcard .v{font-size:16px;font-weight:900;letter-spacing:-.01em}
+  .dcard .v small{font-size:12px;font-weight:800;color:#6b7681;margin-left:3px}
+  .dmid{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 12px;border-left:1px solid #f0f2f5;border-right:1px solid #f0f2f5}
+  .dmid .n{font-size:13px;font-weight:900}.dmid .u{font-size:9px;font-weight:800;color:#8b95a0}
+
+  /* 検索 */
+  .search{margin:11px 16px 0;display:flex;align-items:center;gap:9px;border:1px solid #e7ebef;border-radius:11px;padding:11px 13px}
+  .search .i{color:#aeb6bf;font-size:15px}
+  .search .t{font-size:13px;color:#aeb6bf;font-weight:600}
+
+  /* 地図 */
+  .map{margin:11px 16px;height:230px;border-radius:13px;background:linear-gradient(135deg,#dfe7ee,#eef2f6);border:1px solid #e2e8ee;position:relative;overflow:hidden}
+  .map .grid{position:absolute;inset:0;background-image:linear-gradient(#fff7 1px,transparent 1px),linear-gradient(90deg,#fff7 1px,transparent 1px);background-size:36px 36px;opacity:.6}
+  .pin{position:absolute;left:50%;top:52%;transform:translate(-50%,-100%)}
+  .pin img{width:38px;display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+  /* 吹き出し：黄バブル→落ち着いた濃色チップ・丁寧文 */
+  .tip{position:absolute;left:50%;top:15px;transform:translateX(-50%);background:rgba(22,24,29,.92);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:999px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+
+  /* 下部：住所＋黄は"主役のCTA1つだけ" */
+  .addr{margin:0 16px;font-size:11px;font-weight:700;color:#8b95a0}
+  .addr b{display:block;font-size:13.5px;font-weight:900;color:#16181d;margin-top:2px}
+  .cta{margin:12px 16px 4px;background:#FABE00;color:#1a1a1a;text-align:center;font-size:15px;font-weight:900;padding:15px;border-radius:13px;box-shadow:0 6px 16px rgba(250,190,0,.4)}
+
+  .cap{max-width:412px;margin:10px auto 0;padding:0 20px;font-size:10.5px;color:#9aa3ad;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+  <div class="note">📱 リファイン案（締まり版）｜黄色は"決めるボタン"だけ・枠1トーン・吹き出し上品に</div>
+  <div class="phone">
+    <div class="hd">
+      <div class="lg"><img src="images/logo_header.png" alt="KEYDROP"><div>CAR DELIVERY SERVICE</div></div>
+      <div class="rt"><span>🌐</span><span class="area">📍 エリア選択</span><span>☰</span></div>
+    </div>
+
+    <div class="arearow">
+      <div class="l"><span class="pin">📍</span> 対応エリア <span class="city">札幌市・北広島市</span></div>
+      <div class="chg">変更 ›</div>
+    </div>
+
+    <div class="dates">
+      <div class="dcard"><div class="lb"><span class="dot g"></span>お届け</div><div class="v">7/1<small>（水）10:00</small></div></div>
+      <div class="dmid"><div class="n">1</div><div class="u">日間</div></div>
+      <div class="dcard"><div class="lb"><span class="dot o"></span>回収</div><div class="v">7/1<small>（水）18:00</small></div></div>
+    </div>
+
+    <div class="search"><span class="i">🔍</span><span class="t">ホテル名・住所で検索</span></div>
+
+    <div class="map">
+      <div class="grid"></div>
+      <div class="tip">お届け場所を選んでください</div>
+      <div class="pin"><img src="images/pin_kd.svg" alt="pin"></div>
+    </div>
+
+    <div class="addr">お届け場所<b>北海道札幌市中央区北3条東2</b></div>
+    <div class="cta">この場所に決める</div>
+  </div>
+  <div class="cap">変更点：①黄色をCTA1か所に集約 ②日程バーの黄/緑/橙の3色枠 → 薄グレー1トーン＋小ドット ③吹き出しを濃色チップ＋丁寧文 ④余白と文字の強弱を調整。<br>＝白ベース＋黒文字＋黄1アクセントで"締まり"を出す。</div>
+</body>
+</html>
