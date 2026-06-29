@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>KEYDROP TOP 配車アプリ風（下段集約＋大きいピン吹き出し）</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;background:#e9edf1;color:#16181d;-webkit-font-smoothing:antialiased;padding-bottom:24px}
+  .note{background:#1a1a1a;color:#FABE00;font-size:11px;font-weight:800;text-align:center;padding:7px 10px}
+  .phone{max-width:412px;margin:14px auto 0;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 30px rgba(20,24,29,.16);position:relative}
+
+  /* 地図＝主役（大きく） */
+  .map{height:560px;background:linear-gradient(135deg,#dfe7ee,#eef2f6);position:relative;overflow:hidden}
+  .map .grid{position:absolute;inset:0;background-image:linear-gradient(#fff7 1px,transparent 1px),linear-gradient(90deg,#fff7 1px,transparent 1px);background-size:38px 38px;opacity:.6}
+  /* 浮きボタン（丸・ソフト影） */
+  .fab{position:absolute;width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:0 3px 12px rgba(20,24,29,.18);display:flex;align-items:center;justify-content:center;font-size:17px;color:#3a4048}
+  .fab.menu{left:14px;top:14px}
+  .fab.loc{right:14px;top:14px}
+
+  /* 大きいピン吹き出し（情報カード） */
+  .callout{position:absolute;left:50%;top:120px;transform:translateX(-50%);width:248px;background:#16181d;color:#fff;border-radius:16px;padding:13px 15px;box-shadow:0 8px 22px rgba(0,0,0,.3);text-align:left}
+  .callout::after{content:'';position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);border:9px solid transparent;border-top-color:#16181d;border-bottom:0}
+  .callout .ttl{font-size:11px;font-weight:800;color:#9aa3ad;display:flex;align-items:center;gap:5px}
+  .callout .adr{font-size:15px;font-weight:900;margin-top:3px;line-height:1.4}
+  .callout .meta{font-size:11.5px;font-weight:800;color:#FABE00;margin-top:6px}
+  .pin{position:absolute;left:50%;top:240px;transform:translate(-50%,-100%)}
+  .pin img{width:42px;display:block;filter:drop-shadow(0 5px 7px rgba(0,0,0,.28))}
+
+  /* 下段シート＝入力を1か所に集約 */
+  .sheet{position:relative;margin-top:-26px;background:#fff;border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(20,24,29,.1);padding:8px 16px 18px}
+  .grab{width:38px;height:4px;border-radius:999px;background:#e2e7ec;margin:4px auto 12px}
+  .row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid #f1f4f7}
+  .row .ic{width:26px;text-align:center;font-size:16px;flex:none}
+  .row .bd{flex:1;min-width:0}
+  .row .lb{font-size:10.5px;font-weight:800;color:#8b95a0}
+  .row .vl{font-size:15px;font-weight:900;color:#16181d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .chg{font-size:11px;font-weight:800;color:#9aa3ad;flex:none}
+  .drow{display:flex;gap:8px;padding:11px 0;border-bottom:1px solid #f1f4f7}
+  .dchip{flex:1;display:flex;align-items:center;gap:7px}
+  .dchip .dt{width:7px;height:7px;border-radius:50%}.dt.g{background:#16a34a}.dt.o{background:#d97706}
+  .dchip .dl{font-size:10px;font-weight:800;color:#8b95a0}
+  .dchip .dv{font-size:14px;font-weight:900;color:#16181d}
+  .darw{align-self:center;color:#cbd2da;font-weight:900}
+
+  .quick{display:flex;gap:7px;overflow-x:auto;padding:12px 0 2px}
+  .qchip{flex:none;font-size:12px;font-weight:800;color:#3a4048;background:#f3f6f9;border:1px solid #e7ebef;border-radius:999px;padding:7px 13px;white-space:nowrap}
+
+  .cta{margin-top:14px;background:#FABE00;color:#1a1a1a;text-align:center;font-size:16px;font-weight:900;padding:16px;border-radius:14px;box-shadow:0 6px 16px rgba(250,190,0,.4)}
+
+  .cap{max-width:412px;margin:10px auto 0;padding:0 20px;font-size:10.5px;color:#9aa3ad;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+  <div class="note">📱 配車アプリ風モック｜地図=主役／ピン吹き出し=大きい情報カード／下段=入力を1か所に集約</div>
+  <div class="phone">
+    <div class="map">
+      <div class="grid"></div>
+      <div class="fab menu">☰</div>
+      <div class="fab loc">📍</div>
+      <div class="callout">
+        <div class="ttl">📍 お届け場所をご確認ください</div>
+        <div class="adr">北海道札幌市中央区北3条東2</div>
+        <div class="meta">🚚 デリバリー無料・スマホで完結</div>
+      </div>
+      <div class="pin"><img src="images/pin_kd.svg" alt="pin"></div>
+    </div>
+
+    <div class="sheet">
+      <div class="grab"></div>
+
+      <div class="row">
+        <div class="ic">🔍</div>
+        <div class="bd"><div class="lb">お届け場所</div><div class="vl">北海道札幌市中央区北3条東2</div></div>
+        <div class="chg">検索 ›</div>
+      </div>
+
+      <div class="drow">
+        <div class="dchip"><span class="dt g"></span><div><div class="dl">お届け</div><div class="dv">7/1（水）10:00</div></div></div>
+        <span class="darw">→</span>
+        <div class="dchip"><span class="dt o"></span><div><div class="dl">回収</div><div class="dv">7/1（水）18:00</div></div></div>
+        <div class="chg" style="align-self:center">変更</div>
+      </div>
+
+      <div class="quick">
+        <span class="qchip">🏨 ホテル</span><span class="qchip">🏠 自宅</span><span class="qchip">📍 那覇</span><span class="qchip">🕘 履歴</span>
+      </div>
+
+      <div class="cta">✓ この場所に決める</div>
+    </div>
+  </div>
+  <div class="cap">GO方式：①地図を大きく主役に ②ピンの吹き出しを"大きい情報カード"(住所＋お届け確認＋訴求)に ③お届け場所・日程・確定を下段1枚に集約＋クイック選択。<br>＝入力が散らばらず、配車アプリの完成度に近づく。色味は黒×白×黄で締める。</div>
+</body>
+</html>
