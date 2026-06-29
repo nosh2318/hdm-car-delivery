@@ -21,12 +21,10 @@
   .fab.loc{right:14px;top:14px}
 
   /* 大きいピン吹き出し（情報カード） */
-  .callout{position:absolute;left:50%;top:14%;transform:translateX(-50%);width:248px;background:#16181d;color:#fff;border-radius:16px;padding:13px 15px;box-shadow:0 8px 22px rgba(0,0,0,.3);text-align:left}
-  .callout::after{content:'';position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);border:9px solid transparent;border-top-color:#16181d;border-bottom:0}
-  .callout .ttl{font-size:11px;font-weight:800;color:#9aa3ad;display:flex;align-items:center;gap:5px}
-  .callout .adr{font-size:15px;font-weight:900;margin-top:3px;line-height:1.4}
-  .callout .meta{font-size:11.5px;font-weight:800;color:#FABE00;margin-top:6px}
-  .pin{position:absolute;left:50%;top:46%;transform:translate(-50%,-100%)}
+  .callout{position:absolute;left:50%;top:50%;transform:translate(-50%,calc(-100% - 44px));background:#16181d;color:#fff;border-radius:999px;padding:9px 16px;box-shadow:0 6px 16px rgba(0,0,0,.28);white-space:nowrap;z-index:5}
+  .callout::after{content:'';position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);border:8px solid transparent;border-top-color:#16181d;border-bottom:0}
+  .callout .ttl{font-size:12.5px;font-weight:800;color:#fff}
+  .pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%)}
   .pin img{width:42px;display:block;filter:drop-shadow(0 5px 7px rgba(0,0,0,.28))}
 
   /* 下段シート＝入力を1か所に集約 */
@@ -81,11 +79,7 @@
       <div class="grid"></div>
       <div class="fab menu">☰</div>
       <div class="fab loc">📍</div>
-      <div class="callout">
-        <div class="ttl">📍 お届け場所をご確認ください</div>
-        <div class="adr">北海道札幌市中央区北3条東2</div>
-        <div class="meta">🚚 デリバリー無料・スマホで完結</div>
-      </div>
+      <div class="callout"><div class="ttl">📍 お届け場所を選んでください</div></div>
       <div class="pin"><img src="images/pin_kd.svg" alt="pin"></div>
     </div>
 
@@ -100,11 +94,9 @@
         <div class="stp"><div class="n">4</div><div class="t">情報</div></div>
         <div class="stp"><div class="n">5</div><div class="t">決済</div></div>
       </div>
-      <div class="curttl"><span class="b">STEP 1</span><span class="x">📍 お届け場所を決める</span><span class="nx">次：日程・時間 ›</span></div>
-
       <div class="row">
-        <div class="ic">🔍</div>
-        <div class="bd"><div class="lb">① お届け場所</div><div class="vl">北海道札幌市中央区北3条東2</div></div>
+        <div class="ic">📍</div>
+        <div class="bd"><div class="lb">お届け場所</div><div class="vl">北海道札幌市中央区北3条東2</div></div>
         <div class="chg">検索 ›</div>
       </div>
 
