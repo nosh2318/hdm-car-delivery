@@ -894,8 +894,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         #kdMapGuide .kd-mg-bubble b { color:inherit; }
         #kdMapGuide .kd-mg-bubble.col b { color:#FABE00; }
         /* 中央ピン・マスコットの真上に出る吹き出し（OverlayViewでピンに追従） */
-        .kd-mascot-bubble { position:absolute; transform:translate(-50%, calc(-100% - 58px)); background:#FABE00; color:#1a1a1a; font-size:12.5px; font-weight:800; padding:8px 13px; border-radius:13px; line-height:1.3; text-align:center; white-space:nowrap; box-shadow:0 4px 14px rgba(0,0,0,.3); pointer-events:none; z-index:5; }
-        .kd-mascot-bubble::after { content:''; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%); width:0; height:0; border:7px solid transparent; border-top-color:#FABE00; border-bottom:0; }
+        .kd-mascot-bubble { position:absolute; transform:translate(-50%, calc(-100% - 58px)); background:#16181d; color:#ffffff; font-size:12.5px; font-weight:800; padding:9px 15px; border-radius:999px; line-height:1.3; text-align:center; white-space:nowrap; box-shadow:0 5px 16px rgba(0,0,0,.32); pointer-events:none; z-index:5; }
+        .kd-mascot-bubble::after { content:''; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%); width:0; height:0; border:7px solid transparent; border-top-color:#16181d; border-bottom:0; }
         .kd-mascot-bubble.col { background:#2563eb; color:#fff; }
         .kd-mascot-bubble.col::after { border-top-color:#2563eb; }
         .kd-mascot-bubble b { color:inherit; }
@@ -5394,7 +5394,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: '上のフォームで日時を選択', step2sub: 'マップをタップしてピンを置く',
             deliverable: '台デリバリー可能', classes: 'クラス', noVehicle: '該当する車両がありません',
             noVehicleSub: '日程やクラスを変更してお試しください', searching: '車両を検索中...',
-            seats: '人乗り', available: '台空き', availMany: '空きあり', availFew: '残りわずか', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決める', decideDeliverHere: '✓ お届け場所をこの場所に決める', decideCollectHere: '✓ 回収場所をこの場所に決める',
+            seats: '人乗り', available: '台空き', availMany: '空きあり', availFew: '残りわずか', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決める', decideDeliverHere: '✓ この場所に決める', decideCollectHere: '✓ この場所に決める',
             noAddress: '該当する住所が見つかりません',
             // Confirm
             confirmTitle: '予約内容の確認', estimate: 'お支払い見積もり', taxIncl: '税込',
@@ -5438,7 +5438,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             navBook: '予約', navMypage: 'マイページ', navVehicleP: '車両・料金', navContact: 'お問い合わせ', navUsage: 'ご利用方法', navAbout: 'KEYDROPとは？', navChange: '（変更）',
             areaReselect: 'エリアを選び直す',
             guideStep1: '<b>STEP1</b>：CARデリバリーの<b>お届け日時</b>と<b>場所</b>を決めよう！🔑',
-            guideStep2: '<b>STEP2</b>：CARデリバリーの<b>回収日時</b>と<b>場所</b>を決めてね🏁', guideDate: '📍 車両を呼ぶ<b>場所</b>を決めよう！', guideDateCol: '🏁 車両<b>返却場所</b>を決めよう！', guidePickDel: '📍 地図で<b>お届け先</b>を選んでください', guideDecideDel: '📍 お届け場所を決めて「決めるボタン」を押してね！', guideNextDel: '→「回収場所を選ぶ」に進みましょう', guidePickCol: '🏁 回収場所を決めて「決めるボタン」を押してね！', guideNextCol: '→「次へ」でお客様情報の入力に進みましょう', guideOOA: '🚫 申し訳ございません、配達エリア外です',
+            guideStep2: '<b>STEP2</b>：CARデリバリーの<b>回収日時</b>と<b>場所</b>を決めてね🏁', guideDate: '📍 車両を呼ぶ<b>場所</b>を決めよう！', guideDateCol: '🏁 車両<b>返却場所</b>を決めよう！', guidePickDel: '📍 地図で<b>お届け先</b>を選んでください', guideDecideDel: 'お届け場所を選んでください', guideNextDel: '→「回収場所を選ぶ」に進みましょう', guidePickCol: '🏁 回収場所を決めて「決めるボタン」を押してね！', guideNextCol: '→「次へ」でお客様情報の入力に進みましょう', guideOOA: '🚫 申し訳ございません、配達エリア外です',
             periodLabel: '利用期間', areaLabel: '対応エリア', delDate: 'お届け日', delTime: 'お届け時間', colDate: '回収日', colTime: '回収時間',
             selDate: '日付を選択', selTime: '時間を選択', daysSuffix: '日間',
             emptyVehTitle: 'お届け場所を選択すると', emptyVehDesc: 'デリバリー可能な車両が表示されます',
