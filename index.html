@@ -4086,6 +4086,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
         if (!sqCard) { if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'カードフォームを準備中です。数秒お待ちください。'; } initSquareCard(); return; }
         if (btn) { btn.disabled = true; btn.textContent = t('procProcessing'); }
+        // ── マイクロCV: 決済ボタンの実クリック＝外部決済直前の最終意思シグナル（GTM→Google/Meta最適化用）──
+        try {
+            var _ckStore = (typeof KD_API_STORE === 'function') ? KD_API_STORE() : '';
+            var _ckCls = state.selectedClassType || (state.selectedVehicle && state.selectedVehicle.type) || '';
+            var _ckVal = state._payTotal || state._payBase || 0;
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({ event: 'checkout_click', store: _ckStore, vehicle_class: _ckCls, currency: 'JPY', value: _ckVal });
+            if (typeof gtag === 'function') { gtag('event', 'checkout_click', { store: _ckStore, vehicle_class: _ckCls, currency: 'JPY', value: _ckVal }); }
+        } catch (e) {}
         let token;
         try {
             const result = await sqCard.tokenize();
