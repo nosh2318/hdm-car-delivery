@@ -30,7 +30,23 @@
 
   /* 下段シート＝入力を1か所に集約 */
   .sheet{position:relative;margin-top:-26px;background:#fff;border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(20,24,29,.1);padding:8px 16px 18px}
-  .grab{width:38px;height:4px;border-radius:999px;background:#e2e7ec;margin:4px auto 12px}
+  .grab{width:38px;height:4px;border-radius:999px;background:#e2e7ec;margin:4px auto 10px}
+  /* ステップ進捗バー */
+  .steps{display:flex;align-items:flex-start;padding:2px 2px 10px}
+  .stp{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+  .stp .n{width:24px;height:24px;border-radius:50%;background:#eceff3;color:#9aa3ad;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #eceff3}
+  .stp.on .n{background:#16181d;color:#fff;border-color:#16181d}
+  .stp.done .n{background:#16a34a;color:#fff;border-color:#16a34a}
+  .stp .t{font-size:9.5px;font-weight:800;color:#aab2bb;line-height:1.1;text-align:center}
+  .stp.on .t{color:#16181d}.stp.done .t{color:#16a34a}
+  .stp::before{content:'';position:absolute;top:11px;right:50%;width:100%;height:2px;background:#eceff3;z-index:0}
+  .stp:first-child::before{display:none}
+  .stp.on::before,.stp.done::before{background:#16a34a}
+  .stp .n{position:relative;z-index:1}
+  .curttl{display:flex;align-items:center;gap:7px;background:#16181d;color:#fff;border-radius:11px;padding:9px 13px;margin-bottom:12px}
+  .curttl .b{font-size:10px;font-weight:900;color:#FABE00;background:rgba(250,190,0,.16);border-radius:6px;padding:2px 7px}
+  .curttl .x{font-size:14px;font-weight:900}
+  .curttl .nx{margin-left:auto;font-size:10.5px;font-weight:800;color:#9aa3ad}
   .row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid #f1f4f7}
   .row .ic{width:26px;text-align:center;font-size:16px;flex:none}
   .row .bd{flex:1;min-width:0}
@@ -75,9 +91,19 @@
     <div class="sheet">
       <div class="grab"></div>
 
+      <!-- ステップ進捗バー（今どこ／次に何を） -->
+      <div class="steps">
+        <div class="stp on"><div class="n">1</div><div class="t">お届け<br>場所</div></div>
+        <div class="stp"><div class="n">2</div><div class="t">日程・<br>時間</div></div>
+        <div class="stp"><div class="n">3</div><div class="t">車を<br>選ぶ</div></div>
+        <div class="stp"><div class="n">4</div><div class="t">お客様<br>情報</div></div>
+        <div class="stp"><div class="n">5</div><div class="t">決済</div></div>
+      </div>
+      <div class="curttl"><span class="b">STEP 1</span><span class="x">📍 お届け場所を決める</span><span class="nx">次：日程・時間 ›</span></div>
+
       <div class="row">
         <div class="ic">🔍</div>
-        <div class="bd"><div class="lb">お届け場所</div><div class="vl">北海道札幌市中央区北3条東2</div></div>
+        <div class="bd"><div class="lb">① お届け場所</div><div class="vl">北海道札幌市中央区北3条東2</div></div>
         <div class="chg">検索 ›</div>
       </div>
 
@@ -92,7 +118,7 @@
         <span class="qchip">🏨 ホテル</span><span class="qchip">🏠 自宅</span><span class="qchip">📍 那覇</span><span class="qchip">🕘 履歴</span>
       </div>
 
-      <div class="cta">✓ この場所に決める</div>
+      <div class="cta">次へすすむ ›</div>
     </div>
   </div>
   <div class="cap">GO方式：①地図を大きく主役に ②ピンの吹き出しを"大きい情報カード"(住所＋お届け確認＋訴求)に ③お届け場所・日程・確定を下段1枚に集約＋クイック選択。<br>＝入力が散らばらず、配車アプリの完成度に近づく。色味は黒×白×黄で締める。</div>
