@@ -2,6 +2,12 @@
 -- 背景: 026の4関数が reservations のみ参照→那覇予約(nha_reservations)の追跡が動かなかった。
 -- SELECTはUNION ALL、UPDATEは両テーブル更新して合算行数で判定（該当する1テーブルだけヒット）。
 
+-- 既存関数の戻り型が異なる場合があるため先にDROP（grantは末尾で再付与）
+drop function if exists keydrop_track_get(text,text);
+drop function if exists keydrop_track_set_cust(text,text,double precision,double precision);
+drop function if exists keydrop_track_set_driver(text,text,double precision,double precision);
+drop function if exists keydrop_track_get_staff(text,text);
+
 -- 1) お客様→ドライバー位置取得（cust_token=kd_track_token）
 create or replace function keydrop_track_get(p_res text, p_token text)
 returns table(kd_status text, del_place text, cust_name text,
