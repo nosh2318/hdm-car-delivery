@@ -55,11 +55,14 @@ declare n int; begin
 end $$;
 
 -- 5) スタッフ：お客様の位置・待ち合わせ住所を読む（driver_token照合）
+-- 2026-06-30: col_place を返却列に追加（回収モードの目的地＝回収場所をスタッフ地図に出すため）。
+--   返却列を変えるので drop してから作り直す（create or replace では列変更不可）。
+drop function if exists keydrop_track_get_staff(text, text);
 create or replace function keydrop_track_get_staff(p_res text, p_token text)
-returns table(kd_status text, del_place text, cust_name text,
+returns table(kd_status text, del_place text, col_place text, cust_name text,
   cust_lat double precision, cust_lng double precision, cust_at timestamptz)
 language sql security definer set search_path = public as $$
-  select r.kd_status, r.del_place, r.name,
+  select r.kd_status, r.del_place, r.col_place, r.name,
          r.kd_cust_lat, r.kd_cust_lng, r.kd_cust_at
   from reservations r
   where upper(r.id) = upper(p_res)

@@ -280,7 +280,7 @@
     if (!map) {
       const center = hasMe ? { lat: myLat, lng: myLng }
         : (hasCust ? { lat: +custData.cust_lat, lng: +custData.cust_lng } : (meetLoc || null));
-      if (!center) { geocodeMeet(custData ? custData.del_place : null); return; }
+      if (!center) { geocodeMeet(goalAddr()); return; }
       map = new google.maps.Map(document.getElementById('map'), {
         center, zoom: (hasMe || hasCust) ? 15 : 14, disableDefaultUI: true, zoomControl: true, gestureHandling: 'greedy'
       });
@@ -320,7 +320,7 @@
       custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' お客様</div>');
     }
 
-    geocodeMeet(custData ? custData.del_place : null);  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
+    geocodeMeet(goalAddr());  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
 
     const chip = document.getElementById('distChip');
     if (hasMe && hasCust) {
@@ -342,6 +342,13 @@
   }
 
   let meetLoc = null;
+  // 目的地(集合場所)：回収=回収場所(col_place) / お届け=お届け場所(del_place)。片方が空ならもう片方を使う
+  function goalAddr() {
+    if (!custData) return null;
+    return (custData.kd_status === 'collecting')
+      ? (custData.col_place || custData.del_place || null)
+      : (custData.del_place || custData.col_place || null);
+  }
   function geocodeMeet(addr) {
     if (!gmapReady || !addr) return;
     const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
