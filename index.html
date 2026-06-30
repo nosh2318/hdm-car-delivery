@@ -1266,7 +1266,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function renderAreaInfo() {
         var cs = kdTargetCities(); if (!cs.length) return '';
         return '<div style="display:flex;align-items:center;gap:8px;padding:8px 14px 0;font-size:12px;font-weight:800;flex-wrap:wrap;">'
-            + '<span style="flex:none;color:#0F1F45;">🚗 ご指定場所に車をお届け</span>'
+            + '<span style="flex:none;color:#0F1F45;">' + t('areaDeliverBadge') + '</span>'
             + '<span style="flex:none;color:#16a34a;">📍 ' + t('areaLabel') + '</span>'
             + '<span style="flex:1;min-width:0;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + cs.join('・') + '</span>'
             + '</div>';
@@ -2139,12 +2139,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // taxiUI: お届けと同じ clean sheet（質問見出し＋お届けと同じ＋住所＋決定）
             if (kdTaxiOn()) {
                 const _cc = !!state.collectionAddr && !state.sameCollection;
-                let th = '<div class="kd-q">🏁 下記指定場所で回収します</div>';
+                let th = '<div class="kd-q">' + t('taxiCollectPrompt') + '</div>';
                 if (state.deliveryAddr) th += `<button class="kp-opt kd-same kd-cta-blink" onclick="sameCollectionGo()">🔁 ${t('sameAsDeliveryBtn')}<div class="kp-opt-sub">${state.deliveryAddr}</div></button>`;
                 th += `<div class="kp-row"><span class="kp-ic">📍</span><div class="kp-body"><div class="kp-lbl">${t('collectionPlaceL')}</div><div class="kp-addr">${state.collectionAddr || t('orPickOnMap')}</div></div></div>`;
                 th += (_cc && dateOk)
-                    ? `<button class="kp-confirm kd-cta-blink" onclick="collectionDecideGo()">回収場所を決定</button>`
-                    : `<button class="kp-confirm" disabled>回収場所を決定</button>`;
+                    ? `<button class="kp-confirm kd-cta-blink" onclick="collectionDecideGo()">${t('taxiCollectCta')}</button>`
+                    : `<button class="kp-confirm" disabled>${t('taxiCollectCta')}</button>`;
                 th += `<button onclick="state.screen='options'; render();" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
                 ov.innerHTML = th;
                 return;
@@ -2177,8 +2177,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const ic  = ng ? '🚫' : '📍';
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         const _taxi = kdTaxiOn();
-        const _delCta = _taxi ? 'お届け場所と日時を決定' : t('decideDeliverHere');
-        let html = (_taxi && !ng ? '<div class="kd-q">📍 下記指定場所にお届けします</div>' : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
+        const _delCta = _taxi ? t('taxiDelivCta') : t('decideDeliverHere');
+        let html = (_taxi && !ng ? '<div class="kd-q">' + t('taxiDelivPrompt') + '</div>' : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
             // taxiUI(スマホ)＝下段に日程バーを内包。PC/従来はオーバーレイに日程を入れない(日程は上の#dateStrip)
             const _dateHtml = _taxi ? `<div class="kd-od-date">${kdDateBar()}</div>` : '';
@@ -2384,7 +2384,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const limit = new Date(today); limit.setMonth(limit.getMonth() + 4);
         for (let d = new Date(start); d <= limit; d.setDate(d.getDate() + 1)) {
             const val = localYMD(d);
-            const label = `${d.getMonth() + 1}/${d.getDate()}（${'日月火水木金土'[d.getDay()]}）`;
+            const label = `${d.getMonth() + 1}/${d.getDate()}（${t('dow')[d.getDay()]}）`;
             html += `<option value="${val}" ${val === selected ? 'selected' : ''}>${label}</option>`;
         }
         return html;
@@ -2663,13 +2663,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (state.locStep === 'collection') {
             if (!(dt.endDate && dt.endTime)) return { msg: t('guideDateCol'), dark: true };
             if (state.collectionConfirmed)   return { msg: t('guideNextCol'), dark: true };
-            return { msg: kdTaxiOn() ? '回収先を指定してください' : t('guidePickCol'), dark: true };
+            return { msg: kdTaxiOn() ? t('taxiPickCol') : t('guidePickCol'), dark: true };
         }
         if (state.outOfArea) return { msg: t('guideOOA'), dark: false };
         if (!(dt.startDate && dt.startTime)) return { msg: t('guideDate'), dark: false };
         if (!state.deliveryAddr)             return { msg: t('guidePickDel'), dark: false };
         // taxiUI: 吹き出しにピン留め位置の住所を全表示
-        if (kdTaxiOn()) return { msg: 'お届け先を指定してください', dark: false };
+        if (kdTaxiOn()) return { msg: t('taxiPickDel'), dark: false };
         return { msg: t('guideDecideDel'), dark: false };
     }
     function mountHeaderMascot() {
@@ -3102,13 +3102,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // ── 日程 範囲ピッカー（competitor型：1カレンダーで お届け〜返却＋時間）──
     function kdDateBar() {
         var d = state.datetime;
-        var s = d.startDate ? formatDateLabel(d.startDate) : '日付';
-        var e = d.endDate ? formatDateLabel(d.endDate) : '日付';
+        var s = d.startDate ? formatDateLabel(d.startDate) : t('dateWord');
+        var e = d.endDate ? formatDateLabel(d.endDate) : t('dateWord');
         var blink = state.dateDefault ? ' kd-cta-blink' : '';
         return '<div class="kd-datebar' + blink + '" onclick="openDatePicker()">'
             + '<span class="kd-db-edit">📅 変更</span>'
             + '<div class="kd-db-card s"><span class="kd-db-lbl">🚚 ' + t('delDate') + '</span><span class="kd-db-v">' + s + '</span><span class="kd-db-tm">' + (d.startTime || '--:--') + '</span></div>'
-            + '<div class="kd-db-mid"><span class="kd-db-dur">' + getDayCount() + '日間</span><span class="kd-db-ar">➜</span></div>'
+            + '<div class="kd-db-mid"><span class="kd-db-dur">' + getDayCount() + t('days') + '</span><span class="kd-db-ar">➜</span></div>'
             + '<div class="kd-db-card e"><span class="kd-db-lbl">🏁 ' + t('colDate') + '</span><span class="kd-db-v">' + e + '</span><span class="kd-db-tm">' + (d.endTime || '--:--') + '</span></div>'
             + '</div>';
     }
@@ -3141,18 +3141,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function kdDpValid() { var dp = state._dp; if (!dp || !dp.start || !dp.end) return false; if (dp.end < dp.start) return false; if (dp.end === dp.start && dp.et <= dp.st) return false; return true; }
     function kdDpDur() {
         var dp = state._dp;
-        if (!dp.start) return '<span style="color:#16a34a;">📅 お届けの日付を選んでください</span>';
-        if (!dp.end) return '<span style="color:#16a34a;">🏁 回収の日付を選んでください<br><span style="font-size:11px;color:#888;font-weight:600;">※日帰り(同日返却)は「お届け日」をもう一度タップ</span></span>';
+        if (!dp.start) return '<span style="color:#16a34a;">' + t('dpPickStart') + '</span>';
+        if (!dp.end) return '<span style="color:#16a34a;">' + t('dpPickEnd') + '<br><span style="font-size:11px;color:#888;font-weight:600;">' + t('dpSameHint') + '</span></span>';
         var s = new Date(dp.start + 'T00:00:00'), e = new Date(dp.end + 'T00:00:00');
-        if (dp.start === dp.end) return '<span style="color:#16a34a;font-weight:900;">🚗 日帰り（同日返却・1日）</span>';
-        return (Math.round((e - s) / 86400000) + 1) + '日間';
+        if (dp.start === dp.end) return '<span style="color:#16a34a;font-weight:900;">' + t('dpSameDay') + '</span>';
+        return (Math.round((e - s) / 86400000) + 1) + t('days');
     }
     function kdDpCalGrid(mDate) {
         var dp = state._dp, earliest = kdDpEarliest();
         var limit = new Date(); limit.setHours(0, 0, 0, 0); limit.setMonth(limit.getMonth() + 4);
         var y = mDate.getFullYear(), m = mDate.getMonth();
         var startDow = new Date(y, m, 1).getDay(), daysIn = new Date(y, m + 1, 0).getDate();
-        var html = '<div class="kd-dp-dow">' + ['日', '月', '火', '水', '木', '金', '土'].map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="kd-dp-grid">';
+        var html = '<div class="kd-dp-dow">' + t('dow').map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div><div class="kd-dp-grid">';
         for (var i = 0; i < startDow; i++) html += '<span class="kd-dp-empty"></span>';
         for (var day = 1; day <= daysIn; day++) {
             var cur = new Date(y, m, day), ymd = localYMD(cur), dis = cur < earliest || cur > limit, cls = 'kd-dp-day';
@@ -3162,7 +3162,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             else if (isS) cls += ' sel s';
             else if (isE) cls += ' sel e';
             else if (dp.start && dp.end && ymd > dp.start && ymd < dp.end) cls += ' btw';
-            var badge = (isS && isE) ? '<i class="b1">日帰り</i>' : (isS ? '<i class="bs">開始</i>' : (isE ? '<i class="be">終了</i>' : ''));
+            var badge = (isS && isE) ? '<i class="b1">' + t('dpRoundtrip') + '</i>' : (isS ? '<i class="bs">' + t('dpStartBadge') + '</i>' : (isE ? '<i class="be">' + t('dpEndBadge') + '</i>' : ''));
             html += '<span class="' + cls + '"' + (dis ? '' : ' onclick="kdDpPick(\'' + ymd + '\')"') + '>' + day + badge + '</span>';
         }
         return html + '</div>';
@@ -3171,12 +3171,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         var pop = document.getElementById('kdDatePop'); if (!pop) return;
         var dp = state._dp, base = kdDpEarliest(), mDate = new Date(base.getFullYear(), base.getMonth() + dp.mo, 1), ok = kdDpValid();
         pop.innerHTML = '<div class="kd-dp-card">'
-            + '<div class="kd-dp-head"><b>日程を選択</b><button class="kd-dp-x" onclick="closeDatePicker()">✕</button></div>'
-            + '<div class="kd-dp-nav"><button onclick="kdDpNav(-1)"' + (dp.mo <= 0 ? ' disabled' : '') + '>‹</button><span>' + mDate.getFullYear() + '年' + (mDate.getMonth() + 1) + '月</span><button onclick="kdDpNav(1)"' + (dp.mo >= 3 ? ' disabled' : '') + '>›</button></div>'
+            + '<div class="kd-dp-head"><b>' + t('dpTitle') + '</b><button class="kd-dp-x" onclick="closeDatePicker()">✕</button></div>'
+            + '<div class="kd-dp-nav"><button onclick="kdDpNav(-1)"' + (dp.mo <= 0 ? ' disabled' : '') + '>‹</button><span>' + kdYMLabel(mDate.getFullYear(), mDate.getMonth() + 1) + '</span><button onclick="kdDpNav(1)"' + (dp.mo >= 3 ? ' disabled' : '') + '>›</button></div>'
             + kdDpCalGrid(mDate)
             + '<div class="kd-dp-times"><div class="kd-dp-t s"><label>🚚 ' + t('delTime') + '</label><select onchange="kdDpTime(\'st\',this.value)">' + kdDpTimeOpts(dp.st) + '</select></div><div class="kd-dp-t e"><label>🏁 ' + t('colTime') + '</label><select onchange="kdDpTime(\'et\',this.value)">' + kdDpTimeOpts(dp.et) + '</select></div></div>'
-            + '<div class="kd-dp-dur">' + kdDpDur() + (dp.start ? ' <a class="kd-dp-clear" onclick="kdDpClear()">↺ やり直す</a>' : '') + '</div>'
-            + '<button class="kd-dp-ok"' + (ok ? '' : ' disabled') + ' onclick="applyDatePicker()">確認</button>'
+            + '<div class="kd-dp-dur">' + kdDpDur() + (dp.start ? ' <a class="kd-dp-clear" onclick="kdDpClear()">' + t('dpReset') + '</a>' : '') + '</div>'
+            + '<button class="kd-dp-ok"' + (ok ? '' : ' disabled') + ' onclick="applyDatePicker()">' + t('dpConfirm') + '</button>'
             + '</div>';
     }
     function applyDatePicker() {
@@ -4350,7 +4350,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function formatDateLabel(dateStr) {
         if (!dateStr) return '';
         const d = new Date(dateStr + 'T00:00:00');
-        const days = '日月火水木金土';
+        const days = t('dow');
         return `${d.getMonth()+1}/${d.getDate()}（${days[d.getDay()]}）`;
     }
 
@@ -5496,7 +5496,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: '上のフォームで日時を選択', step2sub: 'マップをタップしてピンを置く',
             deliverable: '台デリバリー可能', classes: 'クラス', noVehicle: '該当する車両がありません',
             noVehicleSub: '日程やクラスを変更してお試しください', searching: '車両を検索中...',
-            seats: '人乗り', available: '台空き', availMany: '空きあり', availFew: '残りわずか', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決める', decideDeliverHere: '✓ この場所に決める', decideCollectHere: '✓ この場所に決める',
+            seats: '人乗り', available: '台空き', availMany: '空きあり', availFew: '残りわずか', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決める', decideDeliverHere: '✓ この場所に決める', decideCollectHere: '✓ この場所に決める', taxiDelivPrompt: '📍 下記指定場所にお届けします', taxiCollectPrompt: '🏁 下記指定場所で回収します', taxiDelivCta: 'お届け場所と日時を決定', taxiCollectCta: '回収場所を決定', taxiPickDel: 'お届け先を指定してください', taxiPickCol: '回収先を指定してください', areaDeliverBadge: '🚗 ご指定場所に車をお届け', dow: ['日', '月', '火', '水', '木', '金', '土'], dateWord: '日付', dpPickStart: '📅 お届けの日付を選んでください', dpPickEnd: '🏁 回収の日付を選んでください', dpSameHint: '※日帰り(同日返却)は「お届け日」をもう一度タップ', dpSameDay: '🚗 日帰り（同日返却・1日）', dpRoundtrip: '日帰り', dpStartBadge: '開始', dpEndBadge: '終了', dpTitle: '日程を選択', dpReset: '↺ やり直す', dpConfirm: '確認',
             noAddress: '該当する住所が見つかりません',
             // Confirm
             confirmTitle: '予約内容の確認', estimate: 'お支払い見積もり', taxIncl: '税込',
@@ -5612,7 +5612,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: 'Select dates above', step2sub: 'Tap the map to place a pin',
             deliverable: ' available for delivery', classes: ' classes', noVehicle: 'No vehicles available',
             noVehicleSub: 'Try changing dates or class', searching: 'Searching...',
-            seats: ' seats', available: ' avail.', availMany: 'Available', availFew: 'Few left', days: ' days', select: 'Select', deliveryPlace: 'Delivery Location', decideHere: '✓ Set this location', decideDeliverHere: '✓ Set this delivery spot', decideCollectHere: '✓ Set this return spot',
+            seats: ' seats', available: ' avail.', availMany: 'Available', availFew: 'Few left', days: ' days', select: 'Select', deliveryPlace: 'Delivery Location', decideHere: '✓ Set this location', decideDeliverHere: '✓ Set this delivery spot', decideCollectHere: '✓ Set this return spot', taxiDelivPrompt: '📍 Delivering to the spot below', taxiCollectPrompt: '🏁 Collecting at the spot below', taxiDelivCta: 'Set delivery spot & time', taxiCollectCta: 'Set return spot', taxiPickDel: 'Choose a delivery location', taxiPickCol: 'Choose a return location', areaDeliverBadge: '🚗 Car delivered to your spot', dow: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], dateWord: 'Date', dpPickStart: '📅 Choose your delivery date', dpPickEnd: '🏁 Choose your return date', dpSameHint: '※ For a same-day return, tap the delivery date again', dpSameDay: '🚗 Same-day return (1 day)', dpRoundtrip: 'Same day', dpStartBadge: 'Start', dpEndBadge: 'End', dpTitle: 'Select dates', dpReset: '↺ Reset', dpConfirm: 'Confirm',
             noAddress: 'No matching address found',
             confirmTitle: 'Booking Confirmation', estimate: 'Estimated Total', taxIncl: 'incl. tax',
             baseFee: 'Base fee', deliveryFee: 'Delivery fee', proceed: 'Proceed to Book', backToSelect: 'Back to Vehicle Selection',
@@ -5722,7 +5722,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: '在上方選擇日期', step2sub: '點擊地圖放置標記',
             deliverable: '輛可送達', classes: '個車型', noVehicle: '沒有符合的車輛',
             noVehicleSub: '請嘗試更改日期或車型', searching: '搜尋中...',
-            seats: '人座', available: '輛可用', availMany: '有空車', availFew: '剩餘不多', days: '天', select: '選擇', deliveryPlace: '送車地點', decideHere: '✓ 設為此地點', decideDeliverHere: '✓ 設為此送車地點', decideCollectHere: '✓ 設為此回收地點',
+            seats: '人座', available: '輛可用', availMany: '有空車', availFew: '剩餘不多', days: '天', select: '選擇', deliveryPlace: '送車地點', decideHere: '✓ 設為此地點', decideDeliverHere: '✓ 設為此送車地點', decideCollectHere: '✓ 設為此回收地點', taxiDelivPrompt: '📍 送車至下方指定地點', taxiCollectPrompt: '🏁 於下方指定地點回收', taxiDelivCta: '確定送車地點與時間', taxiCollectCta: '確定回收地點', taxiPickDel: '請指定送車地點', taxiPickCol: '請指定回收地點', areaDeliverBadge: '🚗 送車到您指定的地點', dow: ['日', '一', '二', '三', '四', '五', '六'], dateWord: '日期', dpPickStart: '📅 請選擇送車日期', dpPickEnd: '🏁 請選擇回收日期', dpSameHint: '※當日往返請再次點選送車日', dpSameDay: '🚗 當日往返（1天）', dpRoundtrip: '當日', dpStartBadge: '開始', dpEndBadge: '結束', dpTitle: '選擇日期', dpReset: '↺ 重新選擇', dpConfirm: '確認',
             noAddress: '找不到符合的地址',
             confirmTitle: '預約內容確認', estimate: '預估費用', taxIncl: '含稅',
             baseFee: '基本費用', deliveryFee: '配送費', proceed: '進入預約手續', backToSelect: '返回車輛選擇',
@@ -5832,7 +5832,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: '위 양식에서 일시 선택', step2sub: '지도를 탭하여 핀을 놓기',
             deliverable: '대 배달 가능', classes: '클래스', noVehicle: '해당하는 차량이 없습니다',
             noVehicleSub: '일정이나 클래스를 변경해 보세요', searching: '차량 검색 중...',
-            seats: '인승', available: '대 가능', availMany: '여유 있음', availFew: '잔여 적음', days: '일간', select: '선택', deliveryPlace: '배달 장소', decideHere: '✓ 이 위치로 결정', decideDeliverHere: '✓ 이곳을 배달 장소로', decideCollectHere: '✓ 이곳을 회수 장소로',
+            seats: '인승', available: '대 가능', availMany: '여유 있음', availFew: '잔여 적음', days: '일간', select: '선택', deliveryPlace: '배달 장소', decideHere: '✓ 이 위치로 결정', decideDeliverHere: '✓ 이곳을 배달 장소로', decideCollectHere: '✓ 이곳을 회수 장소로', taxiDelivPrompt: '📍 아래 지정 장소로 배달합니다', taxiCollectPrompt: '🏁 아래 지정 장소에서 회수합니다', taxiDelivCta: '배달 장소·일시 결정', taxiCollectCta: '회수 장소 결정', taxiPickDel: '배달 장소를 지정해 주세요', taxiPickCol: '회수 장소를 지정해 주세요', areaDeliverBadge: '🚗 지정 장소로 차량 배달', dow: ['일', '월', '화', '수', '목', '금', '토'], dateWord: '날짜', dpPickStart: '📅 배달 날짜를 선택하세요', dpPickEnd: '🏁 회수 날짜를 선택하세요', dpSameHint: '※당일 반납은 배달일을 다시 탭하세요', dpSameDay: '🚗 당일 반납(1일)', dpRoundtrip: '당일', dpStartBadge: '시작', dpEndBadge: '종료', dpTitle: '일정 선택', dpReset: '↺ 다시 선택', dpConfirm: '확인',
             noAddress: '해당하는 주소를 찾을 수 없습니다',
             confirmTitle: '예약 내용 확인', estimate: '결제 예상 금액', taxIncl: '세금 포함',
             baseFee: '기본 요금', deliveryFee: '배송료', proceed: '예약 절차로 진행', backToSelect: '차량 선택으로 돌아가기',
@@ -5930,6 +5930,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     };
 
     function t(key) { return LANG[state.lang]?.[key] || LANG.ja[key] || key; }
+    function kdYMLabel(y, m1) { if (state.lang === 'en') { return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m1 - 1] + ' ' + y; } if (state.lang === 'ko') { return y + '년 ' + m1 + '월'; } return y + '年' + m1 + '月'; }
     // 車両クラス名を選択言語で返す（cls_<type>）。無ければVEHICLE_CLASSESのJP名→type。
     function clsName(type) { if (!type) return ''; const L = LANG[state.lang] || {}; return L['cls_' + type] || LANG.ja['cls_' + type] || (VEHICLE_CLASSES[type] || {}).name || type; }
     // 車種名（メーカー・モデル）を非日本語時に国際表記へ。座標/予約には無関係＝表示のみ。
