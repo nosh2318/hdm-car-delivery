@@ -267,24 +267,26 @@
     else if (pts.length === 1) { map.panTo(pts[0]); }
   }
 
+  let _geocoder = null;
+  // 住所→座標：リファラ制限キーはGeocoding RESTで弾かれるため地図JSのGeocoderを使用
   function geocodeMeet(addr) {
     if (!gmapReady || !map || !addr) return;
     const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
     if (!clean || clean === meetAddrDone) return;
     meetAddrDone = clean;
-    fetch('https://maps.googleapis.com/maps/api/geocode/json?language=ja&region=jp&key=' + GMAPS_KEY + '&address=' + encodeURIComponent(clean))
-      .then(r => r.json()).then(j => {
-        if (j && j.status === 'OK' && j.results && j.results[0]) {
-          const loc = j.results[0].geometry.location;
-          if (!meetMarker) {
-            meetMarker = new google.maps.Marker({
-              map, position: loc, title: '待ち合わせ場所', zIndex: 1, label: { text: '📍', fontSize: '22px' },
-              icon: { path: google.maps.SymbolPath.CIRCLE, scale: 13, fillColor: '#7c3aed', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
-            });
-          } else meetMarker.setPosition(loc);
-          fitAll();
-        }
-      }).catch(() => {});
+    if (!_geocoder) _geocoder = new google.maps.Geocoder();
+    _geocoder.geocode({ address: clean, region: 'jp', language: 'ja' }, function (results, status) {
+      if (status === 'OK' && results && results[0]) {
+        const loc = results[0].geometry.location;
+        if (!meetMarker) {
+          meetMarker = new google.maps.Marker({
+            map, position: loc, title: '待ち合わせ場所', zIndex: 1, label: { text: '📍', fontSize: '22px' },
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 13, fillColor: '#7c3aed', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+          });
+        } else meetMarker.setPosition(loc);
+        fitAll();
+      } else { meetAddrDone = ''; }
+    });
   }
 
   function smoothMove(marker, target) {
