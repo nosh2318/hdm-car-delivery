@@ -186,11 +186,16 @@
 
   function applyAddr(d) {
     const box = document.getElementById('addrBox');
-    if (d && d.del_place) {
-      box.style.display = 'block';
-      document.getElementById('addrVal').textContent = d.del_place + (d.cust_name ? '（' + d.cust_name + ' 様）' : '');
-      document.getElementById('addrLink').href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(d.del_place) + '&travelmode=driving';
-    }
+    if (!d) { box.style.display = 'none'; return; }
+    const collecting = (d.kd_status === 'collecting');
+    const goal = collecting ? (d.col_place || d.del_place) : (d.del_place || d.col_place);
+    if (!goal) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    const lblEl = box.querySelector('.lbl');
+    if (lblEl) lblEl.textContent = collecting ? '📍 回収場所' : '📍 お届け先';
+    document.getElementById('addrVal').textContent = goal + (d.cust_name ? '（' + d.cust_name + ' 様）' : '');
+    // ナビボタン＝Googleマップ経路（住所文字列でOK・Geocoding API不要＝今すぐ向かえる）
+    document.getElementById('addrLink').href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(goal) + '&travelmode=driving';
   }
 
   // ===== sending =====
