@@ -1018,11 +1018,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-adbanner .go { flex: none; align-self: center; width: 30px; height: 30px; margin-right: 12px; border-radius: 50%; background: linear-gradient(#ffd34d, #FABE00); color: #10203f; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
         @keyframes kdad4 { 0%,22% { transform: translateX(0); } 25%,47% { transform: translateX(-25%); } 50%,72% { transform: translateX(-50%); } 75%,97% { transform: translateX(-75%); } 100% { transform: translateX(0); } }
         @keyframes kdad5 { 0%,16% { transform: translateX(0); } 20%,36% { transform: translateX(-20%); } 40%,56% { transform: translateX(-40%); } 60%,76% { transform: translateX(-60%); } 80%,96% { transform: translateX(-80%); } 100% { transform: translateX(0); } }
-        /* ★ お届けオーバーレイのスライダーは全幅で「テキスト横一列」（折りたたまない・スマホもPCも） */
-        .kd-ov-deliver .kd-adbanner .tx { flex-direction: row; align-items: center; gap: 8px; flex-wrap: nowrap; padding: 8px 10px; }
-        .kd-ov-deliver .kd-adbanner .hl { font-size: 12px; white-space: nowrap; }
+        /* ★ お届けオーバーレイ＝マップ全幅で［住所(全幅)｜スライダー広め｜決定］横一列。スライダーはテキスト横一列で全表示（全幅適用・!important） */
+        .kd-pin-overlay.kd-ov-deliver { max-width: none !important; display: flex !important; flex-wrap: wrap; align-items: stretch; gap: 8px 10px; }
+        .kd-ov-deliver .kd-ovtoggle { flex: 1 1 100% !important; order: 0; }
+        .kd-ov-deliver .kp-row { flex: 1 1 100% !important; order: 1; }
+        .kd-ov-deliver .kp-addr { -webkit-line-clamp: unset !important; display: block !important; white-space: normal !important; overflow: visible !important; }
+        .kd-ov-deliver .kd-adslider { flex: 2 1 300px !important; order: 2; margin: 0 !important; min-width: 0; align-self: stretch; }
+        .kd-ov-deliver .kd-adslider .kd-adtrack, .kd-ov-deliver .kd-adslider .kd-adbanner { height: 100%; }
+        .kd-ov-deliver .kp-confirm { flex: 1 1 160px !important; order: 3; margin: 0 !important; align-self: stretch; }
+        .kd-ov-deliver .kd-adbanner .pic { display: none; }
+        .kd-ov-deliver .kd-adbanner .tx { flex-direction: row !important; align-items: center; gap: 8px; flex-wrap: nowrap; padding: 8px 12px; }
+        .kd-ov-deliver .kd-adbanner .hl { font-size: 12.5px; white-space: nowrap; }
         .kd-ov-deliver .kd-adbanner .hl em { margin-left: 4px; }
-        .kd-ov-deliver .kd-adbanner .sub { font-size: 10.5px; white-space: nowrap; }
+        .kd-ov-deliver .kd-adbanner .sub { font-size: 11px; white-space: nowrap; }
         /* PC：スライダーを「この場所に決める」ボタンの横に並べる（スマホは縦積みのまま） */
         @media (min-width: 768px) {
             /* パネルはマップ幅いっぱいに */
