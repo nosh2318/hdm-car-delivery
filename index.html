@@ -2153,7 +2153,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // taxiUI: お届けと同じ clean sheet（質問見出し＋お届けと同じ＋住所＋決定）
             if (kdTaxiOn()) {
                 const _cc = !!state.collectionAddr && !state.sameCollection;
-                let th = kdAdBar() + '<div class="kd-q">' + t('taxiCollectPrompt') + '</div>';
+                let th = kdAdBar() + (kdTaxiOn() ? '' : '<div class="kd-q">' + t('taxiCollectPrompt') + '</div>');
                 if (state.deliveryAddr) th += `<button class="kp-opt kd-same kd-cta-blink" onclick="sameCollectionGo()">🔁 ${t('sameAsDeliveryBtn')}<div class="kp-opt-sub">${state.deliveryAddr}</div></button>`;
                 th += `<div class="kp-row"><span class="kp-ic">📍</span><div class="kp-body"><div class="kp-lbl">${t('collectionPlaceL')}</div><div class="kp-addr">${state.collectionAddr || t('orPickOnMap')}</div></div></div>`;
                 th += (_cc && dateOk)
@@ -2192,7 +2192,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         const _taxi = kdTaxiOn();
         const _delCta = _taxi ? t('taxiDelivCta') : t('decideDeliverHere');
-        let html = (!ng ? kdAdBar() : '') + (_taxi && !ng ? '<div class="kd-q">' + t('taxiDelivPrompt') + '</div>' : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
+        let html = (!ng ? kdAdBar() : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
             // taxiUI(スマホ)＝下段に日程バーを内包。PC/従来はオーバーレイに日程を入れない(日程は上の#dateStrip)
             const _dateHtml = _taxi ? `<div class="kd-od-date">${kdDateBar()}</div>` : '';
