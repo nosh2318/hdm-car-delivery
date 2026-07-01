@@ -1028,6 +1028,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         #delAddrPanel .kd-locpanel-card .kp-confirm, #locPanel .kd-locpanel-card .kp-confirm { display:block; flex:0 0 auto; width:auto; margin-top:0; background:#fffdf4; color:#1a1a1a; border:2px solid #FABE00; border-radius:9px; padding:8px 12px; font-size:13px; font-weight:800; cursor:pointer; text-align:center; white-space:nowrap; }
         #delAddrPanel .kd-locpanel-card .kp-confirm:disabled, #locPanel .kd-locpanel-card .kp-confirm:disabled { background:#f3f3f3; color:#bbb; border-color:#e0e0e0; cursor:not-allowed; }
         .kd-pin-overlay.kd-ov-deliver { max-width: none !important; display: flex !important; flex-wrap: wrap; align-items: stretch; gap: 8px 10px; }
+        /* ★マップが潰れて動かせない対策(スマホ)：オーバーレイを圧縮＋高さ上限で地図領域を確保 */
+        html.taxiui .kd-pin-overlay.kd-ov-deliver { padding: 6px 10px !important; gap: 5px 8px !important; max-height: 46vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
+        html.taxiui .kd-ov-deliver .kd-adbanner .tx { padding: 5px 12px !important; }
+        html.taxiui .kd-ov-deliver .kd-ovtoggle { padding-top: 2px !important; padding-bottom: 4px !important; }
+        html.taxiui .kd-od-row .kd-db-card { padding: 2px 4px !important; }
+        html.taxiui .kd-od-row .kd-db-lbl { font-size: 9px !important; }
+        html.taxiui .kd-od-row .kd-db-v { font-size: 13px !important; }
+        html.taxiui .kd-od-row .kd-db-tm { font-size: 10px !important; padding: 0 6px !important; }
         .kd-ov-deliver .kd-ovtoggle { flex: 1 1 100% !important; order: 0; }
         .kd-ov-deliver .kp-row { flex: 1 1 100% !important; order: 3; }
         .kd-ov-deliver .kp-addr { -webkit-line-clamp: unset !important; display: block !important; white-space: normal !important; overflow: visible !important; }
