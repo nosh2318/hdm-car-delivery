@@ -999,9 +999,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-q::before { content: ""; position: absolute; left: 0; top: 1px; bottom: 10px; width: 4px; border-radius: 3px; background: linear-gradient(#FABE00, #d9a400); }
         /* 広告カルーセル（上品・紺グラデ×金アクセント／1枚ずつ切替） */
         .kd-adslider { overflow: hidden; border-radius: 12px; margin: -2px -2px 12px; box-shadow: 0 3px 12px rgba(0,32,99,.18); }
-        .kd-adtrack { display: flex; width: 400%; }
-        .kd-adtrack.kdn4 { animation: kdad4 22s infinite; }
-        .kd-adbanner { width: 25%; display: flex; align-items: center; gap: 12px; padding: 12px 15px; box-sizing: border-box;
+        .kd-adtrack { display: flex; }
+        .kd-adtrack.kdn4 { width: 400%; animation: kdad4 22s infinite; }
+        .kd-adtrack.kdn5 { width: 500%; animation: kdad5 26s infinite; }
+        .kd-adtrack.kdn4 .kd-adbanner { width: 25%; }
+        .kd-adtrack.kdn5 .kd-adbanner { width: 20%; }
+        .kd-adbanner { display: flex; align-items: center; gap: 12px; padding: 12px 15px; box-sizing: border-box;
             background: linear-gradient(to left, #000d24 0%, #002063 55%, #12409a 100%); position: relative; }
         .kd-adbanner::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(#FABE00, #d9a400); }
         .kd-adbanner .ic { flex: none; width: 36px; height: 36px; border-radius: 50%; background: rgba(250,190,0,.14);
@@ -1010,6 +1013,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .kd-adbanner .tx b { color: #FABE00; font-weight: 900; }
         @keyframes kdad4 { 0%,22% { transform: translateX(0); } 25%,47% { transform: translateX(-25%); } 50%,72% { transform: translateX(-50%); } 75%,97% { transform: translateX(-75%); } 100% { transform: translateX(0); } }
+        @keyframes kdad5 { 0%,16% { transform: translateX(0); } 20%,36% { transform: translateX(-20%); } 40%,56% { transform: translateX(-40%); } 60%,76% { transform: translateX(-60%); } 80%,96% { transform: translateX(-80%); } 100% { transform: translateX(0); } }
         html.taxiui .kd-pin-overlay .kp-opt.kd-same { border: 2px solid #FABE00; background: #fffbeb; }
         .kd-od-date { margin: 11px 0 6px; }
         /* 決定ボタン＝シート最下部の独立ボタン（端まで伸ばさず左右余白・角丸） */
@@ -1278,6 +1282,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function kdAddrInCities(addr) { var cs = kdTargetCities(); if (!cs.length) return true; var a = addr || ''; return cs.some(function (c) { return a.indexOf(c) >= 0; }); }
     // 対応エリア（管理画面で設定した対応可能の市）をお届け日付の上に表示
     function renderAreaInfo() {
+        return ''; // 「ご指定場所に車をお届け／対応エリア」バーは削除しマップを広げる（エリア案内はスライダーに集約）
         var cs = kdTargetCities(); if (!cs.length) return '';
         return '<div style="display:flex;align-items:center;gap:8px;padding:8px 14px 0;font-size:12px;font-weight:800;flex-wrap:wrap;">'
             + '<span style="flex:none;color:#0F1F45;">' + t('areaDeliverBadge') + '</span>'
@@ -3120,12 +3125,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             ['🎟', '車両選択にて<b>10%クーポン配布中!!</b>'],
             ['🚗', '<b>デリバリー料金無料</b>'],
             ['📍', '自宅／駅／コインパーキングなど<b>受け取り場所指定可能</b>'],
-            ['🗾', '対応エリア <b>那覇／札幌</b>']
+            ['🌺', '対応エリア <b>沖縄／那覇市・豊見城市</b>'],
+            ['❄️', '対応エリア <b>北海道／札幌市・北広島市</b>']
         ];
         var items = B.map(function (b) {
             return '<div class="kd-adbanner"><span class="ic">' + b[0] + '</span><span class="tx">' + b[1] + '</span></div>';
         }).join('');
-        return '<div class="kd-adslider"><div class="kd-adtrack kdn4">' + items + '</div></div>';
+        return '<div class="kd-adslider"><div class="kd-adtrack kdn5">' + items + '</div></div>';
     }
     function kdDateBar() {
         var d = state.datetime;
