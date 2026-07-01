@@ -1008,16 +1008,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-adtrack.kdn5 { width: 500%; animation: kdad5 26s infinite; }
         .kd-adtrack.kdn4 .kd-adbanner { width: 25%; }
         .kd-adtrack.kdn5 .kd-adbanner { width: 20%; }
-        .kd-adbanner { display: flex; align-items: center; gap: 12px; padding: 12px 15px; box-sizing: border-box;
+        .kd-adbanner { display: flex; align-items: stretch; gap: 0; padding: 0; box-sizing: border-box; min-height: 58px; overflow: hidden;
             background: linear-gradient(to left, #1657d6 0%, #5a97f0 38%, #b9d4fb 72%, #eef5ff 100%); position: relative; }
-        .kd-adbanner::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(#FABE00, #d9a400); }
-        .kd-adbanner .ic { flex: none; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.65);
-            border: 1px solid rgba(0,32,99,.18); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .kd-adbanner .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .kd-adbanner .pic { flex: none; width: 76px; background-size: cover; background-position: center; border-right: 3px solid #FABE00; }
+        .kd-adbanner .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 8px 10px 8px 13px; }
         .kd-adbanner .hl { font-size: 13.5px; font-weight: 900; color: #002063; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(255,255,255,.5); }
         .kd-adbanner .hl em { font-style: normal; background: linear-gradient(#ffd34d, #FABE00); color: #10203f; padding: 1px 8px; border-radius: 5px; margin-left: 6px; font-weight: 900; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
         .kd-adbanner .sub { font-size: 10.5px; font-weight: 700; color: #33518a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(255,255,255,.5); }
-        .kd-adbanner .go { flex: none; width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(#ffd34d, #FABE00); color: #10203f; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+        .kd-adbanner .go { flex: none; align-self: center; width: 30px; height: 30px; margin-right: 12px; border-radius: 50%; background: linear-gradient(#ffd34d, #FABE00); color: #10203f; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 15px; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
         @keyframes kdad4 { 0%,22% { transform: translateX(0); } 25%,47% { transform: translateX(-25%); } 50%,72% { transform: translateX(-50%); } 75%,97% { transform: translateX(-75%); } 100% { transform: translateX(0); } }
         @keyframes kdad5 { 0%,16% { transform: translateX(0); } 20%,36% { transform: translateX(-20%); } 40%,56% { transform: translateX(-40%); } 60%,76% { transform: translateX(-60%); } 80%,96% { transform: translateX(-80%); } 100% { transform: translateX(0); } }
         /* PC：スライダーを「この場所に決める」ボタンの横に並べる（スマホは縦積みのまま） */
@@ -3149,16 +3147,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     // 広告カルーセル（上品・紺×金／1枚ずつ切替）
     function kdAdBar() {
-        // [アイコン, 見出し, 強調キーワード, サブ行]
+        // [写真, 見出し, 強調キーワード, サブ行]
         var B = [
-            ['🎟', '10%OFFクーポン', '配布中!!', '車両選択画面で使えます'],
-            ['🚗', 'デリバリー料金', '無料', 'お届け・回収 0円'],
-            ['📍', '受け取り場所', '指定可能', '自宅／駅／コインパーキング'],
-            ['🌺', '対応エリア 沖縄', '那覇・豊見城', '那覇市・豊見城市へお届け'],
-            ['❄️', '対応エリア 北海道', '札幌・北広島', '札幌市・北広島市へお届け']
+            ['images/top_banner_01.jpg', '10%OFFクーポン', '配布中!!', '車両選択画面で使えます'],
+            ['images/kv2.jpg', 'デリバリー料金', '無料', 'お届け・回収 0円'],
+            ['images/top_banner_02.jpg', '受け取り場所', '指定可能', '自宅／駅／コインパーキング'],
+            ['images/kv1.jpg', '対応エリア 沖縄', '那覇・豊見城', '那覇市・豊見城市へお届け'],
+            ['images/kv4.jpg', '対応エリア 北海道', '札幌・北広島', '札幌市・北広島市へお届け']
         ];
         var items = B.map(function (b) {
-            return '<div class="kd-adbanner"><span class="ic">' + b[0] + '</span>'
+            return '<div class="kd-adbanner"><span class="pic" style="background-image:url(' + b[0] + ')"></span>'
                 + '<span class="tx"><span class="hl">' + b[1] + '<em>' + b[2] + '</em></span><span class="sub">' + b[3] + '</span></span>'
                 + '<span class="go">»</span></div>';
         }).join('');
