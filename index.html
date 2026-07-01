@@ -1019,6 +1019,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         @keyframes kdad4 { 0%,22% { transform: translateX(0); } 25%,47% { transform: translateX(-25%); } 50%,72% { transform: translateX(-50%); } 75%,97% { transform: translateX(-75%); } 100% { transform: translateX(0); } }
         @keyframes kdad5 { 0%,16% { transform: translateX(0); } 20%,36% { transform: translateX(-20%); } 40%,56% { transform: translateX(-40%); } 60%,76% { transform: translateX(-60%); } 80%,96% { transform: translateX(-80%); } 100% { transform: translateX(0); } }
         /* ★ お届けオーバーレイ＝マップ全幅で［住所(全幅)｜スライダー広め｜決定］横一列。スライダーはテキスト横一列で全表示（全幅適用・!important） */
+        #locPanel .kd-locpanel-card { background:#fff; border:1.5px solid #FABE00; border-radius:12px; padding:10px 12px; margin:10px 16px 0; box-shadow:0 3px 12px rgba(0,32,99,.12); }
+        #locPanel .kd-locpanel-card .kp-row { display:flex; align-items:center; gap:9px; }
+        #locPanel .kd-locpanel-card .kp-ic { font-size:18px; flex:none; }
+        #locPanel .kd-locpanel-card .kp-body { flex:1; min-width:0; }
+        #locPanel .kd-locpanel-card .kp-lbl { font-size:10px; font-weight:800; color:#a07c00; line-height:1.2; }
+        #locPanel .kd-locpanel-card .kp-addr { font-size:14px; font-weight:700; color:#1a1a1a; line-height:1.4; }
+        #locPanel .kd-locpanel-card .kp-confirm { display:block; width:100%; margin-top:9px; background:#fffdf4; color:#1a1a1a; border:2px solid #FABE00; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; text-align:center; }
+        #locPanel .kd-locpanel-card .kp-confirm:disabled { background:#f3f3f3; color:#bbb; border-color:#e0e0e0; cursor:not-allowed; }
         .kd-pin-overlay.kd-ov-deliver { max-width: none !important; display: flex !important; flex-wrap: wrap; align-items: stretch; gap: 8px 10px; }
         .kd-ov-deliver .kd-ovtoggle { flex: 1 1 100% !important; order: 0; }
         .kd-ov-deliver .kp-row { flex: 1 1 100% !important; order: 1; }
@@ -2233,15 +2241,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         const _taxi = kdTaxiOn();
         const _delCta = _taxi ? t('taxiDelivCta') : t('decideDeliverHere');
-        let html = kdOvToggleBtn() + (!ng ? kdAdBar() : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
-        if (!ng) {
-            // taxiUI(スマホ)＝下段に日程バーを内包。PC/従来はオーバーレイに日程を入れない(日程は上の#dateStrip)
-            const _dateHtml = _taxi ? `<div class="kd-od-date">${kdDateBar()}</div>` : '';
-            // 決定ボタンは「枠だけ点滅（塗りなし）」＝①②と統一。日時未設定はdisabled
+        // ★ 非taxi・エリア内＝住所+決定は日時の下(#locPanel/renderLocationStepPanel)へ。マップ上のオーバーレイはスライダーのみ。
+        let html = kdOvToggleBtn() + (!ng ? kdAdBar() : '');
+        if (ng) {
+            html += `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
+        } else if (_taxi) {
+            html += `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
+            const _dateHtml = `<div class="kd-od-date">${kdDateBar()}</div>`;
             const _btnHtml = dateOk
                 ? `<button class="kp-confirm kd-cta-blink" onclick="deliveryDecideGo()">${_delCta}</button>`
                 : `<button class="kp-confirm" disabled>${_delCta}</button>`;
-            html += _taxi ? `<div class="kd-od-row">${_dateHtml}${_btnHtml}</div>` : _btnHtml;
+            html += `<div class="kd-od-row">${_dateHtml}${_btnHtml}</div>`;
         }
         ov.innerHTML = html;
     }
@@ -3341,8 +3351,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>`;
     }
     function renderLocationStepPanel() {
-        // マップ下は空＝マップを画面最下部まで最大化。住所/決定/戻る/警告はすべて地図上カードに集約。
-        return '';
+        // 非taxi・エリア内のお届け＝住所+決定を「日時の下」(フロー列幅)に出す。回収/taxi/エリア外はマップ上カードのまま。
+        try {
+            if (typeof kdTaxiOn === 'function' && kdTaxiOn()) return '';
+            if (state.locStep === 'collection') return '';
+            if (state.screen !== 'top' && state.screen !== 'step_location') return '';
+            const addr = state.deliveryAddr;
+            if (!addr || state.outOfArea) return '';
+            const dt = state.datetime;
+            const dateOk = !!(dt.startDate && dt.startTime);
+            const btn = dateOk
+                ? `<button class="kp-confirm kd-cta-blink" onclick="deliveryDecideGo()">${t('decideDeliverHere')}</button>`
+                : `<button class="kp-confirm" disabled>${t('decideDeliverHere')}</button>`;
+            return `<div class="kd-locpanel-card"><div class="kp-row"><span class="kp-ic">📍</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${addr}</div></div></div>${btn}</div>`;
+        } catch (e) { return ''; }
     }
 
     // ── 次画面：車両（結果）。上部にお届け＝黄/回収＝黒のサマリーを固定し条件一致車両のみ ──
