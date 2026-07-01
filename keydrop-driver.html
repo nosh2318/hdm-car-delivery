@@ -191,7 +191,16 @@
     if (!d) { box.style.display = 'none'; return; }
     const collecting = (d.kd_status === 'collecting');
     const goal = collecting ? (d.col_place || d.del_place) : (d.del_place || d.col_place);
-    if (!goal) { box.style.display = 'none'; return; }
+    if (!goal) {
+      // 目的地が未入力（楽天等はLINEで別途調整）→空白で混乱しないよう明示
+      box.style.display = 'block';
+      const lblEl0 = box.querySelector('.lbl'); if (lblEl0) lblEl0.textContent = '⚠️ 待ち合わせ場所 未入力';
+      const av = document.getElementById('addrVal');
+      if (av) av.innerHTML = 'この予約は' + (collecting ? '回収場所' : 'お届け先') + 'が未入力です。<br>お客様が「今いる場所を共有」すると地図に目的地(お客様位置)が出ます。<br>または予約に場所を入力してください。';
+      const lk = document.getElementById('addrLink'); if (lk) lk.style.display = 'none';
+      return;
+    }
+    const lk2 = document.getElementById('addrLink'); if (lk2) lk2.style.display = '';
     box.style.display = 'block';
     const lblEl = box.querySelector('.lbl');
     if (lblEl) lblEl.textContent = collecting ? '📍 回収場所' : '📍 お届け先';
