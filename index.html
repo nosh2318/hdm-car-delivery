@@ -1097,7 +1097,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </style>
 </head>
 <body>
-<!-- 🎬 起動スプラッシュ（2秒・タップでスキップ・セッション1回／?splash=1で強制表示・?splash=0で無効／スマホ=縦画像・PC=横画像） -->
+<!-- 🎬 起動スプラッシュ（3秒・タップでスキップ・セッション1回／?splash=1で強制表示・?splash=0で無効／スマホ=縦画像・PC=横画像） -->
 <style>#kdSplash{position:fixed;inset:0;z-index:2147483600;background-color:#123a5e;background-image:url('images/splash_go.jpg');background-position:center;background-size:cover;background-repeat:no-repeat;opacity:1;transition:opacity .45s ease;cursor:pointer}@media(min-width:768px){#kdSplash{background-image:url('images/splash_go_pc.jpg')}}</style>
 <div id="kdSplash"></div>
 <script>(function(){try{
@@ -1109,9 +1109,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   try{ sessionStorage.setItem('kd_splash','1'); }catch(e){}
   var done=false; function hide(){ if(done||!sp)return; done=true; sp.style.opacity='0'; setTimeout(function(){ if(sp){sp.remove();sp=null;} },350); }
   sp.addEventListener('click',hide);
-  // 立ち上がり高速化: 最大1秒、ページ読込完了なら0.3sで早期終了（スマホで待たせない）
-  setTimeout(hide,1000);
-  window.addEventListener('load',function(){ setTimeout(hide,300); });
+  // スプラッシュ表示＝3秒（タップでスキップ）
+  setTimeout(hide,3000);
 }catch(e){ var x=document.getElementById('kdSplash'); if(x)x.remove(); }})();</script>
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KVF3F48X"
