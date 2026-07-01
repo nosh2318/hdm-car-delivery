@@ -816,11 +816,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-pin-overlay .kp-go { display: block; width: 100%; margin-top: 9px; background: #FABE00; color: #1a1a1a;
             border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: center; }
         /* 回収の①②2択（同じ枠内に並べる） */
-        .kd-pin-overlay .kp-opt { display: block; width: 100%; margin-top: 8px; background: #fff; border: 1.5px solid #1a1a1a;
-            color: #1a1a1a; border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 800; cursor: pointer; text-align: left; }
-        .kd-pin-overlay .kp-opt b { display: inline-block; min-width: 16px; color: #1a1a1a; }
-        .kd-pin-overlay .kp-opt.kp-opt-active { border-color: #FABE00; background: #fffdf4; }
-        .kd-pin-overlay .kp-opt.kp-opt-dim { border: 1.5px dashed #ccc; color: #999; cursor: default; font-weight: 700; }
+        .kd-pin-overlay .kp-opt { display: block; width: 100%; margin-top: 8px; text-shadow: 0 1px 2px rgba(255,255,255,.5);
+            background: linear-gradient(to left, #1657d6 0%, #5a97f0 38%, #b9d4fb 72%, #eef5ff 100%); border: 0; border-left: 4px solid #FABE00;
+            color: #002063; border-radius: 10px; padding: 11px 13px; font-size: 13px; font-weight: 800; cursor: pointer; text-align: left; }
+        .kd-pin-overlay .kp-opt b { display: inline-block; min-width: 16px; color: #002063; }
+        .kd-pin-overlay .kp-opt.kp-opt-active { box-shadow: inset 0 0 0 2px rgba(250,190,0,.6); }
+        .kd-pin-overlay .kp-opt.kp-opt-dim { background: #eef1f5; border: 1.5px dashed #ccc; border-left: 4px solid #d7dbe2; color: #aab3c2; cursor: default; font-weight: 700; text-shadow: none; }
         .kd-pin-overlay .kp-opt-sub { font-size: 11px; font-weight: 600; color: #666; margin-top: 3px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .kd-pin-overlay .kp-note { margin-top: 8px; font-size: 12px; font-weight: 800; color: #a07c00; text-align: center; }
@@ -1021,6 +1022,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             .kd-ov-deliver .kp-row { order: 1; flex: 1 1 100%; }
             .kd-ov-deliver .kd-adslider { order: 2; flex: 1 1 0; margin: 0; min-width: 0; }
             .kd-ov-deliver .kp-confirm { order: 3; flex: 1 1 0; margin: 0; align-self: stretch; }
+            /* 回収①②をPCで横並び・同幅 */
+            .kd-pin-overlay .kd-col-opts { display: flex; gap: 10px; }
+            .kd-pin-overlay .kd-col-opts .kp-opt { flex: 1 1 0; margin-top: 0; }
         }
         html.taxiui .kd-pin-overlay .kp-opt.kd-same { border: 2px solid #FABE00; background: #fffbeb; }
         .kd-od-date { margin: 11px 0 6px; }
