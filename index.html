@@ -1019,14 +1019,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         @keyframes kdad4 { 0%,22% { transform: translateX(0); } 25%,47% { transform: translateX(-25%); } 50%,72% { transform: translateX(-50%); } 75%,97% { transform: translateX(-75%); } 100% { transform: translateX(0); } }
         @keyframes kdad5 { 0%,16% { transform: translateX(0); } 20%,36% { transform: translateX(-20%); } 40%,56% { transform: translateX(-40%); } 60%,76% { transform: translateX(-60%); } 80%,96% { transform: translateX(-80%); } 100% { transform: translateX(0); } }
         /* ★ お届けオーバーレイ＝マップ全幅で［住所(全幅)｜スライダー広め｜決定］横一列。スライダーはテキスト横一列で全表示（全幅適用・!important） */
-        #locPanel .kd-locpanel-card { background:#fff; border:1.5px solid #FABE00; border-radius:12px; padding:10px 12px; margin:10px 16px 0; box-shadow:0 3px 12px rgba(0,32,99,.12); }
-        #locPanel .kd-locpanel-card .kp-row { display:flex; align-items:center; gap:9px; }
-        #locPanel .kd-locpanel-card .kp-ic { font-size:18px; flex:none; }
-        #locPanel .kd-locpanel-card .kp-body { flex:1; min-width:0; }
-        #locPanel .kd-locpanel-card .kp-lbl { font-size:10px; font-weight:800; color:#a07c00; line-height:1.2; }
-        #locPanel .kd-locpanel-card .kp-addr { font-size:14px; font-weight:700; color:#1a1a1a; line-height:1.4; }
-        #locPanel .kd-locpanel-card .kp-confirm { display:block; width:100%; margin-top:9px; background:#fffdf4; color:#1a1a1a; border:2px solid #FABE00; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; text-align:center; }
-        #locPanel .kd-locpanel-card .kp-confirm:disabled { background:#f3f3f3; color:#bbb; border-color:#e0e0e0; cursor:not-allowed; }
+        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card { background:#fff; border:1.5px solid #FABE00; border-radius:12px; padding:10px 12px; margin:10px 16px 0; box-shadow:0 3px 12px rgba(0,32,99,.12); }
+        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-row { display:flex; align-items:center; gap:9px; }
+        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-ic { font-size:18px; flex:none; }
+        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-body { flex:1; min-width:0; }
+        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-lbl { font-size:10px; font-weight:800; color:#a07c00; line-height:1.2; }
+        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-addr { font-size:14px; font-weight:700; color:#1a1a1a; line-height:1.4; }
+        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-confirm { display:block; width:100%; margin-top:9px; background:#fffdf4; color:#1a1a1a; border:2px solid #FABE00; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; text-align:center; }
+        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-confirm:disabled { background:#f3f3f3; color:#bbb; border-color:#e0e0e0; cursor:not-allowed; }
         .kd-pin-overlay.kd-ov-deliver { max-width: none !important; display: flex !important; flex-wrap: wrap; align-items: stretch; gap: 8px 10px; }
         .kd-ov-deliver .kd-ovtoggle { flex: 1 1 100% !important; order: 0; }
         .kd-ov-deliver .kp-row { flex: 1 1 100% !important; order: 1; }
@@ -2847,6 +2847,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <div id="areaInfo">${renderAreaInfo()}</div>
                     <div id="carStrip">${renderCarStrip()}</div>
                     <div id="dateStrip">${renderStepDateStrip()}</div>
+                    <div id="delAddrPanel">${renderDeliveryAddrPanel()}</div>
                     <div id="mapWrap" class="kd-mapwrap">
                         <div id="map" style="height:100%;"></div>
                         <div class="map-search-bar">
@@ -3103,6 +3104,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function renderLocPanel() {
         const el = document.getElementById('locPanel');
         if (el) el.innerHTML = renderLocationStepPanel();
+        const dap = document.getElementById('delAddrPanel'); if (dap) dap.innerHTML = renderDeliveryAddrPanel();
         updateAreaAlert();
         const ai = document.getElementById('areaInfo');
         if (ai) ai.innerHTML = renderAreaInfo();
@@ -3350,8 +3352,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div style="position:relative;background:${dark?'#1a1a1a':'#FABE00'};color:${dark?'#fff':'#1a1a1a'};font-size:12.5px;font-weight:800;padding:9px 13px;border-radius:14px 14px 14px 3px;line-height:1.55;box-shadow:0 3px 10px rgba(0,0,0,.14);margin-bottom:4px;">${msg}</div>
         </div>`;
     }
-    function renderLocationStepPanel() {
-        // 非taxi・エリア内のお届け＝住所+決定を「日時の下」(フロー列幅)に出す。回収/taxi/エリア外はマップ上カードのまま。
+    function renderLocationStepPanel() { return ''; }
+    // 非taxi・エリア内のお届け＝住所+決定を「日時のすぐ下」(#delAddrPanel・マップの上・フロー列幅)に出す。回収/taxi/エリア外はマップ上カードのまま。
+    function renderDeliveryAddrPanel() {
         try {
             if (typeof kdTaxiOn === 'function' && kdTaxiOn()) return '';
             if (state.locStep === 'collection') return '';
