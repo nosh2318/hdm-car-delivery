@@ -997,6 +997,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         html.taxiui .kd-top #dateStrip { display: none; }
         .kd-q { font-size: 14.5px; font-weight: 900; color: #002063; margin: 2px 0 11px; padding: 0 0 9px 11px; position: relative; border-bottom: 1px solid #eef0f4; }
         .kd-q::before { content: ""; position: absolute; left: 0; top: 1px; bottom: 10px; width: 4px; border-radius: 3px; background: linear-gradient(#FABE00, #d9a400); }
+        /* パネル表示/非表示トグル */
+        .kd-ovtoggle { display: block; width: 100%; background: none; border: 0; color: #7a7f88; font-size: 11.5px; font-weight: 800; padding: 0 0 8px; cursor: pointer; letter-spacing: .03em; }
+        .kd-pin-overlay.kd-ov-min { padding-bottom: 8px; }
+        .kd-pin-overlay.kd-ov-min > *:not(.kd-ovtoggle) { display: none !important; }
         /* 広告カルーセル（上品・紺グラデ×金アクセント／1枚ずつ切替） */
         .kd-adslider { overflow: hidden; border-radius: 12px; margin: -2px -2px 12px; box-shadow: 0 3px 12px rgba(0,32,99,.18); }
         .kd-adtrack { display: flex; }
@@ -2154,13 +2158,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // ── 回収ステップ ──
         if (isCol) {
             if (!ov) { ov = document.createElement('div'); ov.id = 'pinOverlay'; ov.className = 'kd-pin-overlay'; _ovParent.appendChild(ov); }
-            ov.className = 'kd-pin-overlay';
+            ov.className = 'kd-pin-overlay' + (kdOvHidden ? ' kd-ov-min' : '');
             ov.style.display = 'block';
             const dateOk = !!(dt.endDate && dt.endTime);
             if (state.collectionConfirmed) {
                 // ✅ 確定した回収場所を表示 → 「車両を見る」で次画面へ
                 ov.innerHTML =
-                    `<div class="kp-row"><span class="kp-ic">✅</span><div class="kp-body"><div class="kp-lbl">${t('collectionPlaceL')}</div><div class="kp-addr">${state.collectionAddr}</div></div></div>` +
+                    kdOvToggleBtn() + `<div class="kp-row"><span class="kp-ic">✅</span><div class="kp-body"><div class="kp-lbl">${t('collectionPlaceL')}</div><div class="kp-addr">${state.collectionAddr}</div></div></div>` +
                     `<button class="kp-go kd-cta-blink" onclick="collectionDoneGo()">${t('next')} ›</button>` +
                     `<button onclick="reopenCollection()" style="margin-top:6px;width:100%;padding:6px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
                 return;
@@ -2168,18 +2172,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // taxiUI: お届けと同じ clean sheet（質問見出し＋お届けと同じ＋住所＋決定）
             if (kdTaxiOn()) {
                 const _cc = !!state.collectionAddr && !state.sameCollection;
-                let th = kdAdBar() + (kdTaxiOn() ? '' : '<div class="kd-q">' + t('taxiCollectPrompt') + '</div>');
-                if (state.deliveryAddr) th += `<button class="kp-opt kd-same kd-cta-blink" onclick="sameCollectionGo()">🔁 ${t('sameAsDeliveryBtn')}<div class="kp-opt-sub">${state.deliveryAddr}</div></button>`;
+                let th = kdOvToggleBtn() + kdAdBar() + (kdTaxiOn() ? '' : '<div class="kd-q">' + t('taxiCollectPrompt') + '</div>');
                 th += `<div class="kp-row"><span class="kp-ic">📍</span><div class="kp-body"><div class="kp-lbl">${t('collectionPlaceL')}</div><div class="kp-addr">${state.collectionAddr || t('orPickOnMap')}</div></div></div>`;
                 th += (_cc && dateOk)
                     ? `<button class="kp-confirm kd-cta-blink" onclick="collectionDecideGo()">${t('taxiCollectCta')}</button>`
                     : `<button class="kp-confirm" disabled>${t('taxiCollectCta')}</button>`;
+                if (state.deliveryAddr) th += `<button class="kp-opt kd-same kd-cta-blink" onclick="sameCollectionGo()">🔁 ${t('sameAsDeliveryBtn')}<div class="kp-opt-sub">${state.deliveryAddr}</div></button>`;
                 th += `<button onclick="state.screen='options'; render();" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
                 ov.innerHTML = th;
                 return;
             }
             const custom = !!state.collectionAddr && !state.sameCollection;
-            let h = `<div class="kp-lbl" style="margin-bottom:2px;">🏁 ${t('collectionPlaceL')}</div>` + '<div class="kd-col-opts">';
+            let h = kdOvToggleBtn() + `<div class="kp-lbl" style="margin-bottom:2px;">🏁 ${t('collectionPlaceL')}</div>` + '<div class="kd-col-opts">';
             if (!dateOk) {
                 h += `<div class="kp-opt kp-opt-dim"><b>①</b> 📍 ${t('orPickOnMap')}</div>`;
                 h += `<button class="kp-opt kp-opt-dim" disabled><b>②</b> ${t('sameAsDeliveryBtn')}</button>`;
@@ -2201,13 +2205,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (!ov) { ov = document.createElement('div'); ov.id = 'pinOverlay'; ov.className = 'kd-pin-overlay'; _ovParent.appendChild(ov); }
         const ng = state.outOfArea;
         const dateOk = !!(dt.startDate && dt.startTime);
-        ov.className = 'kd-pin-overlay kd-ov-deliver' + (ng ? ' ng' : '');
+        ov.className = 'kd-pin-overlay kd-ov-deliver' + (ng ? ' ng' : '') + (kdOvHidden ? ' kd-ov-min' : '');
         ov.style.display = 'block';
         const ic  = ng ? '🚫' : '📍';
         const body = ng ? (state.outOfAreaReason || t('outOfAreaDefault')) : addr;
         const _taxi = kdTaxiOn();
         const _delCta = _taxi ? t('taxiDelivCta') : t('decideDeliverHere');
-        let html = (!ng ? kdAdBar() : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
+        let html = kdOvToggleBtn() + (!ng ? kdAdBar() : '') + `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
         if (!ng) {
             // taxiUI(スマホ)＝下段に日程バーを内包。PC/従来はオーバーレイに日程を入れない(日程は上の#dateStrip)
             const _dateHtml = _taxi ? `<div class="kd-od-date">${kdDateBar()}</div>` : '';
@@ -3129,6 +3133,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         } catch (e) { }
     }
     // ── 日程 範囲ピッカー（competitor型：1カレンダーで お届け〜返却＋時間）──
+    // パネル(場所オーバーレイ)の表示/非表示トグル（地図を見やすくする）
+    var kdOvHidden = false;
+    function kdOvToggleBtn() {
+        return '<button class="kd-ovtoggle" onclick="kdToggleOv(event)">' + (kdOvHidden ? '▲ 情報パネルを表示' : '▼ 隠して地図を見る') + '</button>';
+    }
+    function kdToggleOv(e) {
+        if (e) e.stopPropagation();
+        kdOvHidden = !kdOvHidden;
+        var ov = document.getElementById('pinOverlay'); if (!ov) return;
+        ov.classList.toggle('kd-ov-min', kdOvHidden);
+        var b = ov.querySelector('.kd-ovtoggle'); if (b) b.textContent = kdOvHidden ? '▲ 情報パネルを表示' : '▼ 隠して地図を見る';
+    }
     // 広告カルーセル（上品・紺×金／1枚ずつ切替）
     function kdAdBar() {
         var B = [
