@@ -82,7 +82,7 @@
   const R = (q.get('r') || '').toUpperCase().trim();
   const D = (q.get('d') || '').trim();
 
-  let gmapReady = false, map = null, meMarker = null, custMarker = null, meIW = null, custIW = null, meetMarker = null, meetAddrDone = '';
+  let gmapReady = false, map = null, meMarker = null, custMarker = null, meIW = null, custIW = null, meetMarker = null, meetIW = null, meetAddrDone = '';
   let watchId = null, sending = false, routeLine = null;
   let lastSentAt = 0, lastSentLat = null, lastSentLng = null, myLat = null, myLng = null;
   let custData = null;
@@ -382,10 +382,15 @@
         if (!map) { renderMap(); return; }
         if (!meetMarker) {
           meetMarker = new google.maps.Marker({
-            map, position: loc, title: '待ち合わせ場所', zIndex: 1, label: { text: '📍', fontSize: '22px' },
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 13, fillColor: '#7c3aed', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+            map, position: loc, title: '🎯 目的地（待ち合わせ場所）', zIndex: 999,
+            label: { text: '🎯', fontSize: '26px' },
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: '#7c3aed', fillOpacity: 0.95, strokeColor: '#fff', strokeWeight: 3 },
+            animation: google.maps.Animation.DROP
           });
         } else meetMarker.setPosition(loc);
+        if (!meetIW) meetIW = new google.maps.InfoWindow({ disableAutoPan: true });
+        meetIW.setContent('<div style="font-weight:800;font-size:13px;white-space:nowrap;color:#6d28d9">🎯 目的地：' + clean + '</div>');
+        meetIW.open(map, meetMarker);
         fitAll();
       } else { meetAddrDone = ''; }
     });
