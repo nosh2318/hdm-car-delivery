@@ -1060,6 +1060,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
         html.taxiui .kd-pin-overlay .kp-opt.kd-same { border: 2px solid #FABE00; background: #fffbeb; }
         .kd-od-date { margin: 11px 0 6px; }
+        /* スマホ(taxi)：日付バーと決定ボタンを横一列に揃える */
+        .kd-od-row { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
+        .kd-od-row .kd-od-date { margin: 0 !important; flex: 1 1 58%; min-width: 0; }
+        .kd-od-row .kp-confirm { flex: 1 1 42%; margin-top: 0 !important; align-self: stretch; display: flex; align-items: center; justify-content: center; white-space: normal; font-size: 13px; line-height: 1.25; padding: 8px 10px; }
+        .kd-od-row .kd-datebar { height: 100%; }
         /* 決定ボタン＝シート最下部の独立ボタン（端まで伸ばさず左右余白・角丸） */
         html.taxiui .kd-pin-overlay .kp-confirm { width: 100%; margin-top: 11px; border-radius: 13px; padding: 15px; box-shadow: 0 4px 14px rgba(20,24,29,.25); }
         /* (PC向けタクシー風レイアウトは撤去＝タクシーUI前のシンプルなPCに戻す。タクシーUI/スプラッシュはスマホで維持) */
