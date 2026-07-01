@@ -80,7 +80,7 @@
   if(q.get("embed")==="1"){var _h=document.getElementById("hdBar");if(_h)_h.style.display="none";}
 
   let gmapReady = false, map = null, meMarker = null, custMarker = null, meIW = null, custIW = null, meetMarker = null, meetAddrDone = '';
-  let watchId = null, sending = false;
+  let watchId = null, sending = false, routeLine = null;
   let lastSentAt = 0, lastSentLat = null, lastSentLng = null, myLat = null, myLng = null;
   let custData = null;
 
@@ -113,6 +113,7 @@
         <span class="lbl">📍 待ち合わせ場所</span>
         <div class="val" id="addrVal"></div>
         <a class="map-link" id="addrLink" target="_blank" rel="noopener">🗺 目的地までナビ（Googleマップで開く）</a>
+        <div style="font-size:11px;color:#b45309;margin-top:6px;line-height:1.5">⚠️ Googleマップを開くと<b>位置共有が一時停止</b>します（戻ると再開）。<b>下の地図に自分→目的地の方向線・距離が出る</b>ので、共有を続けたい時はこのまま向かえます。<span style="color:#94a3b8">（ナビ中共有一時停止）</span></div>
       </div>
       <div class="modebar" id="modeBar" style="display:none">
         <span class="lbl">🛞 何で向かいますか？（お客様の地図に表示されます）</span>
