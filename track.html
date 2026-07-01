@@ -77,7 +77,7 @@
   const R = (q.get('r') || '').toUpperCase().trim();
   const T = (q.get('t') || '').trim();
 
-  let gmapReady = false, map = null, driverMarker = null, custMarker = null, driverIW = null, custIW = null, meetMarker = null, meetAddrDone = '';
+  let gmapReady = false, map = null, driverMarker = null, custMarker = null, driverIW = null, custIW = null, meetMarker = null, meetIW = null, meetAddrDone = '';
   let lastData = null, custShared = false;
   let driverMode = '';  // 回収時のスタッフ移動手段: walk/kick/bike/car（空=フォールバック🚶）
   // 移動手段 → 絵文字・案内文（回収時のみ使用）
@@ -287,15 +287,27 @@
     if (!clean || clean === meetAddrDone) return;
     meetAddrDone = clean;
     if (!_geocoder) _geocoder = new google.maps.Geocoder();
-    _geocoder.geocode({ address: clean, region: 'jp', language: 'ja' }, function (results, status) {
+    // 現在地(お客様/スタッフ)周辺にバイアス＝「グランドホテル」等の一般名を近隣の店舗に解決させ全国誤爆を防ぐ
+    const _req = { address: clean, region: 'jp', language: 'ja' };
+    const _blat = lastData ? +(lastData.cust_lat != null ? lastData.cust_lat : lastData.driver_lat) : NaN;
+    const _blng = lastData ? +(lastData.cust_lng != null ? lastData.cust_lng : lastData.driver_lng) : NaN;
+    if (!isNaN(_blat) && !isNaN(_blng)) {
+      _req.bounds = new google.maps.LatLngBounds({ lat: _blat - 0.5, lng: _blng - 0.5 }, { lat: _blat + 0.5, lng: _blng + 0.5 });
+    }
+    _geocoder.geocode(_req, function (results, status) {
       if (status === 'OK' && results && results[0]) {
         const loc = results[0].geometry.location;
         if (!meetMarker) {
           meetMarker = new google.maps.Marker({
-            map, position: loc, title: '待ち合わせ場所', zIndex: 1, label: { text: '📍', fontSize: '22px' },
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 13, fillColor: '#7c3aed', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+            map, position: loc, title: '🎯 目的地（待ち合わせ場所）', zIndex: 999,
+            label: { text: '🎯', fontSize: '26px' },
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: '#7c3aed', fillOpacity: 0.95, strokeColor: '#fff', strokeWeight: 3 },
+            animation: google.maps.Animation.DROP
           });
         } else meetMarker.setPosition(loc);
+        if (!meetIW) meetIW = new google.maps.InfoWindow({ disableAutoPan: true });
+        meetIW.setContent('<div style="font-weight:800;font-size:13px;white-space:nowrap;color:#6d28d9">🎯 目的地：' + clean + '</div>');
+        meetIW.open(map, meetMarker);
         fitAll();
       } else { meetAddrDone = ''; }
     });
