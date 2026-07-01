@@ -376,7 +376,12 @@
     if (!clean || clean === meetAddrDone) return;
     meetAddrDone = clean;
     if (!_geocoder) _geocoder = new google.maps.Geocoder();
-    _geocoder.geocode({ address: clean, region: 'jp', language: 'ja' }, function (results, status) {
+    // 現在地(スタッフ位置)周辺に絞る＝「グランドホテル」等の一般名を近隣(例:札幌)の店舗に解決させ全国誤爆を防ぐ
+    const _req = { address: clean, region: 'jp', language: 'ja' };
+    if (myLat != null && myLng != null) {
+      _req.bounds = new google.maps.LatLngBounds({ lat: myLat - 0.5, lng: myLng - 0.5 }, { lat: myLat + 0.5, lng: myLng + 0.5 });
+    }
+    _geocoder.geocode(_req, function (results, status) {
       if (status === 'OK' && results && results[0]) {
         const loc = results[0].geometry.location;
         meetLoc = loc;
