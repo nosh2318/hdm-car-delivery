@@ -1019,14 +1019,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         @keyframes kdad4 { 0%,22% { transform: translateX(0); } 25%,47% { transform: translateX(-25%); } 50%,72% { transform: translateX(-50%); } 75%,97% { transform: translateX(-75%); } 100% { transform: translateX(0); } }
         @keyframes kdad5 { 0%,16% { transform: translateX(0); } 20%,36% { transform: translateX(-20%); } 40%,56% { transform: translateX(-40%); } 60%,76% { transform: translateX(-60%); } 80%,96% { transform: translateX(-80%); } 100% { transform: translateX(0); } }
         /* ★ お届けオーバーレイ＝マップ全幅で［住所(全幅)｜スライダー広め｜決定］横一列。スライダーはテキスト横一列で全表示（全幅適用・!important） */
-        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card { background:#fff; border:1.5px solid #FABE00; border-radius:12px; padding:10px 12px; margin:10px 16px 0; box-shadow:0 3px 12px rgba(0,32,99,.12); }
-        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-row { display:flex; align-items:center; gap:9px; }
-        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-ic { font-size:18px; flex:none; }
-        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-body { flex:1; min-width:0; }
-        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-lbl { font-size:10px; font-weight:800; color:#a07c00; line-height:1.2; }
-        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-addr { font-size:14px; font-weight:700; color:#1a1a1a; line-height:1.4; }
-        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-confirm { display:block; width:100%; margin-top:9px; background:#fffdf4; color:#1a1a1a; border:2px solid #FABE00; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; text-align:center; }
-        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card .kp-confirm:disabled { background:#f3f3f3; color:#bbb; border-color:#e0e0e0; cursor:not-allowed; }
+        #delAddrPanel .kd-locpanel-card, #locPanel .kd-locpanel-card { background:#fff !important; border:1.5px solid #FABE00; border-radius:12px; padding:10px 12px; margin:10px 16px 0; box-shadow:0 3px 12px rgba(0,32,99,.12); opacity:1 !important; filter:none !important; }
+        #delAddrPanel .kd-locpanel-card .kp-row, #locPanel .kd-locpanel-card .kp-row { display:flex; align-items:center; gap:9px; }
+        #delAddrPanel .kd-locpanel-card .kp-ic, #locPanel .kd-locpanel-card .kp-ic { font-size:18px; flex:none; }
+        #delAddrPanel .kd-locpanel-card .kp-body, #locPanel .kd-locpanel-card .kp-body { flex:1; min-width:0; }
+        #delAddrPanel .kd-locpanel-card .kp-lbl, #locPanel .kd-locpanel-card .kp-lbl { font-size:10px; font-weight:800; color:#a07c00; line-height:1.2; }
+        #delAddrPanel .kd-locpanel-card .kp-addr, #locPanel .kd-locpanel-card .kp-addr { font-size:14px; font-weight:700; color:#1a1a1a !important; line-height:1.4; }
+        #delAddrPanel .kd-locpanel-card .kp-confirm, #locPanel .kd-locpanel-card .kp-confirm { display:block; width:100%; margin-top:9px; background:#fffdf4; color:#1a1a1a; border:2px solid #FABE00; border-radius:10px; padding:12px; font-size:15px; font-weight:800; cursor:pointer; text-align:center; }
+        #delAddrPanel .kd-locpanel-card .kp-confirm:disabled, #locPanel .kd-locpanel-card .kp-confirm:disabled { background:#f3f3f3; color:#bbb; border-color:#e0e0e0; cursor:not-allowed; }
         .kd-pin-overlay.kd-ov-deliver { max-width: none !important; display: flex !important; flex-wrap: wrap; align-items: stretch; gap: 8px 10px; }
         .kd-ov-deliver .kd-ovtoggle { flex: 1 1 100% !important; order: 0; }
         .kd-ov-deliver .kp-row { flex: 1 1 100% !important; order: 1; }
