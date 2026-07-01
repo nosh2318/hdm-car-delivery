@@ -808,9 +808,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-pin-overlay .kp-addr { font-size: 13px; font-weight: 700; color: #1a1a1a; line-height: 1.4;
             word-break: break-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         /* 決定ボタン＝枠だけ（塗りなし）＝①②と統一デザイン */
-        .kd-pin-overlay .kp-confirm { display: block; width: 100%; margin-top: 9px; background: #fffdf4; color: #1a1a1a;
-            border: 2px solid #FABE00; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: center; }
-        .kd-pin-overlay .kp-confirm:disabled { background: #f3f3f3; color: #bbb; border-color: #e0e0e0; cursor: not-allowed; }
+        .kd-pin-overlay .kp-confirm { display: block; width: 100%; margin-top: 9px; text-shadow: 0 1px 2px rgba(255,255,255,.5);
+            background: linear-gradient(to left, #1657d6 0%, #5a97f0 38%, #b9d4fb 72%, #eef5ff 100%); color: #002063;
+            border: 0; border-left: 4px solid #FABE00; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 900; cursor: pointer; text-align: center; }
+        .kd-pin-overlay .kp-confirm:disabled { background: #eef1f5; color: #aab3c2; border-left-color: #d7dbe2; cursor: not-allowed; text-shadow: none; }
         /* 確定後の前進ボタン（回収場所を選ぶ／車両を見る）＝塗りで明確に */
         .kd-pin-overlay .kp-go { display: block; width: 100%; margin-top: 9px; background: #FABE00; color: #1a1a1a;
             border: none; border-radius: 10px; padding: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: center; }
