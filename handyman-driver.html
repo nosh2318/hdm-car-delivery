@@ -360,38 +360,57 @@
       ? (custData.col_place || custData.del_place || null)
       : (custData.del_place || custData.col_place || null);
   }
-  let _geocoder = null;
+  let _geocoder = null, meetAddrTrying = '';
+  // 目的地ピンを配置（座標が既知ならジオコードを待たず即置く・取りこぼし防止＝冪等）
+  function placeMeet(loc, label) {
+    if (!map || !loc) return;
+    if (!meetMarker) {
+      meetMarker = new google.maps.Marker({
+        map, position: loc, title: '🎯 目的地（待ち合わせ場所）', zIndex: 999,
+        label: { text: '🎯', fontSize: '26px' },
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: '#7c3aed', fillOpacity: 0.95, strokeColor: '#fff', strokeWeight: 3 },
+        animation: google.maps.Animation.DROP
+      });
+    } else meetMarker.setPosition(loc);
+    if (!meetIW) meetIW = new google.maps.InfoWindow({ disableAutoPan: true });
+    meetIW.setContent('<div style="font-weight:800;font-size:13px;white-space:nowrap;color:#6d28d9">🎯 目的地：' + (label || '') + '</div>');
+    meetIW.open(map, meetMarker);
+    fitAll();
+  }
   // 待ち合わせ住所→座標。リファラ制限キーはGeocoding RESTで弾かれるため、地図JSのGeocoder(Maps JS API経由)を使う
   function geocodeMeet(addr) {
     if (!gmapReady || !addr) return;
     const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
-    if (!clean || clean === meetAddrDone) return;
-    meetAddrDone = clean;
+    if (!clean) return;
+    // 既に解決済みの住所→ジオコードせずピンだけ再配置（map生成タイミングでの取りこぼしを防ぐ）
+    if (meetLoc && clean === meetAddrDone) { placeMeet(meetLoc, clean); return; }
+    if (clean === meetAddrTrying) return; // 同一住所の多重リクエスト防止
+    meetAddrTrying = clean;
     if (!_geocoder) _geocoder = new google.maps.Geocoder();
-    // 現在地(スタッフ位置)周辺に絞る＝「グランドホテル」等の一般名を近隣(例:札幌)の店舗に解決させ全国誤爆を防ぐ
-    const _req = { address: clean, region: 'jp', language: 'ja' };
-    if (myLat != null && myLng != null) {
-      _req.bounds = new google.maps.LatLngBounds({ lat: myLat - 0.5, lng: myLng - 0.5 }, { lat: myLat + 0.5, lng: myLng + 0.5 });
-    }
-    _geocoder.geocode(_req, function (results, status) {
-      if (status === 'OK' && results && results[0]) {
-        const loc = results[0].geometry.location;
-        meetLoc = loc;
-        if (!map) { renderMap(); return; }
-        if (!meetMarker) {
-          meetMarker = new google.maps.Marker({
-            map, position: loc, title: '🎯 目的地（待ち合わせ場所）', zIndex: 999,
-            label: { text: '🎯', fontSize: '26px' },
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: '#7c3aed', fillOpacity: 0.95, strokeColor: '#fff', strokeWeight: 3 },
-            animation: google.maps.Animation.DROP
-          });
-        } else meetMarker.setPosition(loc);
-        if (!meetIW) meetIW = new google.maps.InfoWindow({ disableAutoPan: true });
-        meetIW.setContent('<div style="font-weight:800;font-size:13px;white-space:nowrap;color:#6d28d9">🎯 目的地：' + clean + '</div>');
-        meetIW.open(map, meetMarker);
-        fitAll();
-      } else { meetAddrDone = ''; }
-    });
+    // フォールバック候補：番地付き → 番地を落として丁目 → 丁目まで（Googleが番地を解決できない条丁目住所対策）
+    const cands = [clean];
+    const c2 = clean.replace(/[0-9０-９]+\s*[-ー－]\s*[0-9０-９]+.*$/, '').trim();
+    if (c2 && cands.indexOf(c2) < 0) cands.push(c2);
+    const mi = clean.indexOf('丁目');
+    if (mi > 0) { const c3 = clean.slice(0, mi + 2); if (cands.indexOf(c3) < 0) cands.push(c3); }
+    let idx = 0;
+    const tryNext = function () {
+      if (idx >= cands.length) { meetAddrTrying = ''; return; } // 全滅→次のpollで再挑戦
+      const q = cands[idx++];
+      // 現在地(スタッフ位置)周辺に絞る＝一般名を近隣に解決させ全国誤爆を防ぐ
+      const _req = { address: q, region: 'jp', language: 'ja' };
+      if (myLat != null && myLng != null) {
+        _req.bounds = new google.maps.LatLngBounds({ lat: myLat - 0.5, lng: myLng - 0.5 }, { lat: myLat + 0.5, lng: myLng + 0.5 });
+      }
+      _geocoder.geocode(_req, function (results, status) {
+        if (status === 'OK' && results && results[0]) {
+          meetLoc = results[0].geometry.location; meetAddrDone = clean; meetAddrTrying = '';
+          if (!map) { renderMap(); return; }
+          placeMeet(meetLoc, clean);
+        } else { tryNext(); } // ZERO_RESULTS等→次のフォールバック候補で再試行
+      });
+    };
+    tryNext();
   }
 
   function haversine(la1, lo1, la2, lo2) {
