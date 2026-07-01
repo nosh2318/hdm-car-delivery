@@ -995,19 +995,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-stp.on::before, .kd-stp.done::before { background: #16a34a; }
         /* 🚕 taxiUI 下段：質問見出し＋日程内包／日程の別stripは隠す／決定ボタンは画面最下部に独立固定 */
         html.taxiui .kd-top #dateStrip { display: none; }
-        .kd-q { font-size: 14px; font-weight: 900; color: #fff; background: #002063; margin: 0 -12px 10px; padding: 9px 12px; border-radius: 9px 9px 0 0; }
-        /* バナー型 広告カルーセル（1枚ずつ切替・内容別配色） */
-        .kd-adslider { overflow: hidden; border-radius: 10px; margin: -2px -2px 10px; border: 1px solid #e5e7eb; }
+        .kd-q { font-size: 14.5px; font-weight: 900; color: #002063; margin: 2px 0 11px; padding: 0 0 9px 11px; position: relative; border-bottom: 1px solid #eef0f4; }
+        .kd-q::before { content: ""; position: absolute; left: 0; top: 1px; bottom: 10px; width: 4px; border-radius: 3px; background: linear-gradient(#FABE00, #d9a400); }
+        /* 広告カルーセル（上品・紺グラデ×金アクセント／1枚ずつ切替） */
+        .kd-adslider { overflow: hidden; border-radius: 12px; margin: -2px -2px 12px; box-shadow: 0 3px 12px rgba(0,32,99,.18); }
         .kd-adtrack { display: flex; width: 400%; }
-        .kd-adtrack.kdn4 { animation: kdad4 18s infinite; }
-        .kd-adbanner { width: 25%; display: flex; align-items: center; gap: 10px; padding: 9px 12px; box-sizing: border-box; }
-        .kd-adbanner .ic { font-size: 22px; flex: none; }
-        .kd-adbanner .tx { flex: 1; min-width: 0; line-height: 1.3; overflow: hidden; }
-        .kd-adbanner .tx b { display: block; font-size: 12.5px; font-weight: 900; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .kd-adbanner .tx em { display: block; font-size: 11px; font-weight: 800; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .kd-adbanner .go { flex: none; width: 26px; height: 26px; border-radius: 50%; background: #FABE00; color: #1a1a1a; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 17px; }
-        .kd-adbanner.b1 { background: #fff6f6; } .kd-adbanner.b2 { background: #f2fbf5; }
-        .kd-adbanner.b3 { background: #f2f7ff; } .kd-adbanner.b4 { background: #f8f5ff; }
+        .kd-adtrack.kdn4 { animation: kdad4 22s infinite; }
+        .kd-adbanner { width: 25%; display: flex; align-items: center; gap: 12px; padding: 12px 15px; box-sizing: border-box;
+            background: linear-gradient(115deg, #00163f 0%, #002063 60%, #0a2e80 100%); position: relative; }
+        .kd-adbanner::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(#FABE00, #d9a400); }
+        .kd-adbanner .ic { flex: none; width: 36px; height: 36px; border-radius: 50%; background: rgba(250,190,0,.14);
+            border: 1px solid rgba(250,190,0,.55); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .kd-adbanner .tx { flex: 1; min-width: 0; line-height: 1.4; color: #eaf0fb; font-size: 12.5px; font-weight: 600; letter-spacing: .02em;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .kd-adbanner .tx b { color: #FABE00; font-weight: 900; }
         @keyframes kdad4 { 0%,22% { transform: translateX(0); } 25%,47% { transform: translateX(-25%); } 50%,72% { transform: translateX(-50%); } 75%,97% { transform: translateX(-75%); } 100% { transform: translateX(0); } }
         html.taxiui .kd-pin-overlay .kp-opt.kd-same { border: 2px solid #FABE00; background: #fffbeb; }
         .kd-od-date { margin: 11px 0 6px; }
@@ -3113,18 +3114,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         } catch (e) { }
     }
     // ── 日程 範囲ピッカー（competitor型：1カレンダーで お届け〜返却＋時間）──
-    // バナー型 広告カルーセル（1枚ずつ切替・内容別配色）
+    // 広告カルーセル（上品・紺×金／1枚ずつ切替）
     function kdAdBar() {
         var B = [
-            ['🎟', 'クーポン配布中', '10%OFF：NSMESN-02318', '#dc2626', 'b1'],
-            ['🚗', 'デリバリー無料', 'お届け・回収 0円', '#16a34a', 'b2'],
-            ['✈️', '空港・駅は無料送迎', '那覇空港／赤嶺駅に対応', '#2563eb', 'b3'],
-            ['🛡', '免責・NOC補償', 'もしもの時も安心', '#7c3aed', 'b4']
+            ['🎟', '車両選択にて<b>10%クーポン配布中!!</b>'],
+            ['🚗', '<b>デリバリー料金無料</b>'],
+            ['📍', '自宅／駅／コインパーキングなど<b>受け取り場所指定可能</b>'],
+            ['🗾', '対応エリア <b>那覇／札幌</b>']
         ];
         var items = B.map(function (b) {
-            return '<div class="kd-adbanner ' + b[4] + '"><span class="ic">' + b[0] + '</span>'
-                + '<span class="tx"><b>' + b[1] + '</b><em style="color:' + b[3] + '">' + b[2] + '</em></span>'
-                + '<span class="go">›</span></div>';
+            return '<div class="kd-adbanner"><span class="ic">' + b[0] + '</span><span class="tx">' + b[1] + '</span></div>';
         }).join('');
         return '<div class="kd-adslider"><div class="kd-adtrack kdn4">' + items + '</div></div>';
     }
