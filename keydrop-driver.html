@@ -115,8 +115,6 @@
       <div class="addr" id="addrBox" style="display:none">
         <span class="lbl">📍 待ち合わせ場所</span>
         <div class="val" id="addrVal"></div>
-        <a class="map-link" id="addrLink" target="_blank" rel="noopener">🗺 目的地までナビ（Googleマップで開く）</a>
-        <div style="font-size:11px;color:#b45309;margin-top:6px;line-height:1.5">⚠️ Googleマップを開くと<b>位置共有が一時停止</b>します（戻ると再開）。<b>下の地図に自分→目的地の方向線・距離が出る</b>ので、共有を続けたい時はこのまま向かえます。<span style="color:#94a3b8">（ナビ中共有一時停止）</span></div>
       </div>
       <div class="modebar" id="modeBar" style="display:none">
         <span class="lbl">🛞 何で向かいますか？（お客様の地図に表示されます）</span>
@@ -198,16 +196,12 @@
       const lblEl0 = box.querySelector('.lbl'); if (lblEl0) lblEl0.textContent = '⚠️ 待ち合わせ場所 未入力';
       const av = document.getElementById('addrVal');
       if (av) av.innerHTML = 'この予約は' + (collecting ? '回収場所' : 'お届け先') + 'が未入力です。<br>お客様が「今いる場所を共有」すると地図に目的地(お客様位置)が出ます。<br>または予約に場所を入力してください。';
-      const lk = document.getElementById('addrLink'); if (lk) lk.style.display = 'none';
       return;
     }
-    const lk2 = document.getElementById('addrLink'); if (lk2) lk2.style.display = '';
     box.style.display = 'block';
     const lblEl = box.querySelector('.lbl');
     if (lblEl) lblEl.textContent = collecting ? '📍 回収場所' : '📍 お届け先';
     document.getElementById('addrVal').textContent = goal + (d.cust_name ? '（' + d.cust_name + ' 様）' : '');
-    // ナビボタン＝Googleマップ経路（住所文字列でOK・Geocoding API不要＝今すぐ向かえる）
-    document.getElementById('addrLink').href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(goal) + '&travelmode=driving';
   }
 
   // ===== sending =====
