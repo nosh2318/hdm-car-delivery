@@ -1062,8 +1062,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         .kd-od-date { margin: 11px 0 6px; }
         /* スマホ(taxi)：日付バーと決定ボタンを横一列に揃える */
         .kd-od-row { display: flex; align-items: stretch; gap: 8px; margin-top: 8px; }
-        .kd-od-row .kd-od-date { margin: 0 !important; flex: 1 1 58%; min-width: 0; }
-        .kd-od-row .kp-confirm { flex: 1 1 42%; margin-top: 0 !important; align-self: stretch; display: flex; align-items: center; justify-content: center; white-space: normal; font-size: 13px; line-height: 1.25; padding: 8px 10px; }
+        .kd-od-row .kd-od-date { margin: 0 !important; flex: 1 1 68%; min-width: 0; }
+        .kd-od-row .kp-confirm { flex: 0 0 auto; margin-top: 0 !important; align-self: stretch; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-size: 12.5px; font-weight: 800; line-height: 1.2; padding: 8px 12px; }
         .kd-od-row .kd-datebar { height: 100%; }
         /* 決定ボタン＝シート最下部の独立ボタン（端まで伸ばさず左右余白・角丸） */
         html.taxiui .kd-pin-overlay .kp-confirm { width: 100%; margin-top: 11px; border-radius: 13px; padding: 15px; box-shadow: 0 4px 14px rgba(20,24,29,.25); }
@@ -5610,7 +5610,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: '上のフォームで日時を選択', step2sub: 'マップをタップしてピンを置く',
             deliverable: '台デリバリー可能', classes: 'クラス', noVehicle: '該当する車両がありません',
             noVehicleSub: '日程やクラスを変更してお試しください', searching: '車両を検索中...',
-            seats: '人乗り', available: '台空き', availMany: '空きあり', availFew: '残りわずか', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決める', decideDeliverHere: '✓ この場所に決める', decideCollectHere: '✓ この場所に決める', taxiDelivPrompt: '📍 下記指定場所にお届けします', taxiCollectPrompt: '🏁 下記指定場所で回収します', taxiDelivCta: 'お届け場所と日時を決定', taxiCollectCta: '回収場所を決定', taxiPickDel: 'お届け先を指定してください', taxiPickCol: '回収先を指定してください', areaDeliverBadge: '🚗 ご指定場所に車をお届け', dow: ['日', '月', '火', '水', '木', '金', '土'], dateWord: '日付', dpPickStart: '📅 お届けの日付を選んでください', dpPickEnd: '🏁 回収の日付を選んでください', dpSameHint: '※日帰り(同日返却)は「お届け日」をもう一度タップ', dpSameDay: '🚗 日帰り（同日返却・1日）', dpRoundtrip: '日帰り', dpStartBadge: '開始', dpEndBadge: '終了', dpTitle: '日程を選択', dpReset: '↺ やり直す', dpConfirm: '確認',
+            seats: '人乗り', available: '台空き', availMany: '空きあり', availFew: '残りわずか', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決める', decideDeliverHere: '✓ この場所に決める', decideCollectHere: '✓ この場所に決める', taxiDelivPrompt: '📍 下記指定場所にお届けします', taxiCollectPrompt: '🏁 下記指定場所で回収します', taxiDelivCta: '日程を決定して次へ', taxiCollectCta: '回収場所を決定', taxiPickDel: 'お届け先を指定してください', taxiPickCol: '回収先を指定してください', areaDeliverBadge: '🚗 ご指定場所に車をお届け', dow: ['日', '月', '火', '水', '木', '金', '土'], dateWord: '日付', dpPickStart: '📅 お届けの日付を選んでください', dpPickEnd: '🏁 回収の日付を選んでください', dpSameHint: '※日帰り(同日返却)は「お届け日」をもう一度タップ', dpSameDay: '🚗 日帰り（同日返却・1日）', dpRoundtrip: '日帰り', dpStartBadge: '開始', dpEndBadge: '終了', dpTitle: '日程を選択', dpReset: '↺ やり直す', dpConfirm: '確認',
             noAddress: '該当する住所が見つかりません',
             // Confirm
             confirmTitle: '予約内容の確認', estimate: 'お支払い見積もり', taxIncl: '税込',
