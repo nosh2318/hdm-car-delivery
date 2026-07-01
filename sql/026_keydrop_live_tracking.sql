@@ -55,8 +55,9 @@ declare n int; begin
 end $$;
 
 -- 5) スタッフ：お客様の位置・待ち合わせ住所を読む（driver_token照合）
+-- ⚠️ 2026-06-30 SUPERSEDED: この get_staff は sql/033 が札幌+那覇 両対応版で置き換え済み。
+--   ★このブロックは再RUNしないこと（再RUNすると那覇追跡が壊れる）。最新は必ず sql/033 を使う。
 -- 2026-06-30: col_place を返却列に追加（回収モードの目的地＝回収場所をスタッフ地図に出すため）。
---   返却列を変えるので drop してから作り直す（create or replace では列変更不可）。
 drop function if exists keydrop_track_get_staff(text, text);
 create or replace function keydrop_track_get_staff(p_res text, p_token text)
 returns table(kd_status text, del_place text, col_place text, cust_name text,
