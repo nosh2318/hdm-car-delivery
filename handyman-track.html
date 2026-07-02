@@ -18,6 +18,9 @@
   .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
   .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
   .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
+  .langbar{margin-left:auto;display:flex;gap:4px}
+  .langbar button{border:1px solid #3a4668;background:#16234a;color:#cbd5e1;font-size:11px;font-weight:800;padding:4px 8px;border-radius:8px;cursor:pointer;line-height:1}
+  .langbar button.on{background:#FABE00;color:#0F1F45;border-color:#FABE00}
 
   /* status banner */
   .status{padding:16px;flex:none}
@@ -59,10 +62,13 @@
 </style>
 </head>
 <body>
-  <div class="hd" id="hdBar"><a href="https://rent-handyman.jp" target="_blank" rel="noopener"><img src="hdm-logo.png?v=20260624" alt="HANDYMAN HDM Car Delivery" style="height:26px;display:block"></a></div>
+  <div class="hd" id="hdBar">
+    <a href="https://rent-handyman.jp" target="_blank" rel="noopener"><img src="hdm-logo.png?v=20260624" alt="HANDYMAN HDM Car Delivery" style="height:26px;display:block"></a>
+    <div class="langbar" id="langbar"></div>
+  </div>
 
   <div id="root">
-    <div class="loading" id="initLoading">読み込み中…</div>
+    <div class="loading" id="initLoading">…</div>
   </div>
 
 <script>
@@ -70,21 +76,130 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
   const GMAPS_KEY = 'AIzaSyCoX1EyEx-N5A0r4vRzC1KmVp3T29HILbI';
 
+  // ===== i18n（日本語/English/中文/한국어・端末言語で自動選択・切替可）=====
+  const LANGS = [['ja','日本語'],['en','EN'],['zh','中文'],['ko','한국어']];
+  const I18N = {
+    ja:{
+      title:'現在地のご案内｜HANDYMAN（HDM Car Delivery）', checking:'現在の状況を確認しています…',
+      meetLbl:'📍 待ち合わせ場所', openMap:'🗺 待ち合わせ住所を地図で開く', stale:'位置更新待ち…',
+      mapFail:'地図を表示できませんでした。お手数ですが画面を再読み込みしてください。',
+      shareGuide:'📍 スタッフと合流するため、下のボタンで「今いる場所」を共有してください（任意）。',
+      shareBtn:'📍 今いる場所を共有', shareBtnEmph:'📍 今いる場所を共有（スタッフに位置を伝える）', shared:'✅ 現在地を共有しました',
+      safe:'🔒 共有した位置は「この予約のスタッフ」だけに表示され、お届け／回収の完了時に自動でオフになります。継続的な追跡はありません（見るだけなら共有は不要です）。',
+      offLine:'現在、位置共有の対象時間外です', offSub:'担当者がご案内する時間になりましたら、こちらの地図に表示されます。',
+      delLine:'🚚 お届け中｜スタッフが向かっています', delSub:'<b>📍 下の「今いる場所を共有」を押してください。</b>スタッフがあなたのいる場所まで正確にお届けします。',
+      colLine:'🧭 回収に向かっています', colWait:'お待ちください', colSub:'担当者がお車の回収に向かっています。<b>正確な回収場所をお伝えするため、下の「📍今いる場所を共有」をお願いします。</b>',
+      retLine:'🔑 ご返却の待ち合わせ｜位置情報の共有をお願いします', retSub:'<b>📍 返却場所へ向かう前に、下の「今いる場所を共有」を押してください。</b>「これから向かいます」の合図になり、スタッフが到着予定を把握して受け入れ準備をします。', retBtn:'📍 返却に向かう（今いる場所を共有）',
+      mode_walk:'徒歩で向かっています', mode_kick:'キックボードで向かっています', mode_bike:'自転車で向かっています', mode_car:'回収車で向かっています',
+      staff:'スタッフ', youCust:'お客様（あなた）', destPin:'目的地', dist:'スタッフは約{d}先です',
+      getting:'位置情報を取得中…', sharedOk:'✅ 現在地を共有しました。担当者がご案内します。', shareFail:'共有できませんでした。リンクをご確認ください。',
+      commFail:'通信に失敗しました。電波の良い場所で再度お試しください。', noGeo:'お使いの端末では現在地を取得できません。',
+      denied:'位置情報の利用が許可されていません。端末の設定から位置情報を許可してお試しください。', getFail:'現在地を取得できませんでした。電波の良い場所で再度お試しください。',
+      badLink:'リンクが正しくありません。担当者からお送りしたリンクを再度お開きください。'
+    },
+    en:{
+      title:'Live Location｜HANDYMAN (HDM Car Delivery)', checking:'Checking current status…',
+      meetLbl:'📍 Meeting point', openMap:'🗺 Open address in Maps', stale:'Waiting for location update…',
+      mapFail:'Unable to load the map. Please reload the page.',
+      shareGuide:'📍 To meet the staff, please share your current location using the button below (optional).',
+      shareBtn:'📍 Share my location', shareBtnEmph:'📍 Share my location (let staff know where you are)', shared:'✅ Location shared',
+      safe:'🔒 Your shared location is visible only to the staff for this booking and turns off automatically when delivery/collection is complete. There is no continuous tracking (you do not need to share just to view the map).',
+      offLine:'Location sharing is currently outside service hours', offSub:'When it is time for staff to assist you, it will appear on this map.',
+      delLine:'🚚 Delivering｜Staff is on the way', delSub:'<b>📍 Please tap "Share my location" below.</b> Staff will deliver the car right to where you are.',
+      colLine:'🧭 On the way to collect', colWait:'Please wait', colSub:'Staff is on the way to collect the car. <b>Please tap "📍 Share my location" below so we know the exact collection point.</b>',
+      retLine:'🔑 Return meetup｜Please share your location', retSub:'<b>📍 Before heading to the return point, please tap "Share my location" below.</b> It signals that you are on your way so staff can prepare to receive the car.', retBtn:'📍 Heading to return (share my location)',
+      mode_walk:'coming on foot', mode_kick:'coming by kick scooter', mode_bike:'coming by bicycle', mode_car:'coming by collection car',
+      staff:'Staff', youCust:'You', destPin:'Destination', dist:'Staff is about {d} away',
+      getting:'Getting your location…', sharedOk:'✅ Location shared. Staff will guide you.', shareFail:'Could not share. Please check your link.',
+      commFail:'Communication failed. Please try again where the signal is good.', noGeo:'Your device cannot get the current location.',
+      denied:'Location access is not allowed. Please enable location in your device settings and try again.', getFail:'Could not get your location. Please try again where the signal is good.',
+      badLink:'The link is invalid. Please reopen the link sent by our staff.'
+    },
+    zh:{
+      title:'实时位置｜HANDYMAN (HDM Car Delivery)', checking:'正在确认当前状态…',
+      meetLbl:'📍 会合地点', openMap:'🗺 在地图中打开地址', stale:'等待位置更新…',
+      mapFail:'无法显示地图，请重新加载页面。',
+      shareGuide:'📍 为与工作人员会合，请用下方按钮共享您的当前位置（可选）。',
+      shareBtn:'📍 共享我的位置', shareBtnEmph:'📍 共享我的位置（告知工作人员您的位置）', shared:'✅ 已共享位置',
+      safe:'🔒 您共享的位置仅对本预约的工作人员可见，送车/取车完成后会自动关闭。不会持续追踪（仅查看地图无需共享）。',
+      offLine:'当前不在位置共享的服务时间内', offSub:'到工作人员为您服务的时间时，会显示在此地图上。',
+      delLine:'🚚 送车中｜工作人员正在前往', delSub:'<b>📍 请点击下方「共享我的位置」。</b>工作人员会将车准确送到您所在的位置。',
+      colLine:'🧭 正在前往取车', colWait:'请稍候', colSub:'工作人员正在前往取车。<b>为准确告知取车地点，请点击下方「📍共享我的位置」。</b>',
+      retLine:'🔑 还车会合｜请共享您的位置', retSub:'<b>📍 前往还车地点前，请点击下方「共享我的位置」。</b>这会作为「正在前往」的信号，工作人员可掌握到达时间并准备接车。', retBtn:'📍 前往还车（共享我的位置）',
+      mode_walk:'正在步行前往', mode_kick:'正在骑滑板车前往', mode_bike:'正在骑自行车前往', mode_car:'正乘取车车辆前往',
+      staff:'工作人员', youCust:'您', destPin:'目的地', dist:'工作人员距离约{d}',
+      getting:'正在获取位置…', sharedOk:'✅ 已共享位置，工作人员将为您引导。', shareFail:'共享失败，请检查链接。',
+      commFail:'通信失败，请在信号良好处重试。', noGeo:'您的设备无法获取当前位置。',
+      denied:'未允许使用位置信息。请在设备设置中允许定位后重试。', getFail:'无法获取当前位置，请在信号良好处重试。',
+      badLink:'链接无效，请重新打开工作人员发送的链接。'
+    },
+    ko:{
+      title:'실시간 위치｜HANDYMAN (HDM Car Delivery)', checking:'현재 상태를 확인하고 있습니다…',
+      meetLbl:'📍 만나는 장소', openMap:'🗺 지도에서 주소 열기', stale:'위치 업데이트 대기 중…',
+      mapFail:'지도를 표시할 수 없습니다. 페이지를 새로고침해 주세요.',
+      shareGuide:'📍 스태프와 만나기 위해 아래 버튼으로 현재 위치를 공유해 주세요 (선택).',
+      shareBtn:'📍 내 위치 공유', shareBtnEmph:'📍 내 위치 공유 (스태프에게 위치 전달)', shared:'✅ 위치를 공유했습니다',
+      safe:'🔒 공유한 위치는 이 예약의 스태프에게만 표시되며 배달/회수 완료 시 자동으로 꺼집니다. 지속적인 추적은 없습니다 (지도만 볼 경우 공유는 필요 없습니다).',
+      offLine:'현재 위치 공유 대상 시간이 아닙니다', offSub:'담당자가 안내할 시간이 되면 이 지도에 표시됩니다.',
+      delLine:'🚚 배달 중｜스태프가 이동 중입니다', delSub:'<b>📍 아래 "내 위치 공유"를 눌러 주세요.</b> 스태프가 계신 곳까지 정확히 배달해 드립니다.',
+      colLine:'🧭 회수하러 가는 중', colWait:'잠시만 기다려 주세요', colSub:'스태프가 차량 회수를 위해 이동 중입니다. <b>정확한 회수 장소를 위해 아래 "📍 내 위치 공유"를 눌러 주세요.</b>',
+      retLine:'🔑 반납 미팅｜위치 공유를 부탁드립니다', retSub:'<b>📍 반납 장소로 가기 전에 아래 "내 위치 공유"를 눌러 주세요.</b> "지금 갑니다"라는 신호가 되어 스태프가 도착 예정을 파악하고 인수 준비를 합니다.', retBtn:'📍 반납하러 가기 (내 위치 공유)',
+      mode_walk:'도보로 이동 중', mode_kick:'킥보드로 이동 중', mode_bike:'자전거로 이동 중', mode_car:'회수 차량으로 이동 중',
+      staff:'스태프', youCust:'고객님(나)', destPin:'목적지', dist:'스태프까지 약 {d}',
+      getting:'위치 정보를 가져오는 중…', sharedOk:'✅ 위치를 공유했습니다. 담당자가 안내합니다.', shareFail:'공유하지 못했습니다. 링크를 확인해 주세요.',
+      commFail:'통신에 실패했습니다. 신호가 좋은 곳에서 다시 시도해 주세요.', noGeo:'사용 중인 기기에서는 현재 위치를 가져올 수 없습니다.',
+      denied:'위치 정보 사용이 허용되지 않았습니다. 기기 설정에서 위치를 허용한 뒤 다시 시도해 주세요.', getFail:'현재 위치를 가져오지 못했습니다. 신호가 좋은 곳에서 다시 시도해 주세요.',
+      badLink:'링크가 올바르지 않습니다. 담당자가 보낸 링크를 다시 열어 주세요.'
+    }
+  };
+  function detectLang() {
+    try { const s = localStorage.getItem('kd_lang'); if (s && I18N[s]) return s; } catch (e) {}
+    const n = (navigator.language || 'ja').toLowerCase();
+    if (n.indexOf('zh') === 0) return 'zh';
+    if (n.indexOf('ko') === 0) return 'ko';
+    if (n.indexOf('ja') === 0) return 'ja';
+    if (n.indexOf('en') === 0) return 'en';
+    return 'ja';
+  }
+  let LANG = detectLang();
+  function t(key, vars) {
+    let s = (I18N[LANG] && I18N[LANG][key] != null) ? I18N[LANG][key] : (I18N.ja[key] || '');
+    if (vars) Object.keys(vars).forEach(k => { s = s.replace('{' + k + '}', vars[k]); });
+    return s;
+  }
+  function setTxt(id, val) { const e = document.getElementById(id); if (e) e.textContent = val; }
+  function buildLangBar() {
+    const bar = document.getElementById('langbar'); if (!bar) return;
+    bar.innerHTML = LANGS.map(l => '<button data-l="' + l[0] + '"' + (l[0] === LANG ? ' class="on"' : '') + '>' + l[1] + '</button>').join('');
+    bar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.l)));
+  }
+  function applyLang(lang) {
+    if (!I18N[lang]) return;
+    LANG = lang;
+    try { localStorage.setItem('kd_lang', lang); } catch (e) {}
+    document.documentElement.lang = lang;
+    document.title = t('title');
+    buildLangBar();
+    setTxt('shareGuide', t('shareGuide'));
+    setTxt('shareSafe', t('safe'));
+    setTxt('addrLbl', t('meetLbl'));
+    setTxt('addrLink', t('openMap'));
+    setTxt('staleChip', t('stale'));
+    setTxt('mapFallback', t('mapFail'));
+    if (!R || !T) { applyStatus(null); setTxt('stSub', t('badLink')); return; }
+    applyStatus(lastData); applyAddr(lastData);
+    if (map) { renderMap(); refreshMeetIW(); }
+  }
+
   const q = new URLSearchParams(location.search);
   const R = (q.get('r') || '').toUpperCase().trim();
   const T = (q.get('t') || '').trim();
   if(q.get("embed")==="1"){var _h=document.getElementById("hdBar");if(_h)_h.style.display="none";}
 
-  let gmapReady = false, map = null, driverMarker = null, custMarker = null, driverIW = null, custIW = null, meetMarker = null, meetIW = null, meetAddrDone = '';
+  let gmapReady = false, map = null, driverMarker = null, custMarker = null, driverIW = null, custIW = null, meetMarker = null, meetIW = null, meetAddrDone = '', meetAddrTrying = '', meetCleanAddr = '';
   let lastData = null, custShared = false;
   let driverMode = '';  // 回収時のスタッフ移動手段: walk/kick/bike/car（空=フォールバック🚶）
-  // 移動手段 → 絵文字・案内文（回収時のみ使用）
-  const MODE_MAP = {
-    walk: { emoji: '🚶', label: '徒歩で向かっています' },
-    kick: { emoji: '🛴', label: 'キックボードで向かっています' },
-    bike: { emoji: '🚲', label: '自転車で向かっています' },
-    car:  { emoji: '🚗', label: '回収車で向かっています' }
-  };
+  const MODE_EMOJI = { walk: '🚶', kick: '🛴', bike: '🚲', car: '🚗' };
 
   function rpc(name, body) {
     return fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
@@ -117,26 +232,26 @@
     root.innerHTML = `
       <div class="status offhours" id="statusBox">
         <div class="pill">
-          <div class="st-line" id="stLine">現在の状況を確認しています…</div>
+          <div class="st-line" id="stLine">${t('checking')}</div>
           <div class="st-sub" id="stSub"></div>
         </div>
       </div>
       <div class="addr" id="addrBox" style="display:none">
-        <span class="lbl">📍 待ち合わせ場所</span>
+        <span class="lbl" id="addrLbl">${t('meetLbl')}</span>
         <div class="val" id="addrVal"></div>
-        <a class="map-link" id="addrLink" target="_blank" rel="noopener">🗺 待ち合わせ住所を地図で開く</a>
+        <a class="map-link" id="addrLink" target="_blank" rel="noopener">${t('openMap')}</a>
       </div>
       <div class="map-wrap">
         <div class="dist-chip" id="distChip"></div>
-        <div class="stale-chip" id="staleChip">位置更新待ち…</div>
+        <div class="stale-chip" id="staleChip">${t('stale')}</div>
         <div id="map"></div>
-        <div class="map-fallback" id="mapFallback">地図を表示できませんでした。お手数ですが画面を再読み込みしてください。</div>
+        <div class="map-fallback" id="mapFallback">${t('mapFail')}</div>
       </div>
       <div class="share-bar">
-        <div class="share-guide">📍 スタッフと合流するため、下のボタンで「今いる場所」を共有してください（任意）。</div>
-        <button class="btn-share" id="shareBtn">📍 今いる場所を共有</button>
+        <div class="share-guide" id="shareGuide">${t('shareGuide')}</div>
+        <button class="btn-share" id="shareBtn">${t('shareBtn')}</button>
         <div class="share-msg" id="shareMsg"></div>
-        <div class="share-safe">🔒 共有した位置は「この予約のスタッフ」だけに表示され、お届け／回収の完了時に自動でオフになります。継続的な追跡はありません（見るだけなら共有は不要です）。</div>
+        <div class="share-safe" id="shareSafe">${t('safe')}</div>
       </div>
     `;
     document.getElementById('shareBtn').addEventListener('click', shareLocation);
@@ -147,37 +262,38 @@
     const box = document.getElementById('statusBox');
     const line = document.getElementById('stLine');
     const sub = document.getElementById('stSub');
+    if (!box || !line || !sub) return;
     box.className = 'status offhours';
     if (!d) {
-      line.textContent = '現在、位置共有の対象時間外です';
-      sub.textContent = '担当者がご案内する時間になりましたら、こちらの地図に表示されます。';
+      line.textContent = t('offLine');
+      sub.textContent = t('offSub');
       return;
     }
     if (d.kd_status === 'delivering') {
       box.className = 'status delivering';
-      line.textContent = '🚚 お届け中｜スタッフが向かっています';
-      sub.innerHTML = '<b>📍 下の「今いる場所を共有」を押してください。</b>スタッフがあなたのいる場所まで正確にお届けします。';
+      line.textContent = t('delLine');
+      sub.innerHTML = t('delSub');
     } else if (d.kd_status === 'collecting') {
       box.className = 'status collecting';
-      const m = MODE_MAP[driverMode];
-      line.textContent = m ? ('🧭 回収に向かっています｜' + m.emoji + ' ' + m.label) : '🧭 回収に向かっています｜お待ちください';
-      sub.innerHTML = '担当者がお車の回収に向かっています。<b>正確な回収場所をお伝えするため、下の「📍今いる場所を共有」をお願いします。</b>';
+      const em = MODE_EMOJI[driverMode];
+      line.textContent = em ? (t('colLine') + '｜' + em + ' ' + t('mode_' + driverMode)) : (t('colLine') + '｜' + t('colWait'));
+      sub.innerHTML = t('colSub');
     } else if (d.kd_status === 'returning') {
       box.className = 'status collecting';
-      line.textContent = '🔑 ご返却の待ち合わせ｜位置情報の共有をお願いします';
-      sub.innerHTML = '<b>📍 返却場所へ向かう前に、下の「今いる場所を共有」を押してください。</b>「これから向かいます」の合図になり、スタッフが到着予定を把握して受け入れ準備をします。';
+      line.textContent = t('retLine');
+      sub.innerHTML = t('retSub');
     } else {
-      line.textContent = '現在、位置共有の対象時間外です';
-      sub.textContent = '担当者がご案内する時間になりましたら、こちらの地図に表示されます。';
+      line.textContent = t('offLine');
+      sub.textContent = t('offSub');
     }
-    // 回収で未共有のときは共有ボタンの文言を強調
     const sb = document.getElementById('shareBtn');
-    if (sb) sb.textContent = custShared ? '✅ 現在地を共有しました' : (d.kd_status === 'returning' ? '📍 返却に向かう（今いる場所を共有）' : '📍 今いる場所を共有（スタッフに位置を伝える）');
+    if (sb) sb.textContent = custShared ? t('shared') : (d.kd_status === 'returning' ? t('retBtn') : t('shareBtnEmph'));
   }
 
   // ===== meeting address =====
   function applyAddr(d) {
     const box = document.getElementById('addrBox');
+    if (!box) return;
     if (d && d.del_place) {
       box.style.display = 'block';
       document.getElementById('addrVal').textContent = d.del_place;
@@ -193,7 +309,7 @@
     const d = lastData;
     const hasDriver = (d.driver_lat != null && d.driver_lng != null);
     const hasCust = (d.cust_lat != null && d.cust_lng != null);
-    if (!hasDriver && !hasCust) return;
+    if (!hasDriver && !hasCust) { geocodeMeet(d.del_place); return; }
 
     if (!map) {
       const center = hasDriver ? { lat: +d.driver_lat, lng: +d.driver_lng } : { lat: +d.cust_lat, lng: +d.cust_lng };
@@ -203,18 +319,17 @@
       });
     }
 
-    // 回収時はアイコンを入替：車はお客様側、動くスタッフは移動手段に応じて 🚶/🛴/🚲/🚗（お届け時は🚗＝スタッフ/🧍＝お客様）
+    // 回収/返却時はアイコンを入替：車はお客様側、動くスタッフは移動手段に応じて 🚶/🛴/🚲/🚗（お届け時は🚗＝スタッフ/🧍＝お客様）
     const collecting = (d.kd_status === 'collecting' || d.kd_status === 'returning');
-    const modeInfo = collecting ? MODE_MAP[driverMode] : null;
-    const driverEmoji = collecting ? (modeInfo ? modeInfo.emoji : '🚶') : '🚗';
-    const driverLabel = collecting ? ('スタッフ' + (modeInfo ? '（' + modeInfo.label + '）' : '')) : 'スタッフ';
+    const driverEmoji = collecting ? (MODE_EMOJI[driverMode] || '🚶') : '🚗';
+    const driverLabel = collecting ? (t('staff') + (MODE_EMOJI[driverMode] ? '（' + t('mode_' + driverMode) + '）' : '')) : t('staff');
     const custEmoji = collecting ? '🚗' : '🧍';
 
     if (hasDriver) {
       const pos = { lat: +d.driver_lat, lng: +d.driver_lng };
       if (!driverMarker) {
         driverMarker = new google.maps.Marker({
-          map, position: pos, title: 'スタッフ',
+          map, position: pos, title: t('staff'),
           label: { text: driverEmoji, fontSize: '22px' },
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 16, fillColor: '#FABE00', fillOpacity: 1, strokeColor: '#0F1F45', strokeWeight: 2 }
         });
@@ -228,7 +343,7 @@
       const pos = { lat: +d.cust_lat, lng: +d.cust_lng };
       if (!custMarker) {
         custMarker = new google.maps.Marker({
-          map, position: pos, title: 'お客様',
+          map, position: pos, title: t('youCust'),
           label: { text: custEmoji, fontSize: '20px' },
           icon: { path: google.maps.SymbolPath.CIRCLE, scale: 14, fillColor: '#0369a1', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
         });
@@ -238,14 +353,13 @@
       }
     }
 
-    // fit bounds when both present
     if (hasDriver) {
       if (!driverIW) { driverIW = new google.maps.InfoWindow({ disableAutoPan: true }); driverIW.open(map, driverMarker); }
       driverIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#92400e">' + driverEmoji + ' ' + driverLabel + '</div>');
     }
     if (hasCust) {
       if (!custIW) { custIW = new google.maps.InfoWindow({ disableAutoPan: true }); custIW.open(map, custMarker); }
-      custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' お客様（あなた）</div>');
+      custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' ' + t('youCust') + '</div>');
     }
 
     geocodeMeet(d.del_place);  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
@@ -253,7 +367,7 @@
     const chip = document.getElementById('distChip');
     if (hasDriver && hasCust) {
       const dist = haversine(+d.driver_lat, +d.driver_lng, +d.cust_lat, +d.cust_lng);
-      chip.textContent = 'スタッフは約' + fmtDist(dist) + '先です';
+      chip.textContent = t('dist', { d: fmtDist(dist) });
       chip.classList.add('show');
     } else { chip.classList.remove('show'); }
     fitAll();
@@ -269,38 +383,64 @@
     else if (pts.length === 1) { map.panTo(pts[0]); }
   }
 
-  let _geocoder = null;
+  function refreshMeetIW() {
+    if (meetMarker && meetIW && meetCleanAddr) {
+      meetIW.setContent('<div style="font-weight:800;font-size:13px;white-space:nowrap;color:#6d28d9">🎯 ' + t('destPin') + '：' + meetCleanAddr + '</div>');
+    }
+  }
+  // 目的地ピンを配置（座標が既知なら即置く・取りこぼし防止＝冪等）
+  function placeMeet(loc, label) {
+    if (!map || !loc) return;
+    meetCleanAddr = label || meetCleanAddr;
+    if (!meetMarker) {
+      meetMarker = new google.maps.Marker({
+        map, position: loc, title: '🎯 ' + t('destPin'), zIndex: 999,
+        label: { text: '🎯', fontSize: '26px' },
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: '#7c3aed', fillOpacity: 0.95, strokeColor: '#fff', strokeWeight: 3 },
+        animation: google.maps.Animation.DROP
+      });
+    } else meetMarker.setPosition(loc);
+    if (!meetIW) meetIW = new google.maps.InfoWindow({ disableAutoPan: true });
+    refreshMeetIW();
+    meetIW.open(map, meetMarker);
+    fitAll();
+  }
+
+  let _geocoder = null, meetLoc = null;
   // 住所→座標：リファラ制限キーはGeocoding RESTで弾かれるため地図JSのGeocoderを使用
   function geocodeMeet(addr) {
-    if (!gmapReady || !map || !addr) return;
+    if (!gmapReady || !addr) return;
     const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
-    if (!clean || clean === meetAddrDone) return;
-    meetAddrDone = clean;
+    if (!clean) return;
+    if (meetLoc && clean === meetAddrDone) { placeMeet(meetLoc, clean); return; }
+    if (clean === meetAddrTrying) return;
+    meetAddrTrying = clean;
     if (!_geocoder) _geocoder = new google.maps.Geocoder();
-    // 現在地(お客様/スタッフ)周辺にバイアス＝「グランドホテル」等の一般名を近隣の店舗に解決させ全国誤爆を防ぐ
-    const _req = { address: clean, region: 'jp', language: 'ja' };
-    const _blat = lastData ? +(lastData.cust_lat != null ? lastData.cust_lat : lastData.driver_lat) : NaN;
-    const _blng = lastData ? +(lastData.cust_lng != null ? lastData.cust_lng : lastData.driver_lng) : NaN;
-    if (!isNaN(_blat) && !isNaN(_blng)) {
-      _req.bounds = new google.maps.LatLngBounds({ lat: _blat - 0.5, lng: _blng - 0.5 }, { lat: _blat + 0.5, lng: _blng + 0.5 });
-    }
-    _geocoder.geocode(_req, function (results, status) {
-      if (status === 'OK' && results && results[0]) {
-        const loc = results[0].geometry.location;
-        if (!meetMarker) {
-          meetMarker = new google.maps.Marker({
-            map, position: loc, title: '🎯 目的地（待ち合わせ場所）', zIndex: 999,
-            label: { text: '🎯', fontSize: '26px' },
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: '#7c3aed', fillOpacity: 0.95, strokeColor: '#fff', strokeWeight: 3 },
-            animation: google.maps.Animation.DROP
-          });
-        } else meetMarker.setPosition(loc);
-        if (!meetIW) meetIW = new google.maps.InfoWindow({ disableAutoPan: true });
-        meetIW.setContent('<div style="font-weight:800;font-size:13px;white-space:nowrap;color:#6d28d9">🎯 目的地：' + clean + '</div>');
-        meetIW.open(map, meetMarker);
-        fitAll();
-      } else { meetAddrDone = ''; }
-    });
+    // フォールバック候補：番地付き → 丁目 → 町名（Googleが番地を解決できない条丁目住所対策）
+    const cands = [clean];
+    const c2 = clean.replace(/[0-9０-９]+\s*[-ー－]\s*[0-9０-９]+.*$/, '').trim();
+    if (c2 && cands.indexOf(c2) < 0) cands.push(c2);
+    const mi = clean.indexOf('丁目');
+    if (mi > 0) { const c3 = clean.slice(0, mi + 2); if (cands.indexOf(c3) < 0) cands.push(c3); }
+    let idx = 0;
+    const tryNext = function () {
+      if (idx >= cands.length) { meetAddrTrying = ''; return; }
+      const qy = cands[idx++];
+      const _req = { address: qy, region: 'jp', language: 'ja' };
+      const _blat = lastData ? +(lastData.cust_lat != null ? lastData.cust_lat : lastData.driver_lat) : NaN;
+      const _blng = lastData ? +(lastData.cust_lng != null ? lastData.cust_lng : lastData.driver_lng) : NaN;
+      if (!isNaN(_blat) && !isNaN(_blng)) {
+        _req.bounds = new google.maps.LatLngBounds({ lat: _blat - 0.5, lng: _blng - 0.5 }, { lat: _blat + 0.5, lng: _blng + 0.5 });
+      }
+      _geocoder.geocode(_req, function (results, status) {
+        if (status === 'OK' && results && results[0]) {
+          meetLoc = results[0].geometry.location; meetAddrDone = clean; meetAddrTrying = '';
+          if (!map) { renderMap(); return; }
+          placeMeet(meetLoc, clean);
+        } else { tryNext(); }
+      });
+    };
+    tryNext();
   }
 
   function smoothMove(marker, target) {
@@ -341,10 +481,10 @@
     const btn = document.getElementById('shareBtn');
     const msg = document.getElementById('shareMsg');
     if (!navigator.geolocation) {
-      msg.className = 'share-msg err'; msg.textContent = 'お使いの端末では現在地を取得できません。';
+      msg.className = 'share-msg err'; msg.textContent = t('noGeo');
       return;
     }
-    msg.className = 'share-msg'; msg.textContent = '位置情報を取得中…';
+    msg.className = 'share-msg'; msg.textContent = t('getting');
     btn.disabled = true;
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -354,20 +494,20 @@
         if (ok === true || ok === false) {
           if (ok === true) {
             custShared = true;
-            msg.className = 'share-msg ok'; msg.textContent = '✅ 現在地を共有しました。担当者がご案内します。';
+            msg.className = 'share-msg ok'; msg.textContent = t('sharedOk');
             poll();
           } else {
-            msg.className = 'share-msg err'; msg.textContent = '共有できませんでした。リンクをご確認ください。';
+            msg.className = 'share-msg err'; msg.textContent = t('shareFail');
           }
         } else {
-          msg.className = 'share-msg err'; msg.textContent = '通信に失敗しました。電波の良い場所で再度お試しください。';
+          msg.className = 'share-msg err'; msg.textContent = t('commFail');
         }
       },
       (err) => {
         btn.disabled = false;
         msg.className = 'share-msg err';
-        if (err.code === 1) msg.textContent = '位置情報の利用が許可されていません。端末の設定から位置情報を許可してお試しください。';
-        else msg.textContent = '現在地を取得できませんでした。電波の良い場所で再度お試しください。';
+        if (err.code === 1) msg.textContent = t('denied');
+        else msg.textContent = t('getFail');
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
@@ -380,7 +520,6 @@
     let d = (Array.isArray(arr) && arr.length) ? arr[0] : null;
     if(d && d.kd_status_at){ const _age=(Date.now()-new Date(d.kd_status_at).getTime())/3600000; if(_age>6){ d=null; } }  // 6時間で自動オフ(放置・完了忘れ対策)
     lastData = d;
-    // 回収中のみ移動手段を取得（RPC未適用でも例外を握りつぶしフォールバック🚶）
     if (d && d.kd_status === 'collecting') {
       try { const m = await rpc('keydrop_track_get_mode', { p_res: R, p_token: T }); if (typeof m === 'string') driverMode = m; }
       catch (e) { /* 未デプロイ時は無視＝🚶 */ }
@@ -396,10 +535,13 @@
   // ===== init =====
   (function init() {
     document.getElementById('initLoading') && (document.getElementById('initLoading').remove());
+    document.documentElement.lang = LANG;
+    document.title = t('title');
+    buildLangBar();
     buildScaffold();
     if (!R || !T) {
       applyStatus(null);
-      document.getElementById('stSub').textContent = 'リンクが正しくありません。担当者からお送りしたリンクを再度お開きください。';
+      document.getElementById('stSub').textContent = t('badLink');
       return;
     }
     loadMaps();
