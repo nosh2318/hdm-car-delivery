@@ -21,6 +21,9 @@
   .langbar{margin-left:auto;display:flex;gap:4px}
   .langbar button{border:1px solid #3a3f47;background:#1a1f27;color:#cbd5e1;font-size:11px;font-weight:800;padding:4px 8px;border-radius:8px;cursor:pointer;line-height:1}
   .langbar button.on{background:#FABE00;color:#0e1116;border-color:#FABE00}
+  .langrow{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;padding:12px 16px 0}
+  .langrow button{border:1px solid #d0d5dd;background:#fff;color:#334155;font-size:12px;font-weight:800;padding:7px 13px;border-radius:10px;cursor:pointer;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .langrow button.on{background:#FABE00;color:#0e1116;border-color:#FABE00}
 
   /* status banner */
   .status{padding:16px;flex:none}
@@ -166,9 +169,12 @@
   }
   function setTxt(id, val) { const e = document.getElementById(id); if (e) e.textContent = val; }
   function buildLangBar() {
-    const bar = document.getElementById('langbar'); if (!bar) return;
-    bar.innerHTML = LANGS.map(l => '<button data-l="' + l[0] + '"' + (l[0] === LANG ? ' class="on"' : '') + '>' + l[1] + '</button>').join('');
-    bar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.l)));
+    const html = LANGS.map(l => '<button data-l="' + l[0] + '"' + (l[0] === LANG ? ' class="on"' : '') + '>' + l[1] + '</button>').join('');
+    ['langbar', 'langrow'].forEach(id => {
+      const bar = document.getElementById(id); if (!bar) return;
+      bar.innerHTML = html;
+      bar.querySelectorAll('button').forEach(b => b.addEventListener('click', () => applyLang(b.dataset.l)));
+    });
   }
   function applyLang(lang) {
     if (!I18N[lang]) return;
@@ -235,6 +241,7 @@
   function buildScaffold() {
     const root = document.getElementById('root');
     root.innerHTML = `
+      <div class="langrow" id="langrow"></div>
       <div class="status offhours" id="statusBox">
         <div class="pill">
           <div class="st-line" id="stLine">${t('checking')}</div>
@@ -538,8 +545,8 @@
     document.getElementById('initLoading') && (document.getElementById('initLoading').remove());
     document.documentElement.lang = LANG;
     document.title = t('title');
-    buildLangBar();
     buildScaffold();
+    buildLangBar();
     if (!R || !T) {
       applyStatus(null);
       document.getElementById('stSub').textContent = t('badLink');
