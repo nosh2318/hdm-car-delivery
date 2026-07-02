@@ -14,7 +14,7 @@
   a{color:#0369a1}
 
   /* header */
-  .hd{background:#0e1116;color:#fff;padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30;flex:none}
+  .hd{background:#0e1116;color:#fff;padding:13px 16px;display:flex;align-items:center;gap:10px 8px;flex-wrap:wrap;position:sticky;top:0;z-index:30;flex:none}
   .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
   .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
   .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
@@ -181,7 +181,6 @@
     setTxt('shareGuide', t('shareGuide'));
     setTxt('shareSafe', t('safe'));
     setTxt('addrLbl', t('meetLbl'));
-    setTxt('addrLink', t('openMap'));
     setTxt('staleChip', t('stale'));
     setTxt('mapFallback', t('mapFail'));
     // 動的テキスト
@@ -245,7 +244,6 @@
       <div class="addr" id="addrBox" style="display:none">
         <span class="lbl" id="addrLbl">${t('meetLbl')}</span>
         <div class="val" id="addrVal"></div>
-        <a class="map-link" id="addrLink" target="_blank" rel="noopener">${t('openMap')}</a>
       </div>
       <div class="map-wrap">
         <div class="dist-chip" id="distChip"></div>
@@ -299,7 +297,6 @@
     if (d && d.del_place) {
       box.style.display = 'block';
       document.getElementById('addrVal').textContent = d.del_place;
-      document.getElementById('addrLink').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.del_place);
     } else {
       box.style.display = 'none';
     }
