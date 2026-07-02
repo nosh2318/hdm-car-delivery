@@ -227,6 +227,14 @@
     document.getElementById('stopBtn').disabled = false;
     sending = true;
     setSendState('on', '位置を送信中…', '初回の位置取得を待っています');
+    // ★ LINE自動送信: 追跡URLを顧客へ（ページ表示中1回のみ・安全ガード/テストモードはサーバ側line-track/line-push）
+    if (!window.__trackLineSent) {
+      window.__trackLineSent = true;
+      fetch('https://ckrxttbnawkclshczsia.supabase.co/functions/v1/line-track', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ r: R, d: D })
+      }).then(x => x.json()).then(j => { console.log('[line-track]', j); }).catch(e => console.warn('[line-track]', e));
+    }
     watchId = navigator.geolocation.watchPosition(
       onPos,
       (err) => {
