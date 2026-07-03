@@ -368,6 +368,7 @@
   }
 
   let meetLoc = null;
+  let meetIWClosed = false; // ✖️で閉じたら再表示しない（ピンtapで復帰）
   // 目的地(集合場所)：回収=回収場所(col_place) / お届け=お届け場所(del_place)。片方が空ならもう片方を使う
   function goalAddr() {
     if (!custData) return null;
@@ -386,10 +387,16 @@
         icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: '#7c3aed', fillOpacity: 0.95, strokeColor: '#fff', strokeWeight: 3 },
         animation: google.maps.Animation.DROP
       });
+      // ピンをタップすると吹き出しを再表示
+      meetMarker.addListener('click', function () { meetIWClosed = false; if (meetIW) meetIW.open(map, meetMarker); });
     } else meetMarker.setPosition(loc);
-    if (!meetIW) meetIW = new google.maps.InfoWindow({ disableAutoPan: true });
+    if (!meetIW) {
+      meetIW = new google.maps.InfoWindow({ disableAutoPan: true });
+      // ✖️で閉じたら再表示しない（地図更新で勝手に開き直さない）
+      meetIW.addListener('closeclick', function () { meetIWClosed = true; });
+    }
     meetIW.setContent('<div style="font-weight:800;font-size:13px;white-space:nowrap;color:#6d28d9">🎯 目的地：' + (label || '') + '</div>');
-    meetIW.open(map, meetMarker);
+    if (!meetIWClosed) meetIW.open(map, meetMarker);
     fitAll();
   }
   // 待ち合わせ住所→座標。リファラ制限キーはGeocoding RESTで弾かれるため、地図JSのGeocoder(Maps JS API経由)を使う
