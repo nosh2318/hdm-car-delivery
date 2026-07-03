@@ -189,20 +189,24 @@
   function applyAddr(d) {
     const box = document.getElementById('addrBox');
     if (!d) { box.style.display = 'none'; return; }
-    const collecting = (d.kd_status === 'collecting');
-    const goal = collecting ? (d.col_place || d.del_place) : (d.del_place || d.col_place);
-    if (!goal) {
-      // 目的地が未入力（楽天等はLINEで別途調整）→空白で混乱しないよう明示
-      box.style.display = 'block';
-      const lblEl0 = box.querySelector('.lbl'); if (lblEl0) lblEl0.textContent = '⚠️ 待ち合わせ場所 未入力';
-      const av = document.getElementById('addrVal');
-      if (av) av.innerHTML = 'この予約は' + (collecting ? '回収場所' : 'お届け先') + 'が未入力です。<br>お客様が「今いる場所を共有」すると地図に目的地(お客様位置)が出ます。<br>または予約に場所を入力してください。';
-      return;
-    }
+    const collecting = (d.kd_status === 'collecting' || d.kd_status === 'returning');
+    const goal = collecting ? (d.col_place || '') : (d.del_place || '');
+    const other = collecting ? (d.del_place || '') : (d.col_place || '');
     box.style.display = 'block';
     const lblEl = box.querySelector('.lbl');
-    if (lblEl) lblEl.textContent = collecting ? '📍 回収場所' : '📍 お届け先';
-    document.getElementById('addrVal').textContent = goal + (d.cust_name ? '（' + d.cust_name + ' 様）' : '');
+    const av = document.getElementById('addrVal');
+    if (!goal) {
+      if (lblEl) lblEl.textContent = '⚠️ ' + (collecting ? '回収場所' : 'お届け先') + ' 未入力';
+      if (av) av.innerHTML = 'この予約は' + (collecting ? '回収場所' : 'お届け先') + 'が未入力です。<br>お客様が「今いる場所を共有」すると地図に表示されます。または予約に場所を入力してください。';
+      return;
+    }
+    if (lblEl) lblEl.textContent = collecting ? '📍 回収場所（回収先へ）' : '📍 お届け先（お届け先へ）';
+    var html = goal + (d.cust_name ? '（' + d.cust_name + ' 様）' : '');
+    html += '<div style="font-size:11px;color:#127a3e;font-weight:800;margin-top:5px">✅ お客様の画面にも「この場所」が目的地として表示されています</div>';
+    if (other && other !== goal) {
+      html += '<div style="font-size:11.5px;color:#b91c1c;font-weight:800;margin-top:6px;background:#fdecec;border:1.5px solid #f5c6c6;border-radius:10px;padding:8px 10px;line-height:1.6">⚠️ この予約は<u>お届け先と回収先が異なります</u><br>・お届け先：' + (d.del_place || '—') + '<br>・回収先：' + (d.col_place || '—') + '<br>今は「' + (collecting ? '回収' : 'お届け') + '」なので<b>' + goal + '</b>へ向かってください。</div>';
+    }
+    av.innerHTML = html;
   }
 
   // ===== sending =====
