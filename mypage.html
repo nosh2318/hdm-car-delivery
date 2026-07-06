@@ -1,0 +1,128 @@
+<!doctype html><html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KEY-DROP マイページ</title>
+<style>
+:root{--navy:#0F1F45;--gold:#FABE00;--green:#0e9f50;--ink:#1f2a44;--sub:#5b6577;--line:#e6e9f0;--bg:#f5f6f9}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",Roboto,sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:520px;margin:0 auto;padding:calc(8px + env(safe-area-inset-top)) 14px calc(50px + env(safe-area-inset-bottom));min-height:100vh}
+.top{display:flex;align-items:center;justify-content:space-between;padding:10px 2px 6px}
+.logo{font-weight:900;font-size:19px;letter-spacing:.5px;color:var(--navy);display:flex;align-items:center;gap:2px}
+.logo .b{color:var(--gold)}
+.store{font-size:11px;font-weight:800;color:#fff;background:var(--navy);padding:3px 10px;border-radius:999px}
+.lang{display:flex;gap:5px;margin:2px 0 10px;flex-wrap:wrap}
+.lang button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer}
+.lang button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.hello{font-size:17px;font-weight:800;margin:2px 0 12px}.hello span{font-size:12px;font-weight:600;color:var(--sub);margin-left:4px}
+.hero{background:linear-gradient(135deg,var(--navy),#1c356e);color:#fff;border-radius:16px;padding:16px 18px;margin-bottom:14px;box-shadow:0 6px 18px rgba(15,31,69,.2)}
+.hero .rid{font-size:12px;opacity:.85;letter-spacing:1px}
+.hero .car{font-size:22px;font-weight:800;margin:3px 0 8px}
+.hero .st{display:inline-block;font-size:12px;font-weight:700;background:rgba(255,255,255,.18);padding:3px 12px;border-radius:999px}
+.hero .cap{font-size:13px;font-weight:700;margin-left:8px;opacity:.92}
+.notice{background:#fff8e6;border:1.5px solid #fde68a;border-radius:14px;padding:13px 15px;margin-bottom:14px}
+.notice .t{font-weight:800;font-size:14px;color:#8a5a00;display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.notice .b{font-size:13px;line-height:1.7;color:#7a4d00}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.card h2{margin:-16px -16px 12px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:7px;background:#f7f9fc;border-bottom:1px solid var(--line);padding:12px 16px;border-radius:16px 16px 0 0}
+.card h2 .em{font-size:16px}
+.row{display:flex;padding:8px 0;border-bottom:1px dashed #eef1f5;gap:10px}
+.row:last-child{border-bottom:0}
+.row .k{width:96px;flex:none;color:var(--sub);font-size:13px}
+.row .v{flex:1;font-weight:700;min-width:0;word-break:break-word}
+.row .v.big{font-size:16px}
+.gold{color:#b8860b}
+.badge{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:1px 7px}
+.foot{text-align:center;font-size:11px;color:var(--sub);margin-top:8px;line-height:1.7}
+.center{display:flex;align-items:center;justify-content:center;min-height:70vh;color:var(--sub);text-align:center;padding:24px}
+.spin{width:26px;height:26px;border:3px solid #dbe2ee;border-top-color:var(--navy);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 12px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.line-btn{display:block;text-align:center;background:#06c755;color:#fff;font-weight:800;padding:13px;border-radius:12px;text-decoration:none;font-size:14px;margin-top:6px}
+</style></head>
+<body><div class="wrap" id="app"><div class="center"><div><div class="spin"></div>読み込み中…</div></div></div>
+<script>
+const FN="https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
+const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+const TOKEN=new URLSearchParams(location.search).get("t")||"";
+const LINE_URL="https://lin.ee/g6iDNYz";
+let L=(navigator.language||"ja").slice(0,2); if(!["ja","en","zh","ko"].includes(L))L="ja";
+const $=s=>document.querySelector(s);
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const TX={
+ store:{ja:"札幌",en:"Sapporo",zh:"札幌",ko:"삿포로"},store_n:{ja:"那覇",en:"Naha",zh:"那霸",ko:"나하"},
+ your_page:{ja:"様 専用ページ",en:"— Your Page",zh:"專屬頁面",ko:"님 전용 페이지"},
+ guest:{ja:"お客様",en:"Guest",zh:"貴賓",ko:"고객님"},
+ rid:{ja:"予約番号",en:"Booking No.",zh:"預約編號",ko:"예약번호"},
+ cls:{ja:"クラス",en:" Class",zh:"車型",ko:"클래스"},
+ cap:{ja:"定員",en:"Seats",zh:"座位",ko:"정원"},people_unit:{ja:"名",en:"",zh:"人",ko:"명"},
+ notice_t:{ja:"運営からのお知らせ",en:"Notice",zh:"營運通知",ko:"운영 안내"},
+ notice_b:{ja:"「時間・場所」など各種変更は、こちらのマイページから操作をお願い申し上げます。<br>マイページで変更された内容が最優先で反映されます。",en:"Please make all changes (time/location) here on this page.<br>Changes made here take top priority.",zh:"「時間・地點」等各項變更請於本頁操作。<br>於本頁所做的變更將最優先反映。",ko:"'시간·장소' 등 각종 변경은 이 페이지에서 진행해 주세요.<br>이 페이지에서 변경한 내용이 최우선으로 반영됩니다."},
+ resv:{ja:"ご予約内容",en:"Reservation",zh:"預約內容",ko:"예약 내용"},
+ via:{ja:"ご予約元",en:"Booked via",zh:"預約來源",ko:"예약 경로"},
+ vehicle:{ja:"車両クラス",en:"Vehicle",zh:"車型",ko:"차량"},
+ period:{ja:"ご利用",en:"Period",zh:"使用期間",ko:"이용"},
+ ppl:{ja:"乗車定員",en:"Capacity",zh:"座位",ko:"정원"},
+ opt:{ja:"オプション",en:"Options",zh:"選配",ko:"옵션"},none:{ja:"なし",en:"None",zh:"無",ko:"없음"},
+ ins:{ja:"補償",en:"Insurance",zh:"保障",ko:"보장"},
+ price:{ja:"お支払い",en:"Total",zh:"金額",ko:"결제금액"},coupon:{ja:"クーポン",en:"Coupon",zh:"優惠券",ko:"쿠폰"},
+ deliver:{ja:"お届け・回収",en:"Delivery / Pickup",zh:"送車・取車",ko:"배달·회수"},
+ del_place:{ja:"お届け先",en:"Delivery to",zh:"送車地點",ko:"배달 장소"},
+ del_dt:{ja:"お届け日時",en:"Delivery",zh:"送車時間",ko:"배달 일시"},
+ col_place:{ja:"回収先",en:"Pickup at",zh:"取車地點",ko:"회수 장소"},
+ col_dt:{ja:"回収日時",en:"Pickup",zh:"取車時間",ko:"회수 일시"},
+ unset:{ja:"未設定",en:"Not set",zh:"未設定",ko:"미설정"},
+ line:{ja:"公式LINEへ",en:"Official LINE",zh:"官方LINE",ko:"공식 LINE"},
+ foot:{ja:"このページはお客様専用です。URLの共有はお控えください。",en:"This page is for you only. Please do not share the URL.",zh:"此頁面為您專屬，請勿分享網址。",ko:"이 페이지는 고객 전용입니다. URL 공유를 삼가주세요."},
+ nokey:{ja:"URLが正しくありません。予約完了メールのリンクからお開きください。",en:"Invalid URL. Please open from the link in your confirmation email.",zh:"網址不正確，請由確認信中的連結開啟。",ko:"URL이 올바르지 않습니다. 확인 메일의 링크로 열어주세요."},
+ notfound:{ja:"マイページが見つかりません。URLをご確認ください。",en:"Page not found. Please check the URL.",zh:"找不到頁面，請確認網址。",ko:"페이지를 찾을 수 없습니다. URL을 확인해 주세요."},
+};
+function t(k){const e=TX[k];return e?(e[L]||e.ja):k}
+const CLS_JP={A:"アルファード/ヴェルファイア",A2:"アルファード/ヴェルファイア",B:"ノア/デリカ",B2:"ノア",C:"ロッキー/CX-3",S:"ハリアー/CX-5",F:"ルーミー/ソリオ",H:"カローラ/アクセラ",D:"軽自動車"};
+function fmtDate(d){if(!d)return"";const p=String(d).split("-");if(p.length<3)return d;const w=["日","月","火","水","木","金","土"];const dt=new Date(+p[0],+p[1]-1,+p[2]);const wd=isNaN(dt)?"":(L==="ja"?"("+w[dt.getDay()]+")":"");return (+p[1])+"/"+(+p[2])+wd}
+function dateTime(d,tm){const dd=fmtDate(d);return dd?(dd+(tm?" "+tm:"")):(tm||"—")}
+function insLabel(s){s=String(s||"");if(/NOC|安心|フル/.test(s))return {ja:"基本＋免責＋NOC補償（安心ワイドパック）",en:"Full (with NOC)",zh:"安心全險",ko:"안심 와이드"}[L];if(/免責|CDW/.test(s))return {ja:"基本＋免責補償",en:"CDW",zh:"免責險",ko:"면책"}[L];return {ja:"基本プラン",en:"Basic",zh:"基本",ko:"기본"}[L]}
+async function call(action,body){const r=await fetch(FN,{method:"POST",headers:{"Content-Type":"application/json",apikey:ANON,Authorization:"Bearer "+ANON},body:JSON.stringify({action,token:TOKEN,...body})});return {status:r.status,json:await r.json().catch(()=>({}))}}
+function langSwitch(){return `<div class="lang">`+["ja:日本語","en:EN","zh:繁中","ko:한국어"].map(x=>{const[k,l]=x.split(":");return `<button class="${L===k?"on":""}" onclick="setLang('${k}')">${l}</button>`}).join("")+`</div>`}
+function setLang(l){L=l;render(DATA)}
+let DATA=null;
+function render(d){
+  DATA=d;const r=d.reservation;
+  const cls=CLS_JP[r.vehicle]||r.vehicle||"";
+  const opts=[];if(r.opt_c)opts.push((L==="ja"?"チャイルドシート":"Child seat")+"×"+r.opt_c);if(r.opt_j)opts.push((L==="ja"?"ジュニアシート":"Junior seat")+"×"+r.opt_j);if(r.opt_b)opts.push((L==="ja"?"ベビーシート":"Baby seat")+"×"+r.opt_b);
+  const optStr=opts.length?opts.join("・"):t("none");
+  const store=String(r.id||"").toUpperCase().startsWith("KDN-")?t("store_n"):t("store");
+  const price=Number(r.price)||0, disc=Number(r.discount)||0;
+  $("#app").innerHTML=`
+  <div class="top"><div class="logo">KEY<span class="b">◦</span>DROP</div><div class="store">${store}</div></div>
+  ${langSwitch()}
+  <div class="hello">${esc(r.name||t("guest"))}<span>${t("your_page")}</span></div>
+  <div class="hero">
+    <div class="rid">${t("rid")} ${esc(r.id)}</div>
+    <div class="car">${esc(r.vehicle)}${t("cls")}${r.people>0?` <span class="cap">👥 ${t("cap")}${r.people}${t("people_unit")}</span>`:""}</div>
+    <div class="st">${esc(r.status||"確定")}</div>
+  </div>
+  <div class="notice"><div class="t">📣 ${t("notice_t")}</div><div class="b">${t("notice_b")}</div></div>
+  <div class="card"><h2><span class="em">🚗</span>${t("resv")}</h2>
+    <div class="row"><div class="k">${t("via")}</div><div class="v">KEY-DROP <span style="color:#94a3b8;font-size:12px;margin-left:6px">${esc(r.id)}</span></div></div>
+    <div class="row"><div class="k">${t("vehicle")}</div><div class="v">${esc(r.vehicle)}${cls?`（${esc(cls)}）`:""}</div></div>
+    <div class="row"><div class="k">${t("period")}</div><div class="v">${esc(r.lend_date)} ${esc(r.lend_time||"")} 〜 ${esc(r.return_date)} ${esc(r.return_time||"")}</div></div>
+    <div class="row"><div class="k">${t("opt")}</div><div class="v">${esc(optStr)}</div></div>
+    <div class="row"><div class="k">${t("ins")}</div><div class="v">${esc(insLabel(r.insurance))}</div></div>
+    ${price>0?`<div class="row"><div class="k">${t("price")}</div><div class="v big gold">¥${price.toLocaleString()}${disc>0?` <span style="font-size:11px;color:var(--sub)">(${t("coupon")} -¥${disc.toLocaleString()})</span>`:""}</div></div>`:""}
+  </div>
+  <div class="card"><h2><span class="em">📍</span>${t("deliver")}</h2>
+    <div class="row"><div class="k">${t("del_place")}</div><div class="v">${r.del_place?esc(r.del_place):`<span style="color:#b91c1c">${t("unset")}</span>`}</div></div>
+    <div class="row"><div class="k">${t("del_dt")}</div><div class="v">${esc(dateTime(r.lend_date,r.lend_time||r.del_time))}</div></div>
+    <div class="row"><div class="k">${t("col_place")}</div><div class="v">${r.col_place?esc(r.col_place):`<span style="color:#b91c1c">${t("unset")}</span>`}</div></div>
+    <div class="row"><div class="k">${t("col_dt")}</div><div class="v">${esc(dateTime(r.return_date,r.return_time||r.col_time))}</div></div>
+  </div>
+  <a class="line-btn" href="${LINE_URL}" target="_blank">💬 ${t("line")}</a>
+  <div class="foot">${t("foot")}<br>KEY-DROP mypage v1.0</div>`;
+}
+async function load(){
+  if(!TOKEN){$("#app").innerHTML=`<div class="center">${t("nokey")}</div>`;return}
+  const {json}=await call("lookup",{});
+  if(!json.ok||!json.reservation){$("#app").innerHTML=`<div class="center">${esc(json.error||t("notfound"))}</div>`;return}
+  render(json);
+}
+load();
+</script></body></html>

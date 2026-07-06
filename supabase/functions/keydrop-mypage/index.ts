@@ -181,32 +181,36 @@ Deno.serve(async (req) => {
   const action = String(p.action || "").trim();
   const mail = String(p.mail || "").trim().toLowerCase();
   // 予約番号は大文字に正規化（DBのid＝KD-/KDN-は大文字。小文字入力でもログイン可に）
-  const resId = String(p.resId || p.reservationId || "").trim().toUpperCase();
+  const resId0 = String(p.resId || p.reservationId || "").trim().toUpperCase();
+  // 🔑 マイページURL用トークン（?t=<mypage_token>）。メールで本人にだけURLを送る＝URL所持＝本人（ログイン不要）
+  const token = String(p.token || "").trim();
 
-  // 本人確認：予約番号 + メール の両方必須（片方だけでは何も返さない＝総当たり/PII漏洩防止）
-  if (!mail || mail.indexOf("@") < 0) return json({ error: "メールアドレスが必要です" }, 400, origin);
-  if (!resId) return json({ error: "予約番号が必要です" }, 400, origin);
+  let M: any, r: any, resId = resId0;
 
-  let M = resolveStore(p, resId); // 店舗解決（予約番号の接頭辞優先）
-
-  // 予約を1件だけ取得（id一致 かつ mail一致 のときのみ・店舗別テーブル／那覇は列エイリアスで札幌項目名に揃える）
-  let rows = await sbGet(
-    M.resv,
-    `id=eq.${encodeURIComponent(resId)}&select=${M.sel}`,
-  );
-  let r = rows[0];
-  // 🛡 自己修復：解決した店舗で見つからなければ、もう一方の店舗も必ず探す。
-  // 接頭辞ルールが将来変わっても／クライアントが誤ったstoreを送っても、本人の予約に確実に到達する
-  // （本人確認は下のmail一致で担保＝総当たり防止は維持）。
-  if (!r) {
-    const oKey = otherStoreKey(M.store);
-    const oM = mkStore(oKey);
-    const orows = await sbGet(oM.resv, `id=eq.${encodeURIComponent(resId)}&select=${oM.sel}`).catch(() => []);
-    if (orows[0]) { r = orows[0]; M = oM; }
-  }
-  if (!r || String(r.mail || "").trim().toLowerCase() !== mail) {
-    // 一致しなければ存在を明かさず一律エラー
-    return json({ error: "予約番号またはメールアドレスが一致しません" }, 404, origin);
+  if (token && /^[0-9a-fA-F-]{36}$/.test(token)) {
+    // トークン認証：mypage_tokenで予約を特定（札幌→那覇の順で探索）。予約番号+メールは不要。
+    for (const sk of ["spk", "nha"]) {
+      const MM = mkStore(sk);
+      const rr = await sbGet(MM.resv, `mypage_token=eq.${encodeURIComponent(token)}&select=${MM.sel}`).catch(() => []);
+      if (rr[0]) { r = rr[0]; M = MM; resId = String(rr[0].id || "").toUpperCase(); break; }
+    }
+    if (!r) return json({ error: "マイページが見つかりません（URLをご確認ください）" }, 404, origin);
+  } else {
+    // 従来ログイン：予約番号 + メール（URLを紛失した人の救済入口）
+    if (!mail || mail.indexOf("@") < 0) return json({ error: "メールアドレスが必要です" }, 400, origin);
+    if (!resId) return json({ error: "予約番号が必要です" }, 400, origin);
+    M = resolveStore(p, resId);
+    const rows = await sbGet(M.resv, `id=eq.${encodeURIComponent(resId)}&select=${M.sel}`);
+    r = rows[0];
+    // 🛡 自己修復：解決した店舗で見つからなければ、もう一方の店舗も探す（本人確認はmail一致で担保）
+    if (!r) {
+      const oM = mkStore(otherStoreKey(M.store));
+      const orows = await sbGet(oM.resv, `id=eq.${encodeURIComponent(resId)}&select=${oM.sel}`).catch(() => []);
+      if (orows[0]) { r = orows[0]; M = oM; }
+    }
+    if (!r || String(r.mail || "").trim().toLowerCase() !== mail) {
+      return json({ error: "予約番号またはメールアドレスが一致しません" }, 404, origin);
+    }
   }
 
   if (action === "lookup") {
