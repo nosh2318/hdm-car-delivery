@@ -1,128 +1,961 @@
-<!doctype html><html lang="ja"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>KEY-DROP マイページ</title>
 <style>
-:root{--navy:#0F1F45;--gold:#FABE00;--green:#0e9f50;--ink:#1f2a44;--sub:#5b6577;--line:#e6e9f0;--bg:#f5f6f9}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",Roboto,sans-serif;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
-.wrap{max-width:520px;margin:0 auto;padding:calc(8px + env(safe-area-inset-top)) 14px calc(50px + env(safe-area-inset-bottom));min-height:100vh}
-.top{display:flex;align-items:center;justify-content:space-between;padding:10px 2px 6px}
-.logo{font-weight:900;font-size:19px;letter-spacing:.5px;color:var(--navy);display:flex;align-items:center;gap:2px}
-.logo .b{color:var(--gold)}
-.store{font-size:11px;font-weight:800;color:#fff;background:var(--navy);padding:3px 10px;border-radius:999px}
-.lang{display:flex;gap:5px;margin:2px 0 10px;flex-wrap:wrap}
-.lang button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer}
-.lang button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
-.hello{font-size:17px;font-weight:800;margin:2px 0 12px}.hello span{font-size:12px;font-weight:600;color:var(--sub);margin-left:4px}
-.hero{background:linear-gradient(135deg,var(--navy),#1c356e);color:#fff;border-radius:16px;padding:16px 18px;margin-bottom:14px;box-shadow:0 6px 18px rgba(15,31,69,.2)}
-.hero .rid{font-size:12px;opacity:.85;letter-spacing:1px}
-.hero .car{font-size:22px;font-weight:800;margin:3px 0 8px}
-.hero .st{display:inline-block;font-size:12px;font-weight:700;background:rgba(255,255,255,.18);padding:3px 12px;border-radius:999px}
-.hero .cap{font-size:13px;font-weight:700;margin-left:8px;opacity:.92}
-.notice{background:#fff8e6;border:1.5px solid #fde68a;border-radius:14px;padding:13px 15px;margin-bottom:14px}
-.notice .t{font-weight:800;font-size:14px;color:#8a5a00;display:flex;align-items:center;gap:7px;margin-bottom:6px}
-.notice .b{font-size:13px;line-height:1.7;color:#7a4d00}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
-.card h2{margin:-16px -16px 12px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:7px;background:#f7f9fc;border-bottom:1px solid var(--line);padding:12px 16px;border-radius:16px 16px 0 0}
-.card h2 .em{font-size:16px}
-.row{display:flex;padding:8px 0;border-bottom:1px dashed #eef1f5;gap:10px}
-.row:last-child{border-bottom:0}
-.row .k{width:96px;flex:none;color:var(--sub);font-size:13px}
-.row .v{flex:1;font-weight:700;min-width:0;word-break:break-word}
-.row .v.big{font-size:16px}
-.gold{color:#b8860b}
-.badge{display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:1px 7px}
-.foot{text-align:center;font-size:11px;color:var(--sub);margin-top:8px;line-height:1.7}
-.center{display:flex;align-items:center;justify-content:center;min-height:70vh;color:var(--sub);text-align:center;padding:24px}
-.spin{width:26px;height:26px;border:3px solid #dbe2ee;border-top-color:var(--navy);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 12px}
-@keyframes sp{to{transform:rotate(360deg)}}
-.line-btn{display:block;text-align:center;background:#06c755;color:#fff;font-weight:800;padding:13px;border-radius:12px;text-decoration:none;font-size:14px;margin-top:6px}
-</style></head>
-<body><div class="wrap" id="app"><div class="center"><div><div class="spin"></div>読み込み中…</div></div></div>
-<script>
-const FN="https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
-const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
-const TOKEN=new URLSearchParams(location.search).get("t")||"";
-const LINE_URL="https://lin.ee/g6iDNYz";
-let L=(navigator.language||"ja").slice(0,2); if(!["ja","en","zh","ko"].includes(L))L="ja";
-const $=s=>document.querySelector(s);
-function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-const TX={
- store:{ja:"札幌",en:"Sapporo",zh:"札幌",ko:"삿포로"},store_n:{ja:"那覇",en:"Naha",zh:"那霸",ko:"나하"},
- your_page:{ja:"様 専用ページ",en:"— Your Page",zh:"專屬頁面",ko:"님 전용 페이지"},
- guest:{ja:"お客様",en:"Guest",zh:"貴賓",ko:"고객님"},
- rid:{ja:"予約番号",en:"Booking No.",zh:"預約編號",ko:"예약번호"},
- cls:{ja:"クラス",en:" Class",zh:"車型",ko:"클래스"},
- cap:{ja:"定員",en:"Seats",zh:"座位",ko:"정원"},people_unit:{ja:"名",en:"",zh:"人",ko:"명"},
- notice_t:{ja:"運営からのお知らせ",en:"Notice",zh:"營運通知",ko:"운영 안내"},
- notice_b:{ja:"「時間・場所」など各種変更は、こちらのマイページから操作をお願い申し上げます。<br>マイページで変更された内容が最優先で反映されます。",en:"Please make all changes (time/location) here on this page.<br>Changes made here take top priority.",zh:"「時間・地點」等各項變更請於本頁操作。<br>於本頁所做的變更將最優先反映。",ko:"'시간·장소' 등 각종 변경은 이 페이지에서 진행해 주세요.<br>이 페이지에서 변경한 내용이 최우선으로 반영됩니다."},
- resv:{ja:"ご予約内容",en:"Reservation",zh:"預約內容",ko:"예약 내용"},
- via:{ja:"ご予約元",en:"Booked via",zh:"預約來源",ko:"예약 경로"},
- vehicle:{ja:"車両クラス",en:"Vehicle",zh:"車型",ko:"차량"},
- period:{ja:"ご利用",en:"Period",zh:"使用期間",ko:"이용"},
- ppl:{ja:"乗車定員",en:"Capacity",zh:"座位",ko:"정원"},
- opt:{ja:"オプション",en:"Options",zh:"選配",ko:"옵션"},none:{ja:"なし",en:"None",zh:"無",ko:"없음"},
- ins:{ja:"補償",en:"Insurance",zh:"保障",ko:"보장"},
- price:{ja:"お支払い",en:"Total",zh:"金額",ko:"결제금액"},coupon:{ja:"クーポン",en:"Coupon",zh:"優惠券",ko:"쿠폰"},
- deliver:{ja:"お届け・回収",en:"Delivery / Pickup",zh:"送車・取車",ko:"배달·회수"},
- del_place:{ja:"お届け先",en:"Delivery to",zh:"送車地點",ko:"배달 장소"},
- del_dt:{ja:"お届け日時",en:"Delivery",zh:"送車時間",ko:"배달 일시"},
- col_place:{ja:"回収先",en:"Pickup at",zh:"取車地點",ko:"회수 장소"},
- col_dt:{ja:"回収日時",en:"Pickup",zh:"取車時間",ko:"회수 일시"},
- unset:{ja:"未設定",en:"Not set",zh:"未設定",ko:"미설정"},
- line:{ja:"公式LINEへ",en:"Official LINE",zh:"官方LINE",ko:"공식 LINE"},
- foot:{ja:"このページはお客様専用です。URLの共有はお控えください。",en:"This page is for you only. Please do not share the URL.",zh:"此頁面為您專屬，請勿分享網址。",ko:"이 페이지는 고객 전용입니다. URL 공유를 삼가주세요."},
- nokey:{ja:"URLが正しくありません。予約完了メールのリンクからお開きください。",en:"Invalid URL. Please open from the link in your confirmation email.",zh:"網址不正確，請由確認信中的連結開啟。",ko:"URL이 올바르지 않습니다. 확인 메일의 링크로 열어주세요."},
- notfound:{ja:"マイページが見つかりません。URLをご確認ください。",en:"Page not found. Please check the URL.",zh:"找不到頁面，請確認網址。",ko:"페이지를 찾을 수 없습니다. URL을 확인해 주세요."},
-};
-function t(k){const e=TX[k];return e?(e[L]||e.ja):k}
-const CLS_JP={A:"アルファード/ヴェルファイア",A2:"アルファード/ヴェルファイア",B:"ノア/デリカ",B2:"ノア",C:"ロッキー/CX-3",S:"ハリアー/CX-5",F:"ルーミー/ソリオ",H:"カローラ/アクセラ",D:"軽自動車"};
-function fmtDate(d){if(!d)return"";const p=String(d).split("-");if(p.length<3)return d;const w=["日","月","火","水","木","金","土"];const dt=new Date(+p[0],+p[1]-1,+p[2]);const wd=isNaN(dt)?"":(L==="ja"?"("+w[dt.getDay()]+")":"");return (+p[1])+"/"+(+p[2])+wd}
-function dateTime(d,tm){const dd=fmtDate(d);return dd?(dd+(tm?" "+tm:"")):(tm||"—")}
-function insLabel(s){s=String(s||"");if(/NOC|安心|フル/.test(s))return {ja:"基本＋免責＋NOC補償（安心ワイドパック）",en:"Full (with NOC)",zh:"安心全險",ko:"안심 와이드"}[L];if(/免責|CDW/.test(s))return {ja:"基本＋免責補償",en:"CDW",zh:"免責險",ko:"면책"}[L];return {ja:"基本プラン",en:"Basic",zh:"基本",ko:"기본"}[L]}
-async function call(action,body){const r=await fetch(FN,{method:"POST",headers:{"Content-Type":"application/json",apikey:ANON,Authorization:"Bearer "+ANON},body:JSON.stringify({action,token:TOKEN,...body})});return {status:r.status,json:await r.json().catch(()=>({}))}}
-function langSwitch(){return `<div class="lang">`+["ja:日本語","en:EN","zh:繁中","ko:한국어"].map(x=>{const[k,l]=x.split(":");return `<button class="${L===k?"on":""}" onclick="setLang('${k}')">${l}</button>`}).join("")+`</div>`}
-function setLang(l){L=l;render(DATA)}
-let DATA=null;
-function render(d){
-  DATA=d;const r=d.reservation;
-  const cls=CLS_JP[r.vehicle]||r.vehicle||"";
-  const opts=[];if(r.opt_c)opts.push((L==="ja"?"チャイルドシート":"Child seat")+"×"+r.opt_c);if(r.opt_j)opts.push((L==="ja"?"ジュニアシート":"Junior seat")+"×"+r.opt_j);if(r.opt_b)opts.push((L==="ja"?"ベビーシート":"Baby seat")+"×"+r.opt_b);
-  const optStr=opts.length?opts.join("・"):t("none");
-  const store=String(r.id||"").toUpperCase().startsWith("KDN-")?t("store_n"):t("store");
-  const price=Number(r.price)||0, disc=Number(r.discount)||0;
-  $("#app").innerHTML=`
-  <div class="top"><div class="logo">KEY<span class="b">◦</span>DROP</div><div class="store">${store}</div></div>
-  ${langSwitch()}
-  <div class="hello">${esc(r.name||t("guest"))}<span>${t("your_page")}</span></div>
-  <div class="hero">
-    <div class="rid">${t("rid")} ${esc(r.id)}</div>
-    <div class="car">${esc(r.vehicle)}${t("cls")}${r.people>0?` <span class="cap">👥 ${t("cap")}${r.people}${t("people_unit")}</span>`:""}</div>
-    <div class="st">${esc(r.status||"確定")}</div>
-  </div>
-  <div class="notice"><div class="t">📣 ${t("notice_t")}</div><div class="b">${t("notice_b")}</div></div>
-  <div class="card"><h2><span class="em">🚗</span>${t("resv")}</h2>
-    <div class="row"><div class="k">${t("via")}</div><div class="v">KEY-DROP <span style="color:#94a3b8;font-size:12px;margin-left:6px">${esc(r.id)}</span></div></div>
-    <div class="row"><div class="k">${t("vehicle")}</div><div class="v">${esc(r.vehicle)}${cls?`（${esc(cls)}）`:""}</div></div>
-    <div class="row"><div class="k">${t("period")}</div><div class="v">${esc(r.lend_date)} ${esc(r.lend_time||"")} 〜 ${esc(r.return_date)} ${esc(r.return_time||"")}</div></div>
-    <div class="row"><div class="k">${t("opt")}</div><div class="v">${esc(optStr)}</div></div>
-    <div class="row"><div class="k">${t("ins")}</div><div class="v">${esc(insLabel(r.insurance))}</div></div>
-    ${price>0?`<div class="row"><div class="k">${t("price")}</div><div class="v big gold">¥${price.toLocaleString()}${disc>0?` <span style="font-size:11px;color:var(--sub)">(${t("coupon")} -¥${disc.toLocaleString()})</span>`:""}</div></div>`:""}
-  </div>
-  <div class="card"><h2><span class="em">📍</span>${t("deliver")}</h2>
-    <div class="row"><div class="k">${t("del_place")}</div><div class="v">${r.del_place?esc(r.del_place):`<span style="color:#b91c1c">${t("unset")}</span>`}</div></div>
-    <div class="row"><div class="k">${t("del_dt")}</div><div class="v">${esc(dateTime(r.lend_date,r.lend_time||r.del_time))}</div></div>
-    <div class="row"><div class="k">${t("col_place")}</div><div class="v">${r.col_place?esc(r.col_place):`<span style="color:#b91c1c">${t("unset")}</span>`}</div></div>
-    <div class="row"><div class="k">${t("col_dt")}</div><div class="v">${esc(dateTime(r.return_date,r.return_time||r.col_time))}</div></div>
-  </div>
-  <a class="line-btn" href="${LINE_URL}" target="_blank">💬 ${t("line")}</a>
-  <div class="foot">${t("foot")}<br>KEY-DROP mypage v1.0</div>`;
+:root{
+  --bg:#e7ecf1; --card:#fff; --ink:#1c2430; --sub:#6b7784; --line:#e3e8ee;
+  --accent:#0F1F45; --accent-d:#0a1836; --warn:#c2410c; --danger:#b91c1c; --gold:#b8860b;
+  --r:16px; --shadow:0 3px 16px rgba(20,30,45,.09);
 }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:520px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 14px calc(60px + env(safe-area-inset-bottom));min-height:100vh}
+.top{padding:22px 4px 12px;display:flex;align-items:center;gap:10px}
+.logo{font-weight:800;letter-spacing:.5px;font-size:19px}
+.logo b{color:var(--accent)}
+.store{margin-left:auto;font-size:12px;color:var(--sub);border:1px solid var(--line);
+  padding:3px 10px;border-radius:999px;background:#fff}
+.langsw{display:flex;gap:4px;margin:0 0 10px;flex-wrap:wrap}
+.langsw button{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--line);
+  background:#fff;color:var(--sub);cursor:pointer}
+.langsw button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.hello{font-size:19px;font-weight:800;padding:2px 4px 12px;letter-spacing:.3px}
+.hello span{font-size:13px;font-weight:700;color:var(--sub);margin-left:4px}
+.hero{background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;
+  border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-bottom:14px;
+  display:flex;align-items:center;gap:12px;overflow:hidden}
+.hero .hero-txt{flex:1;min-width:0}
+.hero .rid{font-size:12px;opacity:.85;letter-spacing:1px}
+.hero .car{font-size:22px;font-weight:800;margin:2px 0 8px}
+.hero .st{display:inline-block;font-size:12px;font-weight:700;background:rgba(255,255,255,.2);
+  padding:4px 12px;border-radius:999px}
+.hero .hero-car{width:40%;max-width:180px;flex:none;object-fit:contain;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
+.hero.no-img{}
+.card{background:var(--card);border:1px solid #d5dce4;border-radius:var(--r);
+  padding:16px;margin-bottom:14px;box-shadow:var(--shadow);overflow:hidden}
+.card h2{margin:-16px -16px 12px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:7px;
+  padding:12px 16px;background:#f6f9fb;border-bottom:1px solid #e2e7ee;color:var(--accent-d)}
+.card h2 .em{font-size:16px}
+.row{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-top:1px solid #eceff3}
+.row:first-of-type{border-top:0}
+.row .k{width:82px;flex:none;color:var(--sub);font-size:13px;padding-top:1px}
+.row .v{flex:1;font-weight:600;word-break:break-word}
+.row .v.big{font-size:16px}
+.edit{margin-left:auto;flex:none;font-size:12px;font-weight:700;color:var(--accent);
+  border:1px solid var(--accent);background:#f0faf7;border-radius:999px;padding:4px 12px;cursor:pointer}
+.edit.req{color:var(--gold);border-color:var(--gold);background:#fff8ec}
+.muted{color:var(--sub)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
+  padding:5px 12px;border-radius:999px}
+.pill.wait{background:#f1f3f5;color:var(--sub)}
+.pill.on{background:#eafaf5;color:var(--accent-d)}
+.bigbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:14px;border-radius:12px;font-weight:800;font-size:15px;border:0;cursor:pointer;
+  background:var(--accent);color:#fff;text-decoration:none}
+.bigbtn.ghost{background:#fff;color:var(--accent);border:1.5px solid var(--accent)}
+.note{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.5}
+.hrow{display:flex;gap:8px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line);font-size:13px}
+.hrow:first-of-type{border-top:0}
+.hdate{color:var(--sub);font-size:11.5px;flex:0 0 auto;min-width:32px;font-weight:700}
+.htx{flex:1;line-height:1.5}
+.hpill{flex:0 0 auto;padding:1px 8px;border-radius:999px;font-size:10.5px;font-weight:700}
+.hint{font-size:12.5px;color:var(--accent-d);background:#eafaf5;border:1px solid #b7e6da;
+  border-left:4px solid var(--accent);border-radius:10px;padding:10px 12px;margin-top:10px;line-height:1.6;font-weight:600}
+.hint b{color:var(--accent-d)}
+.dashed{border:1.5px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--sub)}
+.reqbar{display:flex;gap:8px;flex-wrap:wrap}
+.reqbtn{flex:1;min-width:calc(50% - 4px);text-align:center;padding:11px 8px;border-radius:12px;
+  font-size:13px;font-weight:700;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
+.reqbtn.danger{color:var(--danger);border-color:#f3c9c9;background:#fff6f6}
+.foot{text-align:center;color:var(--sub);font-size:11px;padding:18px 0 4px;line-height:1.7}
+.foot a{color:var(--accent)}
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(20,28,38,.5);display:none;align-items:flex-end;
+  justify-content:center;z-index:50}
+.scrim.show{display:flex}
+.sheet{background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+  animation:up .25s ease}
+@keyframes up{from{transform:translateY(30px);opacity:.5}to{transform:none;opacity:1}}
+.sheet h3{margin:0 0 4px;font-size:17px;font-weight:800}
+.sheet p.sub{margin:0 0 14px;color:var(--sub);font-size:13px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--sub);margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:12px;border:1.5px solid var(--line);
+  border-radius:10px;font-size:16px;font-family:inherit;background:#fff}
+.field textarea{min-height:80px;resize:vertical}
+.sheet .acts{display:flex;gap:10px;margin-top:6px}
+.sheet .acts button{flex:1;padding:13px;border-radius:11px;font-weight:800;font-size:15px;border:0;cursor:pointer}
+.btn-cancel{background:#eef1f4;color:var(--ink)}
+.btn-ok{background:var(--accent);color:#fff}
+.btn-ok.req{background:var(--gold)}
+.btn-ok.danger{background:var(--danger)}
+.sheet .acts button:disabled{opacity:.4;cursor:not-allowed}
+.optrow{display:grid;grid-template-columns:52px 1fr 16px 88px;gap:9px;align-items:center;
+  padding:11px 0;border-top:1px solid var(--line)}
+.optimg{width:52px;height:52px;object-fit:cover;border-radius:9px;border:1px solid var(--line);background:#fafbfc}
+.optlbl{font-weight:700;font-size:13px}
+.optprice{display:block;font-size:11px;color:var(--sub);font-weight:600;margin-top:1px}
+.optprev-tot{margin-top:6px;padding-top:6px;border-top:1px dashed #e6cfa0;font-weight:800;font-size:14px;text-align:right;color:var(--gold)}
+.optcur{font-size:13px;color:var(--sub);text-align:right}
+.optarrow{text-align:center;color:var(--sub)}
+.optsel{padding:8px;border:1.5px solid var(--line);border-radius:9px;font-size:16px;background:#fff}
+.optprev{background:#fff8ec;border:1px solid #f3d9a8;border-radius:10px;padding:10px 12px;margin-top:12px}
+.optprev-h{font-size:11px;font-weight:800;color:var(--gold);margin-bottom:4px}
+.optprev-r{font-size:13px;font-weight:600}
+.trkbtns{display:flex;gap:8px;margin-top:10px}
+.trkbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;text-align:center;
+  padding:13px 8px;border-radius:12px;font-weight:800;font-size:13.5px;text-decoration:none;
+  background:#eef1f4;color:#0F1F45;border:1.5px solid #dfe4ea}
+.trkbtn.live{background:#0F1F45;color:#fff;border-color:#0F1F45}
+.trkbtn .livebadge{font-size:10px;font-weight:800;background:#0e9f50;color:#fff;border-radius:999px;padding:1px 7px;margin-left:4px}
+/* 追跡プレビュー(見本・本番配色 ネイビー×ゴールド) */
+.tphone{position:relative;border-radius:14px;overflow:hidden;border:1px solid #dfe4ea;
+  box-shadow:0 4px 18px rgba(15,31,69,.14);background:#fff}
+.tp-badge{position:absolute;top:9px;right:9px;z-index:4;background:rgba(15,31,69,.82);color:#fff;
+  font-size:10px;font-weight:800;padding:3px 10px;border-radius:999px;letter-spacing:.5px}
+.tp-hd{background:#0F1F45;color:#fff;padding:11px 14px;display:flex;align-items:center;gap:8px}
+.tp-logo{font-weight:900;font-size:15px;letter-spacing:.5px}.tp-logo b{color:#FABE00}
+.tp-hdsub{font-size:11px;opacity:.85;font-weight:700}
+.tp-status{background:#0e9f50;color:#fff;font-size:12.5px;font-weight:800;padding:8px 14px;
+  display:flex;align-items:center;gap:8px}
+.tp-status b{font-size:15px;margin:0 1px}
+.tp-dot{width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,.7);
+  animation:tppulse 1.6s infinite}
+@keyframes tppulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.tp-map{position:relative;height:180px;background:linear-gradient(120deg,#e8f0e9 0%,#e3ecf4 100%)}
+.tp-map::before{content:"";position:absolute;inset:0;
+  background-image:linear-gradient(#d5e0ea 1px,transparent 1px),linear-gradient(90deg,#d5e0ea 1px,transparent 1px);
+  background-size:32px 32px;opacity:.7}
+.tp-route{position:absolute;left:20%;top:74%;width:60%;height:4px;
+  background:repeating-linear-gradient(90deg,#0F1F45 0 11px,transparent 11px 20px);
+  transform:rotate(-27deg);transform-origin:left center;border-radius:2px;opacity:.8}
+.tp-car{position:absolute;font-size:28px;filter:drop-shadow(0 4px 5px rgba(0,0,0,.25));z-index:2;
+  animation:tpmove 3.6s ease-in-out infinite}
+.tp-dest{position:absolute;right:15%;top:20%;font-size:28px;filter:drop-shadow(0 4px 5px rgba(0,0,0,.25))}
+.tp-destlbl{position:absolute;left:50%;top:-14px;transform:translateX(-50%);background:#0F1F45;color:#fff;
+  font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;white-space:nowrap}
+@keyframes tpmove{0%{left:17%;top:76%}50%{left:55%;top:48%}100%{left:17%;top:76%}}
+.tp-bar{display:flex;align-items:center;gap:10px;padding:11px 12px;background:#fff;border-top:1px solid #eef1f4}
+.tp-info{flex:none}
+.tp-k{font-size:10px;color:var(--sub);font-weight:700}
+.tp-v{font-size:15px;font-weight:900;color:#0F1F45}
+.tp-share{flex:1;background:#FABE00;color:#0F1F45;border:0;border-radius:10px;padding:11px;
+  font-size:13px;font-weight:900;box-shadow:0 2px 6px rgba(250,190,0,.4)}
+.mpmap{width:100%;height:230px;border-radius:12px;border:1px solid var(--line);overflow:hidden;background:#eef1f4}
+.mpsug{position:absolute;left:0;right:0;top:100%;z-index:5;background:#fff;border:1px solid var(--line);
+  border-radius:0 0 10px 10px;box-shadow:0 8px 20px rgba(20,30,45,.12);display:none;max-height:220px;overflow:auto}
+.mpsug-i{padding:10px 12px;font-size:13px;border-bottom:1px solid #f2f4f6;cursor:pointer}
+.mpsug-i:hover{background:#f5f8ff}
+.mppicked{margin-top:10px;font-size:13px;background:#eafaf5;border:1px solid #b7e6da;border-radius:10px;padding:9px 12px}
+.mppicked b{color:var(--accent-d)}
+.inscard{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fafbfc}
+.insttl{font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.insprice{color:var(--accent-d);font-size:13px}
+.insdesc{font-size:11.5px;color:var(--sub);margin-top:3px;line-height:1.5}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1c2430;color:#fff;
+  padding:12px 20px;border-radius:999px;font-size:13px;font-weight:700;z-index:99;opacity:0;
+  transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
+.toast.show{opacity:1}
+.center{text-align:center;padding:60px 20px;color:var(--sub)}
+.spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);
+  border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 14px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.banner{background:#fff8ec;border:1px solid #f3d9a8;color:var(--gold);border-radius:12px;
+  padding:11px 13px;font-size:12.5px;font-weight:700;margin-bottom:12px;display:flex;gap:8px}
+.setbanner{display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#fff3d6,#ffe9c2);
+  border:1.5px solid #f0c46a;border-radius:14px;padding:13px;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 10px rgba(180,120,10,.12)}
+.setbanner .sb-ic{font-size:24px;flex:none}
+.setbanner .sb-tx{flex:1;font-size:12.5px;color:#7a4d06;line-height:1.4}
+.setbanner .sb-tx b{display:block;font-size:14px;color:#8a4b00;margin-bottom:1px}
+.setbanner .sb-go{flex:none;font-weight:900;color:#8a4b00;background:#fff;border-radius:999px;padding:6px 12px;font-size:13px}
+.unset{display:inline-block;font-size:12px;font-weight:800;color:var(--warn);background:#fff1e6;
+  border:1px solid #f5c9a3;border-radius:6px;padding:2px 9px}
+.edit.call{color:#fff;background:var(--warn);border-color:var(--warn);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(194,65,12,.4)}60%{box-shadow:0 0 0 6px rgba(194,65,12,0)}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="center"><div class="spin"></div>読み込み中…</div>
+</div>
+
+<div class="scrim" id="scrim"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const VER = "kd1.0 KEYDROPマイページ(HANDYMAN内容)";
+const FN = "https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
+const TOKEN = new URLSearchParams(location.search).get("t") || "";
+const RO = new URLSearchParams(location.search).get("ro")==="1"; // スタッフ確認用=閲覧専用（編集・依頼を一切させない）
+const $ = s=>document.querySelector(s);
+let DATA = null;
+
+/* ================= 多言語 i18n（日本語/English/繁體中文/한국어）================= */
+const LANGS=[{k:"ja",n:"日本語"},{k:"en",n:"EN"},{k:"zh",n:"繁中"},{k:"ko",n:"한국어"}];
+function detectLang(){
+  const s=localStorage.getItem("mypage_lang"); if(s&&LANGS.some(l=>l.k===s))return s;
+  const n=(navigator.language||"ja").toLowerCase();
+  if(n.startsWith("ja"))return"ja"; if(n.startsWith("ko"))return"ko"; if(n.startsWith("zh"))return"zh"; return"en";
+}
+let L=detectLang();
+function setLang(k){L=k;localStorage.setItem("mypage_lang",k);closeSheet();render();}
+const TX={
+ loading:{ja:"読み込み中…",en:"Loading…",zh:"載入中…",ko:"불러오는 중…"},
+ no_key:{ja:"アクセスキーがありません。LINEに届いたURLからお開きください。",en:"No access key. Please open from the URL sent via LINE.",zh:"沒有存取金鑰。請從 LINE 收到的網址開啟。",ko:"액세스 키가 없습니다. LINE으로 받은 URL에서 열어주세요."},
+ not_found:{ja:"予約が見つかりませんでした",en:"Reservation not found",zh:"找不到預約",ko:"예약을 찾을 수 없습니다"},
+ your_page:{ja:"様 専用ページ",en:" — Your Reservation Page",zh:" 專屬頁面",ko:"님 전용 페이지"},
+ guest:{ja:"お客",en:"Guest",zh:"貴賓",ko:"고객"},
+ store:{ja:"店",en:" Store",zh:"店",ko:"점"},
+ st_confirmed:{ja:"予約確定",en:"Confirmed",zh:"預約確認",ko:"예약 확정"},
+ st_cancelled:{ja:"キャンセル済",en:"Cancelled",zh:"已取消",ko:"취소됨"},
+ st_cancel_req:{ja:"キャンセル申請中",en:"Cancellation requested",zh:"取消申請中",ko:"취소 신청 중"},
+ cls:{ja:"クラス",en:" Class",zh:"車型",ko:" 클래스"},
+ rid:{ja:"予約番号",en:"Reservation No.",zh:"預約編號",ko:"예약 번호"},
+ banner_cancel:{ja:"🕓 キャンセル申請を受け付けました。担当より折り返しご連絡いたします。",en:"🕓 Your cancellation request has been received. Our staff will contact you.",zh:"🕓 已收到您的取消申請，專員將與您聯繫。",ko:"🕓 취소 신청이 접수되었습니다. 담당자가 연락드립니다."},
+ unset_both:{ja:"お届け先・回収先",en:"Delivery & pickup location",zh:"送車與取車地點",ko:"배달·회수 장소"},
+ unset_del:{ja:"お届け先",en:"Delivery location",zh:"送車地點",ko:"배달 장소"},
+ unset_col:{ja:"回収先",en:"Pickup location",zh:"取車地點",ko:"회수 장소"},
+ not_set_suffix:{ja:"が未設定です",en:" is not set",zh:"尚未設定",ko:" 미설정"},
+ set_tap:{ja:"タップして、車をお届け／回収する場所を地図から設定してください。",en:"Tap to set the delivery/pickup location on the map.",zh:"點擊並在地圖上設定送車／取車地點。",ko:"탭하여 지도에서 배달/회수 장소를 설정하세요."},
+ set_go:{ja:"設定 ›",en:"Set ›",zh:"設定 ›",ko:"설정 ›"},
+ resv_content:{ja:"ご予約内容",en:"Reservation Details",zh:"預約內容",ko:"예약 내용"},
+ booked_via:{ja:"ご予約元",en:"Booked via",zh:"預約來源",ko:"예약 경로"},
+ changed_from:{ja:"変更前",en:"was",zh:"原",ko:"이전"},
+ notice_title:{ja:"運営からのお知らせ",en:"Notice",zh:"營運通知",ko:"운영 안내"},
+ notice_body:{ja:"「時間・場所」など各種変更は、こちらのマイページから操作をお願い申し上げます。<br>マイページで変更された内容が最優先で反映されます。",en:"Please make all changes (time, location, etc.) here on My Page.<br>Changes made on My Page take top priority.",zh:"「時間・地點」等各項變更請於本頁操作。<br>於本頁所做的變更將最優先反映。",ko:"'시간·장소' 등 각종 변경은 이 마이페이지에서 진행해 주세요.<br>마이페이지에서 변경한 내용이 최우선으로 반영됩니다."},
+ vehicle_class:{ja:"車両クラス",en:"Vehicle class",zh:"車型",ko:"차량 클래스"},
+ use_period:{ja:"ご利用",en:"Period",zh:"使用期間",ko:"이용"},
+ people:{ja:"乗車定員",en:"Capacity",zh:"乘車人數",ko:"승차정원"},
+ people_unit:{ja:"名",en:" ppl",zh:"人",ko:"명"},
+ capacity:{ja:"定員",en:"Max ",zh:"定員",ko:"정원"},
+ option:{ja:"オプション",en:"Options",zh:"選配",ko:"옵션"},
+ none:{ja:"なし",en:"None",zh:"無",ko:"없음"},
+ insurance:{ja:"補償",en:"Insurance",zh:"保障",ko:"보장"},
+ change_req:{ja:"変更依頼",en:"Request change",zh:"申請變更",ko:"변경 요청"},
+ req_pending:{ja:"🕓 確認中",en:"🕓 Reviewing",zh:"🕓 確認中",ko:"🕓 확인 중"},
+ deliver_pickup:{ja:"お届け・回収",en:"Delivery & Pickup",zh:"送車・取車",ko:"배달・회수"},
+ del_place:{ja:"お届け先",en:"Delivery to",zh:"送車地點",ko:"배달 장소"},
+ del_dt:{ja:"お届け日時",en:"Delivery date/time",zh:"送車日期時間",ko:"배달 일시"},
+ col_place:{ja:"回収先",en:"Pickup at",zh:"取車地點",ko:"회수 장소"},
+ col_dt:{ja:"回収日時",en:"Pickup date/time",zh:"取車日期時間",ko:"회수 일시"},
+ unset:{ja:"未設定",en:"Not set",zh:"未設定",ko:"미설정"},
+ edit:{ja:"変更",en:"Edit",zh:"變更",ko:"변경"},
+ set_it:{ja:"📍設定する",en:"📍 Set",zh:"📍 設定",ko:"📍 설정"},
+ time_edit:{ja:"時間変更",en:"Change time",zh:"變更時間",ko:"시간 변경"},
+ dp_hint:{ja:"⏰ <b>お届け</b>は出発24時間前まで即時変更（以降は担当が確認後に反映）。<br><b>回収</b>は2時間前まで変更いただけます。それ以降は<b>公式LINE</b>にて承ります。",en:"⏰ <b>Delivery</b>: editable instantly up to 24h before (after that, staff confirm). <b>Pickup</b>: editable up to 2h before. Later changes via <b>official LINE</b>.",zh:"⏰ <b>送車</b>：出發前24小時可即時變更（之後由專員確認）。<b>取車</b>：2小時前可變更，之後請透過<b>官方LINE</b>。",ko:"⏰ <b>배달</b>: 출발 24시간 전까지 즉시 변경(이후 담당자 확인). <b>회수</b>: 2시간 전까지 변경 가능. 이후는 <b>공식 LINE</b>."},
+ damage_check:{ja:"車両状態チェック",en:"Vehicle Condition Check",zh:"車輛狀態確認",ko:"차량 상태 체크"},
+ damage_view:{ja:"車両の状態を確認する",en:"Check vehicle condition",zh:"確認車輛狀態",ko:"차량 상태 확인"},
+ damage_note:{ja:"ご出発前に、傷・へこみの状態をご確認ください。気になる点は引き渡し時にお申し付けください。",en:"Please check scratches/dents before departure. Let us know any concerns at handover.",zh:"出發前請確認刮痕／凹痕。如有疑問請於交車時告知。",ko:"출발 전 흠집·찌그러짐을 확인하세요. 인수 시 문의해 주세요."},
+ damage_prep:{ja:"🔧 車両の割り当て準備中です。まもなく表示されます。",en:"🔧 Vehicle is being assigned. Available shortly.",zh:"🔧 車輛配置準備中，即將顯示。",ko:"🔧 차량 배정 준비 중입니다. 곧 표시됩니다."},
+ damage_locked:{ja:"🔒 準備中",en:"🔒 Coming soon",zh:"🔒 準備中",ko:"🔒 준비 중"},
+ damage_open8:{ja:"ご出発日の AM8:00 に閲覧可能になります。",en:"Available from 8:00 AM on your departure day.",zh:"將於出發日上午8:00開放檢視。",ko:"출발일 오전 8:00부터 열람 가능합니다."},
+ track_title:{ja:"当日のリアルタイム追跡",en:"Live Tracking (on the day)",zh:"當日即時追蹤",ko:"당일 실시간 추적"},
+ staff_moving:{ja:"● スタッフ移動中",en:"● Staff en route",zh:"● 專員移動中",ko:"● 담당자 이동 중"},
+ tap_open:{ja:"タップで開く",en:"Tap to open",zh:"點擊開啟",ko:"탭하여 열기"},
+ preview_img:{ja:"表示イメージ",en:"Preview",zh:"顯示範例",ko:"표시 예시"},
+ track_col:{ja:"回収追跡",en:"Pickup tracking",zh:"取車追蹤",ko:"회수 추적"},
+ track_del:{ja:"お届け追跡",en:"Delivery tracking",zh:"送車追蹤",ko:"배달 추적"},
+ heading_col:{ja:"回収に向かっています",en:"Heading to pickup",zh:"正前往取車",ko:"회수하러 가는 중"},
+ heading_del:{ja:"お届け中 ・ あと約 8 分で到着",en:"Delivering · ~8 min to arrive",zh:"配送中 · 約8分鐘抵達",ko:"배달 중 · 약 8분 후 도착"},
+ to_dest:{ja:"目的地まで",en:"To destination",zh:"距目的地",ko:"목적지까지"},
+ share_loc:{ja:"📍 今いる場所を共有",en:"📍 Share my location",zh:"📍 分享我的位置",ko:"📍 현재 위치 공유"},
+ track_del_btn:{ja:"📦 お届けの追跡",en:"📦 Track delivery",zh:"📦 追蹤送車",ko:"📦 배달 추적"},
+ track_col_btn:{ja:"🔄 回収の追跡",en:"🔄 Track pickup",zh:"🔄 追蹤取車",ko:"🔄 회수 추적"},
+ moving:{ja:"● 移動中",en:"● Moving",zh:"● 移動中",ko:"● 이동 중"},
+ track_note:{ja:"上は表示イメージです。<b>お届け／回収それぞれ</b>のボタンから、スタッフの現在地マップ（全画面）を開けます。移動中は「● 移動中」が点きます（開始時にLINEでもお知らせ）。",en:"Above is a preview. Use the <b>Delivery / Pickup</b> buttons to open the staff's live map (full screen). '● Moving' lights up while en route (also notified via LINE).",zh:"以上為示意。使用<b>送車／取車</b>按鈕開啟專員即時地圖（全螢幕）。移動中會亮起「● 移動中」（開始時也會透過LINE通知）。",ko:"위는 예시입니다. <b>배달/회수</b> 버튼으로 담당자 실시간 지도(전체화면)를 열 수 있습니다. 이동 중에는 '● 이동 중'이 켜집니다(시작 시 LINE으로도 안내)."},
+ cancel:{ja:"キャンセル",en:"Cancellation",zh:"取消",ko:"취소"},
+ cancel_apply:{ja:"キャンセルを申請する",en:"Request cancellation",zh:"申請取消",ko:"취소 신청"},
+ cancel_note:{ja:"キャンセル規定・料金をご確認のうえ申請いただけます。申請後、担当者が内容を確認し確定・ご連絡します。",en:"Please review the cancellation policy before requesting. Staff will confirm and contact you.",zh:"請確認取消規定與費用後申請。申請後專員將確認並聯繫您。",ko:"취소 규정·요금을 확인 후 신청하세요. 신청 후 담당자가 확인·연락드립니다."},
+ cancel_done:{ja:"🕓 キャンセル申請済み",en:"🕓 Cancellation requested",zh:"🕓 已申請取消",ko:"🕓 취소 신청 완료"},
+ cancel_wait:{ja:"担当者が確認しご連絡します。",en:"Staff will confirm and contact you.",zh:"專員將確認並與您聯繫。",ko:"담당자가 확인 후 연락드립니다."},
+ recent_hist:{ja:"最近の履歴",en:"Recent Activity",zh:"最近紀錄",ko:"최근 이력"},
+ hist_note:{ja:"ご依頼は担当が確認し、処理後にLINEでお知らせします。状況はこの画面に反映されます。",en:"Requests are reviewed by staff and notified via LINE after processing. Status is shown here.",zh:"申請將由專員確認，處理後透過LINE通知。狀態會顯示於此。",ko:"요청은 담당자가 확인 후 LINE으로 안내합니다. 상태는 이 화면에 반영됩니다."},
+ foot_contact:{ja:"お問い合わせ",en:"Contact",zh:"聯絡我們",ko:"문의"},
+ foot_private:{ja:"このページはお客様専用です。URLの共有はお控えください。",en:"This page is for you only. Please do not share the URL.",zh:"此頁面為您專屬，請勿分享網址。",ko:"이 페이지는 고객 전용입니다. URL 공유를 삼가주세요."},
+ // dialogs
+ cancel_btn:{ja:"やめる",en:"Cancel",zh:"取消",ko:"취소"},
+ no_change:{ja:"変更がありません",en:"No changes",zh:"沒有變更",ko:"변경 사항 없음"},
+ min2:{ja:"2文字以上で入力してください",en:"Please enter at least 2 characters",zh:"請輸入至少2個字",ko:"2자 이상 입력하세요"},
+ saved:{ja:"変更を反映しました",en:"Change applied",zh:"變更已套用",ko:"변경이 반영되었습니다"},
+ pending_appr:{ja:"承認待ちで受け付けました（担当確認後に反映）",en:"Received — pending staff approval",zh:"已受理，待專員審核",ko:"접수됨 — 담당자 승인 대기"},
+ save_fail:{ja:"変更に失敗しました",en:"Failed to save",zh:"變更失敗",ko:"변경 실패"},
+ apply_this:{ja:"この内容で変更する",en:"Apply this change",zh:"確認變更",ko:"이 내용으로 변경"},
+ edit_del_place:{ja:"お届け先の登録・変更",en:"Set delivery location",zh:"設定送車地點",ko:"배달 장소 설정"},
+ edit_col_place:{ja:"回収先の登録・変更",en:"Set pickup location",zh:"設定取車地點",ko:"회수 장소 설정"},
+ edit_lend_time:{ja:"お届け時間の変更",en:"Change delivery time",zh:"變更送車時間",ko:"배달 시간 변경"},
+ edit_return_time:{ja:"回収時間の変更",en:"Change pickup time",zh:"變更取車時間",ko:"회수 시간 변경"},
+ lbl_del_place:{ja:"お届け先（住所・ホテル名）",en:"Delivery (address / hotel)",zh:"送車地點（地址／飯店）",ko:"배달 장소(주소·호텔)"},
+ lbl_col_place:{ja:"回収先（住所・場所）",en:"Pickup (address / place)",zh:"取車地點（地址／地點）",ko:"회수 장소(주소·장소)"},
+ ph_del:{ja:"例：ベッセルイン札幌中島公園",en:"e.g. Vessel Inn Sapporo",zh:"例：札幌某飯店",ko:"예: 삿포로 호텔"},
+ ph_col:{ja:"例：札幌駅",en:"e.g. Sapporo Station",zh:"例：札幌車站",ko:"예: 삿포로역"},
+ sapporo_st_note:{ja:"⚠️ 札幌駅の南口は停車不可のため、<b>北口</b>をおすすめします。北口でのお受け渡しをご指定ください。",en:"⚠️ Stopping is not allowed at the South exit of Sapporo Station. Please use the <b>North exit</b>.",zh:"⚠️ 札幌車站南口禁止停車，建議使用<b>北口</b>交車。",ko:"⚠️ 삿포로역 남쪽 출구는 정차 불가입니다. <b>북쪽 출구</b>를 이용해 주세요."},
+ sub_del:{ja:"お届けの24時間前まで即時反映。以降は担当が確認後に反映します。",en:"Instant up to 24h before delivery. After that, staff confirm.",zh:"送車前24小時內即時反映，之後由專員確認。",ko:"배달 24시간 전까지 즉시 반영. 이후 담당자 확인."},
+ sub_col:{ja:"回収の2時間前まで変更できます。以降は公式LINEで承ります。",en:"Editable up to 2h before pickup. Later via official LINE.",zh:"取車前2小時可變更，之後請透過官方LINE。",ko:"회수 2시간 전까지 변경 가능. 이후 공식 LINE."},
+ map_del_title:{ja:"お届け先の変更",en:"Change delivery location",zh:"變更送車地點",ko:"배달 장소 변경"},
+ map_col_title:{ja:"回収先の変更",en:"Change pickup location",zh:"變更取車地點",ko:"회수 장소 변경"},
+ map_new_del:{ja:"お届け先の登録",en:"Register delivery location",zh:"登記送車地點",ko:"배달 장소 등록"},
+ map_new_col:{ja:"回収先の登録",en:"Register pickup location",zh:"登記取車地點",ko:"회수 장소 등록"},
+ map_apply_new:{ja:"この場所で登録",en:"Register this location",zh:"以此地點登記",ko:"이 장소로 등록"},
+ map_sub:{ja:"検索して選ぶか、地図のピンを動かして正確な場所を指定してください。",en:"Search & select, or drag the pin to set the exact location.",zh:"搜尋選擇，或拖動地圖圖釘指定確切位置。",ko:"검색해 선택하거나 지도의 핀을 움직여 정확한 위치를 지정하세요."},
+ map_search_ph:{ja:"🔍 住所・ホテル名・施設名で検索",en:"🔍 Search address / hotel / place",zh:"🔍 搜尋地址／飯店／地點",ko:"🔍 주소·호텔·시설 검색"},
+ map_loading:{ja:"地図を読み込み中…",en:"Loading map…",zh:"載入地圖中…",ko:"지도 불러오는 중…"},
+ map_unselected:{ja:"未選択",en:"Not selected",zh:"未選擇",ko:"미선택"},
+ map_hint:{ja:"⏰ 出発24時間前まで変更できます。変更後すぐ反映されます。",en:"⏰ Editable up to 24h before departure. Applied immediately.",zh:"⏰ 出發前24小時可變更，變更後立即反映。",ko:"⏰ 출발 24시간 전까지 변경 가능. 변경 즉시 반영."},
+ map_apply:{ja:"この場所で変更",en:"Change to this location",zh:"變更為此地點",ko:"이 장소로 변경"},
+ map_load_fail:{ja:"地図を読み込めませんでした。検索欄に入力して変更できます。",en:"Could not load map. You can type in the search box.",zh:"無法載入地圖。可於搜尋欄輸入。",ko:"지도를 불러올 수 없습니다. 검색란에 입력하세요."},
+ map_getting:{ja:"住所を取得中…",en:"Getting address…",zh:"取得地址中…",ko:"주소 가져오는 중…"},
+ map_no_hit:{ja:"該当なし",en:"No results",zh:"無符合",ko:"결과 없음"},
+ enter_place:{ja:"場所を入力してください",en:"Please enter a location",zh:"請輸入地點",ko:"장소를 입력하세요"},
+ opt_title:{ja:"有料オプションの変更依頼",en:"Request Option Change",zh:"申請選配變更",ko:"유료 옵션 변경 요청"},
+ opt_sub:{ja:"ご希望の数量をお選びください。担当が空き状況を確認し確定します。",en:"Select the quantity. Staff will confirm availability.",zh:"請選擇數量。專員將確認庫存後確定。",ko:"원하는 수량을 선택하세요. 담당자가 재고 확인 후 확정합니다."},
+ opt_note:{ja:"※ 受付は<b>貸出前日19:00まで</b>。料金は税込・目安です。最終金額は担当が確定します。",en:"※ Requests accepted until <b>19:00 the day before pickup</b>. Prices are tax-incl. estimates. Final amount confirmed by staff.",zh:"※ 受理至<b>取車前一日19:00</b>。費用為含稅參考值，最終金額由專員確定。",ko:"※ 접수는 <b>대여 전날 19:00까지</b>. 요금은 세금 포함 참고값. 최종 금액은 담당자가 확정."},
+ req_this:{ja:"この内容で依頼する",en:"Request this",zh:"以此申請",ko:"이 내용으로 요청"},
+ opt_child:{ja:"チャイルドシート",en:"Child seat",zh:"兒童安全座椅",ko:"카시트"},
+ opt_junior:{ja:"ジュニアシート",en:"Junior seat",zh:"兒童增高墊",ko:"주니어 시트"},
+ opt_baby:{ja:"ベビーシート",en:"Baby seat",zh:"嬰兒座椅",ko:"베이비 시트"},
+ unit_qty:{ja:"個",en:"",zh:"個",ko:"개"},
+ per_car:{ja:"/台",en:" each",zh:"/台",ko:"/대"},
+ change_content:{ja:"変更内容",en:"Change",zh:"變更內容",ko:"변경 내용"},
+ approx:{ja:"概算",en:"Est.",zh:"約",ko:"약"},
+ opt_confirm:{ja:"オプションの変更を依頼します。",en:"Request option change.",zh:"申請選配變更。",ko:"옵션 변경을 요청합니다."},
+ confirm_ok:{ja:"よろしいですか？（担当が確認し確定します）",en:"Proceed? (Staff will confirm)",zh:"是否確認？（專員將確認）",ko:"진행할까요? (담당자가 확인·확정)"},
+ received:{ja:"依頼を受け付けました",en:"Request received",zh:"已受理申請",ko:"요청이 접수되었습니다"},
+ already_req:{ja:"受付済みです",en:"Already requested",zh:"已受理",ko:"이미 접수됨"},
+ send_fail:{ja:"送信に失敗しました",en:"Failed to send",zh:"傳送失敗",ko:"전송 실패"},
+ ins_title:{ja:"補償の変更依頼",en:"Request Insurance Change",zh:"申請保障變更",ko:"보장 변경 요청"},
+ ins_sub:{ja:"現在の補償はそのまま、ご希望のプランをお選びください。担当が確認し確定します。",en:"Keep current or pick a plan. Staff will confirm.",zh:"維持現有或選擇方案。專員將確認。",ko:"현재 보장 유지 또는 원하는 플랜 선택. 담당자가 확정."},
+ current:{ja:"現在",en:"Current",zh:"目前",ko:"현재"},
+ new_plan:{ja:"変更後のプラン",en:"New plan",zh:"變更後方案",ko:"변경 후 플랜"},
+ ins_note:{ja:"※ 変更は<b>貸出前まで</b>（貸出完了後は変更不可）。料金は税込・目安/日です。最終金額は担当が確定します。",en:"※ Changes accepted <b>until pickup</b> (not changeable after pickup). Prices are tax-incl. per day (est.). Final amount by staff.",zh:"※ 變更受理至<b>取車前</b>（取車後不可變更）。費用含稅、每日參考值，最終由專員確定。",ko:"※ 변경은 <b>대여 전까지</b>(대여 완료 후 변경 불가). 요금은 세금 포함·1일 참고값. 최종은 담당자 확정."},
+ free:{ja:"無料",en:"Free",zh:"免費",ko:"무료"},
+ ins_confirm:{ja:"補償の変更を依頼します。",en:"Request insurance change.",zh:"申請保障變更。",ko:"보장 변경을 요청합니다."},
+ cancel_title:{ja:"キャンセル規定のご確認",en:"Cancellation Policy",zh:"取消規定確認",ko:"취소 규정 확인"},
+ cancel_sub:{ja:"下記の規定（目安）をご確認のうえ、申請してください。",en:"Please review the policy (guide) before requesting.",zh:"請確認以下規定（參考）後申請。",ko:"아래 규정(참고)을 확인 후 신청하세요."},
+ cancel_when:{ja:"キャンセル時期",en:"Timing",zh:"取消時間",ko:"취소 시기"},
+ cancel_fee:{ja:"キャンセル料",en:"Fee",zh:"取消費",ko:"취소료"},
+ cancel_policy_note:{ja:"※ 台風など不可抗力（北海道着 航空便の欠航証明書のご提示）の場合は無料で承ります。<br>※ ご予約経路（OTA/公式）により規定が異なる場合があり、最終金額は担当者が確定します。",en:"※ Free for force majeure (e.g. typhoon; flight cancellation certificate required). ※ Policy may differ by booking channel; final amount confirmed by staff.",zh:"※ 因颱風等不可抗力（需提供航班取消證明）可免費。※ 依預約通路規定或有不同，最終由專員確定。",ko:"※ 태풍 등 불가항력(항공편 결항 증명 제시)은 무료. ※ 예약 경로에 따라 규정이 다를 수 있으며 최종 금액은 담당자 확정."},
+ reason_opt:{ja:"理由（任意）",en:"Reason (optional)",zh:"原因（選填）",ko:"사유(선택)"},
+ reason_ph:{ja:"差し支えなければご記入ください",en:"Enter if you wish",zh:"如方便請填寫",ko:"괜찮으시면 입력해 주세요"},
+ agree_policy:{ja:"上記のキャンセル規定に同意します",en:"I agree to the cancellation policy above",zh:"我同意上述取消規定",ko:"위 취소 규정에 동의합니다"},
+ cancel_confirm:{ja:"キャンセルを申請します。",en:"Request cancellation.",zh:"申請取消。",ko:"취소를 신청합니다."},
+ confirm_contact:{ja:"よろしいですか？（担当が確認しご連絡します）",en:"Proceed? (Staff will confirm and contact you)",zh:"是否確認？（專員將確認並聯繫）",ko:"진행할까요? (담당자가 확인·연락)"},
+ cancel_req_done:{ja:"キャンセル申請を受け付けました",en:"Cancellation request received",zh:"已受理取消申請",ko:"취소 신청이 접수되었습니다"},
+ applied_already:{ja:"申請済みです",en:"Already requested",zh:"已申請",ko:"이미 신청됨"},
+ enter_content:{ja:"内容を入力してください",en:"Please enter details",zh:"請輸入內容",ko:"내용을 입력하세요"},
+ // confirm templates use tf()
+ reg_confirm:{ja:(a,b)=>`${a}を「${b}」で登録します。\nよろしいですか？`,en:(a,b)=>`Set ${a} to "${b}".\nProceed?`,zh:(a,b)=>`將${a}設定為「${b}」。\n是否確認？`,ko:(a,b)=>`${a}을(를) "${b}"(으)로 등록합니다.\n진행할까요?`},
+ err_chitose:{ja:"新千歳空港・千歳市は対象外です。札幌市内の場所をご指定ください。",en:"New Chitose Airport / Chitose City is not available. Please choose a place within Sapporo City.",zh:"新千歲機場／千歲市不在服務範圍。請指定札幌市內地點。",ko:"신치토세 공항·치토세시는 대상 외입니다. 삿포로 시내 장소를 지정해 주세요."},
+ err_sapporo:{ja:"札幌市内の場所をご指定ください（地図から選ぶと確実です）。",en:"Please choose a place within Sapporo City (using the map is most reliable).",zh:"請指定札幌市內地點（用地圖選擇最準確）。",ko:"삿포로 시내 장소를 지정해 주세요(지도에서 선택하면 확실합니다)."},
+ sapporo_only:{ja:"※ 場所は札幌市内のみ（新千歳空港など市外は不可）。",en:"※ Sapporo City only (airports/outside city not available).",zh:"※ 僅限札幌市內（機場等市外不可）。",ko:"※ 삿포로 시내만 가능(공항 등 시외 불가)."},
+ ready_title:{ja:"返却の準備ができたら",en:"Ready to Return Early",zh:"提前準備好還車",ko:"조기 반납 준비"},
+ ready_btn:{ja:"🟢 返却の準備ができました（早めの回収OK）",en:"🟢 Ready for pickup (earlier is OK)",zh:"🟢 已可還車（可提前取車）",ko:"🟢 반납 준비 완료(조기 회수 OK)"},
+ ready_note:{ja:"予定の回収時間より早く準備ができた場合に押してください。スケジュールに余裕があれば早めに回収に伺います（確約ではありません）。",en:"Tap if you're ready before the scheduled pickup time. If our schedule allows, we'll pick up earlier (not guaranteed).",zh:"若比預定取車時間更早準備好，請點擊。若排程允許將提前取車（非保證）。",ko:"예정 회수 시간보다 일찍 준비되면 눌러주세요. 일정에 여유가 있으면 조기 회수합니다(확약 아님)."},
+ ready_pending:{ja:"承りました。確認中です（担当がスケジュールを確認します）",en:"Received. Under review (staff is checking the schedule).",zh:"已收到，確認中（專員正在確認排程）。",ko:"접수되었습니다. 확인 중입니다(담당자가 일정 확인)."},
+ ready_received:{ja:"🕓 承りました。確認中",en:"🕓 Received. Reviewing",zh:"🕓 已收到・確認中",ko:"🕓 접수됨·확인 중"},
+ ready_approved:{ja:"✅ 早めの回収を承りました",en:"✅ Earlier pickup accepted",zh:"✅ 已受理提前取車",ko:"✅ 조기 회수 접수됨"},
+ ready_approved_note:{ja:"担当がスケジュールを調整し、回収時間が早まる場合は改めてご連絡します。",en:"Our staff will adjust and contact you if pickup can be earlier.",zh:"專員將調整排程，若可提前取車會再與您聯繫。",ko:"담당자가 일정을 조정하여 회수가 앞당겨지면 다시 연락드립니다."},
+ ready_rejected:{ja:"今回は予定のお時間で回収いたします",en:"Pickup will be at the scheduled time",zh:"本次將依預定時間取車",ko:"이번에는 예정 시간에 회수합니다"},
+ ready_confirm:{ja:"返却の準備ができたことをお知らせします。\nよろしいですか？",en:"Notify staff that you are ready to return.\nProceed?",zh:"通知專員您已可還車。\n是否確認？",ko:"반납 준비 완료를 알립니다.\n진행할까요?"},
+ ready_time_title:{ja:"返却の準備ができました",en:"Ready to return early",zh:"已可提前還車",ko:"조기 반납 준비 완료"},
+ ready_time_label:{ja:"回収に来てほしい時間の目安",en:"Preferred pickup time (approx.)",zh:"希望取車時間（約）",ko:"희망 회수 시간(대략)"},
+ ready_time_sub:{ja:"この時間以降なら回収OKという目安をお選びください（確約ではありません）。",en:"Select a time from when pickup is OK (not guaranteed).",zh:"請選擇之後可取車的時間（非保證）。",ko:"이 시간 이후 회수 가능한 시간을 선택하세요(확약 아님)."},
+ ready_time_req:{ja:"時間を選んでください",en:"Please select a time",zh:"請選擇時間",ko:"시간을 선택하세요"},
+ ready_send:{ja:"この内容で知らせる",en:"Notify",zh:"通知",ko:"알리기"},
+ ready_at:{ja:"希望時間の目安",en:"Preferred time",zh:"希望時間",ko:"희망 시간"},
+};
+const OTANAME={J:{ja:"じゃらん",en:"Jalan",zh:"Jalan",ko:"Jalan"},R:{ja:"楽天トラベル",en:"Rakuten Travel",zh:"樂天旅遊",ko:"라쿠텐 트래블"},S:{ja:"skyticket",en:"skyticket",zh:"skyticket",ko:"skyticket"},O:{ja:"エアトリ",en:"Airtrip",zh:"Airtrip",ko:"에어트립"},RC:{ja:"レンタカードットコム",en:"Rentalcars.com",zh:"Rentalcars",ko:"렌터카닷컴"},G:{ja:"GoGoOut",en:"GoGoOut",zh:"GoGoOut",ko:"GoGoOut"},HP:{ja:"公式サイト",en:"Official site",zh:"官方網站",ko:"공식 사이트"},SP:{ja:"公式サイト",en:"Official site",zh:"官方網站",ko:"공식 사이트"},direct:{ja:"直販",en:"Direct",zh:"直營",ko:"직판"},KEYDROP:{ja:"KEYDROP",en:"KEYDROP",zh:"KEYDROP",ko:"KEYDROP"}};
+function otaName(o){const e=OTANAME[o];return e?(e[L]||e.ja):(o||"-");}
+function placeErrJs(place,lat,lng){
+  if(/新千歳|千歳空港|千歳市/.test(place))return t('err_chitose');
+  if(lat!=null&&lng!=null)return (lat>=42.90&&lat<=43.30&&lng>=141.15&&lng<=141.62)?null:t('err_sapporo');
+  // ピン座標が無い自由入力は「札幌」表記必須をやめる（すすきの/大通/丘珠/カタカナ名等の有効な場所が弾かれないように）。市外の明示(新千歳/千歳)のみ上でブロック。
+  return null;
+}
+function t(k){const e=TX[k];return e?(e[L]||e.ja):k;}
+function tf(k){const e=TX[k];if(!e)return"";const f=e[L]||e.ja;const a=[].slice.call(arguments,1);return typeof f==="function"?f.apply(null,a):f;}
+function langSwitch(){return `<div class="langsw">`+LANGS.map(l=>`<button class="${L===l.k?'on':''}" onclick="setLang('${l.k}')">${l.n}</button>`).join("")+`</div>`;}
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const WD=["日","月","火","水","木","金","土"];
+function fmtDate(d){if(!d)return"";const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d);if(!m)return d;
+  const dt=new Date(+m[1],+m[2]-1,+m[3]);return `${+m[2]}/${+m[3]}(${WD[dt.getDay()]})`}
+function dateTime(d,t){const dd=fmtDate(d);return dd?(dd+(t?" "+t:"")):(t||"—")}
+const IMG_BASE="images/"; // spk-task同梱(同一オリジン・https)
+function trackUrl(resId,trk,type){ // type: "del"=お届け / "col"=回収
+  const guide=(type==="col")?"handyman-collection-guide.html":"handyman-delivery-guide.html";
+  const t=trk.token?("&t="+encodeURIComponent(trk.token)):"";
+  return `https://keydrop.jp/${guide}?r=${encodeURIComponent(resId)}${t}`;
+}
+function classImg(v){ // 店舗別クラス画像（札幌=基本 / 那覇=_nha があれば）
+  const store=(DATA&&DATA.store)||"spk";
+  const suf=(store==="nha"&&["B","C","F","H","S"].includes(v))?"_nha":"";
+  return IMG_BASE+"class_"+encodeURIComponent(v)+suf+".png";
+}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
+function closeSheet(){$("#scrim").classList.remove("show");$("#sheet").innerHTML=""}
+$("#scrim").addEventListener("click",e=>{if(e.target.id==="scrim")closeSheet()});
+
+let SENDING=false; // 送信系(lookup以外)の多重実行ガード（モバイルのゴーストクリック/二重タップで2回叩かれるのを防ぐ）
+async function call(action, body){
+  const mut = action!=="lookup";
+  if(mut && RO){ toast("スタッフ確認用（閲覧のみ）のため編集できません"); return {status:0, json:{dropped:true, ro:true}}; } // 閲覧専用は書込禁止
+  if(mut){ if(SENDING) return {status:0, json:{dropped:true}}; SENDING=true; }
+  try{
+    const r = await fetch(FN,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action,token:TOKEN,...body})});
+    return {status:r.status, json: await r.json().catch(()=>({}))};
+  } finally { if(mut) SENDING=false; }
+}
+
+// 履歴1行を自然文で生成（日単位・多言語）。mode:"you"=お客様ページ視点。対象外はnull。
+const HFLD_L={del_place:{ja:"お届け場所",en:"delivery location",zh:"送車地點",ko:"배달 장소"},col_place:{ja:"回収場所",en:"pickup location",zh:"取車地點",ko:"회수 장소"},lend_time:{ja:"お届け時間",en:"delivery time",zh:"送車時間",ko:"배달 시간"},return_time:{ja:"回収時間",en:"pickup time",zh:"取車時間",ko:"회수 시간"},option:{ja:"オプション",en:"option",zh:"選配",ko:"옵션"},insurance:{ja:"補償",en:"insurance",zh:"保障",ko:"보장"},method:{ja:"受渡方法",en:"handover method",zh:"交車方式",ko:"인수 방법"},cancel:{ja:"キャンセル",en:"cancellation",zh:"取消",ko:"취소"}};
+function fldName(f){const e=HFLD_L[f];return e?(e[L]||e.ja):f;}
+function hDate(iso){if(!iso)return"";const d=new Date(iso);if(isNaN(d))return"";const j=new Date(d.getTime()+9*3600*1000);return(j.getUTCMonth()+1)+"/"+j.getUTCDate();}
+function histLine(c,mode){
+  const e=HFLD_L[c.field]; if(!e)return null;
+  if(!["applied","requested","approved","rejected"].includes(c.status))return null;
+  const val=String(c.value!=null?c.value:(c.new_value||"")), isC=c.field==="cancel";
+  const oldv=String(c.old!=null?c.old:(c.old_value||"")).trim();
+  // 場所・時間は「変更前→変更後」で見せる（どこからどこへ／何時から何時へ）
+  const isPT=["del_place","col_place","lend_time","return_time"].includes(c.field);
+  const ba=(isPT&&oldv&&oldv!==val)?`「${oldv}」→「${val}」`:`「${val}」`;
+  const src=c.source||"customer_mypage", fn=fldName(c.field);
+  const cust=src==="customer_form"?{ja:"お客様がフォームで",en:"You (via form)",zh:"您（透過表單）",ko:"고객님이 폼에서"}[L]
+            :src==="staff"?{ja:"担当が",en:"Staff",zh:"專員",ko:"담당자가"}[L]
+            :{ja:"お客様がマイページで",en:"You (via My Page)",zh:"您（透過本頁）",ko:"고객님이 마이페이지에서"}[L];
+  const PILL={requested:{t:{ja:"確認中",en:"Reviewing",zh:"確認中",ko:"확인 중"}[L],c:"#b45309",b:"#fef3c7"},approved:{t:{ja:"反映済",en:"Applied",zh:"已反映",ko:"반영됨"}[L],c:"#0e7a3b",b:"#dcfce7"},rejected:{t:{ja:"見送り",en:"Declined",zh:"未受理",ko:"보류"}[L],c:"#64748b",b:"#f1f5f9"}};
+  let text="",pill=null;
+  if(c.status==="applied"){
+    if(isC) text={ja:cust+"キャンセルしました",en:cust+" cancelled",zh:cust+"取消了",ko:cust+" 취소했습니다"}[L];
+    else if(isPT&&oldv&&oldv!==val) text=cust+" "+{ja:`${fn}を${ba}に変更しました`,en:`changed ${fn} from "${oldv}" to "${val}"`,zh:`將${fn}從「${oldv}」變更為「${val}」`,ko:`${fn}을(를) "${oldv}"→"${val}"(으)로 변경했습니다`}[L];
+    else text=cust+" "+{ja:`${fn}を「${val}」にしました`,en:`set ${fn} to "${val}"`,zh:`將${fn}設為「${val}」`,ko:`${fn}을(를) "${val}"(으)로 설정`}[L];
+  }else if(c.status==="requested"){
+    text=isC?{ja:"お客様がキャンセルを申請しました",en:"You requested cancellation",zh:"您申請了取消",ko:"고객님이 취소를 신청했습니다"}[L]:{ja:`お客様が${fn}の変更を依頼しました`,en:`You requested a ${fn} change`,zh:`您申請變更${fn}`,ko:`고객님이 ${fn} 변경을 요청했습니다`}[L]; pill=PILL.requested;
+  }else if(c.status==="approved"){
+    text=isC?{ja:"担当がキャンセルを承認しました",en:"Staff approved the cancellation",zh:"專員已核准取消",ko:"담당자가 취소를 승인했습니다"}[L]:(isPT&&oldv&&oldv!==val?{ja:`担当が${fn}を${ba}に変更・反映しました`,en:`Staff changed ${fn} from "${oldv}" to "${val}"`,zh:`專員將${fn}從「${oldv}」變更為「${val}」`,ko:`담당자가 ${fn}을(를) "${oldv}"→"${val}"(으)로 변경·반영했습니다`}[L]:{ja:`担当が${fn}の変更を承認・反映しました`,en:`Staff approved the ${fn} change`,zh:`專員已核准並反映${fn}變更`,ko:`담당자가 ${fn} 변경을 승인·반영했습니다`}[L]); pill=PILL.approved;
+  }else{
+    text=isC?{ja:"担当がキャンセル申請を見送りました",en:"Staff declined the cancellation",zh:"專員未受理取消申請",ko:"담당자가 취소 신청을 보류했습니다"}[L]:{ja:`担当が${fn}の変更を見送りました`,en:`Staff declined the ${fn} change`,zh:`專員未受理${fn}變更`,ko:`담당자가 ${fn} 변경을 보류했습니다`}[L]; pill=PILL.rejected;
+  }
+  return {date:hDate(c.at||c.created_at),text:esc(text),pill:pill?pill.t:null,pc:pill?pill.c:"",pb:pill?pill.b:""};
+}
+// その項目の「変更前の値」（適用済みの最新変更のold_value）＝行に「🔄変更前 〇〇」を出す
+function origOf(field){const rc=((DATA&&DATA.recentChanges)||[]).filter(c=>c.field===field&&c.status==="applied");if(!rc.length)return"";const c=rc[0];const ov=String(c.old_value||"").trim(),nv=String(c.new_value||"").trim();return(ov&&ov!==nv)?ov:"";}
+function chgBadge(field){const ov=origOf(field);return ov?`<span style="display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:1px 7px;white-space:nowrap">🔄 ${t('changed_from')} ${esc(ov)}</span>`:"";}
+const TIMES=(()=>{let a=[];for(let h=9;h<=19;h++){a.push(("0"+h).slice(-2)+":00");if(h<19)a.push(("0"+h).slice(-2)+":30")}return a})();
+function timeSel(id,val){return `<select id="${id}"><option value="">${{ja:"指定なし",en:"Not specified",zh:"未指定",ko:"미지정"}[L]}</option>`+
+  TIMES.map(x=>`<option ${x===val?"selected":""}>${x}</option>`).join("")+`</select>`}
+
+function pendReq(f){return ((DATA&&DATA.recentChanges)||[]).some(c=>c.field===f&&c.status==="requested")}
+// 返却準備(ready)の最新状態: none/requested/approved/rejected（recentChangesは新しい順）
+function readyLatest(){const rc=((DATA&&DATA.recentChanges)||[]).filter(c=>c.field==="ready");return rc.length?rc[0]:null}
+function readyState(){const c=readyLatest();return c?c.status:"none"}
+// 希望時間の目安（new_value末尾の HH:MM を抽出）
+function readyTime(){const c=readyLatest();if(!c)return"";const m=String(c.new_value||"").match(/(\d{1,2}:\d{2})/);return m?m[1]:""}
+function render(){
+  const d=DATA, r=d.reservation;
+  const cls={A:"アルファード/ヴェルファイア",B:"ノア/デリカ",C:"ロッキー/CX-3",S:"ハリアー/CX-5",F:"ルーミー/ソリオ",H:"カローラ/アクセラ"}[r.vehicle]||r.vehicle;
+  const cap={A:8,A2:8,B:8,B2:8,C:5,S:5,F:5,H:5}[r.vehicle]||0;  // クラス別 最大乗車定員（車両スペック・ユーザー数ではない）
+  const cancelled=(r.status==="キャンセル"||r.status==="cancelled");
+  const stLabel = d.pendingCancel ? t('st_cancel_req') : (cancelled ? t('st_cancelled') : t('st_confirmed'));
+  const opts=[]; if(r.opt_c)opts.push(t('opt_child')+"×"+r.opt_c); if(r.opt_b)opts.push(t('opt_baby')+"×"+r.opt_b);
+  if(r.opt_j)opts.push(t('opt_junior')+"×"+r.opt_j); if(r.opt_usb)opts.push("USB");
+  const optStr = opts.length?opts.join("・"):t('none');
+  const editable = !d.pendingCancel && !cancelled && !RO;  // RO(スタッフ閲覧)は編集不可
+
+  $("#app").innerHTML = `
+  ${RO?`<div style="background:#0F1F45;color:#fff;text-align:center;padding:9px 12px;font-size:13px;font-weight:700">🔒 スタッフ確認用（閲覧のみ・編集/依頼はできません）</div>`:""}
+  <div class="top"><div class="logo">KEY<b style="color:#FABE00">◦</b>DROP</div><div class="store">${esc(d.label)}${t('store')}</div></div>
+  ${langSwitch()}
+  <div class="hello">${esc(r.name||t('guest'))}<span>${t('your_page')}</span></div>
+
+  ${d.pendingCancel?`<div class="banner">${t('banner_cancel')}</div>`:""}
+
+  ${(editable&&(!r.del_place||!r.col_place))?`<div class="setbanner" onclick="mapPicker('${!r.del_place?"del_place":"col_place"}')">
+    <div class="sb-ic">📍</div>
+    <div class="sb-tx"><b>${(!r.del_place&&!r.col_place?t('unset_both'):!r.del_place?t('unset_del'):t('unset_col'))+t('not_set_suffix')}</b>
+    <span>${t('set_tap')}</span></div>
+    <div class="sb-go">${t('set_go')}</div></div>`:""}
+
+  <div class="hero">
+    <div class="hero-txt">
+      <div class="rid">${t('rid')} ${esc(r.id)}</div>
+      <div class="car">${esc(r.vehicle)}${t('cls')}${cap>0?` <span style="font-size:14px;font-weight:700;opacity:.9;white-space:nowrap">👥 ${t('capacity')}${cap}${t('people_unit')}</span>`:""}</div>
+      <div class="st">${esc(stLabel)}</div>
+    </div>
+    <img class="hero-car" src="${classImg(r.vehicle)}" alt="${esc(r.vehicle)}"
+      onerror="this.parentNode.classList.add('no-img');this.remove()">
+  </div>
+
+  <div style="background:#fff8e6;border:1.5px solid #fde68a;border-radius:14px;padding:13px 15px;margin-bottom:14px">
+    <div style="font-weight:800;font-size:14px;color:#8a5a00;display:flex;align-items:center;gap:7px;margin-bottom:6px">📣 ${t('notice_title')}</div>
+    <div style="font-size:13px;line-height:1.7;color:#7a4d00">${t('notice_body')}</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="em">🚗</span>${t('resv_content')}</h2>
+    <div class="row"><div class="k">${t('booked_via')}</div><div class="v">${esc(otaName(r.ota))}<span style="color:#94a3b8;font-size:12px;margin-left:6px">${esc(r.id||"")}</span></div></div>
+    <div class="row"><div class="k">${t('vehicle_class')}</div><div class="v">${esc(r.vehicle)}（${esc(cls)}）</div></div>
+    <div class="row"><div class="k">${t('use_period')}</div><div class="v">${esc(r.lend_date)} ${esc(r.lend_time||"")} 〜 ${esc(r.return_date)} ${esc(r.return_time||"")}</div></div>
+    <div class="row"><div class="k">${t('people')}</div><div class="v">${cap>0?cap+t('people_unit'):"-"}</div></div>
+    <div class="row"><div class="k">${t('option')}</div><div class="v">${esc(optStr)}
+      ${editable?(pendReq('option')?`<span class="edit" style="background:#fef3c7;color:#b45309;border-color:#fde68a;cursor:default">${t('req_pending')}</span>`:`<span class="edit req" onclick="reqOption()">${t('change_req')}</span>`):""}</div></div>
+    <div class="row"><div class="k">${t('insurance')}</div><div class="v">${esc(insLabel(insCur())||r.insurance||"-")}
+      ${editable?(pendReq('insurance')?`<span class="edit" style="background:#fef3c7;color:#b45309;border-color:#fde68a;cursor:default">${t('req_pending')}</span>`:`<span class="edit req" onclick="reqInsurance()">${t('change_req')}</span>`):""}</div></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="em">📍</span>${t('deliver_pickup')}</h2>
+    <div class="row"><div class="k">${t('del_place')}</div><div class="v">${r.del_place?esc(r.del_place):`<span class="unset">${t('unset')}</span>`}${chgBadge('del_place')}
+      ${editable?`<span class="edit ${r.del_place?"":"call"}" onclick="mapPicker('del_place')">${r.del_place?t('edit'):t('set_it')}</span>`:""}</div></div>
+    <div class="row"><div class="k">${t('del_dt')}</div><div class="v">${esc(dateTime(r.lend_date,r.lend_time))}${chgBadge('lend_time')}
+      ${editable?`<span class="edit" onclick="editField('lend_time')">${t('time_edit')}</span>`:""}</div></div>
+    <div class="row"><div class="k">${t('col_place')}</div><div class="v">${r.col_place?esc(r.col_place):`<span class="unset">${t('unset')}</span>`}${chgBadge('col_place')}
+      ${editable?`<span class="edit ${r.col_place?"":"call"}" onclick="mapPicker('col_place')">${r.col_place?t('edit'):t('set_it')}</span>`:""}</div></div>
+    <div class="row"><div class="k">${t('col_dt')}</div><div class="v">${esc(dateTime(r.return_date,r.return_time))}${chgBadge('return_time')}
+      ${editable?`<span class="edit" onclick="editField('return_time')">${t('time_edit')}</span>`:""}</div></div>
+    ${editable?`<div class="hint">${t('dp_hint')}</div>`:""}
+  </div>
+
+  <div class="card">
+    <h2><span class="em">🩹</span>${t('damage_check')}</h2>
+    ${d.damage.ready
+      ? (d.damage.url
+          ? `<a class="bigbtn ghost" href="${esc(d.damage.url)}" target="_blank" rel="noopener">${t('damage_view')}</a>
+             <div class="note">${t('damage_note')}</div>`
+          : `<div class="dashed">${t('damage_prep')}</div>`)
+      : `<div class="dashed"><span class="pill wait">${t('damage_locked')}</span><div style="margin-top:8px"><b>${t('damage_open8')}</b></div></div>`}
+  </div>
+
+  <div class="card">
+    <h2><span class="em">🛰</span>${t('track_title')}</h2>
+    ${d.tracking.active?`<span class="pill on" style="margin-bottom:8px">${t('staff_moving')}</span>`:""}
+    <div class="tphone">
+      <div class="tp-badge">${d.tracking.active?t('tap_open'):t('preview_img')}</div>
+      <div class="tp-hd"><span class="tp-logo">KEY<b style="color:#FABE00">◦</b>DROP</span><span class="tp-hdsub">${d.tracking.kd_status==="collecting"?t('track_col'):t('track_del')}</span></div>
+      <div class="tp-status"><span class="tp-dot"></span>${d.tracking.kd_status==="collecting"?t('heading_col'):t('heading_del')}</div>
+      <div class="tp-map">
+        <div class="tp-route"></div>
+        <div class="tp-dest">📍<span class="tp-destlbl">${d.tracking.kd_status==="collecting"?t('col_place'):t('del_place')}</span></div>
+        <div class="tp-car">🚚</div>
+      </div>
+      <div class="tp-bar">
+        <div class="tp-info"><div class="tp-k">${t('to_dest')}</div><div class="tp-v">約 1.4km</div></div>
+        <button class="tp-share">${t('share_loc')}</button>
+      </div>
+    </div>
+    <div class="trkbtns">
+      <a class="trkbtn ${d.tracking.kd_status==="delivering"?"live":""}" href="${trackUrl(r.id,d.tracking,"del")}" target="_blank" rel="noopener">
+        ${t('track_del_btn')}${d.tracking.kd_status==="delivering"?`<span class="livebadge">${t('moving')}</span>`:""}</a>
+      <a class="trkbtn ${d.tracking.kd_status==="collecting"?"live":""}" href="${trackUrl(r.id,d.tracking,"col")}" target="_blank" rel="noopener">
+        ${t('track_col_btn')}${d.tracking.kd_status==="collecting"?`<span class="livebadge">${t('moving')}</span>`:""}</a>
+    </div>
+    <div class="note">${t('track_note')}</div>
+  </div>
+
+  ${editable?`
+  <div class="card">
+    <h2><span class="em">🟢</span>${t('ready_title')}</h2>
+    ${(()=>{const rs=readyState(),rt=readyTime();const tline=rt?`<div style="margin-top:6px;font-size:13px"><b>${t('ready_at')}：</b>${rt}〜</div>`:"";
+      if(rs==="requested")return `<div class="dashed"><span class="pill wait">${t('ready_received')}</span>${tline}<div style="margin-top:8px">${t('ready_pending')}</div></div>`;
+      if(rs==="approved")return `<div class="dashed" style="border-color:#0e9f50;background:#f0fdf4"><span class="pill" style="background:#dcfce7;color:#0e7a3b">${t('ready_approved')}</span>${tline}<div style="margin-top:8px">${t('ready_approved_note')}</div></div>`;
+      if(rs==="rejected")return `<div class="dashed"><span class="pill" style="background:#f1f5f9;color:#64748b">${t('ready_rejected')}</span></div>`;
+      return `<button class="bigbtn" style="background:#0e9f50" onclick="openReady()">${t('ready_btn')}</button><div class="note">${t('ready_note')}</div>`;
+    })()}
+  </div>`:""}
+
+  ${editable?`
+  <div class="card">
+    <h2><span class="em">🚫</span>${t('cancel')}</h2>
+    <button class="bigbtn" style="background:#fff;color:var(--danger);border:1.5px solid #f0c2c2" onclick="askCancel()">${t('cancel_apply')}</button>
+    <div class="note">${t('cancel_note')}</div>
+  </div>`
+  :(d.pendingCancel?`
+  <div class="card">
+    <h2><span class="em">🚫</span>${t('cancel')}</h2>
+    <div class="dashed"><span class="pill wait">${t('cancel_done')}</span><div style="margin-top:8px">${t('cancel_wait')}</div></div>
+  </div>`:"")}
+
+  ${(()=>{const list=(d.history||d.recentChanges||[]).map(c=>histLine(c,"you")).filter(Boolean);
+    if(!list.length)return"";
+    return `<div class="card"><h2><span class="em">🕘</span>${t('recent_hist')}</h2>`+
+      list.map(h=>`<div class="hrow"><span class="hdate">${h.date}</span><span class="htx">${h.text}</span>${h.pill?`<span class="hpill" style="color:${h.pc};background:${h.pb}">${h.pill}</span>`:""}</div>`).join("")+
+      `<div class="note">${t('hist_note')}</div></div>`})()}
+
+  <div class="foot">
+    KEY-DROP ${esc(d.label)}${t('store')} ／ LINE：<a href="https://lin.ee/g6iDNYz">${t('foot_contact')}</a><br>
+    ${t('foot_private')}<br>
+    <span style="opacity:.5">${VER}</span>
+  </div>`;
+}
+
+/* ---- 場所・時間 変更（項目ごとに個別・即反映） ---- */
+function editField(field){
+  const r=DATA.reservation;
+  const CFG={
+    del_place:{title:t('edit_del_place'),label:t('lbl_del_place'),type:"text",val:r.del_place||"",ph:t('ph_del')},
+    col_place:{title:t('edit_col_place'),label:t('lbl_col_place'),type:"text",val:r.col_place||"",ph:t('ph_col')},
+    lend_time:{title:t('edit_lend_time'),label:t('del_dt')+"（"+fmtDate(r.lend_date)+"）",type:"time",val:r.lend_time||""},
+    return_time:{title:t('edit_return_time'),label:t('col_dt')+"（"+fmtDate(r.return_date)+"）",type:"time",val:r.return_time||""},
+  }[field];
+  if(!CFG)return;
+  const isDelF=(field==="del_place"||field==="lend_time");
+  const subTxt=isDelF?t('sub_del'):t('sub_col');
+  const input = CFG.type==="time" ? timeSel("fv",CFG.val)
+    : `<input id="fv" value="${esc(CFG.val)}" placeholder="${esc(CFG.ph||"")}">`;
+  $("#sheet").innerHTML=`
+    <h3>${esc(CFG.title)}</h3>
+    <p class="sub">${subTxt}</p>
+    <div class="field"><label>${esc(CFG.label)}</label>${input}</div>
+    <div class="acts"><button class="btn-cancel" onclick="closeSheet()">${t('cancel_btn')}</button>
+      <button class="btn-ok" onclick="saveField('${field}')">${t('apply_this')}</button></div>`;
+  $("#scrim").classList.add("show");
+}
+async function saveField(field){
+  const r=DATA.reservation, cur={del_place:r.del_place,col_place:r.col_place,lend_time:r.lend_time,return_time:r.return_time}[field]||"";
+  const v=$("#fv").value.trim();
+  if(v===cur){toast(t('no_change'));return}
+  if((field==="del_place"||field==="col_place")&&v.length<2){toast(t('min2'));return}
+  if(field==="del_place"||field==="col_place"){const pe=placeErrJs(v,null,null);if(pe){toast(pe);return}}
+  const _lb={del_place:t('del_place'),col_place:t('col_place'),lend_time:t('del_dt'),return_time:t('col_dt')}[field]||"";
+  if(!confirm(tf('reg_confirm',_lb,v)))return;
+  const {json}=await call("update",{[field]:v});
+  if(json.dropped)return;
+  if(json.ok){closeSheet();toast(json.pendingApproval?t('pending_appr'):t('saved'));await load()}
+  else if(json.lineOnly){closeSheet();toast(json.error)}
+  else toast(json.error||t('save_fail'));
+}
+
+/* ================= 地図ピッカー（KEYDROP方式・検索候補＋ドラッグピン）================= */
+const GMAPS_KEY="AIzaSyCoX1EyEx-N5A0r4vRzC1KmVp3T29HILbI";
+const SPK_CENTER={lat:43.0621,lng:141.3544}; // 札幌中心
+let _gLoaded=false,_gLoading=null,mpMap=null,mpMarker=null,mpGeocoder=null,mpAuto=null,mpPlaces=null,mpTok=null;
+let mpField=null,mpPicked={place:"",lat:null,lng:null};
+function gLang(){return L==="zh"?"zh-TW":L;}
+function loadGoogle(){
+  if(_gLoaded)return Promise.resolve();
+  if(_gLoading)return _gLoading;
+  _gLoading=new Promise((res,rej)=>{
+    const s=document.createElement("script");
+    s.src=`https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&libraries=places&language=${gLang()}`;
+    s.async=true;s.onload=()=>{_gLoaded=true;res()};s.onerror=rej;document.head.appendChild(s);
+  });
+  return _gLoading;
+}
+function mapPicker(field){
+  mpField=field;
+  const r=DATA.reservation, isDel=field==="del_place";
+  mpPicked={place:(isDel?r.del_place:r.col_place)||"",
+    lat:(isDel?r.del_lat:r.col_lat)||null,lng:(isDel?r.del_lng:r.col_lng)||null};
+  const isNew=!String((isDel?r.del_place:r.col_place)||"").trim();  // 場所が空=新規登録 / 有=変更
+  const mapTitle=isNew?(isDel?t('map_new_del'):t('map_new_col')):(isDel?t('map_del_title'):t('map_col_title'));
+  const applyLbl=isNew?t('map_apply_new'):t('map_apply');
+  $("#sheet").innerHTML=`
+    <h3>${mapTitle}</h3>
+    <p class="sub">${t('map_sub')}</p>
+    <div class="field" style="position:relative;margin-bottom:8px">
+      <input id="mpSearch" placeholder="${t('map_search_ph')}" autocomplete="off"
+        oninput="mpSearchInput()" value="${esc(mpPicked.place)}">
+      <div id="mpSuggest" class="mpsug"></div>
+    </div>
+    <div id="mpMap" class="mpmap"><div class="center" style="padding:30px"><div class="spin"></div>${t('map_loading')}</div></div>
+    <div class="mppicked">📍 <b id="mpPicked">${esc(mpPicked.place||t('map_unselected'))}</b></div>
+    <div id="mpStNote" style="display:none;margin-top:8px;padding:8px 10px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:12.5px;line-height:1.55">${t('sapporo_st_note')}</div>
+    <div class="hint" style="margin-top:8px">${t('map_hint')}<br>${t('sapporo_only')}</div>
+    <div class="acts" style="margin-top:12px"><button class="btn-cancel" onclick="closeSheet()">${t('cancel_btn')}</button>
+      <button class="btn-ok" id="mpBtn" onclick="mpSave()">${applyLbl}</button></div>`;
+  $("#scrim").classList.add("show");
+  mpStNote();
+  loadGoogle().then(initMpMap).catch(()=>{
+    document.getElementById("mpMap").innerHTML='<div class="center" style="padding:20px;font-size:12px">'+t('map_load_fail')+'</div>';
+  });
+}
+function initMpMap(){
+  const el=document.getElementById("mpMap"); if(!el)return;
+  const c=(mpPicked.lat&&mpPicked.lng)?{lat:+mpPicked.lat,lng:+mpPicked.lng}:SPK_CENTER;
+  el.innerHTML="";
+  mpMap=new google.maps.Map(el,{center:c,zoom:mpPicked.lat?16:13,disableDefaultUI:true,zoomControl:true,gestureHandling:"greedy",clickableIcons:false});
+  mpMarker=new google.maps.Marker({position:c,map:mpMap,draggable:true});
+  mpGeocoder=new google.maps.Geocoder();
+  mpAuto=new google.maps.places.AutocompleteService();
+  mpPlaces=new google.maps.places.PlacesService(mpMap);
+  mpTok=new google.maps.places.AutocompleteSessionToken();
+  mpMap.addListener("click",e=>{mpMarker.setPosition(e.latLng);mpReverse(e.latLng.lat(),e.latLng.lng())});
+  mpMarker.addListener("dragend",()=>{const ll=mpMarker.getPosition();mpReverse(ll.lat(),ll.lng())});
+}
+function mpReverse(lat,lng){
+  mpPicked.lat=lat;mpPicked.lng=lng;
+  const pe=document.getElementById("mpPicked"); if(pe)pe.textContent=t('map_getting');
+  mpGeocoder.geocode({location:{lat,lng},language:gLang()},(res,st)=>{
+    let addr=`${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    if(st==="OK"&&res&&res[0])addr=res[0].formatted_address.replace(/^日本[、,]\s*/,"").replace(/〒?\s*\d{3}-?\d{4}\s*/,"").trim();
+    mpPicked.place=addr;
+    const pe=document.getElementById("mpPicked"); if(pe)pe.textContent=addr;
+    const si=document.getElementById("mpSearch"); if(si)si.value=addr;
+    mpStNote();
+  });
+}
+// 札幌駅を指定した場合の停車注意（南口は停車不可→北口推奨）
+function mpStNote(){
+  const si=document.getElementById("mpSearch");
+  const v=((si&&si.value)||mpPicked.place||"");
+  const el=document.getElementById("mpStNote");
+  if(el)el.style.display=/札幌駅|札幌\s*駅|sapporo\s*st(a|ation)?|札幌車站|삿포로역/i.test(v)?"block":"none";
+}
+let _mpDeb=null;
+function mpSearchInput(){
+  mpStNote();
+  const q=document.getElementById("mpSearch").value.trim();
+  const box=document.getElementById("mpSuggest");
+  if(q.length<2){box.style.display="none";return}
+  clearTimeout(_mpDeb);
+  _mpDeb=setTimeout(()=>{
+    if(!mpAuto){box.style.display="none";return}
+    mpAuto.getPlacePredictions({input:q,sessionToken:mpTok,language:gLang(),
+      locationBias:{center:SPK_CENTER,radius:60000},componentRestrictions:{country:"jp"}},(preds,st)=>{
+      if(st!=="OK"||!preds||!preds.length){box.innerHTML='<div class="mpsug-i" style="color:#999">'+t('map_no_hit')+'</div>';box.style.display="block";return}
+      box.innerHTML=preds.slice(0,6).map(p=>`<div class="mpsug-i" onclick="mpPick('${p.place_id}')">📍 ${esc(p.description)}</div>`).join("");
+      box.style.display="block";
+    });
+  },350);
+}
+function mpPick(placeId){
+  document.getElementById("mpSuggest").style.display="none";
+  mpPlaces.getDetails({placeId,fields:["geometry","name","formatted_address"],sessionToken:mpTok,language:gLang()},(pl,st)=>{
+    mpTok=new google.maps.places.AutocompleteSessionToken();
+    if(st!=="OK"||!pl||!pl.geometry)return;
+    const lat=pl.geometry.location.lat(),lng=pl.geometry.location.lng();
+    let addr=(pl.formatted_address||"").replace(/^日本[、,]\s*/,"").replace(/〒?\s*\d{3}-?\d{4}\s*/,"").trim();
+    const name=pl.name?(pl.name+(addr?" "+addr:"")):addr;
+    mpPicked={place:name,lat,lng};
+    document.getElementById("mpPicked").textContent=name;
+    document.getElementById("mpSearch").value=name;
+    if(mpMap){mpMap.setCenter({lat,lng});mpMap.setZoom(16);mpMarker.setPosition({lat,lng})}
+    mpStNote();
+  });
+}
+async function mpSave(){
+  const r=DATA.reservation, isDel=mpField==="del_place";
+  const cur=(isDel?r.del_place:r.col_place)||"";
+  const place=(document.getElementById("mpSearch").value||mpPicked.place||"").trim();
+  if(place.length<2){toast(t('enter_place'));return}
+  if(place===cur){toast(t('no_change'));return}
+  {const pe=placeErrJs(place,mpPicked.lat,mpPicked.lng);if(pe){toast(pe);return}}
+  if(!confirm(tf('reg_confirm',isDel?t('del_place'):t('col_place'),place)))return;
+  const body={[mpField]:place};
+  if(mpPicked.lat&&mpPicked.lng){body[isDel?"del_lat":"col_lat"]=mpPicked.lat;body[isDel?"del_lng":"col_lng"]=mpPicked.lng}
+  const {json}=await call("update",body);
+  if(json.dropped)return;
+  if(json.ok){closeSheet();toast(json.pendingApproval?t('pending_appr'):t('saved'));await load()}
+  else if(json.lineOnly){closeSheet();toast(json.error)}
+  else toast(json.error||t('save_fail'));
+}
+
+/* ---- オプション 変更依頼（現在値を残し、右に変更後をプルダウンで選ぶ）---- */
+// 札幌オプション＝チャイルドシート/ジュニアシートのみ（画像付き）
+const OPTDEF=[
+  {key:"opt_c",tkey:"opt_child",max:3,price:1000,img:"images/opt_child.png"},
+  {key:"opt_j",tkey:"opt_junior",max:3,price:500,img:"images/opt_junior.png"},
+];
+function optLabel(o){return t(o.tkey);}
+// 補償プラン（プルダウン・リクエスト制）※オーナー提供の正式料金/24h
+const INS_PLANS=[
+  {v:"なし",price:0,
+    label:{ja:"基本プラン（保険付き）",en:"Basic plan (insured)",zh:"基本方案（含保險）",ko:"기본 플랜(보험 포함)"},
+    desc:{ja:"基本保証のみ適用されるプランです。<br>・対人／対物 無制限（免責保証なし）<br>・車両保証 車両時価総額まで（免責負担額15万円）<br>・人身損害補償 3000万円まで",en:"Basic coverage only.<br>・Bodily/property: unlimited (no deductible waiver)<br>・Vehicle: up to market value (¥150,000 deductible)<br>・Personal injury: up to ¥30 million",zh:"僅適用基本保障。<br>・對人／對物 無上限（無免責保障）<br>・車輛保障 至車輛時價（免責自付額15萬日圓）<br>・人身損害 至3000萬日圓",ko:"기본 보장만 적용.<br>・대인/대물 무제한(면책 보장 없음)<br>・차량 보장 시가까지(면책 부담 15만엔)<br>・인신 손해 3000만엔까지"}},
+  {v:"免責",price:1100,unit:"/24h",
+    label:{ja:"基本プラン＋免責補償",en:"Basic + CDW",zh:"基本方案＋免責保障",ko:"기본 플랜＋면책 보장"},
+    desc:{ja:"事故時に、お客様が自己負担する費用（免責額）を免除する制度です。<br>基本補償ではカバーできない車両補償の自己負担額15万円が免除されます。",en:"Waives your out-of-pocket deductible in an accident.<br>The ¥150,000 vehicle deductible not covered by basic is waived.",zh:"事故時免除您的自付免責額。<br>基本方案未涵蓋的車輛自付額15萬日圓可免除。",ko:"사고 시 자기부담(면책액)을 면제합니다.<br>기본에서 커버되지 않는 차량 자기부담 15만엔이 면제됩니다."}},
+  {v:"NOC",price:1650,unit:"/24h",
+    label:{ja:"基本＋免責＋NOC補償（安心ワイドパック）",en:"Basic + CDW + NOC (Full Pack)",zh:"基本＋免責＋NOC（安心全包）",ko:"기본＋면책＋NOC(안심 와이드팩)"},
+    desc:{ja:"免責補償もノンオペレーションチャージの心配もなくしたい方へ、すべての補償をひとまとめにした安心ワイドパック。<br>損傷タイヤの修理代・ホイールキャップ紛失の補償も付きます。",en:"All-in-one pack: no deductible and no non-operation charge worries.<br>Also covers damaged tire repair and hubcap loss.",zh:"將所有保障整合的安心全包，免除免責與NOC的擔憂。<br>另含輪胎損傷修理與輪圈蓋遺失保障。",ko:"면책도 NOC 걱정도 없는 올인원 안심 와이드팩.<br>손상 타이어 수리·휠캡 분실 보장도 포함."}},
+];
+function insLabel(v){const p=INS_PLANS.find(x=>x.v===v);return p?(p.label[L]||p.label.ja):(v||"—");}
+function insDesc(p){return p.desc[L]||p.desc.ja;}
+function yen(n){return "¥"+Number(n||0).toLocaleString()}
+function reqOption(){
+  const r=DATA.reservation;
+  const uq=t('unit_qty');
+  const rows=OPTDEF.map(o=>{
+    const cur=+(r[o.key]||0), lb=optLabel(o);
+    let opts="";
+    for(let i=0;i<=o.max;i++)opts+=`<option value="${i}" ${i===cur?"selected":""}>${i}${uq}</option>`;
+    return `<div class="optrow">
+      <img class="optimg" src="${o.img}" alt="${lb}" onerror="this.style.visibility='hidden'">
+      <div class="optlbl">${lb}<span class="optprice">${yen(o.price)}${t('per_car')}</span></div>
+      <div class="optarrow">→</div>
+      <select class="optsel" data-key="${o.key}" data-cur="${cur}" data-price="${o.price}" onchange="optPreview()">${opts}</select>
+    </div>`;
+  }).join("");
+  $("#sheet").innerHTML=`
+    <h3>${t('opt_title')}</h3>
+    <p class="sub">${t('opt_sub')}</p>
+    ${rows}
+    <div id="optprev" class="optprev" style="display:none"></div>
+    <div class="note" style="margin-top:8px">${t('opt_note')}</div>
+    <div class="acts" style="margin-top:10px"><button class="btn-cancel" onclick="closeSheet()">${t('cancel_btn')}</button>
+      <button class="btn-ok req" id="optbtn" disabled onclick="sendOption()">${t('req_this')}</button></div>`;
+  $("#scrim").classList.add("show");
+}
+function optDiffs(){
+  const diffs=[];
+  document.querySelectorAll(".optsel").forEach(s=>{
+    const cur=+s.dataset.cur, nv=+s.value; if(cur===nv)return;
+    const def=OPTDEF.find(o=>o.key===s.dataset.key);
+    diffs.push({label:optLabel(def),from:cur,to:nv,price:+s.dataset.price,diff:(nv-cur)*(+s.dataset.price)});
+  });
+  return diffs;
+}
+function optPreview(){
+  const d=optDiffs(), box=$("#optprev"), btn=$("#optbtn"), uq=t('unit_qty');
+  if(!d.length){box.style.display="none";btn.disabled=true;return}
+  const total=d.reduce((s,x)=>s+x.diff,0);
+  const sign=total>=0?"＋":"−";
+  box.style.display="block";
+  box.innerHTML="<div class='optprev-h'>"+t('change_content')+"</div>"+
+    d.map(x=>`<div class="optprev-r">${x.label}：<b>${x.from}${uq}</b> → <b style="color:var(--gold)">${x.to}${uq}</b>
+      <span style="color:var(--sub)">（${x.diff>=0?"＋":"−"}${yen(Math.abs(x.diff))}）</span></div>`).join("")+
+    `<div class="optprev-tot">${t('approx')} ${sign}${yen(Math.abs(total))}</div>`;
+  btn.disabled=false;
+}
+async function sendOption(){
+  const d=optDiffs(); if(!d.length){toast(t('no_change'));return}
+  const total=d.reduce((s,x)=>s+x.diff,0), uq=t('unit_qty');
+  const detail=d.map(x=>`${x.label} ${x.from}${uq}→${x.to}${uq}`).join(" / ")+`（${t('approx')}${total>=0?"＋":"−"}${yen(Math.abs(total))}）`;
+  const target={}; document.querySelectorAll(".optsel").forEach(s=>{target[s.dataset.key]=+s.value});
+  if(!confirm(t('opt_confirm')+"\n"+detail+"\n"+t('confirm_ok')))return;
+  const {json}=await call("request",{req_type:"option",detail,target});
+  if(json.dropped)return;
+  if(json.ok){closeSheet();toast(json.alreadyRequested?t('already_req'):t('received'));await load()}
+  else toast(json.error||t('send_fail'));
+}
+/* ---- 補償 変更依頼（プルダウンで選択・金額表示）---- */
+function insCur(){const ins=String(DATA.reservation.insurance||"");
+  if(/フル|NOC|安心/.test(ins))return"NOC"; if(/免責|CDW/.test(ins))return"免責"; return"なし"}
+function reqInsurance(){
+  const cur=insCur();
+  const curLabel=insLabel(cur);
+  const nowTag={ja:"✓ 現在のプラン",en:"✓ Current plan",zh:"✓ 目前方案",ko:"✓ 현재 플랜"}[L];
+  const opts=INS_PLANS.map(p=>`<option value="${p.v}" ${p.v===cur?"selected":""}>${insLabel(p.v)}（${p.price?yen(p.price)+(p.unit||""):t('free')}）${p.v===cur?" ★"+nowTag.replace("✓ ",""):""}</option>`).join("");
+  const planCards=INS_PLANS.map(p=>{const isCur=p.v===cur;return `<div class="inscard" style="${isCur?'border:2px solid var(--gold);background:#fffdf5':''}">
+      <div class="insttl">${esc(insLabel(p.v))} <span class="insprice">${p.price?yen(p.price)+(p.unit||""):t('free')}</span>${isCur?` <span style="background:var(--gold);color:#3a2f00;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;margin-left:4px;white-space:nowrap">${nowTag}</span>`:''}</div>
+      <div class="insdesc">${insDesc(p)}</div></div>`;}).join("");
+  $("#sheet").innerHTML=`
+    <h3>${t('ins_title')}</h3>
+    <p class="sub">${t('ins_sub')}</p>
+    <div class="row" style="border:0;padding:8px 10px;margin-bottom:8px;background:#fffdf5;border:1.5px solid var(--gold);border-radius:10px"><div class="k" style="font-weight:700">${t('current')}</div><div class="v" style="font-weight:800;color:#3a2f00">${esc(curLabel)}</div></div>
+    ${planCards}
+    <div class="field"><label>${t('new_plan')}</label>
+      <select id="insel" onchange="insPreview()">${opts}</select></div>
+    <div id="insprev" class="optprev" style="display:none"></div>
+    <div class="note" style="margin-top:6px">${t('ins_note')}</div>
+    <div class="acts" style="margin-top:10px"><button class="btn-cancel" onclick="closeSheet()">${t('cancel_btn')}</button>
+      <button class="btn-ok req" id="insbtn" disabled onclick="sendInsurance()">${t('req_this')}</button></div>`;
+  $("#scrim").classList.add("show");
+}
+function insPreview(){
+  const cur=insCur(), sel=$("#insel").value, box=$("#insprev"), btn=$("#insbtn");
+  if(sel===cur){box.style.display="none";btn.disabled=true;return}
+  const a=INS_PLANS.find(p=>p.v===cur)||{price:0}, b=INS_PLANS.find(p=>p.v===sel)||{price:0};
+  const diff=(b.price||0)-(a.price||0);
+  box.style.display="block";
+  box.innerHTML=`<div class='optprev-h'>${t('change_content')}</div>
+    <div class="optprev-r"><b>${esc(insLabel(cur))}</b> → <b style="color:var(--gold)">${esc(insLabel(sel))}</b></div>
+    <div class="optprev-tot">${t('approx')} ${diff>=0?"＋":"−"}${yen(Math.abs(diff))}/${{ja:"日",en:"day",zh:"日",ko:"일"}[L]}</div>`;
+  btn.disabled=false;
+}
+async function sendInsurance(){
+  const cur=insCur(), sel=$("#insel").value;
+  if(sel===cur){toast(t('no_change'));return}
+  const detail=`補償を「${insLabel(sel)}」に変更希望（現在:${insLabel(cur)}）`;
+  if(!confirm(t('ins_confirm')+"\n"+insLabel(sel)+"\n"+t('confirm_ok')))return;
+  const {json}=await call("request",{req_type:"insurance",detail,target:{insurance:sel}});
+  if(json.dropped)return;
+  if(json.ok){closeSheet();toast(json.alreadyRequested?t('already_req'):t('received'));await load()}
+  else toast(json.error||t('send_fail'));
+}
+async function sendReq(kind){
+  const detail=$("#rq").value.trim();
+  if(detail.length<1){toast(t('enter_content'));return}
+  if(!confirm(detail+"\n"+t('confirm_ok')))return;
+  const {json}=await call("request",{req_type:kind,detail});
+  if(json.dropped)return;
+  if(json.ok){closeSheet();toast(json.alreadyRequested?t('already_req'):t('received'));await load()}
+  else toast(json.error||t('send_fail'));
+}
+
+/* ---- キャンセル申請（規定・料金を提示 → 同意して申請）---- */
+const CANCEL_POLICY=[  // 予約取消料（正式）※借受予約日基準
+  {when:{ja:"借受日の7日前まで",en:"Up to 7 days before",zh:"租車日7天前",ko:"대여일 7일 전까지"},fee:{ja:"無料",en:"Free",zh:"免費",ko:"무료"}},
+  {when:{ja:"6日〜3日前",en:"6–3 days before",zh:"6～3天前",ko:"6~3일 전"},fee:{ja:"料金総額の 20%",en:"20% of total",zh:"總額20%",ko:"총액의 20%"}},
+  {when:{ja:"2日前・前日",en:"2 days / 1 day before",zh:"2天前・前一天",ko:"2일 전・전날"},fee:{ja:"料金総額の 30%",en:"30% of total",zh:"總額30%",ko:"총액의 30%"}},
+  {when:{ja:"当日以降",en:"On the day or later",zh:"當天以後",ko:"당일 이후"},fee:{ja:"料金総額の 50%",en:"50% of total",zh:"總額50%",ko:"총액의 50%"}},
+];
+function askCancel(){
+  const rows=CANCEL_POLICY.map(p=>`<tr><td style="padding:8px 6px;border-top:1px solid var(--line)">${p.when[L]||p.when.ja}</td>
+    <td style="padding:8px 6px;border-top:1px solid var(--line);text-align:right;font-weight:700">${p.fee[L]||p.fee.ja}</td></tr>`).join("");
+  $("#sheet").innerHTML=`
+    <h3>${t('cancel_title')}</h3>
+    <p class="sub">${t('cancel_sub')}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:10px">
+      <thead><tr><th style="text-align:left;padding:6px;color:var(--sub);font-size:12px">${t('cancel_when')}</th>
+      <th style="text-align:right;padding:6px;color:var(--sub);font-size:12px">${t('cancel_fee')}</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    <div class="note" style="margin:0 0 12px">${t('cancel_policy_note')}</div>
+    <div class="field"><label>${t('reason_opt')}</label>
+      <textarea id="cr" placeholder="${t('reason_ph')}"></textarea></div>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin-bottom:12px;cursor:pointer">
+      <input type="checkbox" id="agree" style="width:18px;height:18px;margin-top:2px" onchange="document.getElementById('cbtn').disabled=!this.checked">
+      <span>${t('agree_policy')}</span></label>
+    <div class="acts"><button class="btn-cancel" onclick="closeSheet()">${t('cancel_btn')}</button>
+      <button class="btn-ok danger" id="cbtn" disabled onclick="sendCancel()">${t('cancel_apply')}</button></div>`;
+  $("#scrim").classList.add("show");
+}
+function openReady(){
+  const r=DATA.reservation;
+  $("#sheet").innerHTML=`
+    <h3>🟢 ${t('ready_time_title')}</h3>
+    <p class="sub">${t('ready_time_sub')}</p>
+    <div class="field"><label>${t('ready_time_label')}（${fmtDate(r.return_date)}）</label>${timeSel("rdyt",r.return_time||"")}</div>
+    <div class="acts"><button class="btn-cancel" onclick="closeSheet()">${t('cancel_btn')}</button>
+      <button class="btn-ok" style="background:#0e9f50" onclick="confirmReady()">${t('ready_send')}</button></div>`;
+  $("#scrim").classList.add("show");
+}
+async function confirmReady(){
+  const time=$("#rdyt").value.trim();
+  if(!time){toast(t('ready_time_req'));return}
+  const {json}=await call("ready",{time});
+  if(json.dropped)return;
+  if(json.ok){closeSheet();toast(json.alreadyRequested?t('already_req'):t('ready_received'));await load()}
+  else toast(json.error||t('send_fail'));
+}
+async function sendCancel(){
+  const reason=$("#cr").value.trim();
+  if(!confirm(t('cancel_confirm')+"\n"+t('confirm_contact')))return;
+  const {json}=await call("cancel_request",{reason});
+  if(json.dropped)return;
+  if(json.ok){closeSheet();toast(json.alreadyRequested?t('applied_already'):t('cancel_req_done'));await load()}
+  else toast(json.error||t('send_fail'));
+}
+
 async function load(){
-  if(!TOKEN){$("#app").innerHTML=`<div class="center">${t("nokey")}</div>`;return}
-  const {json}=await call("lookup",{});
-  if(!json.ok||!json.reservation){$("#app").innerHTML=`<div class="center">${esc(json.error||t("notfound"))}</div>`;return}
-  render(json);
+  if(!TOKEN){$("#app").innerHTML=`<div class="center">${t('no_key')}</div>`;return}
+  const {status,json}=await call("lookup",{});
+  if(!json.ok){$("#app").innerHTML=`<div class="center">${esc(json.error||t('not_found'))}</div>`;return}
+  DATA=json;
+  try{document.title=(json.reservation.name||t('guest'))+" | HANDYMAN "+json.label}catch(e){}
+  render();
 }
 load();
-</script></body></html>
+</script>
+</body>
+</html>
