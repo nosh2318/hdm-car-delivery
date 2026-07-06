@@ -116,9 +116,9 @@ async function notifySlack(text: string, channel?: string): Promise<void> {
 //   時刻PATCHのみ正本列名が違う(lend_time→start_time / return_time→end_time)ので lendTimeCol/returnTimeCol で切替。
 const STORE_MAP: Record<string, { resv: string; fleet: string; tasks: string; lendTimeCol: string; returnTimeCol: string; slackEnv: string; slackDefault: string; sel: string }> = {
   spk: { resv: "reservations", fleet: "fleet", tasks: "tasks", lendTimeCol: "lend_time", returnTimeCol: "return_time", slackEnv: "SLACK_KEYDROP_CHANNEL", slackDefault: "C08TDTPEB36",
-    sel: "id,ota,vehicle,lend_date,return_date,lend_time,return_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,kd_status,coupon_code,discount" },
+    sel: "id,ota,vehicle,lend_date,return_date,lend_time,return_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,del_lat,del_lng,col_lat,col_lng,kd_status,kd_track_token,coupon_code,discount" },
   nha: { resv: "nha_reservations", fleet: "nha_fleet", tasks: "nha_tasks", lendTimeCol: "start_time", returnTimeCol: "end_time", slackEnv: "SLACK_KEYDROP_CHANNEL_NAHA", slackDefault: "C06KZ56NTDF",
-    sel: "id,ota,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,kd_status,coupon_code,discount" },
+    sel: "id,ota,vehicle:vehicle_class,lend_date:start_date,return_date:end_date,lend_time:start_time,return_time:end_time,del_time,col_time,name,mail,tel,people,price,status,insurance,opt_b,opt_c,opt_j,opt_usb,del_place,col_place,del_lat,del_lng,col_lat,col_lng,kd_status,kd_track_token,coupon_code,discount" },
 };
 function mkStore(s: string) {
   const m = STORE_MAP[s];
@@ -160,6 +160,13 @@ function hoursUntil(date: string, time: string): number {
   const target = new Date(`${date}T${t}:00+09:00`).getTime();
   return (target - Date.now()) / 3600000;
 }
+
+// ---- HANDYMANマイページ相当の表示解決（OPタスクから場所/時間を実値解決）----
+function nowJst(): string { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().replace("T", " "); }
+function parseCJ(t: any): any { let cj = t?.changed_json; if (typeof cj === "string") { try { cj = JSON.parse(cj); } catch { cj = {}; } } return cj || {}; }
+function resolveTaskPlace(t: any): string { if (!t) return ""; const cj = parseCJ(t); const place = String(t.place || ""); if (cj._placeSource === "manual") return place; return String(cj._ssPlace || place || ""); }
+function resolveTaskTime(t: any): string { if (!t) return ""; const cj = parseCJ(t); return String(cj._timeChange || cj._ssTime || t.time || ""); }
+function taskOptNum(t: any, k: string): number { if (!t) return 0; const cj = parseCJ(t); return Number(cj[k]) || 0; }
 
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
@@ -214,26 +221,58 @@ Deno.serve(async (req) => {
   }
 
   if (action === "lookup") {
-    const fleet = await sbGet(M.fleet, `reservation_id=eq.${encodeURIComponent(resId)}&select=vehicle_code`);
-    // キャンセル依頼マーカー（keydrop_payments.cancel_requested_at）を返す＝再入場でも「申請中」を表示し再依頼を防ぐ
-    const pay = await sbGet("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}&select=cancel_requested_at,cancel_reason,change_req`).catch(() => []);
+    const enc = encodeURIComponent(resId);
+    // 傷チェック解禁：出発日8:00以降（KEYDROP札幌のみ vehicle_twins あり・best-effort）
+    const todayJ = nowJst().slice(0, 10); const hhJ = +nowJst().slice(11, 13);
+    const damageReady = (!!r.lend_date && (r.lend_date < todayJ || (r.lend_date === todayJ && hhJ >= 8)));
+    const damageP: Promise<string | null> = (damageReady && M.store === "spk") ? (async () => {
+      try {
+        const fl = await sbGet(M.fleet, `reservation_id=eq.${enc}&select=vehicle_code`);
+        const code = fl[0]?.vehicle_code; if (!code) return null;
+        const vs = await sbGet("vehicles", `code=eq.${encodeURIComponent(code)}&select=plate_no`);
+        const plate = vs[0]?.plate_no; if (!plate) return null;
+        const tw = await sbGet("vehicle_twins", `display_label=ilike.*${encodeURIComponent(plate)}*&share_enabled=eq.true&select=share_token&limit=1`);
+        return tw[0]?.share_token ? `https://nosh2318.github.io/handyman-damage/v.html?t=${tw[0].share_token}&v=v3` : null;
+      } catch (_) { return null; }
+    })() : Promise.resolve(null);
+    const fleetP = sbGet(M.fleet, `reservation_id=eq.${enc}&select=vehicle_code`);
+    const opTasksP = sbGet(M.tasks, `reservation_id=eq.${enc}&deleted=not.is.true&select=_id,place,time,insurance,changed_json`).catch(() => []);
+    // 変更履歴＝KEYDROP独自ログ（keydrop_mypage_changes）＝HANDYMANの mypage_changes と切り分け
+    const chgP = sbGet("keydrop_mypage_changes", `reservation_id=eq.${enc}&order=created_at.desc&limit=12&select=field,old_value,new_value,source,status,actor,created_at`).catch(() => []);
+    const payP = sbGet("keydrop_payments", `reservation_id=eq.${enc}&select=cancel_requested_at,cancel_reason,change_req`).catch(() => []);
+    const [damageUrl, fleet, opTasks, chg, pay] = await Promise.all([damageP, fleetP, opTasksP, chgP, payP]);
+    const dTask = opTasks.find((t: any) => String(t._id || "").startsWith("d-"));
+    const cTask = opTasks.find((t: any) => String(t._id || "").startsWith("c-"));
+    const appliedChg = (field: string): string | null => { const c = chg.find((x: any) => x.field === field && x.status === "applied"); return c && String(c.new_value || "").trim() ? String(c.new_value).trim() : null; };
+    const delPlaceR = appliedChg("del_place") ?? (resolveTaskPlace(dTask) || (r.del_place || ""));
+    const colPlaceR = appliedChg("col_place") ?? (resolveTaskPlace(cTask) || (r.col_place || ""));
+    const lendTimeR = appliedChg("lend_time") ?? (resolveTaskTime(dTask) || r.lend_time || r.del_time || "");
+    const returnTimeR = appliedChg("return_time") ?? (resolveTaskTime(cTask) || r.return_time || r.col_time || "");
+    const optBR = Math.max(Number(r.opt_b) || 0, taskOptNum(dTask, "_optB"), taskOptNum(cTask, "_optB"));
+    const optCR = Math.max(Number(r.opt_c) || 0, taskOptNum(dTask, "_optC"), taskOptNum(cTask, "_optC"));
+    const optJR = Math.max(Number(r.opt_j) || 0, taskOptNum(dTask, "_optJ"), taskOptNum(cTask, "_optJ"));
+    const insR = String(r.insurance || "").trim() || String(dTask?.insurance || cTask?.insurance || "").trim();
+    const pendingCancel = !!pay[0]?.cancel_requested_at || chg.some((c: any) => c.field === "cancel" && c.status === "requested");
+    const readyPending = chg.some((c: any) => c.field === "ready" && c.status === "requested");
+    const history = chg.map((c: any) => ({ field: c.field, value: c.new_value, old: c.old_value, at: c.created_at, source: c.source === "staff" ? "staff" : "customer_mypage", status: c.status, actor: c.actor })).slice(0, 10);
     const cr = pay[0]?.change_req || null;
     return json({
-      ok: true,
+      ok: true, store: M.store, label: M.store === "nha" ? "那覇" : "札幌",
       reservation: {
         id: r.id, vehicle: r.vehicle, lend_date: r.lend_date, return_date: r.return_date,
-        lend_time: r.lend_time, return_time: r.return_time, del_time: r.del_time, col_time: r.col_time,
+        lend_time: lendTimeR, return_time: returnTimeR, del_time: r.del_time, col_time: r.col_time,
         name: r.name, people: r.people, price: r.price, status: r.status,
-        insurance: r.insurance, del_place: r.del_place, col_place: r.col_place,
-        opt_b: r.opt_b || 0, opt_c: r.opt_c || 0, opt_j: r.opt_j || 0, opt_usb: r.opt_usb || 0,
-        kd_status: r.kd_status || null,
-        coupon_code: r.coupon_code || null,
-        discount: Number(r.discount) || 0,
-        cancel_requested_at: pay[0]?.cancel_requested_at || null,
-        cancel_reason: pay[0]?.cancel_reason || null,
+        insurance: insR, del_place: delPlaceR, col_place: colPlaceR,
+        opt_b: optBR, opt_c: optCR, opt_j: optJR, opt_usb: r.opt_usb || 0,
+        kd_status: r.kd_status || null, kd_track_token: r.kd_track_token || null,
+        coupon_code: r.coupon_code || null, discount: Number(r.discount) || 0,
+        cancel_requested_at: pay[0]?.cancel_requested_at || null, cancel_reason: pay[0]?.cancel_reason || null,
         change_req: (cr && cr.status === "pending") ? cr : null,
         vehicle_code: fleet[0]?.vehicle_code || null,
       },
+      damage: { ready: damageReady, url: damageUrl },
+      tracking: { active: r.kd_status === "delivering" || r.kd_status === "collecting", kd_status: r.kd_status || null, token: r.kd_track_token || null },
+      pendingCancel, readyPending, recentChanges: chg, history,
     }, 200, origin);
   }
 
