@@ -4042,7 +4042,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="complete-icon" style="font-size:0;"><img src="images/logo_header.png?v=3" alt="KEYDROP" style="width:200px;height:auto;"></div>
                 <div class="complete-title">${t('completeTitle')}</div>
                 <div class="complete-res-id" style="margin-bottom:12px;">
-                    ${t('resNo')}: <strong>${resId}</strong>
+                    ${t('resNo')}:
+                    <button type="button" onclick="copyResId(this,'${resId}')" title="${t('copyResId')}" style="display:inline-flex;align-items:center;gap:6px;margin-left:4px;padding:6px 12px;border:1.5px solid #FABE00;border-radius:8px;background:#fffbeb;color:#1a1a1a;font-weight:800;font-size:15px;cursor:pointer;">
+                        <span>${resId}</span>
+                        <span style="font-size:13px;">📋</span>
+                    </button>
+                    <div style="font-size:11px;color:#999;margin-top:5px;">${t('copyResIdHint')}</div>
                 </div>
                 <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:11px 13px;margin-bottom:16px;font-size:12px;color:#dc2626;font-weight:700;line-height:1.7;text-align:left;">
                     ${t('mypageLoginWarn')}
@@ -4500,6 +4505,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
     }
 
+    function copyResId(btn, id) {
+        var done = function () {
+            var lbl = btn.querySelector('span:last-child');
+            var prev = lbl ? lbl.textContent : '';
+            if (lbl) lbl.textContent = '✅';
+            var orig = btn.style.background; btn.style.background = '#dcfce7';
+            setTimeout(function () { if (lbl) lbl.textContent = prev; btn.style.background = orig; }, 1400);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(id).then(done).catch(function () { fallbackCopy(id); done(); });
+        } else { fallbackCopy(id); done(); }
+    }
+    function fallbackCopy(text) {
+        try {
+            var ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta);
+        } catch (e) {}
+    }
     function resetAndGoTop() {
         state.selectedVehicle = null;
         state.selectedClass = null;
@@ -5695,7 +5720,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             paypayName: 'PayPay', paypayDesc: 'PayPayアプリで決済',
             total: '合計（税込）',
             // Complete
-            completeTitle: 'ご予約が完了しました', resNo: '予約番号',
+            completeTitle: 'ご予約が完了しました', resNo: '予約番号', copyResId: '予約番号をコピー', copyResIdHint: 'タップでコピーできます',
             nextStep: '次のステップ', emailSent: '確認メールを送信しました', checkMypage: 'マイページで予約状況を確認',
             goTop: 'トップに戻る',
             hdrBooker: '予約者情報', bookerSection: '👤 予約者情報',
@@ -5805,7 +5830,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             appleName: 'Apple Pay', appleDesc: 'Pay with Touch ID / Face ID',
             paypayName: 'PayPay', paypayDesc: 'Pay via PayPay app',
             total: 'Total (incl. tax)',
-            completeTitle: 'Booking Confirmed!', resNo: 'Reservation No.',
+            completeTitle: 'Booking Confirmed!', resNo: 'Reservation No.', copyResId: 'Copy reservation number', copyResIdHint: 'Tap to copy',
             nextStep: 'Next Steps', emailSent: 'Confirmation email sent', checkMypage: 'Check status on My Page',
             goTop: 'Back to Top',
             hdrBooker: 'Booker Information', bookerSection: '👤 Booker Information',
@@ -5915,7 +5940,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             appleName: 'Apple Pay', appleDesc: '使用Touch ID / Face ID輕鬆付款',
             paypayName: 'PayPay', paypayDesc: '使用PayPay App付款',
             total: '合計（含稅）',
-            completeTitle: '預約已完成！', resNo: '預約編號',
+            completeTitle: '預約已完成！', resNo: '預約編號', copyResId: '複製預約編號', copyResIdHint: '點擊即可複製',
             nextStep: '下一步', emailSent: '已發送確認郵件', checkMypage: '在我的頁面確認預約狀態',
             goTop: '回到首頁',
             hdrBooker: '預約者資訊', bookerSection: '👤 預約者資訊',
@@ -6025,7 +6050,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             appleName: 'Apple Pay', appleDesc: 'Touch ID / Face ID로 간편 결제',
             paypayName: 'PayPay', paypayDesc: 'PayPay 앱으로 결제',
             total: '합계 (세금 포함)',
-            completeTitle: '예약이 완료되었습니다!', resNo: '예약 번호',
+            completeTitle: '예약이 완료되었습니다!', resNo: '예약 번호', copyResId: '예약 번호 복사', copyResIdHint: '탭하면 복사됩니다',
             nextStep: '다음 단계', emailSent: '확인 이메일을 보냈습니다', checkMypage: '마이페이지에서 예약 상태 확인',
             goTop: '처음으로',
             hdrBooker: '예약자 정보', bookerSection: '👤 예약자 정보',
