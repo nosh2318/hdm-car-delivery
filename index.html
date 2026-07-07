@@ -1156,7 +1156,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <button class="menu-lang-btn" onclick="switchLang('ko')">한국어</button>
                     </div>
                     <div class="menu-user">
-                        <button class="menu-user-btn" onclick="closeMenu(); state.screen='mypage'; render();">予約を確認する（マイページ）</button>
+                        <button class="menu-user-btn" onclick="closeMenu(); location.href='mypage.html';">予約を確認する（マイページ）</button>
                     </div>
                     <div class="menu-section">
                         <a class="menu-item" href="#" onclick="closeMenu(); kdBackToAreaSelect(); return false;" style="color:#FABE00;font-weight:800;">
@@ -1592,7 +1592,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 + '</div>'
                 + '<div class="kdg-links">'
                 + '<a class="kdg-link" href="keydrop-about.html" target="_blank" rel="noopener"><span class="li">🔑</span><span class="lt">' + t('gAbout') + '</span><span class="lc">›</span></a>'
-                + '<a class="kdg-link" href="./?mypage=1"><span class="li">📱</span><span class="lt">' + t('gMyLogin') + '</span><span class="lc">›</span></a>'
+                + '<a class="kdg-link" href="mypage.html"><span class="li">📱</span><span class="lt">' + t('gMyLogin') + '</span><span class="lc">›</span></a>'
                 + '<a class="kdg-link" href="guide.html" target="_blank" rel="noopener"><span class="li">📖</span><span class="lt">' + t('gGuide') + '</span><span class="lc">›</span></a>'
                 + '</div>'
                 + '</div>';
@@ -2886,7 +2886,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
-                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="#" onclick="location.href='mypage.html'; return false;">${t('navMypage')}</a>
                         <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
@@ -2999,7 +2999,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
-                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="#" onclick="location.href='mypage.html'; return false;">${t('navMypage')}</a>
                         <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
@@ -3109,7 +3109,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
-                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="#" onclick="location.href='mypage.html'; return false;">${t('navMypage')}</a>
                         <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
@@ -3454,7 +3454,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
-                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="#" onclick="location.href='mypage.html'; return false;">${t('navMypage')}</a>
                         <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
@@ -4046,7 +4046,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const cls = VEHICLE_CLASSES[v?.type] || {};
         const resId = state._lastResId || 'HDM' + Date.now().toString().slice(-8);
         const mpMail = state._lastMail || '';
-        const mypageUrl = 'https://keydrop.jp/?mypage=1&id=' + encodeURIComponent(resId) + (mpMail ? '&mail=' + encodeURIComponent(mpMail) : '');
+        const mypageUrl = 'https://keydrop.jp/mypage.html?resv=' + encodeURIComponent(resId) + (mpMail ? '&mail=' + encodeURIComponent(mpMail) : '');
         const startLabel = formatDateLabel(state.datetime.startDate);
         const endLabel = formatDateLabel(state.datetime.endDate);
 
@@ -4722,7 +4722,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
-                        <a href="#" onclick="state.screen='mypage'; mypageState.view='lookup'; render(); return false;">${t('navMypage')}</a>
+                        <a href="#" onclick="location.href='mypage.html'; return false;">${t('navMypage')}</a>
                         <a href="keydrop-about.html" target="_blank">${t('navAbout')}</a>
                         <a href="guide.html" target="_blank">${t('navUsage')}</a>
                         <a href="https://lin.ee/ZxBknUv" target="_blank">${t('navContact')}</a>
@@ -6355,9 +6355,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     window.history.replaceState({}, '', window.location.pathname);
                 }
             } else if (sp.get('mypage')) {
-                // メール内リンク（?mypage=1）→ マイページを開く
+                // 旧 ?mypage=1 リンク（ブックマーク/旧メール）→ 統一マイページ mypage.html へ転送
+                const _rid = sp.get('id') || sp.get('resId') || sp.get('resv') || '';
+                const _rml = sp.get('mail') || '';
+                location.replace('mypage.html' + (_rid ? ('?resv=' + encodeURIComponent(_rid) + (_rml ? '&mail=' + encodeURIComponent(_rml) : '')) : ''));
+                return;
+                // ▼ 以下は旧内蔵マイページ（未使用・退役）
                 state.screen = 'mypage';
-                // 直リンク：予約番号＋メールが付いていれば自動ログイン（タイピング不要）
                 const _did = sp.get('id') || sp.get('resId');
                 const _dmail = sp.get('mail');
                 if (_did && _dmail) {

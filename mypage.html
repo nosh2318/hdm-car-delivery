@@ -193,10 +193,12 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 <div class="toast" id="toast"></div>
 
 <script>
-const VER = "kd1.1 KEYDROPマイページ(店舗別クラス名)";
+const VER = "kd1.2 KEYDROPマイページ(統一・予約番号+メールログイン対応)";
 const FN = "https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
 const TOKEN = new URLSearchParams(location.search).get("t") || "";
 const RO = new URLSearchParams(location.search).get("ro")==="1"; // スタッフ確認用=閲覧専用（編集・依頼を一切させない）
+// トークンURL(?t=)が無い入口（サイトのメニュー等）＝予約番号＋メールでログイン。EFはtoken か resId+mail の両方に対応。
+let LOGIN = { resId: (new URLSearchParams(location.search).get("resv")||new URLSearchParams(location.search).get("id")||"").trim().toUpperCase(), mail: (new URLSearchParams(location.search).get("mail")||"").trim() };
 const $ = s=>document.querySelector(s);
 let DATA = null;
 
@@ -212,6 +214,13 @@ function setLang(k){L=k;localStorage.setItem("mypage_lang",k);closeSheet();rende
 const TX={
  loading:{ja:"読み込み中…",en:"Loading…",zh:"載入中…",ko:"불러오는 중…"},
  no_key:{ja:"アクセスキーがありません。LINEに届いたURLからお開きください。",en:"No access key. Please open from the URL sent via LINE.",zh:"沒有存取金鑰。請從 LINE 收到的網址開啟。",ko:"액세스 키가 없습니다. LINE으로 받은 URL에서 열어주세요."},
+ login_title:{ja:"マイページ ログイン",en:"My Page Login",zh:"我的頁面登入",ko:"마이페이지 로그인"},
+ login_sub:{ja:"予約番号とご予約時のメールアドレスを入力してください。",en:"Enter your reservation number and the email used for booking.",zh:"請輸入預約編號與預約時的電子郵件。",ko:"예약 번호와 예약 시 이메일을 입력하세요."},
+ login_mail:{ja:"メールアドレス",en:"Email",zh:"電子郵件",ko:"이메일"},
+ login_btn:{ja:"ログイン",en:"Login",zh:"登入",ko:"로그인"},
+ login_need:{ja:"予約番号とメールアドレスを入力してください",en:"Please enter reservation number and email",zh:"請輸入預約編號與電子郵件",ko:"예약 번호와 이메일을 입력하세요"},
+ login_fail:{ja:"予約番号またはメールアドレスが一致しません",en:"Reservation number or email does not match",zh:"預約編號或電子郵件不符",ko:"예약 번호 또는 이메일이 일치하지 않습니다"},
+ login_hint:{ja:"※ メールに届いたマイページURLからは、ログイン不要で開けます。",en:"※ From the My Page URL sent by email, you can open without login.",zh:"※ 透過電子郵件收到的網址可免登入開啟。",ko:"※ 이메일로 받은 URL에서는 로그인 없이 열립니다."},
  not_found:{ja:"予約が見つかりませんでした",en:"Reservation not found",zh:"找不到預約",ko:"예약을 찾을 수 없습니다"},
  your_page:{ja:"様 専用ページ",en:" — Your Reservation Page",zh:" 專屬頁面",ko:"님 전용 페이지"},
  guest:{ja:"お客",en:"Guest",zh:"貴賓",ko:"고객"},
@@ -411,8 +420,9 @@ async function call(action, body){
   if(mut && RO){ toast("スタッフ確認用（閲覧のみ）のため編集できません"); return {status:0, json:{dropped:true, ro:true}}; } // 閲覧専用は書込禁止
   if(mut){ if(SENDING) return {status:0, json:{dropped:true}}; SENDING=true; }
   try{
+    const auth = TOKEN ? {token:TOKEN} : {resId:LOGIN.resId, mail:LOGIN.mail}; // トークン優先／無ければ予約番号+メール
     const r = await fetch(FN,{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action,token:TOKEN,...body})});
+      body:JSON.stringify({action,...auth,...body})});
     return {status:r.status, json: await r.json().catch(()=>({}))};
   } finally { if(mut) SENDING=false; }
 }
@@ -951,10 +961,35 @@ async function sendCancel(){
   else toast(json.error||t('send_fail'));
 }
 
+function showLoginForm(msg){
+  $("#app").innerHTML=`<div style="max-width:420px;margin:0 auto;padding:26px 18px">
+    <div style="text-align:center;font-size:20px;font-weight:900;color:#0F1F45;margin-bottom:4px">KEY<span style="color:#FABE00">◦</span>DROP</div>
+    <div style="text-align:center;font-size:15px;font-weight:800;margin-bottom:6px">${t('login_title')}</div>
+    <div style="font-size:12.5px;color:#64748b;text-align:center;margin-bottom:16px">${t('login_sub')}</div>
+    <label style="font-size:12px;font-weight:700;color:#475569">${t('rid')}</label>
+    <input id="mpResId" value="${esc(LOGIN.resId||"")}" placeholder="KDN-XXXX-XXXX-XXX / KD-XXXX-XXXX-XXX" autocapitalize="characters" spellcheck="false" style="width:100%;font-size:16px;padding:11px;border:1.5px solid #cbd5e1;border-radius:10px;margin:5px 0 12px">
+    <label style="font-size:12px;font-weight:700;color:#475569">${t('login_mail')}</label>
+    <input id="mpMail" type="email" inputmode="email" placeholder="example@email.com" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')doMypageLogin()" style="width:100%;font-size:16px;padding:11px;border:1.5px solid #cbd5e1;border-radius:10px;margin:5px 0 14px">
+    <button onclick="doMypageLogin()" style="width:100%;font-size:15px;font-weight:900;color:#0F1F45;background:#FABE00;border:0;border-radius:11px;padding:13px;cursor:pointer">${t('login_btn')}</button>
+    <div id="mpLerr" style="color:#b91c1c;font-size:12.5px;margin-top:10px;min-height:16px">${msg?esc(msg):""}</div>
+    <div style="font-size:11.5px;color:#94a3b8;margin-top:8px;line-height:1.6">${t('login_hint')}</div>
+  </div>`;
+}
+async function doMypageLogin(){
+  const rid=($("#mpResId").value||"").trim().toUpperCase(); const ml=($("#mpMail").value||"").trim();
+  if(!rid||!ml){$("#mpLerr").textContent=t('login_need');return}
+  const btn=document.querySelector("#app button"); if(btn){btn.disabled=true;btn.textContent="…";}
+  LOGIN.resId=rid; LOGIN.mail=ml;
+  const {json}=await call("lookup",{});
+  if(!json||!json.ok){LOGIN.resId="";LOGIN.mail="";showLoginForm((json&&json.error)||t('login_fail'));return}
+  DATA=json;
+  try{document.title=(json.reservation.name||t('guest'))+" | HANDYMAN "+json.label}catch(e){}
+  render();
+}
 async function load(){
-  if(!TOKEN){$("#app").innerHTML=`<div class="center">${t('no_key')}</div>`;return}
+  if(!TOKEN && !(LOGIN.resId && LOGIN.mail)){ showLoginForm(); return; } // トークンURL以外＝ログインフォーム
   const {status,json}=await call("lookup",{});
-  if(!json.ok){$("#app").innerHTML=`<div class="center">${esc(json.error||t('not_found'))}</div>`;return}
+  if(!json.ok){ if(!TOKEN){LOGIN.resId="";LOGIN.mail="";showLoginForm(json.error||t('login_fail'));return;} $("#app").innerHTML=`<div class="center">${esc(json.error||t('not_found'))}</div>`;return}
   DATA=json;
   try{document.title=(json.reservation.name||t('guest'))+" | HANDYMAN "+json.label}catch(e){}
   render();
