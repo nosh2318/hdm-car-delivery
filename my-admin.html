@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>マイページ管理 | KEY-DROP</title>
+<style>
+:root{--bg:#eef1f5;--card:#fff;--ink:#1c2430;--sub:#6b7784;--line:#e4e8ee;--accent:#0e7a6b;
+  --gold:#b45309;--danger:#b91c1c;--ok:#0e9f50;--blue:#1d4ed8;--r:12px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:13.5px;line-height:1.5}
+/* header */
+.hd{display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));background:#0e7490;color:#fff;position:sticky;top:0;z-index:20}
+.hd .logo{font-weight:900;font-size:16px}.hd .logo b{color:#FABE00}
+.hd .t{font-weight:800;font-size:14px}
+.hd .sp{margin-left:auto}
+.movebar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:#eef4ff;border-bottom:1px solid #d6e2f5;overflow:hidden;min-height:34px}
+.movebar.has{animation:mbBlink 1.3s ease-in-out infinite}
+@keyframes mbBlink{0%,100%{background:#eef4ff;box-shadow:inset 0 0 0 2px #bfdbfe}50%{background:#fff4e0;box-shadow:inset 0 0 0 2px #f59e0b}}
+.movebar .mb-lbl{font-size:11px;font-weight:800;color:#1e40af;white-space:nowrap;flex:none}
+.movebar .mb-empty{font-size:12px;color:#94a3b8}
+.movebar .mb-scroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin;flex:1;min-width:0;-webkit-overflow-scrolling:touch}
+.movebar .mb-scroll::-webkit-scrollbar{height:4px}
+.movebar .mb-chip{font-size:12px;background:#fff;border:1px solid #cdddf5;border-radius:999px;padding:4px 11px;white-space:nowrap;cursor:pointer;color:#334;flex:none}
+.movebar .mb-chip b{color:#0F1F45}.movebar .mb-chip i{color:#64748b;font-style:normal;font-size:11px;margin-left:3px}
+.movebar .mb-chip:hover{background:#f0f6ff;border-color:#3b82f6}
+@media(max-width:640px){.movebar{padding:6px 10px;gap:7px}.movebar .mb-lbl{font-size:10px}.movebar .mb-chip{font-size:11px;padding:4px 9px}}
+.hd button{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
+.hd button.alert{background:var(--danger);animation:blink 1.2s infinite}
+.opsel{background:#fff;color:var(--ink);border:0;border-radius:8px;padding:7px 10px;font-weight:800;font-size:12.5px;max-width:150px}
+.opsel.need{background:#FABE00;color:#0F1F45;animation:blink 1.4s infinite}
+.miniedit{margin-left:8px;font-size:11px;font-weight:800;color:var(--accent);background:#eafaf5;border:1px solid #b7e6da;border-radius:999px;padding:2px 9px;cursor:pointer;vertical-align:middle}
+/* layout */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:12px;padding:12px;align-items:stretch;height:calc(100vh - 52px)}
+@media(max-width:900px){.main{grid-template-columns:1fr;height:auto}}
+.pane{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+/* カンバン */
+.board{display:flex;flex-direction:column;min-width:0;height:100%}
+.btoolbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.bsearch{flex:1;min-width:180px;padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14px;background:#fff}
+.todaytgl{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:var(--sub);background:#fff;border:1px solid var(--line);padding:7px 11px;border-radius:9px;cursor:pointer}
+.todaytgl.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btotal{font-size:11.5px;color:var(--sub);font-weight:700}
+.bcols{display:flex;gap:14px;overflow-x:auto;flex:1;min-height:0;padding-bottom:6px}
+.bcol{flex:0 0 262px;width:262px;max-width:262px;background:#f4f6f9;border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-height:0;box-shadow:0 1px 4px rgba(15,31,69,.06);overflow:hidden}
+.bcol-h{font-size:12.5px;font-weight:900;padding:10px 12px;background:#fff;border-radius:11px 11px 0 0;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.bcol-n{background:var(--ink);color:#fff;font-size:11px;border-radius:999px;padding:1px 8px}
+.bcol-body{overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px;flex:1;min-height:40px}
+.bcol-empty{text-align:center;color:#b0b8c1;font-size:12px;padding:14px}
+.bcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;cursor:pointer;box-shadow:0 1px 3px rgba(20,30,45,.05);overflow:hidden;min-width:0}
+.bcard:hover{border-color:var(--accent)}
+.bcard.sel{border:2px solid var(--accent);box-shadow:0 2px 8px rgba(14,122,107,.2)}
+.bc-top{display:flex;align-items:center;gap:8px}
+.clsbadge.sm{width:30px;height:30px;font-size:14px;border-radius:8px}
+.bc-nm{font-weight:800;font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bc-sub{font-size:10.5px;color:var(--sub);font-family:ui-monospace,monospace;margin-top:5px;line-height:1.5}
+.bc-btn{width:100%;margin-top:8px;padding:7px;border-radius:8px;font-weight:800;font-size:12px;border:0;cursor:pointer}
+.bc-btn.chk{background:var(--ok);color:#fff}
+.bc-btn.undo{background:#eef1f4;color:var(--sub)}
+.karte-pane{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:auto;height:100%}
+.karte-back{display:none}
+@media(max-width:900px){
+  .main{padding:8px;gap:8px}
+  .bcol{flex:0 0 84%}
+  .btoolbar{position:sticky;top:0}
+  /* カルテはカード選択時に全画面オーバーレイ */
+  .karte-pane{position:fixed;inset:0;z-index:60;border-radius:0;border:0;display:none}
+  body.karte-open .karte-pane{display:block}
+  body.karte-open .board{display:none}
+  .karte-back{display:block;position:sticky;top:0;z-index:5;width:100%;text-align:left;
+    background:#0e7490;color:#fff;border:0;padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top));font-weight:800;font-size:15px;cursor:pointer}
+  .karte-pane{padding-bottom:env(safe-area-inset-bottom)}
+}
+/* ヘッダー スマホ調整 */
+@media(max-width:640px){
+  .hd{flex-wrap:wrap;gap:6px;padding:8px 10px}
+  .hd .t{font-size:12px}
+  .hd .sp{flex-basis:100%;order:5;height:0}
+  .opsel{max-width:130px;font-size:11.5px;padding:6px 8px}
+  .hd button{font-size:11px;padding:6px 9px}
+}
+/* list */
+.lsearch{padding:10px;border-bottom:1px solid var(--line)}
+.lsearch input{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:9px;font-size:14px}
+.chips{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:9px 10px;border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;white-space:nowrap;font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--sub)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip .n{opacity:.85;margin-left:4px;font-weight:900}
+.chip.on .n{opacity:1}
+.list{max-height:calc(100vh - 190px);overflow:auto}
+.li{display:flex;align-items:center;gap:9px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;position:relative}
+.li:hover{background:#f6f8fa}.li.sel{background:#eafaf5}
+.li.req{box-shadow:inset 4px 0 0 var(--danger)}.li.chg{box-shadow:inset 4px 0 0 var(--ok)}
+.li.sel{box-shadow:inset 4px 0 0 var(--accent)}
+.li .clsbadge{width:38px;height:38px;flex:none;border-radius:9px;color:#fff;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.li .m{flex:1;min-width:0}
+.li .nm{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.otatag{font-size:9.5px;font-weight:800;color:#fff;border-radius:5px;padding:1px 6px;vertical-align:middle}
+.li .rid2{font-family:ui-monospace,monospace;font-size:12px;color:var(--ink);font-weight:700;margin-top:2px}
+.li .r2{font-size:11px;color:var(--sub);margin-top:2px}
+.actline{font-size:12px;font-weight:800;margin-top:4px;padding:4px 8px;border-radius:7px;line-height:1.4;
+  white-space:normal;word-break:break-word}
+.actline.a-reans{background:#f3ecff;color:#6b21a8}
+.actline.a-req{background:#fff7e0;color:#8a5a00}
+.actline.a-chg{background:#ffeceb;color:#b91c1c}
+.actline.a-miss{background:#f1f5f9;color:#475569}
+.actline.a-ack{background:#e9f9ef;color:#0e7a4a}
+.li .pop{position:absolute;right:8px;top:8px;font-size:10px;font-weight:800;color:#fff;background:var(--gold);border-radius:999px;padding:1px 7px;animation:pop 1.4s infinite}
+.li .pop.chg{background:var(--ok);animation:none}
+.li .pop.reans{background:#7c3aed}
+.li .pop.chg2{background:var(--danger)}
+.li .pop.miss{background:#64748b;animation:none}
+.li .pop.ack{background:#0e9f50;animation:none}
+.chip.reanswer.on{background:#7c3aed;border-color:#7c3aed}
+.chip.noplace.on{background:#64748b;border-color:#64748b}
+.li.reans{box-shadow:inset 4px 0 0 #7c3aed}.li.miss{box-shadow:inset 4px 0 0 #64748b}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+/* detail */
+.detail{min-height:300px}
+.dhd{padding:14px;background:linear-gradient(135deg,var(--accent),#0a5e52);color:#fff}
+.dhd .dnm{font-size:18px;font-weight:900}
+.dhd .dbadges{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.dhd .dbadge{background:#fff;border:1px solid rgba(255,255,255,.5);border-radius:10px;padding:6px 11px;line-height:1.2}
+.dhd .dbadge .dl{display:block;font-size:9.5px;font-weight:800;color:var(--sub);letter-spacing:.5px}
+.dhd .dbadge .dv{display:block;font-size:14px;font-weight:900;color:var(--ink)}
+.dhd .dbadge[style*="background"] .dv{color:#fff}
+.dhd .dst{display:inline-block;margin-top:10px;font-size:11.5px;font-weight:700;background:rgba(255,255,255,.2);padding:3px 11px;border-radius:999px}
+.dbody{padding:14px}
+.sec{margin-bottom:16px}
+.sec h3{font-size:12px;font-weight:800;color:var(--sub);margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px}
+.kv{display:flex;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.kv:first-of-type{border-top:0}.kv .k{width:92px;flex:none;color:var(--sub)}.kv .v{flex:1;font-weight:600}
+.kv .v.chg{color:var(--gold);font-weight:800}
+.grp{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.grp-h{background:#f6f8fa;font-size:11.5px;font-weight:800;color:var(--ink);padding:6px 12px;border-bottom:1px solid var(--line)}
+.grp .kv{padding:6px 12px}.grp .kv:first-of-type{border-top:0}
+.cmpbox{background:#fff5f5;border:1.5px solid #f0b8b8;border-left:5px solid var(--danger);border-radius:12px;padding:12px;margin-bottom:12px}
+.cmp-h{font-weight:900;font-size:13.5px;color:var(--danger);margin-bottom:8px}
+.cmp-tbl{background:#fff;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.cmp-row{display:grid;grid-template-columns:78px 1fr 16px 1fr;gap:6px;align-items:center;padding:7px 10px;border-top:1px solid var(--line);font-size:12.5px}
+.cmp-row:first-child{border-top:0}
+.cmp-head{background:#f6f8fa;font-size:10px;font-weight:800;color:var(--sub)}
+.cmp-f{font-weight:800}
+.cmp-b{color:var(--sub);text-decoration:line-through}
+.cmp-ar{text-align:center;color:var(--danger);font-weight:900}
+.cmp-a{font-weight:900;color:var(--danger)}
+.cmp-c.newer{border-width:2px;box-shadow:0 0 0 2px rgba(220,38,38,.15)}
+.cmp-c.newer .cmp-l{color:#dc2626}
+.mm-hint{margin-top:8px;font-size:12px;font-weight:800;color:#b91c1c;background:#fff;border:1px dashed #fca5a5;border-radius:8px;padding:7px 9px}
+.dft{margin:8px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:#fff}
+.dft-r{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;padding:7px 10px;border-top:1px solid #f0f0f0}
+.dft-r:first-child{border-top:0}
+.dft-r.nw{background:#fef2f2}
+.dft-l{font-size:10.5px;font-weight:800;color:var(--sub);min-width:78px}
+.dft-t{font-size:11px;font-weight:800;color:#94a3b8;min-width:96px}
+.dft-r.nw .dft-t{color:#dc2626}
+.dft-v{font-size:13px;font-weight:700;flex:1;min-width:150px;word-break:break-all}
+.verdict{font-size:12px;font-weight:800;border-radius:8px;padding:7px 9px}
+.verdict.op{background:#fff7ed;color:#b45309;border:1px solid #fed7aa}
+.verdict.ss{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.verdict.unk{background:#f8fafc;color:#475569;border:1px solid #e2e8f0}
+.okline{font-size:12px;font-weight:800;color:#0e9f50;margin:2px 0 8px}
+.vfoot{display:block;margin-top:4px;font-size:10.5px;font-weight:700;color:#7c2d12;opacity:.8}
+.reanswer{background:#fff4f0;border:1.5px solid #f0b89a;border-left:5px solid var(--warn);border-radius:12px;padding:12px;margin-bottom:12px}
+.reanswer .ra-h{font-weight:900;font-size:13.5px;color:var(--warn)}
+.reanswer .ra-b{font-size:12.5px;margin-top:4px;line-height:1.5}
+.karte{background:#fffdf5;border:1px solid #f0e3b8;border-radius:12px;padding:12px}
+.karte h3{margin-bottom:8px;color:#8a6d00}
+.ktags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.ktags button{font-size:11.5px;font-weight:700;border:1px solid #e6d59a;background:#fff;color:#7a5c00;border-radius:999px;padding:5px 10px;cursor:pointer}
+.ktags button:hover{background:#fff6d8}
+#knote{width:100%;min-height:70px;padding:10px;border:1.5px solid #e6d59a;border-radius:9px;font-size:14px;font-family:inherit;resize:vertical}
+.karteflag{margin-left:5px}
+.kartepeek{font-size:11px;color:#8a6d00;background:#fff8e1;border-radius:6px;padding:2px 7px;margin-top:3px;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.warn{border:1px solid #f3c9c9;background:#fff6f6;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12.5px}
+.warn b{color:var(--danger)}
+.mmrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px}
+.mmrow .lab{color:var(--sub);font-size:10px}
+.chg-item{border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:7px}
+.chg-item.req{border-left:4px solid var(--gold);background:#fffdf7}
+.chg-item.cancel{border-left:4px solid var(--danger);background:#fff7f7}
+.chg-item.applied{border-left:4px solid var(--ok)}
+.chg-item .ci{display:flex;align-items:center;gap:7px;font-weight:800;font-size:12.5px}
+.chg-item .st{font-size:10.5px;font-weight:800;padding:1px 8px;border-radius:999px;margin-left:auto}
+.st.requested{background:#fef3c7;color:var(--gold)}.st.applied{background:#dcfce7;color:var(--ok)}
+.st.approved{background:#dbeafe;color:var(--blue)}.st.rejected{background:#f1f5f9;color:var(--sub)}
+.chg-item .cb{font-size:12.5px;margin-top:3px}.chg-item .arrow{color:var(--gold);font-weight:800;margin:0 3px}
+.chg-item .ba{font-size:9.5px;font-weight:800;color:#fff;background:var(--sub);border-radius:5px;padding:1px 5px;margin-right:2px}
+.chg-item .applied .ba{}
+.chg-item .meta{font-size:10.5px;color:var(--sub);margin-top:2px}
+.acts{display:flex;gap:7px;margin-top:8px}
+.btn{padding:8px 12px;border-radius:8px;font-weight:800;font-size:12.5px;border:0;cursor:pointer}
+.btn.ok{background:var(--ok);color:#fff}.btn.dang{background:#fff;color:var(--danger);border:1.5px solid #f0c2c2}
+.btn.pri{background:var(--accent);color:#fff}.btn.ghost{background:#eef1f4;color:var(--ink)}
+.btn.line{background:#06c755;color:#fff}
+.dactions{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+.empty{text-align:center;color:var(--sub);padding:40px 20px}
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(15,25,45,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:14px}
+.scrim.show{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:440px;width:100%;padding:18px;max-height:88vh;overflow:auto}
+.modal h3{margin:0 0 12px;font-size:16px;font-weight:800}
+.cfgrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.cfgrow:first-of-type{border-top:0}.cfgrow .cl{flex:1;font-weight:700;font-size:13px}
+.cfgrow .cl small{display:block;font-weight:500;color:var(--sub);font-size:11px;margin-top:3px;line-height:1.45}
+.swstate{font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.swstate.on{background:#dcfce7;color:var(--ok)}.swstate.off{background:#f1f5f9;color:var(--sub)}
+.cfghelp{font-size:12px;color:var(--ink);background:#f0f6ff;border:1px solid #cfe0f5;border-radius:9px;padding:9px 11px;margin-bottom:10px;line-height:1.5}
+.cfgstat{font-size:12px;font-weight:800;border-radius:9px;padding:8px 11px;margin-bottom:6px}
+.cfgstat.on{background:#eafaf5;color:var(--ok);border:1px solid #b7e6da}
+.cfgstat.off{background:#f8fafc;color:var(--sub);border:1px solid var(--line)}
+.cfgdiv{text-align:center;font-size:10.5px;color:var(--sub);margin:12px 0 4px;letter-spacing:1px}
+.sw{width:44px;height:25px;border-radius:999px;background:#cbd5e1;position:relative;cursor:pointer;flex:none;transition:.2s}
+.sw.on{background:var(--ok)}.sw::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:.2s}.sw.on::after{left:22px}
+.inp{padding:7px 9px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;width:80px}
+.inp.wide{width:200px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#1c2430;color:#fff;padding:11px 18px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;transition:.25s;z-index:99}
+.toast.show{opacity:1}
+.spin{width:24px;height:24px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;margin:40px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.login{max-width:340px;margin:60px auto;text-align:center;background:#fff;padding:24px;border-radius:14px}
+.login input{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;margin-bottom:10px;font-size:16px}
+.backbtn{display:none!important}
+.fresh{font-size:11px;font-weight:700;color:var(--sub);white-space:nowrap;margin-right:2px}
+.fresh .auto{font-size:9.5px;background:#eef2f7;color:#64748b;border-radius:6px;padding:1px 5px;margin-left:2px}
+</style>
+</head>
+<body>
+<div id="app"><div class="spin"></div></div>
+<div id="errbar" style="display:none;position:fixed;left:0;right:0;bottom:0;background:#b91c1c;color:#fff;padding:10px 14px;font-size:12px;z-index:999;font-family:monospace"></div>
+<div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const SB="https://ckrxttbnawkclshczsia.supabase.co";
+const FN=SB+"/functions/v1";
+const ADMIN_VER="kd1.0 KEYDROP専用(HANDYMAN内容)";
+const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+const $=s=>document.querySelector(s);
+function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
+window.onerror=function(msg,src,ln){showErr(msg+" @"+ln);return false};
+window.addEventListener("unhandledrejection",e=>showErr("Promise: "+(e.reason&&e.reason.message||e.reason)));
+const MYURL="https://keydrop.jp/mypage.html?t=";
+let CFG={},RES=[],CHG={},FILTER="userchg",Q="",SEL=null,SELTASKS=null,VIEW="changes",CFILTER="req",STAFF=[],OPERATOR=localStorage.getItem("admin_op")||"",TODAY_ONLY=false,LAST_LOAD=0,DAYF="all";
+let SENDS={},VIEWS={},UFILTER="all"; // SENDS=mypage URL送信ログ, VIEWS=マイページ開封(mypage_views)
+function fmtClock(ms){if(!ms)return"—";const d=new Date(ms);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+":"+String(d.getSeconds()).padStart(2,"0")}
+const TIMES=(()=>{let a=[];for(let h=9;h<=19;h++){a.push(("0"+h).slice(-2)+":00");if(h<19)a.push(("0"+h).slice(-2)+":30")}return a})();
+function setOp(v){OPERATOR=v;localStorage.setItem("admin_op",v);render()}
+function needOp(){if(!OPERATOR){toast("先に担当者を選んでください");return false}return true}
+function sure(msg){return window.confirm("本当に"+msg+"よろしいですか？")}
+const CLS={A:"アルファード/ヴェル",B:"ノア/デリカ",C:"ロッキー/CX-3",S:"ハリアー/CX-5",F:"ルーミー/ソリオ",H:"カローラ/アクセラ"};
+const CLSC={A:"#7c3aed",B:"#0284c7",C:"#059669",S:"#d97706",F:"#db2777",H:"#64748b"};
+// 流入先(OTA)ラベル＋色
+const OTAL={J:"じゃらん",R:"楽天",S:"skyticket",O:"エアトリ",RC:"レンタカーcom",G:"GoGoOut",HP:"オフィシャル",SP:"オフィシャル",direct:"直販",KEYDROP:"KEYDROP"};
+const OTAC={J:"#e11d48",R:"#bf0000",S:"#7c3aed",O:"#0891b2",RC:"#059669",G:"#ca8a04",HP:"#0F1F45",SP:"#0F1F45",direct:"#475569",KEYDROP:"#0369a1"};
+function otaLabel(o){return OTAL[o]||o||"—"}
+function otaColor(o){return OTAC[o]||"#64748b"}
+const FLD={del_place:"お届け先",col_place:"回収先",lend_time:"お届け時間",return_time:"回収時間",option:"オプション変更依頼",insurance:"補償変更依頼",method:"受渡方法変更依頼",cancel:"キャンセル申請",ready:"早め回収(返却準備完了)"};
+const WD=["日","月","火","水","木","金","土"];
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function fmtD(d){if(!d)return"";const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d);if(!m)return d;const dt=new Date(+m[1],+m[2]-1,+m[3]);return `${+m[2]}/${+m[3]}(${WD[dt.getDay()]})`}
+function fmtDT(s){if(!s)return"";return String(s).replace("T"," ").slice(0,16)}
+function srcLabel(s){return s==="customer"?"顧客(マイページ)":s==="staff"?"スタッフ(管理画面)":s==="form"?"フォーム":s||""}
+function chgMeta(c){return `<div class="meta">📅 ${esc(fmtDT(c.created_at))} ・ ${esc(srcLabel(c.source))}${c.actor?" ・ 担当:<b>"+esc(c.actor)+"</b>":""}${["del_place","col_place","lend_time","return_time"].includes(c.field)?" ・ ✅OPシート反映":""}</div>`}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+function tok(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf("sb-")===0&&k.indexOf("auth-token")>=0){let v=null;try{v=JSON.parse(localStorage.getItem(k))}catch(e){continue}const t=(v&&v.access_token)||(v&&v.currentSession&&v.currentSession.access_token)||(v&&v.session&&v.session.access_token)||(Array.isArray(v)&&typeof v[0]==="string"?v[0]:null);if(t)return t}}}catch(e){}return null}
+function H(){return{apikey:ANON,Authorization:"Bearer "+(tok()||ANON),"Content-Type":"application/json"}}
+async function api(p,opt){const r=await fetch(SB+"/rest/v1/"+p,{...opt,headers:{...H(),...(opt&&opt.headers||{})}});if(!r.ok)throw new Error(r.status+" "+(await r.text()).slice(0,120));const ct=r.headers.get("content-type")||"";return ct.includes("json")?r.json():null}
+function today(){const d=new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function tomorrow(){const d=new Date();d.setDate(d.getDate()+1);return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+// その日のタスク＝お届け(lend)または回収(return)がその日
+function onDay(r,day){return r.lend_date===day||r.return_date===day}
+function dayPass(r){return DAYF==="all"||(DAYF==="today"&&onDay(r,today()))||(DAYF==="tmrw"&&onDay(r,tomorrow()));}
+function ago(days){const d=new Date();d.setDate(d.getDate()-days);return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+
+async function loadAll(keepSel){
+  const [cfg,res,chg,stf,links,sends,views]=await Promise.all([
+    api("spk_line_config?id=eq.1&select=*"),
+    api("reservations?ota=eq.KEYDROP&return_date=gte."+today()+"&status=not.in.(%22%E3%82%AD%E3%83%A3%E3%83%B3%E3%82%BB%E3%83%AB%22,cancelled)&order=lend_date.asc&limit=400&select=id,name,ota,lend_date,return_date,lend_time,return_time,del_time,col_time,vehicle,del_place,col_place,visit_type,return_type,people,opt_b,opt_c,opt_j,insurance,status,mypage_token,mypage_locked,staff_note,tel,mail,admin_checked_at,admin_checked_by"),
+    api("keydrop_mypage_changes?order=created_at.desc&limit=500&select=id,reservation_id,field,old_value,new_value,source,status,note,actor,created_at"),
+    api("staff?select=name&order=name.asc").catch(()=>[]),
+    api("spk_line_links?select=resv_no,line_user_id,del_place,col_place,del_time,col_time,answered_at&limit=5000").catch(()=>[]),
+    api("spk_line_sends?action=eq.mypage_initial&order=sent_at.desc&limit=3000&select=resv_no,status,sent_at").catch(()=>[]),
+    api("mypage_views?select=reservation_id,first_at,last_at,view_count&limit=5000").catch(()=>[]),
+  ]);
+  CFG=cfg[0]||{}; RES=res||[]; STAFF=(stf||[]).map(s=>s.name).filter(Boolean);
+  LINE_SET=new Set((links||[]).filter(l=>l.resv_no&&l.line_user_id).map(l=>l.resv_no));
+  SENDS={}; (sends||[]).forEach(s=>{ if(s.resv_no&&!SENDS[s.resv_no]) SENDS[s.resv_no]={at:s.sent_at,status:s.status}; }); // 最新のURL送信
+  VIEWS={}; (views||[]).forEach(v=>{ if(v.reservation_id) VIEWS[v.reservation_id]={first:v.first_at,last:v.last_at,count:v.view_count}; });
+  // エルメ受付フォーム(spk_line_links)＝SSと同一ソース。ライブSSシートに無い回答をここで補完（フォーム回答済み判定・場所あり判定に使う）
+  LINK_MAP={}; (links||[]).forEach(l=>{ if(!l.resv_no)return; const del=String(l.del_place||"").trim(),col=String(l.col_place||"").trim(); if(del||col) LINK_MAP[l.resv_no]={del,col,delTime:String(l.del_time||"").trim(),colTime:String(l.col_time||"").trim(),ts:l.answered_at||""}; });
+  CHG={}; (chg||[]).forEach(c=>{(CHG[c.reservation_id]=CHG[c.reservation_id]||[]).push(c)});
+  render();
+  // OPタスクから ①場所マップ(実際の場所は tasks._ssPlace) ②フォーム再回答(_ssAlert) を集める
+  try{
+    const ids=RES.map(r=>r.id);const pmap={};
+    for(let i=0;i<ids.length;i+=60){
+      const chunk=ids.slice(i,i+60).map(encodeURIComponent).join(",");
+      const ts=await api("tasks?reservation_id=in.("+chunk+")&select=_id,reservation_id,place,time,insurance,changed_json,updated_at").catch(()=>[]);
+      (ts||[]).forEach(t=>{
+        let cj={};try{cj=JSON.parse(t.changed_json||"{}")}catch(e){}
+        const manual=cj._placeSource==="manual";
+        const disp=(manual?t.place:(cj._ssPlace||t.place))||"";
+        const opAt=(manual?(cj._manualPlaceAt||t.updated_at):(cj._ssPlaceAt||t.updated_at))||"";  // OP側の場所確定時刻(近似)
+        const opTime=(cj._ssTime||t.time||"");  // OP側の時刻(運用値)
+        const kind=String(t._id).slice(0,2);const rid=t.reservation_id;
+        pmap[rid]=pmap[rid]||{};
+        const opExact=manual?!!cj._manualPlaceAt:!!cj._ssPlaceAt;  // 場所の確定時刻が正確か(概算=updated_atなら不確か)
+        // 補償・オプションはd-/c-いずれかの実値を採用
+        if(t.insurance&&String(t.insurance).trim())pmap[rid].ins=String(t.insurance).trim();
+        pmap[rid].optC=Math.max(pmap[rid].optC||0,+(cj._optC)||0);
+        pmap[rid].optJ=Math.max(pmap[rid].optJ||0,+(cj._optJ)||0);
+        pmap[rid].optB=Math.max(pmap[rid].optB||0,+(cj._optB)||0);
+        const fromForm=!manual&&!!String(cj._ssPlace||"").trim();  // OP場所がフォーム由来(_ssPlace)＝顧客が回答して入れた証拠
+        if(kind==="d-"){pmap[rid].del=disp;pmap[rid].delAt=opAt;pmap[rid].delSrc=cj._placeSource||"";pmap[rid].delExact=opExact;pmap[rid].delTime=opTime;pmap[rid].delForm=fromForm;pmap[rid].hasDel=true;}
+        if(kind==="c-"){pmap[rid].col=disp;pmap[rid].colAt=opAt;pmap[rid].colSrc=cj._placeSource||"";pmap[rid].colExact=opExact;pmap[rid].colTime=opTime;pmap[rid].colForm=fromForm;pmap[rid].hasCol=true;}
+      });
+    }
+    PLACE_MAP=pmap;mergeLinkIntoSS();computeMismatch();computeResvConf();render();
+    await fetchSS();mergeLinkIntoSS();computeMismatch();LAST_LOAD=Date.now();render();  // ライブSS取得→情報相違(SS≠OP)＋迷子(SS再回答で値変化)を確定
+  }catch(e){}
+  if(keepSel&&SEL)selectRes(SEL,true);
+}
+/* ==== ステータス判定（7分類）==== */
+function csOf(r){return CHG[(typeof r==="string"?r:r.id)]||[]}
+// 場所の全ソースを収集：form(SS/エルメ)・resv(予約情報)・op(OPタスクの実体・_ssPlace優先)。区分で要否も返す。
+function placeSources(r){
+  const id=(typeof r==="string"?r:r.id);const rr=(typeof r==="string"?(RES.find(x=>x.id===id)||{}):r)||{};
+  const ss=SS_MAP[id]||{};const pm=PLACE_MAP[id];  // pm=OPタスクが存在すれば{del,col}(未来で未生成ならundefined)
+  const vt=String(rr.visit_type||""),rtp=String(rr.return_type||"");
+  return {
+    form:{del:String(ss.del||"").trim(),col:String(ss.col||"").trim()},
+    resv:{del:String(rr.del_place||"").trim(),col:String(rr.col_place||"").trim()},
+    op:{del:pm?String(pm.del||"").trim():"",col:pm?String(pm.col||"").trim():"",exists:!!pm,delExists:!!(pm&&pm.hasDel),colExists:!!(pm&&pm.hasCol)},
+    needDel:vt!=="来店"&&vt!=="PUB"&&vt!=="PUB来店",
+    needCol:rtp!=="返却"
+  };
+}
+// 場所情報なし＝【どのソース(form/予約/OP)にも場所が無い】＝真の未回答 のみ。＋時刻欠落。
+// 「場所がどこかにあるのに場所なしに落ちる」事態を無くす（それは異常値で拾う）。
+function stMissing(r){
+  const s=placeSources(r);
+  const delMiss=s.needDel&&!(s.form.del||s.resv.del||s.op.del);
+  const colMiss=s.needCol&&!(s.form.col||s.resv.col||s.op.col);
+  const timeOk=String(r.lend_time||"").trim()&&String(r.return_time||"").trim();
+  return delMiss||colMiss||!timeOk;
+}
+// 場所ソース不整合＝【場所がどこか(フォーム/予約情報/OP)にあるのに"運用上の場所"が空】＝場所があるのに場所なしに落ちる異常。
+//  運用値=opPlaceOf(タスク実値||予約情報)。これが空で、かつフォーム等どこかに場所がある＝反映漏れ。表記ゆれの食い違いは拾わない(誤検知回避)。
+function stPlaceInconsistent(r){
+  const s=placeSources(r);const op=opPlaceOf(r);
+  const chk=(f,need)=>{if(!need)return false;const opv=String(op[f]||"").trim();const any=s.form[f]||s.resv[f]||s.op[f];return !opv&&!!any;};
+  return chk("del",s.needDel)||chk("col",s.needCol);
+}
+function stReq(r){return csOf(r).some(c=>c.status==="requested")}                                   // 変更リクエスト
+function stUserChg(r){return csOf(r).some(c=>c.source==="customer"&&c.status==="applied")}          // 情報変更有り
+// この予約の最後の"活動"時刻（変更/依頼の作成時刻。迷子は活動扱い＝常に要確認）
+function lastActivityAt(r){let t="";csOf(r).forEach(c=>{if((c.created_at||"")>t)t=c.created_at});const ss=SS_MAP[r.id];if(ss&&ss.ts){const ms=ssTimeMs(ss.ts);if(!isNaN(ms)){const iso=new Date(ms).toISOString();if(iso>t)t=iso}}return t}
+// スタッフが確認した後、新しい活動(変更/フォーム再回答)が無ければ「確認済み」。迷子も確認後(admin_checked_at≧最新フォーム回答)なら消える
+function isChecked(r){const ca=r.admin_checked_at;if(!ca)return false;const la=lastActivityAt(r);return !la||la<=ca}
+function stAck(r){return isChecked(r)}                                                              // 確認済みBOX
+let ALERT_RES=new Set();                                                                             // フォーム再回答(迷子)を持つ予約
+let LINE_SET=new Set();                                                                              // LINE ID有りの予約番号
+let PLACE_MAP={};                                                                                    // 予約→OPシートの実際の場所 {del,col}
+let SS_MAP={};                                                                                       // 予約→ライブSS(フォーム実値) {del,col}
+let LINK_MAP={};                                                                                      // 予約→エルメ受付フォーム回答(spk_line_links) {del,col} ＝SS補完
+let MISMATCH_RES=new Set();                                                                          // 情報相違: OP(タスク実値) ≠ SS(フォーム実値)
+let MISMATCH_MAP={};                                                                                 // 予約→相違明細 [{kind,op,ss}]
+const PLACE_SHEET_CSV="https://docs.google.com/spreadsheets/d/e/2PACX-1vSsixHeH7WvPEhA0BqOhFcun6DgBAeB9z11ikzRgXQcB_OxKKwWT8uCvl6Fb551nYlRmBGLj0e7OcGi/pub?gid=854005754&single=true&output=csv";
+function opPlaceOf(r){const p=PLACE_MAP[r.id]||{};return{del:String(p.del||r.del_place||"").trim(),col:String(p.col||r.col_place||"").trim()}}
+// 場所の"芯"を抽出（全角/半角空白除去→時刻表記以降を落とす）。「札幌駅北口 9:50でいいです」→「札幌駅北口」
+function coreP(s){return String(s||"").replace(/[\s　]/g,"").replace(/\d{1,2}[:：]\d{2}.*$/,"").trim()}
+// SS(芯) と OP(芯) が実質的に食い違うか（双方向の包含で住所⇔名称のブレを許容）
+function placeConflict(ss,op){const a=coreP(ss),b=coreP(op);if(!a||!b)return false;return !(a.includes(b)||b.includes(a))}
+function stMismatch(r){return MISMATCH_RES.has(r.id)}                                                // 🔴 情報相違＝要確認・修正
+function stReanswer(r){return ALERT_RES.has(r.id)}                                                   // ⑤フォーム再回答(迷子)
+// SS回答日時(JST文字列)→epoch ms
+function ssTimeMs(s){if(!s)return NaN;const m=String(s).match(/(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(!m)return NaN;return Date.parse(m[1]+"-"+String(m[2]).padStart(2,"0")+"-"+String(m[3]).padStart(2,"0")+"T"+String(m[4]).padStart(2,"0")+":"+m[5]+":"+(m[6]||"00")+"+09:00")}
+function fmtT(ms){if(isNaN(ms))return"不明";const d=new Date(ms);return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
+function mkDiff(kind,ss,op,ssMs,opAt,opSrc,opExact){const opMs=opAt?Date.parse(opAt):NaN;let newer="?";if(!isNaN(ssMs)&&!isNaN(opMs))newer=ssMs>opMs?"ss":"op";return{kind:kind,ss:ss,op:op||"(空)",ssAt:ssMs,opAt:opMs,opSrc:opSrc||"",opExact:!!opExact,newer:newer}}
+// SS_MAP と PLACE_MAP を突合して情報相違を再計算（新旧＝時系列も判定）
+// エルメ受付フォーム(LINK_MAP)をSS_MAPに補完＝ライブSSシートに無い予約の回答を拾う（優先はライブSS、無ければlink）
+function mergeLinkIntoSS(){Object.entries(LINK_MAP).forEach(([rid,l])=>{const cur=SS_MAP[rid];if(cur&&(cur.del||cur.col))return;SS_MAP[rid]={del:l.del,col:l.col,ts:l.ts,delTs:l.ts,colTs:l.ts,prevDel:"",prevCol:"",_fromLink:true};});}
+function computeMismatch(){const mm=new Set(),map={},al=new Set();RES.forEach(r=>{const ss=SS_MAP[r.id];if(!ss)return;if(ss.prevDel||ss.prevCol)al.add(r.id);const p=PLACE_MAP[r.id]||{};const op=opPlaceOf(r);const ssMs=ssTimeMs(ss.ts);const list=[];if(placeConflict(ss.del,op.del))list.push(mkDiff("お届け先",ss.del,op.del,ssMs,p.delAt,p.delSrc,p.delExact));if(placeConflict(ss.col,op.col))list.push(mkDiff("回収先",ss.col,op.col,ssMs,p.colAt,p.colSrc,p.colExact));if(list.length){mm.add(r.id);map[r.id]=list}});MISMATCH_RES=mm;MISMATCH_MAP=map;ALERT_RES=al}
+// 整合の相違: 予約情報(reservations) ≠ マイページ/OP(tasks)。両方に実値があり食い違う項目を検出（patrolと同じ）。
+let RESV_CONF={};
+function computeResvConf(){
+  RESV_CONF={};
+  const norm=v=>String(v==null?"":v).trim();
+  RES.forEach(r=>{
+    const p=PLACE_MAP[r.id]; if(!p)return;
+    const fs=[];
+    const cmp=(field,a,b)=>{a=norm(a);b=norm(b);if(a&&b&&a!==b)fs.push({field,resv:a,op:b});};
+    cmp("del_place",r.del_place,p.del);
+    cmp("col_place",r.col_place,p.col);
+    // ※時間(lend_time/return_time)は異常判定から除外：フォーム回答で予約情報(OTAデフォルト)から変わるのが正常。差=異常ではない。
+    cmp("insurance",r.insurance,p.ins);
+    const oc=(f,rn,tn)=>{rn=+rn||0;tn=+tn||0;if(rn>0&&tn>0&&rn!==tn)fs.push({field:f,resv:String(rn),op:String(tn)});};
+    oc("opt_c",r.opt_c,p.optC);oc("opt_j",r.opt_j,p.optJ);oc("opt_b",r.opt_b,p.optB);
+    if(fs.length)RESV_CONF[r.id]=fs;
+  });
+}
+function stResvConf(r){return !!RESV_CONF[(typeof r==="string"?r:r.id)]}
+// フォーム履歴（SS回答）があるか。予約≠OP の差は「フォーム済なら正常／未なら異常値の疑い」で判断する。
+function stFormDone(r){const s=SS_MAP[(typeof r==="string"?r:r.id)];return !!(s&&(s.del||s.col||s.ts))}
+function stInfoProvided(r){if(stFormDone(r))return true;const id=(typeof r==="string"?r:r.id);
+  const pm=PLACE_MAP[id]; if(pm&&(pm.delForm||pm.colForm))return true;  // OP場所がフォーム由来(_ssPlace)＝顧客が回答済み
+  return (CHG[id]||[]).some(c=>["del_place","col_place","lend_time","return_time"].includes(c.field)&&c.source==="customer");}
+// HP/オフィシャル/直販は予約時に場所が入る＝フォーム不要。OTAは場所をフォームで入れる。
+function isOfficial(r){const o=(typeof r==="string"?(RES.find(x=>x.id===r)||{}).ota:r.ota);return o==="HP"||o==="SP"||o==="direct"}
+function hasPlace(r){const p=opPlaceOf(r);return !!(String(p.del||"").trim()||String(p.col||"").trim())}
+// ⚠️ 異常値（一旦まとめ）＝OTA予約(HP除く)で、フォーム/マイページ履歴が無いのに「場所が入っている(出所不明)」or「予約情報とOPが相違」。
+// ⚠️ 異常値・要確認＝オーナー確定の3条件のみ（2026-07-05）：
+//  ① フォーム踏んでないのに場所がある（非HP・フォーム未回答なのに場所あり＝出所不明）
+//  ② HPなのに場所がない（HPは予約時に場所が入るはず→無いのは異常）
+//  ③ 場所があるのにOPシートタスクに場所がない（フォーム/予約に場所ありなのに生成済みOPタスクが空＝同期漏れ）
+function stAbnormalConf(r){
+  const s=placeSources(r),op=opPlaceOf(r);
+  const opDel=String(op.del||"").trim(),opCol=String(op.col||"").trim();
+  // ① 非HP・フォーム未回答なのに場所あり
+  if(!isOfficial(r)&&!stInfoProvided(r)&&(opDel||opCol))return true;
+  // ② HPなのに場所がない
+  if(isOfficial(r)&&((s.needDel&&!opDel)||(s.needCol&&!opCol)))return true;
+  // ③ 場所があるのにOPシートタスクに場所がない（d-/c-タスクが実在するのに空・同期漏れ）。洗車(w-)だけの未来予約は対象外。
+  if(s.needDel&&s.op.delExists&&!s.op.del&&(s.form.del||s.resv.del))return true;
+  if(s.needCol&&s.op.colExists&&!s.op.col&&(s.form.col||s.resv.col))return true;
+  return false;
+}
+// ライブSS(公開CSV)を取得して SS_MAP を作る（列: 4=予約番号,1=回答日時,8=DEL場所,11=COL場所。同一予約は回答日時が最新の行）
+async function fetchSS(){try{const resp=await fetch(PLACE_SHEET_CSV,{cache:"no-store"});if(!resp.ok)return;const rows=parseCSV(await resp.text());if(rows.length<2)return;const byId={};rows.slice(1).forEach(r=>{const rid=(r[4]||"").trim();if(!rid)return;(byId[rid]=byId[rid]||[]).push({ts:(r[1]||"").trim(),del:(r[8]||"").trim(),col:(r[11]||"").trim()})});const m={};Object.entries(byId).forEach(([rid,arr])=>{arr.sort((a,b)=>a.ts<b.ts?1:(a.ts>b.ts?-1:0));const pick=(f)=>{const ne=arr.filter(x=>x[f]);const cur=ne[0];if(!cur)return{val:"",at:"",prev:"",prevAt:""};const pv=ne.find(x=>x!==cur&&x[f]!==cur[f]);return{val:cur[f],at:cur.ts,prev:pv?pv[f]:"",prevAt:pv?pv.ts:""}};const d=pick("del"),c=pick("col");m[rid]={del:d.val,delTs:d.at,prevDel:d.prev,prevDelTs:d.prevAt,col:c.val,colTs:c.at,prevCol:c.prev,prevColTs:c.prevAt,ts:(d.at>c.at?d.at:c.at)}});SS_MAP=m}catch(e){}}
+// 簡易CSVパーサ（引用符・改行・カンマ対応）
+function parseCSV(t){const rows=[];let f="",row=[],q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else{if(c==='"')q=true;else if(c===","){row.push(f);f=""}else if(c==="\n"){row.push(f);rows.push(row);row=[];f=""}else if(c==="\r"){}else f+=c}}if(f!==""||row.length){row.push(f);rows.push(row)}return rows}
+function stToday(r){return r.lend_date===today()}                                                   // ⑥本日＝本日出発
+function resFlag(id){const r=(typeof id==="string")?RES.find(x=>x.id===id):id;if(!r)return"";
+  if(stReanswer(r))return"reans"; if(stReq(r))return"req"; if(stUserChg(r))return"chg"; if(stMissing(r))return"miss"; return""}
+const STATUS_DEFS=[
+  {k:"mismatch",label:"🔴 情報相違(SS≠OP)",fn:stMismatch},
+  {k:"resvabn",label:"⚠️ 異常値・要確認",fn:stAbnormalConf},
+  {k:"formdone",label:"📝 フォーム済",fn:stFormDone},
+  {k:"userchg",label:"情報変更有り",fn:stUserChg},
+  {k:"ack",label:"確認済み",fn:stAck},
+  {k:"noplace",label:"場所情報なし",fn:stMissing},
+  {k:"req",label:"変更リクエスト",fn:stReq},
+  {k:"reanswer",label:"位置情報更新あり（迷子）",fn:stReanswer},
+  {k:"today",label:"本日",fn:stToday},
+  {k:"all",label:"全予約",fn:()=>true},
+];
+function statusCount(k){const d=STATUS_DEFS.find(x=>x.k===k);return d?RES.filter(d.fn).length:0}
+function reqTotal(){return RES.filter(stUserChg).length+RES.filter(r=>stReq(r)).length}
+/* ==== カンバン：各予約を1列に割当（優先度）==== */
+const BOARD_COLS=[
+  {k:"req",label:"🟡 変更リクエスト（オプション/補償）",color:"#b45309",def:"お客様がマイページで<b>オプション/補償/早め回収/キャンセル</b>を依頼＝カードで承認/却下（承認＝実反映＋LINE通知）。"},
+  {k:"userchg",label:"🔴 情報変更(未確認)",color:"#b91c1c",def:"お客様が<b>マイページで場所/時間を即時変更</b>した記録（未確認）。内容を確認して確認済みに。"},
+  {k:"mismatch",label:"🔴 情報相違（SS≠OP）要確認・修正",color:"#dc2626",def:"フォームで回答した場所と、OP(マイページ)の場所が<b>明確に別物</b>＝手動対応の食い違い。どちらが正しいか確認して統一。"},
+  {k:"miss",label:"⚪ 場所情報なし",color:"#64748b",def:"<b>フォーム未回答 かつ 予約情報/フォーム/OP のどこにも場所が無い</b>＝真に未確定のお客様。LINE ID有りなら場所催促を自動化可（📣通知②）。"},
+  {k:"resvabn",label:"⚠️ 異常値・要確認（システム/導線の問題）",color:"#e11d48",def:"システム/導線の異常＝次の3つ：<br><b>① フォーム踏んでない(未回答)のに場所がある</b>（非HP・出所不明）<br><b>② HPなのに場所がない</b>（HPは予約時に場所が入るはず）<br><b>③ 場所があるのにOPシートのタスクに場所がない</b>（フォーム/予約に場所ありなのに生成済みOPタスクが空＝同期漏れ）"},
+  {k:"reanswer",label:"🔔 位置情報更新あり（迷子）",color:"#7c3aed",def:"お客様が<b>フォームで場所を更新</b>した（＝迷子/場所変更）。更新後の場所を確認。"},
+  {k:"ack",label:"✅ 確認済み",color:"#0e9f50",def:"スタッフが確認済み。新しい活動（変更/フォーム再回答）が来ると自動で戻る。"},
+];
+function defPop(label,text){let el=document.getElementById("defpop");if(!el){el=document.createElement("div");el.id="defpop";el.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px";el.onclick=function(){el.remove()};document.body.appendChild(el);}el.innerHTML='<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:18px 18px 14px;box-shadow:0 14px 44px rgba(0,0,0,.35)"><div style="font-weight:800;font-size:15px;margin-bottom:10px">'+label+'</div><div style="font-size:13px;line-height:1.8;color:#33415a">'+text+'</div><div style="text-align:right;margin-top:14px"><button style="background:#0e9f50;color:#fff;border:0;border-radius:8px;padding:8px 18px;font-weight:700;cursor:pointer" onclick="var e=document.getElementById(\'defpop\');if(e)e.remove()">閉じる</button></div></div>';el.querySelector("div").onclick=function(ev){ev.stopPropagation()};}
+function hasAction(r){return stReanswer(r)||stReq(r)||stUserChg(r)}          // 顧客の能動的な動き
+// 1予約が複数の「やること」を同時に持つ場合、該当する全カラムに表示する。
+// 例：オプション/補償の【変更リクエスト(req・承認待ち)】と、場所/時間の【情報変更(userchg・即時反映の確認)】は独立の対応事項＝両方に出すのが正解。
+function resColumns(r){
+  // 「確認済みにする」を押したら、相違(SS≠OP)でも常に確認済みBOXへ移動する（新しい動きが来れば isChecked=false で自動復帰）
+  if(isChecked(r))return["ack"];
+  const cols=[];
+  if(stReq(r))cols.push("req");              // 承認待ちの依頼（オプション/補償/早め回収/キャンセル）
+  if(stReanswer(r))cols.push("reanswer");    // フォーム再回答(迷子)
+  if(stUserChg(r))cols.push("userchg");      // お客様がマイページで即時変更（要確認）
+  if(stMismatch(r))cols.push("mismatch");    // 🔴 情報相違(SS≠OP)＝他の対応と併存して出す（排他にしない）
+  if(cols.length)return cols;                // ↑独立の対応事項は同時に複数列へ
+  if(stAbnormalConf(r))return["resvabn"];    // ⚠️ 異常値
+  if(stMissing(r))return["miss"];            // 場所情報なし
+  return["ok"];
+}
+function resColumn(r){return resColumns(r)[0];}  // 代表カラム（件数/ackボタン等の単一用途）
+// カラム別のアクティビティ行（同じ予約が2列に出る時、その列に関係する内容を表示）
+function activityFor(r,colk){
+  const cs=csOf(r);
+  if(colk==="userchg"){
+    const ucs=cs.filter(c=>c.source==="customer"&&c.status==="applied");
+    if(ucs.length){const fs=[...new Set(ucs.map(c=>fldJp(c.field)))];return {cls:"a-chg",t:"🔴 お客様が変更："+fs.join("・")};}
+  }
+  if(colk==="req"){
+    const reqs=cs.filter(c=>c.status==="requested");
+    const rdy=reqs.find(c=>c.field==="ready");
+    if(rdy){const m=String(rdy.new_value||"").match(/(\d{1,2}:\d{2})/);const tm=m?"（希望 "+m[1]+"〜）":"（スケジュール調整可能なら早めに回収）";
+      return {cls:"a-req",t:"🟢 返却準備完了・早め回収OK"+tm+(reqs.length>1?" 他"+(reqs.length-1)+"件":"")};}
+    if(reqs.length){const c=reqs[0];const kind=c.field==="cancel"?"キャンセル申請":fldJp(c.field)+"変更依頼";
+      return {cls:"a-req",t:"🟡 "+kind+"："+(c.new_value||"")+(reqs.length>1?" 他"+(reqs.length-1)+"件":"")};}
+  }
+  return activity(r);
+}
+// この列に出ている理由バッジ（同じ予約番号が複数列に出る時の識別用）
+function colBadge(colk){
+  const c=BOARD_COLS.find(x=>x.k===colk);if(!c)return"";
+  const short={req:"🟡 変更リクエスト",userchg:"🔴 情報変更",mismatch:"情報相違",miss:"場所なし",resvabn:"要確認",reanswer:"迷子",ack:"確認済み"}[colk]||c.label;
+  return `<span style="display:inline-block;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:800;color:#fff;background:${c.color};white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.12)">📌 この列は「${short}」</span>`;
+}
+function matchQ(r){const q=Q.trim();return !q||((r.name||"").includes(q)||(r.id||"").toUpperCase().includes(q.toUpperCase()))}
+function formBadge(r){
+  if(isOfficial(r))return `<span style="display:inline-block;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:800;color:#fff;background:#0284c7;white-space:nowrap">🏠 HP予約(場所は予約時)</span>`;
+  const done=stFormDone(r)||stInfoProvided(r);
+  return `<span style="display:inline-block;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:800;color:#fff;background:${done?'#0e9f50':'#94a3b8'};white-space:nowrap">${done?'📝 フォーム済':'フォーム未'}</span>`;
+}
+function lineBadge(r){const ok=LINE_SET.has(r.id);return `<span style="display:inline-block;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:800;color:#fff;background:${ok?'#06c755':'#cbd5e1'};white-space:nowrap" title="${ok?'LINE連携済＝通知/自動送信できる':'LINE未連携＝通知が飛ばない(no_userid)'}">${ok?'📱 LINE ID有':'LINE ID無'}</span>`}
+function cardHtml(r,colk){
+  colk=colk||resColumn(r);
+  const multi=resColumns(r).length>1;               // 同じ予約が複数列に出ている
+  const act=activityFor(r,colk);
+  return `<div class="bcard ${SEL===r.id?"sel":""}" onclick="selectRes('${r.id}')">
+    ${multi?`<div style="margin:-2px 0 6px">${colBadge(colk)}</div>`:""}
+    <div class="bc-top"><div class="clsbadge sm" style="background:${CLSC[r.vehicle]||'#64748b'}">${esc(r.vehicle||"?")}</div>
+      <div class="bc-nm">${esc(r.name||"—")}<span class="otatag" style="background:${otaColor(r.ota)}">${esc(otaLabel(r.ota))}</span></div></div>
+    <div class="bc-sub">🎫 ${esc(r.id)}${multi?` <span style="color:#94a3b8;font-size:10px">(複数の対応あり)</span>`:""}<br>${fmtD(r.lend_date)} ${esc(r.lend_time||"")}〜${fmtD(r.return_date)}</div>
+    <div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${formBadge(r)}${lineBadge(r)}</div>
+    ${act?`<div class="actline ${act.cls}">${esc(act.t)}</div>`:""}
+    ${r.staff_note?`<div class="kartepeek">🗒 ${esc(r.staff_note.split("\n").join(" / ").slice(0,36))}</div>`:""}
+    ${colk==="ack"
+      ?`<button class="bc-btn undo" onclick="event.stopPropagation();uncheckRes('${r.id}')">↩ 未対応に戻す${r.admin_checked_by?" ("+esc(r.admin_checked_by)+")":""}</button>`
+      :`<button class="bc-btn chk" onclick="event.stopPropagation();checkRes('${r.id}')">✅ 確認済みにする</button>`}
+  </div>`;
+}
+
+function onSearch(v){Q=v;render()}
+function render(){
+  // 検索欄などにフォーカス中なら、再描画後にフォーカス＋カーソル位置を復元（全体render()で入力が途切れるのを防ぐ）
+  const ae=document.activeElement, wasSearch=!!(ae&&ae.classList&&ae.classList.contains("bsearch")), cs=wasSearch?ae.selectionStart:null;
+  try{renderInner()}catch(e){showErr("描画: "+(e.message||e));if($("#app").querySelector(".spin"))$("#app").innerHTML='<div class="empty">描画エラー：'+esc(e.message||"")+'<br><button class="btn ghost" onclick="location.reload()">再読込</button></div>'}
+  if(wasSearch){const el=document.querySelector(".bsearch");if(el){el.focus();const L=el.value.length,p=(cs==null?L:Math.min(cs,L));try{el.setSelectionRange(p,p)}catch(_){}}}
+}
+function renderInner(){
+  const q=Q.trim();
+  const fdef=STATUS_DEFS.find(x=>x.k===FILTER)||STATUS_DEFS[STATUS_DEFS.length-1];
+  let list=RES.filter(r=>{
+    if(!fdef.fn(r))return false;
+    if(q&&!((r.name||"").includes(q)||(r.id||"").toUpperCase().includes(q.toUpperCase())))return false;
+    return true;
+  });
+  // 時系列順（お届け日→時間）。ステータスは色・点滅で分かるので並びは日付優先。
+  list.sort((a,b)=>((a.lend_date||"")+ (a.lend_time||"")).localeCompare((b.lend_date||"")+(b.lend_time||"")));
+  const rc=RES.filter(stReq).length;  // 変更依頼バッジ＝承認待ちの依頼(変更リクエスト)のみ。情報変更(即時反映済)は含めない
+  $("#app").innerHTML=`
+  <div class="hd"><div class="logo">KEY<b>◦</b>DROP <span style="font-size:10px;background:#FABE00;color:#083344;padding:1px 7px;border-radius:999px;margin-left:4px">専用</span></div><div class="t">KEYDROP マイページ管理 <span style="font-size:10px;color:#94a3b8;font-weight:600">${ADMIN_VER}</span></div>
+    <div class="sp"></div>
+    <select class="opsel ${OPERATOR?"":"need"}" onchange="setOp(this.value)">
+      <option value="">担当者を選択…</option>
+      ${STAFF.map(n=>`<option ${n===OPERATOR?"selected":""}>${esc(n)}</option>`).join("")}
+      ${OPERATOR&&!STAFF.includes(OPERATOR)?`<option selected>${esc(OPERATOR)}</option>`:""}
+    </select>
+    <span class="fresh" title="30秒ごと自動更新。SS(フォーム)はGoogle側で最大約5分キャッシュされるため、お客様の変更反映に数分の遅れがあります。">🕐 ${fmtClock(LAST_LOAD)} <span class="auto">自動30秒</span></span>
+    <button onclick="loadAll(true)">🔄 更新</button>
+    <button class="${rc?"alert":""}" onclick="VIEW='changes';SEL=null;render()">🔔 変更依頼 ${rc}</button>
+    <button onclick="openHistory()">🕘 履歴</button>
+    <button onclick="openUsage()">📲 利用状況</button>
+    <button onclick="openManual()">📖 マニュアル</button>
+    <button onclick="openNotify()">📣 通知</button>
+    <button onclick="openCfg()">⚙️ トリガー設定</button>
+  </div>
+  ${moveBar()}
+  <div class="main">
+    <div class="board">
+      <div class="btoolbar">
+        <input class="bsearch" placeholder="🔍 予約番号・お名前で検索" value="${esc(Q)}" oninput="onSearch(this.value)">
+        <span style="display:inline-flex;gap:4px">
+          ${["all:すべて","today:本日","tmrw:明日"].map(x=>{const[k,l]=x.split(":");return `<button class="todaytgl ${DAYF===k?"on":""}" style="padding:7px 12px" onclick="DAYF='${k}';render()">${l}</button>`}).join("")}
+        </span>
+        <span class="btotal">${DAYF==="all"?"動きあり "+RES.filter(r=>resColumn(r)!=="ok").length+"件 / 全"+RES.length:(DAYF==="today"?"本日":"明日")+"のタスク "+RES.filter(r=>dayPass(r)).length+"件"}</span>
+      </div>
+      <div class="bcols">
+        ${BOARD_COLS.map(col=>{
+          const cards=RES.filter(r=>resColumns(r).includes(col.k)&&matchQ(r)&&dayPass(r))
+            .sort((a,b)=>((a.lend_date||"")+(a.lend_time||"")).localeCompare((b.lend_date||"")+(b.lend_time||"")));
+          const hot=cards.length>0;
+          return `<div class="bcol" style="background:${col.color}12;border:1.5px solid ${col.color}${hot?"88":"44"}">
+            <div class="bcol-h" style="border-top:4px solid ${col.color};background:${col.color}26;border-bottom:1.5px solid ${col.color}55;color:${col.color}">${col.label}${col.def?` <span onclick="event.stopPropagation();defPop('${col.label.replace(/'/g,"")}','${String(col.def).replace(/'/g,"")}')" style="cursor:pointer;display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;background:#ffffffcc;color:${col.color};font-size:11px;font-weight:800;border:1px solid ${col.color}66" title="定義を見る">i</span>`:""}<span class="bcol-n" style="background:${col.color}">${cards.length}</span></div>
+            <div class="bcol-body">${cards.length?cards.map(r=>cardHtml(r,col.k)).join(""):`<div class="bcol-empty">なし</div>`}</div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>
+    <div class="karte-pane" id="detail">
+      ${SEL?`<button class="karte-back" onclick="SEL=null;render()">← 一覧へ戻る</button>`+detailHtml():`<div class="empty">🃏 カードを選ぶと<br>ここにカルテを表示します</div>`}
+    </div>
+  </div>`;
+  document.body.classList.toggle("karte-open",!!SEL);
+}
+function fldJp(f){return {del_place:"お届け先",col_place:"回収先",lend_time:"お届け時間",return_time:"回収時間",option:"オプション",insurance:"補償",method:"受渡方法",cancel:"キャンセル",ready:"早め回収(返却準備完了)"}[f]||f}
+// 状況ボード：今この予約で「誰が何を求めているか」を1行で
+function activity(r){
+  const cs=csOf(r);
+  if(stReanswer(r))return {cls:"a-reans",t:"🔔 フォームで情報更新 — 要確認（迷子）"};
+  const reqs=cs.filter(c=>c.status==="requested");
+  const rdy=reqs.find(c=>c.field==="ready");
+  if(rdy){const m=String(rdy.new_value||"").match(/(\d{1,2}:\d{2})/);const tm=m?"（希望 "+m[1]+"〜）":"（スケジュール調整可能なら早めに回収）";
+    return {cls:"a-req",t:"🟢 返却準備完了・早め回収OK"+tm+(reqs.length>1?" 他"+(reqs.length-1)+"件":"")};}
+  if(reqs.length){const c=reqs[0];const kind=c.field==="cancel"?"キャンセル申請":fldJp(c.field)+"変更依頼";
+    return {cls:"a-req",t:"🟡 "+kind+"："+(c.new_value||"")+(reqs.length>1?" 他"+(reqs.length-1)+"件":"")};}
+  const ucs=cs.filter(c=>c.source==="customer"&&c.status==="applied");
+  if(ucs.length){const fs=[...new Set(ucs.map(c=>fldJp(c.field)))];return {cls:"a-chg",t:"🔴 お客様が変更："+fs.join("・")};}
+  if(stAbnormalConf(r)){const rs=[];const p=opPlaceOf(r);
+    const s=placeSources(r);const opD=String(p.del||"").trim(),opC=String(p.col||"").trim();
+    if(!isOfficial(r)&&!stInfoProvided(r)&&(opD||opC))rs.push("フォーム未回答なのに場所あり(出所不明)");
+    if(isOfficial(r)&&((s.needDel&&!opD)||(s.needCol&&!opC)))rs.push("HPなのに場所がない");
+    {const w=[];if(s.needDel&&s.op.delExists&&!s.op.del&&(s.form.del||s.resv.del))w.push("お届け");if(s.needCol&&s.op.colExists&&!s.op.col&&(s.form.col||s.resv.col))w.push("回収");if(w.length)rs.push("場所があるのにOPタスクに未反映("+w.join("・")+")");}
+    return {cls:"a-req",t:"⚠️ 異常値・要確認："+rs.join("／")};}
+  if(stMissing(r)){const p=opPlaceOf(r);const vt=String(r.visit_type||""),rtp=String(r.return_type||"");const m=[];
+    if(vt!=="来店"&&vt!=="PUB"&&vt!=="PUB来店"&&!p.del)m.push("お届け先");
+    if(!String(r.lend_time||"").trim())m.push("お届け時間");
+    if(rtp!=="返却"&&!p.col)m.push("回収先");
+    if(!String(r.return_time||"").trim())m.push("回収時間");
+    return {cls:"a-miss",t:"⚪ 未設定："+m.join("・")};}
+  if(stAck(r))return {cls:"a-ack",t:"✅ 確認済み"};
+  return null;
+}
+function liHtml(r){
+  const f=resFlag(r.id);const act=activity(r);
+  return `<div class="li ${f} ${SEL===r.id?"sel":""}" onclick="selectRes('${r.id}')">
+    <div class="clsbadge" style="background:${CLSC[r.vehicle]||'#64748b'}">${esc(r.vehicle||"?")}</div>
+    <div class="m">
+      <div class="nm">${esc(r.name||"—")} 様 <span class="otatag" style="background:${otaColor(r.ota)}">${esc(otaLabel(r.ota))}</span>${r.staff_note?`<span class="karteflag" title="${esc(r.staff_note)}">🗒</span>`:""}</div>
+      <div class="r2">🎫 ${esc(r.id)} ・ ${fmtD(r.lend_date)} ${esc(r.lend_time||"")}〜${fmtD(r.return_date)}</div>
+      ${act?`<div class="actline ${act.cls}">${esc(act.t)}</div>`:""}
+      ${r.staff_note?`<div class="kartepeek">🗒 ${esc(r.staff_note.split("\n").join(" / ").slice(0,40))}</div>`:""}
+    </div>
+  </div>`;
+}
+async function selectRes(id,silent){
+  SEL=id;VIEW="detail";SELTASKS=null;render();
+  // 食い違い検出用に tasks 取得
+  try{SELTASKS=await api("tasks?reservation_id=eq."+encodeURIComponent(id)+"&select=_id,place,changed_json");}catch(e){SELTASKS=[]}
+  render();
+  if(!silent){const el=document.getElementById("detail");if(el&&window.innerWidth<=820)el.scrollIntoView({behavior:"smooth"});}
+}
+function opDisp(t){let cj={};try{cj=JSON.parse(t.changed_json||"{}")}catch(e){}return cj._placeSource==="manual"?t.place:(cj._ssPlace||t.place||"")}
+function _cj(t){try{return JSON.parse(t.changed_json||"{}")}catch(e){return {}}}
+// フォーム再回答＝SS履歴で「前回値(非空)と異なる値に変わった」場合のみ迷子として出す（1回のみ=正常）
+function formReanswer(){
+  const ss=SS_MAP[SEL];if(!ss)return[];const r=RES.find(x=>x.id===SEL)||{id:SEL};const op=opPlaceOf(r);const out=[];
+  if(ss.prevDel)out.push({kind:"お届け先",field:"del_place",prevVal:ss.prevDel,prevAt:ssTimeMs(ss.prevDelTs),val:ss.del,formAt:ssTimeMs(ss.delTs),applied:!placeConflict(ss.del,op.del)});
+  if(ss.prevCol)out.push({kind:"回収先",field:"col_place",prevVal:ss.prevCol,prevAt:ssTimeMs(ss.prevColTs),val:ss.col,formAt:ssTimeMs(ss.colTs),applied:!placeConflict(ss.col,op.col)});
+  return out;
+}
+async function patchTaskCj(taskId,patchObj){
+  const t=(SELTASKS||[]).find(x=>x._id===taskId);if(!t)return;
+  const cj=_cj(t);Object.assign(cj,patchObj);
+  await api("tasks?_id=eq."+encodeURIComponent(taskId),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({changed_json:JSON.stringify(cj)})});
+}
+async function applyReanswer(taskId,field,val){
+  if(!needOp())return;
+  if(!sure("フォーム再回答の内容をこの予約に反映して"))return;
+  try{
+    await api("reservations?id=eq."+encodeURIComponent(SEL),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({[field]:val})});
+    await patchTaskCj(taskId,{_ssPlace:val,_placeSource:"manual",_ssAlert:""});
+    toast("反映しました");await loadAll(true);selectRes(SEL,true);
+  }catch(e){toast("反映失敗（ログイン要）")}
+}
+async function dismissReanswer(taskId){
+  if(!sure("この通知を確認済みにして"))return;
+  try{await patchTaskCj(taskId,{_ssAlert:""});toast("確認済みにしました");selectRes(SEL,true);}catch(e){toast("失敗")}
+}
+function mismatch(r){
+  if(!SELTASKS)return[];const out=[];
+  const d=SELTASKS.find(t=>t._id.slice(0,2)==="d-"),c=SELTASKS.find(t=>t._id.slice(0,2)==="c-");
+  if(r.del_place&&d&&opDisp(d)!==r.del_place)out.push({kind:"お届け先",resv:r.del_place,op:opDisp(d)});
+  if(r.col_place&&c&&opDisp(c)!==r.col_place)out.push({kind:"回収先",resv:r.col_place,op:opDisp(c)});
+  return out;
+}
+function resName(id){const r=RES.find(x=>x.id===id);return r?(r.name||"—"):"—"}
+// 変更表示：場所/時間は必ず 変更前→変更後（前が空なら「未設定」）。依頼系は new_value をそのまま。
+function cbHtml(c){
+  const pt=["del_place","col_place","lend_time","return_time"].includes(c.field);
+  if(pt)return `<div class="cb"><span class="ba">変更前</span> <s style="color:var(--sub)">${esc(c.old_value||"未設定")}</s>
+     <span class="arrow">→</span> <span class="ba">変更後</span> <b>${esc(c.new_value)}</b></div>`;
+  return `<div class="cb">${c.old_value?`<span style="color:var(--sub)">${esc(c.old_value)}</span> <span class="arrow">→</span> `:""}<b>${esc(c.new_value)}</b></div>`;
+}
+function globalChangesHtml(){
+  const all=Object.values(CHG).flat();
+  let list=all.filter(c=>CFILTER==="req"?c.status==="requested":CFILTER==="applied"?c.status==="applied":true);
+  list.sort((a,b)=>{const w=x=>x==="requested"?0:x==="applied"?1:2;
+    if(w(a.status)!==w(b.status))return w(a.status)-w(b.status);return (b.created_at||"").localeCompare(a.created_at||"")});
+  const rc=all.filter(c=>c.status==="requested").length;
+  return `<div class="dhd" style="background:linear-gradient(135deg,#0e7490,#0b5560)">
+    <div class="dnm">📋 変更・依頼一覧</div>
+    <div class="drid">顧客がマイページで行った変更・依頼を一覧で確認・承認できます</div>
+  </div>
+  <div class="dbody">
+    <div class="chips" style="border:0;padding:0 0 10px">
+      <div class="chip ${CFILTER==="req"?"on":""}" onclick="CFILTER='req';render()">要対応 <span class="n">${rc}</span></div>
+      <div class="chip ${CFILTER==="applied"?"on":""}" onclick="CFILTER='applied';render()">反映済(場所/時間)</div>
+      <div class="chip ${CFILTER==="all"?"on":""}" onclick="CFILTER='all';render()">すべて <span class="n">${all.length}</span></div>
+    </div>
+    ${list.length?list.map(c=>`<div class="chg-item ${c.field==="cancel"?"cancel":(c.status==="requested"?"req":(c.status==="applied"?"applied":""))}">
+      <div class="ci">${esc(FLD[c.field]||c.field)}
+        <span style="font-weight:600;color:var(--sub);font-size:11.5px">${esc(resName(c.reservation_id))}様</span>
+        <span class="rid" style="cursor:pointer;text-decoration:underline" onclick="selectRes('${c.reservation_id}')">${esc(c.reservation_id)}</span>
+        <span class="st ${c.status}">${{requested:"要対応",applied:"反映済",approved:"承認済",rejected:"却下"}[c.status]||c.status}</span></div>
+      ${cbHtml(c)}
+      ${c.note?`<div class="meta">📝 ${esc(c.note)}</div>`:""}
+      ${chgMeta(c)}
+      ${c.status==="requested"?`<div class="acts">
+        <button class="btn ok" onclick="decide(${c.id},'approved')">承認</button>
+        <button class="btn dang" onclick="decide(${c.id},'rejected')">却下</button>
+        <button class="btn ghost" onclick="selectRes('${c.reservation_id}')">予約を開く</button></div>`:""}
+    </div>`).join(""):`<div class="empty">${CFILTER==="req"?"要対応の変更依頼はありません ✅":"該当なし"}</div>`}
+  </div>`;
+}
+// 情報変更を「変更前 ⇄ 変更後」で並べて比較
+function changeCompare(r){
+  const cs=csOf(r).filter(c=>c.source==="customer"&&c.status==="applied");
+  if(!cs.length)return "";
+  return `<div class="cmpbox">
+    <div class="cmp-h">🔴 お客様が変更しました（変更前 ⇄ 変更後）</div>
+    <div class="cmp-tbl">
+      <div class="cmp-row cmp-head"><div>項目</div><div>変更前</div><div></div><div>変更後</div></div>
+      ${cs.map(c=>`<div class="cmp-row">
+        <div class="cmp-f">${esc(fldJp(c.field))}</div>
+        <div class="cmp-b">${esc(c.old_value||"未設定")}</div>
+        <div class="cmp-ar">→</div>
+        <div class="cmp-a">${esc(c.new_value||"")}</div>
+      </div>`).join("")}
+    </div>
+    <div style="font-size:11px;color:var(--sub);margin-top:6px">※OPシートには反映済みです。内容を確認したら押してください。</div>
+    <button class="btn ok" style="margin-top:6px" onclick="checkRes('${r.id}')">✅ 確認済みにする</button>
+  </div>`;
+}
+async function checkRes(id){
+  if(!needOp())return;
+  if(!sure("この予約を確認済みにして"))return;
+  const now=new Date().toISOString();
+  try{await api("reservations?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({admin_checked_at:now,admin_checked_by:OPERATOR})});
+    const r=RES.find(x=>x.id===id);if(r){r.admin_checked_at=now;r.admin_checked_by=OPERATOR;}
+    toast("確認済みにしました（確認済みBOXへ）");render();
+  }catch(e){toast("更新失敗（ログイン要）")}
+}
+async function uncheckRes(id){
+  if(!needOp())return;
+  if(!sure("未対応に戻して"))return;
+  try{await api("reservations?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({admin_checked_at:null})});
+    const r=RES.find(x=>x.id===id);if(r)r.admin_checked_at=null;
+    toast("未対応に戻しました");render();
+  }catch(e){toast("更新失敗（ログイン要）")}
+}
+function detailHtml(){
+  const r=RES.find(x=>x.id===SEL);if(!r)return `<div class="empty">予約が見つかりません</div>`;
+  const cs=(CHG[r.id]||[]);const lk=r.mypage_locked||{};
+  const mm=mismatch(r);
+  const opts=[];if(r.opt_c)opts.push("チャイルド×"+r.opt_c);if(r.opt_j)opts.push("ジュニア×"+r.opt_j);if(r.opt_b)opts.push("ベビー×"+r.opt_b);
+  const chgd=f=>lk[f]?"chg":"";
+  return `
+  <div class="dhd">
+    <button class="btn ghost backbtn" style="margin-bottom:8px" onclick="SEL=null;VIEW='changes';render()">← 一覧へ</button>
+    <div class="dnm">${esc(r.name||"—")} 様</div>
+    <div class="dbadges">
+      <div class="dbadge"><span class="dl">🎫 予約番号</span><span class="dv">${esc(r.id)}</span></div>
+      <div class="dbadge" style="background:${CLSC[r.vehicle]||'#64748b'};color:#fff;border:0"><span class="dl" style="color:rgba(255,255,255,.85)">🚗 クラス</span><span class="dv">${esc(r.vehicle)}（${esc(CLS[r.vehicle]||"")}）</span></div>
+      <div class="dbadge" style="background:${otaColor(r.ota)};color:#fff;border:0"><span class="dl" style="color:rgba(255,255,255,.85)">🌐 流入先</span><span class="dv">${esc(otaLabel(r.ota))}</span></div>
+    </div>
+    <div class="dst">${esc(r.status||"予約確定")}</div>
+  </div>
+  <div class="dbody">
+    ${(MISMATCH_MAP[r.id]||[]).map(d=>`<div class="reanswer mm">
+      <div class="ra-h">🔴 情報相違・${esc(d.kind)}</div>
+      <div class="dft">
+        <div class="dft-r${d.newer==="ss"?" nw":""}"><span class="dft-l">SS(フォーム)</span><span class="dft-t">${fmtT(d.ssAt)}${d.newer==="ss"?" 🆕":""}</span><span class="dft-v">${esc(d.ss||"(空)")}</span></div>
+        <div class="dft-r${d.newer==="op"?" nw":""}"><span class="dft-l">OP(${d.opSrc==="manual"?"手動":"SS反映"})</span><span class="dft-t">${fmtT(d.opAt)}${d.opExact?"":"≈概算"}${d.newer==="op"?" 🆕":""}</span><span class="dft-v">${esc(d.op||"(空)")}</span></div>
+      </div>
+      <div class="verdict ${d.newer==="?"?"unk":d.newer}">${d.newer==="op"?"🆕 OPが新しい"+(d.opExact?"":"（推定・OP時刻は概算）")+" → 後からの手動変更＝意図的かも。SSへ戻さない":d.newer==="ss"?"🆕 フォームが新しい → 客が後で変更＝SS採用が有力":"⚠️ 新旧不明 → 両方を確認"}<span class="vfoot">※最終判断は必ず人が（電話/LINEで確認してから確定）</span></div>
+    </div>`).join("")}
+    ${(stAbnormalConf(r)&&!stInfoProvided(r)&&(opPlaceOf(r).del||opPlaceOf(r).col))?`<div class="reanswer mm">
+      <div class="ra-h">⚠️ 異常値①：OTA・フォーム未回答なのに場所が入っています（出所不明）</div>
+      <div style="font-size:12.5px;padding:8px 10px;line-height:1.7">お届け先：<b>${esc(opPlaceOf(r).del||"—")}</b><br>回収先：<b>${esc(opPlaceOf(r).col||"—")}</b><br>
+        <span style="color:var(--sub);font-size:11.5px">${esc(otaLabel(r.ota))}予約で、お客様のフォーム回答が無いのに場所が入っています。出所（誰が入れたか）を下の「🕘変更履歴」やLINE/電話で確認してください。正しければ「✅確認済みにする」、誤りなら場所を修正。</span></div>
+    </div>`:""}
+    ${stAbnormalConf(r)?(RESV_CONF[r.id]||[]).map((f,fi)=>{const isTime=(f.field==="lend_time"||f.field==="return_time");const opv=isTime?f.op:("「"+esc(f.op)+"」"),rev=isTime?f.resv:("「"+esc(f.resv)+"」");return `<div class="reanswer mm">
+      <div class="ra-h">⚠️ 異常値②：予約情報 ≠ マイページ/OP・${esc(acFldJp(f.field))}</div>
+      <div style="font-size:12.5px;padding:8px 10px;line-height:1.65">予約情報＝<b>${rev}</b> ／ マイページ・OP＝<b style="color:#dc2626">${opv}</b>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn ok" style="font-size:12px" onclick="acResolve('${r.id}',${fi},'resv')">✅ ${opv}で統一</button>
+          <button class="btn ghost" style="font-size:12px" onclick="acResolve('${r.id}',${fi},'op')">${rev}で統一</button>
+        </div></div>
+    </div>`}).join(""):""}
+    ${Object.keys(AC_DONE).filter(k=>k.indexOf(r.id+"|")===0).map(k=>{const field=k.slice((r.id+"|").length);const d=AC_DONE[k];const isTime=(field==="lend_time"||field==="return_time");const val=isTime?esc(d.value):("「"+esc(d.value)+"」");return `<div class="reanswer">
+      <div class="ra-h">✅ 整合を統一済み・${esc(acFldJp(field))}</div>
+      <div style="font-size:12.5px;padding:8px 10px">${val} で統一しました（正常化）。<button class="btn ghost" style="font-size:11.5px;margin-left:8px" onclick="acUndo('${r.id}','${field}')">↩ 元に戻す</button></div>
+    </div>`}).join("")}
+    ${formReanswer().filter(fr=>fr.applied).map(fr=>`<div class="reanswer">
+      <div class="ra-h">🔔 フォーム再回答・${esc(fr.kind)}（お客様が変更）</div>
+      <div class="dft">
+        <div class="dft-r"><span class="dft-l">変更前</span><span class="dft-t">${fmtT(fr.prevAt)}</span><span class="dft-v old">${esc(fr.prevVal)}</span></div>
+        <div class="dft-r nw"><span class="dft-l">変更後</span><span class="dft-t">${fmtT(fr.formAt)} 🆕</span><span class="dft-v">${esc(fr.val)}</span></div>
+      </div>
+      <div class="okline">✅ OPに反映済み（値は一致）</div>
+      <div class="acts"><button class="btn ghost" onclick="checkRes('${r.id}')">✅ 確認済み</button></div>
+    </div>`).join("")}
+    ${changeCompare(r)}
+    ${mm.length?`<div class="warn"><b>⚠️ 場所の食い違い（予約正本 ⇄ OPシート）</b>
+      ${mm.map(m=>`<div class="mmrow"><div><div class="lab">${esc(m.kind)}・予約</div>${esc(m.resv)}</div>
+        <div><div class="lab">OPシート表示</div>${esc(m.op)||"（空）"}</div></div>`).join("")}
+      <div style="margin-top:6px;font-size:11px">※アプリで再読込しても不一致なら、OPシート側の値を確認してください。</div></div>`:""}
+
+    <div class="sec"><h3>予約内容 ${Object.keys(lk).length?'<span style="color:var(--gold)">● 顧客変更あり</span>':""}</h3>
+      <div class="grp"><div class="grp-h">📦 お届け</div>
+        <div class="kv"><div class="k">場所</div><div class="v ${chgd("del_place")}">${esc(opPlaceOf(r).del||"—（未設定）")}<button class="miniedit" onclick="staffEdit('del_place')">✏️編集</button></div></div>
+        <div class="kv"><div class="k">日付</div><div class="v">${fmtD(r.lend_date)||"—"}</div></div>
+        <div class="kv"><div class="k">時間</div><div class="v ${chgd("lend_time")}">${esc(r.lend_time||"—")}<button class="miniedit" onclick="staffEdit('lend_time')">✏️編集</button></div></div>
+      </div>
+      <div class="grp"><div class="grp-h">🔄 回収</div>
+        <div class="kv"><div class="k">場所</div><div class="v ${chgd("col_place")}">${esc(opPlaceOf(r).col||"—（未設定）")}<button class="miniedit" onclick="staffEdit('col_place')">✏️編集</button></div></div>
+        <div class="kv"><div class="k">日付</div><div class="v">${fmtD(r.return_date)||"—"}</div></div>
+        <div class="kv"><div class="k">時間</div><div class="v ${chgd("return_time")}">${esc(r.return_time||"—")}<button class="miniedit" onclick="staffEdit('return_time')">✏️編集</button></div></div>
+      </div>
+      <div class="kv"><div class="k">人数</div><div class="v">${esc(r.people||"—")}名</div></div>
+      <div class="kv"><div class="k">オプション</div><div class="v">${opts.length?esc(opts.join("・")):"なし"}</div></div>
+      <div class="kv"><div class="k">補償</div><div class="v">${esc(r.insurance||"—")}</div></div>
+    </div>
+
+    <div class="sec"><h3>🕘 変更履歴（どこから登録・編集したか）</h3>
+      ${srcHistoryHtml(r)}
+    </div>
+
+    <div class="sec"><h3>変更・依頼 履歴（${cs.length}）</h3>
+      ${cs.length?cs.map(chgHtml).join(""):`<div style="color:var(--sub);font-size:12.5px">変更・依頼はありません</div>`}
+    </div>
+
+    <div class="sec"><h3>マイページ</h3>
+      <div class="dactions">
+        <button class="btn line" onclick="openMy('${r.mypage_token}')">👁 顧客マイページを確認（閲覧のみ）</button>
+        <button class="btn ghost" onclick="copyMy('${r.mypage_token}')">🔗 顧客へ送るURLをコピー</button>
+      </div>
+    </div>
+    <div class="sec karte">
+      <h3>🗒 カルテ / スタッフメモ <span style="color:var(--sub);font-weight:600;text-transform:none">（LINE・電話で受けた依頼や特記事項をここに）</span></h3>
+      <div class="ktags">
+        ${["📵連絡取れない","🚬タバコ臭い","⚠️要注意","⭐常連/VIP","📞電話で依頼","💬LINEで依頼","🅿️駐車場所","🐶ペット"].map(t=>`<button onclick="addTag(${JSON.stringify(t)})">${esc(t)}</button>`).join("")}
+      </div>
+      <textarea id="knote" placeholder="この予約・お客様の記録（連絡状況・特記事項・受けた変更依頼の内容 など）">${esc(r.staff_note||"")}</textarea>
+      <button class="btn pri" style="margin-top:6px" onclick="saveNote('${r.id}')">💾 カルテを保存</button>
+    </div>
+  </div>`;
+}
+function srcBadge(src){const M={form:{t:"📝 フォーム",b:"#7c3aed"},mypage:{t:"📱 マイページ",b:"#0e7a6b"},staff:{t:"👤 担当",b:"#64748b"}};const x=M[src]||M.staff;return `<span style="display:inline-block;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:800;color:#fff;background:${x.b};white-space:nowrap">${x.t}</span>`}
+// 変更履歴（どこから）：フォーム(SS_MAP)＋マイページ/担当(mypage_changes)を時系列で。誰がどこから登録/編集したかのログ。
+function srcHistoryHtml(r){
+  const ev=[];
+  (CHG[r.id]||[]).forEach(c=>{ if(!fldJp(c.field))return; if(!["applied","requested","approved","rejected"].includes(c.status))return;
+    ev.push({ms:Date.parse(c.created_at)||0, src:c.source==="staff"?"staff":"mypage", field:c.field, val:c.new_value||"", status:c.status, actor:c.actor}); });
+  const ss=SS_MAP[r.id];
+  if(ss){const add=(field,val,ts)=>{if(val&&ts){const ms=ssTimeMs(ts);ev.push({ms:isNaN(ms)?0:ms, src:"form", field, val, status:"applied"});}};
+    add("del_place",ss.del,ss.delTs); add("del_place",ss.prevDel,ss.prevDelTs);
+    add("col_place",ss.col,ss.colTs); add("col_place",ss.prevCol,ss.prevColTs);}
+  ev.sort((a,b)=>b.ms-a.ms);
+  if(!ev.length)return `<div style="color:var(--sub);font-size:12.5px">変更・登録の履歴はありません</div>`;
+  return ev.map(e=>{
+    const verb=e.status==="requested"?"の変更を依頼":e.status==="approved"?"の変更を承認・反映":e.status==="rejected"?"の変更を見送り":"を登録/編集";
+    const who=e.src==="staff"?(e.actor?esc(String(e.actor).split("@")[0]):"担当"):"お客様";
+    const dt=e.ms?fmtT(e.ms):"";
+    return `<div style="display:flex;gap:8px;align-items:baseline;padding:7px 2px;border-top:1px solid #eef2f7;font-size:12.5px">
+      <span style="color:#64748b;font-size:10.5px;font-weight:700;min-width:74px">${dt}</span>
+      <span>${srcBadge(e.src)}</span>
+      <span style="flex:1;line-height:1.5">${who}が ${esc(fldJp(e.field))}「${esc(e.val)}」${verb}</span>
+    </div>`;
+  }).join("");
+}
+function chgHtml(c){
+  const cls=c.field==="cancel"?"cancel":(c.status==="requested"?"req":(c.status==="applied"?"applied":c.status==="acknowledged"?"applied":""));
+  const stLbl={requested:"要対応",applied:"情報変更(未確認)",approved:"承認済",rejected:"却下",acknowledged:"確認済み"}[c.status]||c.status;
+  const isUserApplied=c.source==="customer"&&c.status==="applied";
+  return `<div class="chg-item ${cls}">
+    <div class="ci">${esc(FLD[c.field]||c.field)}
+      <span class="st ${c.status}">${stLbl}</span></div>
+    ${cbHtml(c)}
+    ${c.note?`<div class="meta">📝 ${esc(c.note)}</div>`:""}
+    ${chgMeta(c)}
+    ${c.status==="requested"?`<div class="acts">
+      <button class="btn ok" onclick="decide(${c.id},'approved')">承認</button>
+      <button class="btn dang" onclick="decide(${c.id},'rejected')">却下</button>
+      <span style="flex:1;font-size:10.5px;color:var(--sub);align-self:center">※承認後アプリで内容を反映${c.field==="cancel"?"/キャンセル確定":""}</span>
+    </div>`:isUserApplied?`<div class="acts">
+      <button class="btn ok" onclick="ackChange(${c.id})">✅ 確認済みにする</button>
+      <span style="flex:1;font-size:10.5px;color:var(--sub);align-self:center">お客様の変更を確認したら押す（①→②）</span>
+    </div>`:""}
+  </div>`;
+}
+async function ackChange(id){
+  if(!needOp())return;
+  if(!sure("この情報変更を確認済みにして"))return;
+  try{await api("keydrop_mypage_changes?id=eq."+id,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({status:"acknowledged",actor:OPERATOR})});
+    const c=Object.values(CHG).flat().find(x=>x.id===id);if(c){c.status="acknowledged";c.actor=OPERATOR;}
+    toast("確認済みにしました");render();
+  }catch(e){toast("更新失敗（ログイン要）")}
+}
+function setF(f){FILTER=f;render()}
+async function decide(id,status){
+  if(!needOp())return;
+  const c0=Object.values(CHG).flat().find(x=>x.id===id);
+  const applyNote=(c0&&["insurance","option","cancel"].includes(c0.field))
+    ? (status==="approved"?(c0.field==="cancel"?"\n※承認するとキャンセル確定（配車解除）＋顧客へLINE通知します":"\n※承認すると内容を予約に反映＋顧客へLINE通知します"):"\n※却下すると顧客へLINE通知します")
+    : "\n※顧客へLINE通知します";
+  if(!sure((status==="approved"?"この依頼を承認しますか？":"この依頼を却下しますか？")+applyNote))return;
+  const st=tok(); if(!st){toast("ログインが必要です");return}
+  try{
+    const r=await fetch(FN+"/keydrop-mypage",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"decide",staff_token:st,change_id:id,decision:status})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok){toast("処理失敗："+(j.error||r.status));return}
+    const c=Object.values(CHG).flat().find(x=>x.id===id);if(c){c.status=status;c.actor=OPERATOR;}
+    toast(status==="approved"?"承認・反映＋通知しました":"却下＋通知しました");render();
+  }catch(e){toast("処理失敗（通信）")}
+}
+/* ---- スタッフがマイページ情報(場所/時間)を編集＝マニュアル受付 ---- */
+function staffEdit(field){
+  if(!needOp())return;
+  const r=RES.find(x=>x.id===SEL);if(!r)return;
+  const isTime=field==="lend_time"||field==="return_time";
+  const label={del_place:"お届け先",col_place:"回収先",lend_time:"お届け時間",return_time:"回収時間"}[field];
+  const cur={del_place:r.del_place,col_place:r.col_place,lend_time:r.lend_time,return_time:r.return_time}[field]||"";
+  const input=isTime
+    ?`<select id="sev">${["",...TIMES].map(t=>`<option ${t===cur?"selected":""}>${t||"（未設定）"}</option>`).join("")}</select>`
+    :`<input id="sev" value="${esc(cur)}" placeholder="住所・ホテル名・場所">`;
+  $("#modal").innerHTML=`<h3>${label}を変更</h3>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:10px">📞 電話・LINEで受けた変更をここで反映（担当：<b>${esc(OPERATOR)}</b>）</div>
+    <div class="field"><label style="display:block;font-size:11px;color:var(--sub);margin-bottom:4px">現在：${esc(cur||"未設定")}</label>${input}</div>
+    <div class="acts" style="margin-top:12px">
+      <button class="btn pri" onclick="staffEditSave('${field}')">この内容で変更</button>
+      <button class="btn ghost" onclick="closeM()">やめる</button></div>`;
+  $("#scrim").classList.add("show");
+}
+async function staffEditSave(field){
+  const r=RES.find(x=>x.id===SEL);if(!r)return;
+  const v=(document.getElementById("sev").value||"").trim();
+  const label={del_place:"お届け先",col_place:"回収先",lend_time:"お届け時間",return_time:"回収時間"}[field];
+  const cur={del_place:r.del_place,col_place:r.col_place,lend_time:r.lend_time,return_time:r.return_time}[field]||"";
+  if(v===cur){toast("変更がありません");return}
+  if(!sure(label+"を「"+(v||"未設定")+"」に変更して"))return;
+  try{
+    const rp={};
+    if(field==="del_place")rp.del_place=v; if(field==="col_place")rp.col_place=v;
+    if(field==="lend_time"){rp.lend_time=v;rp.del_time=v;} if(field==="return_time"){rp.return_time=v;rp.col_time=v;}
+    await api("reservations?id=eq."+encodeURIComponent(SEL),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify(rp)});
+    const isCol=field==="col_place"||field==="return_time";
+    const task=(SELTASKS||[]).find(t=>String(t._id).slice(0,2)===(isCol?"c-":"d-"));
+    if(task){
+      if(field.indexOf("place")>=0)await patchTaskCj(task._id,{_ssPlace:v,_placeSource:"manual",_ssAlert:""});
+      else{await api("tasks?_id=eq."+encodeURIComponent(task._id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({time:v})});await patchTaskCj(task._id,{_ssTime:v});}
+    }
+    await api("keydrop_mypage_changes",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({reservation_id:SEL,store:"spk",field,old_value:cur,new_value:v,source:"staff",actor:OPERATOR,status:"applied",note:"管理画面で変更"})});
+    toast("変更しました");closeM();await loadAll(true);selectRes(SEL,true);
+  }catch(e){toast("変更失敗（ログイン要）")}
+}
+function addTag(t){const ta=document.getElementById("knote");if(!ta)return;
+  const cur=ta.value.trim();ta.value=(cur?cur+"\n":"")+t+" ";ta.focus()}
+async function saveNote(id){
+  if(!needOp())return;
+  const ta=document.getElementById("knote");if(!ta)return;
+  const note=ta.value.trim();
+  if(!sure("カルテを保存して"))return;
+  try{await api("reservations?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},
+    body:JSON.stringify({staff_note:note,staff_note_at:new Date().toISOString(),staff_note_by:OPERATOR})});
+    const r=RES.find(x=>x.id===id);if(r)r.staff_note=note;
+    toast("カルテを保存しました");render();
+  }catch(e){toast("保存失敗（ログイン要）")}
+}
+function openMy(t){window.open(MYURL+t+"&ro=1&v="+Date.now(),"_blank")}  /* ro=1=閲覧専用（スタッフが顧客情報を編集できないように）*/
+function copyMy(t){navigator.clipboard.writeText(MYURL+t).then(()=>toast("URLをコピーしました"),()=>toast("コピー失敗"))}
+
+function openCfg(){
+  const sw=(k,ic,label,sub)=>`<div class="cfgrow">
+    <div class="cl"><span style="font-size:15px">${ic}</span> ${label}
+      <span class="swstate ${CFG[k]?"on":"off"}">${CFG[k]?"ON 送信中":"OFF 停止中"}</span>
+      ${sub?`<small>${sub}</small>`:""}</div>
+    <div class="sw ${CFG[k]?"on":""}" onclick="CFG.${k}=!CFG.${k};openCfg()"></div></div>`;
+  const anyOn=CFG.damage_enabled||CFG.track_enabled||CFG.thanks_enabled;
+  $("#modal").innerHTML=`<h3>⚙️ 自動送信トリガー設定</h3>
+    <div class="cfghelp">お客様の <b>LINE</b> へ<b>自動でメッセージ／URL</b>を送る条件です。
+      <b>ON＝自動送信する</b>／<b>OFF＝送らない</b>。変更したら最後に「保存」を押してください。</div>
+    <div class="cfgstat ${anyOn?"on":"off"}">${anyOn?"🟢 現在：一部の自動送信がONです（お客様に送信されます）":"⛔ 現在：すべてOFF（自動送信は停止中）"}</div>
+
+    ${sw("damage_enabled","🩹","車両状態チェックの自動送信","ご出発前に「車の傷チェックURL」をLINEで自動送信します。")}
+    <div class="cfgrow" style="padding-left:8px"><div class="cl" style="font-size:12px;color:var(--sub)">└ いつ送る？　出発の
+      <input class="inp" type="number" value="${CFG.lead_min||30}" onchange="CFG.lead_min=this.value" style="width:64px"> 分前に自動送信</div></div>
+
+    ${sw("track_enabled","🛰","位置追跡の自動送信","スタッフがお届け／回収に出発した時、「現在地の追跡URL」を自動送信します。")}
+
+    ${sw("thanks_enabled","🙏","御礼メッセージの自動送信","ご返却の翌朝、お礼のメッセージを自動送信します。")}
+
+    <div class="cfgdiv">— テスト用 —</div>
+    ${sw("test_mode","🧪","テストモード（本番停止）","ONの間は<b>実際のお客様には送らず</b>、下の「テスト宛先」だけに送ります。動作確認用。本番運用時はOFF。")}
+    <div class="cfgrow" style="padding-left:8px"><div class="cl" style="font-size:12px;color:var(--sub)">└ テスト宛先（自分のLINE userId）<br>
+      <input class="inp wide" value="${esc(CFG.test_user_id||"")}" onchange="CFG.test_user_id=this.value" placeholder="U..." style="margin-top:4px"></div></div>
+
+    <div class="acts" style="margin-top:16px">
+      <button class="btn pri" onclick="saveCfg()">💾 この設定を保存</button>
+      <button class="btn ghost" onclick="closeM()">閉じる</button></div>
+    <div style="font-size:11px;color:var(--sub);margin-top:10px">※保存すると即反映され、次回の対象予約から自動送信の挙動が変わります。<br>※現在は混乱防止のため全OFF推奨。本番開始の準備ができたらONにしてください。</div>`;
+  $("#scrim").classList.add("show");
+}
+/* ===== 最新の履歴（誰が・何を・いつ／日単位）===== */
+function hDateA(iso){if(!iso)return"";const d=new Date(iso);if(isNaN(d))return"";const j=new Date(d.getTime()+9*3600*1000);return(j.getUTCMonth()+1)+"/"+j.getUTCDate();}
+function histLineA(c,name){
+  const FL={del_place:"お届け場所",col_place:"回収場所",lend_time:"お届け時間",return_time:"回収時間",option:"オプション",insurance:"補償",method:"受渡方法",cancel:"キャンセル"};
+  const L=FL[c.field]; if(!L)return null;
+  if(!["applied","requested","approved","rejected"].includes(c.status))return null;
+  const nm=(name||"お客様")+"様", actor=(c.actor?String(c.actor).split("@")[0]:"担当");
+  const val=String(c.value!=null?c.value:(c.new_value||"")), isPlace=(c.field==="del_place"||c.field==="col_place"), src=c.source||"customer_mypage";
+  const P={requested:{t:"確認中",c:"#b45309",b:"#fef3c7"},approved:{t:"反映済",c:"#0e7a3b",b:"#dcfce7"},rejected:{t:"見送り",c:"#64748b",b:"#f1f5f9"}};
+  let text="",pill=null;
+  if(c.status==="applied"){
+    const who=src==="customer_form"?`${nm}がフォームで`:(src==="staff"?`${actor}が`:`${nm}がマイページで`);
+    const suf=src==="customer_form"?"にしました":"に変更しました";
+    if(c.field==="cancel")text=`${who}キャンセルしました`;
+    else if(isPlace)text=`${who}${L}を「${val}」${suf}`;
+    else text=`${who}${L}を ${val} ${suf}`;
+  }else if(c.status==="requested"){text=c.field==="cancel"?`${nm}がキャンセルを申請しました`:`${nm}が${L}の変更を依頼しました`;pill=P.requested;}
+  else if(c.status==="approved"){text=c.field==="cancel"?`${actor}が${nm}のキャンセルを承認しました`:`${actor}が${nm}の${L}変更を承認・反映しました`;pill=P.approved;}
+  else if(c.status==="rejected"){text=c.field==="cancel"?`${actor}が${nm}のキャンセル申請を見送りました`:`${actor}が${nm}の${L}変更を見送りました`;pill=P.rejected;}
+  return {date:hDateA(c.at||c.created_at),text:esc(text),pill:pill?pill.t:null,pc:pill?pill.c:"",pb:pill?pill.b:""};
+}
+// 相対時間（◯分前）
+function relTime(iso){if(!iso)return"";const ms=Date.parse(iso);if(isNaN(ms))return"";let s=Math.floor((Date.now()-ms)/1000);if(s<60)return"たった今";if(s<3600)return Math.floor(s/60)+"分前";if(s<86400)return Math.floor(s/3600)+"時間前";return Math.floor(s/86400)+"日前"}
+// 最近の動き（マイページ/管理の変更・依頼を新しい順）＝ヘッダー下ティッカー
+function moveBar(){
+  const verb={applied:"を変更",requested:"を依頼",approved:"を承認・反映",rejected:"を見送り",acknowledged:"を確認"};
+  const items=[];
+  Object.entries(CHG).forEach(([rid,arr])=>{const r=RES.find(x=>x.id===rid);if(!r)return;arr.forEach(c=>{if(!verb[c.status])return;items.push({rid,name:r.name,field:c.field,status:c.status,source:c.source,at:c.created_at})})});
+  items.sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
+  const top=items.slice(0,10);
+  if(!top.length)return `<div class="movebar"><span class="mb-lbl">🛰 最近の動き</span><span class="mb-empty">まだ動きはありません</span></div>`;
+  const chips=top.map(x=>{const who=x.source==="staff"?"担当":"お客様";const fld=x.field==="cancel"?"キャンセル":x.field==="ready"?"早め回収":fldJp(x.field);return `<span class="mb-chip" onclick="selectRes('${x.rid}')"><b>${esc(x.name)}様</b> ${who}が${esc(fld)}${verb[x.status]} <i>${relTime(x.at)}</i></span>`}).join("");
+  return `<div class="movebar has"><span class="mb-lbl">🛰 最近の動き ${top.length}</span><div class="mb-scroll">${chips}</div></div>`;
+}
+function openHistory(){
+  const nameOf=id=>{const r=RES.find(x=>x.id===id);return r?r.name:""};
+  const items=[];
+  Object.values(CHG).flat().forEach(c=>items.push({field:c.field,value:c.new_value,at:c.created_at,source:c.source==="staff"?"staff":"customer_mypage",status:c.status,actor:c.actor,rid:c.reservation_id}));
+  // OPタスク由来（フォーム回答・担当編集の場所）＝確定時刻が正確なものだけ。マイページ即時分(customer)はCHGと重複するので除外。
+  Object.entries(PLACE_MAP).forEach(([rid,p])=>{
+    const ev=(place,at,srcp,exact,field)=>{if(place&&at&&exact&&srcp!=="customer")items.push({field,value:place,at,source:srcp==="manual"?"staff":"customer_form",status:"applied",rid});};
+    ev(p.del,p.delAt,p.delSrc,p.delExact,"del_place"); ev(p.col,p.colAt,p.colSrc,p.colExact,"col_place");
+  });
+  items.sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
+  const lines=items.slice(0,120).map(c=>histLineA(c,nameOf(c.rid))).filter(Boolean).slice(0,80);
+  $("#modal").style.maxWidth="640px";
+  $("#modal").innerHTML=`<h3>🕘 最新の履歴</h3>
+    <div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">お客様・担当がマイページで行った変更／依頼の履歴（新しい順・最大60件）</div>
+    <div style="max-height:70vh;overflow:auto">${lines.length?lines.map(h=>`<div style="display:flex;gap:8px;align-items:baseline;padding:7px 2px;border-top:1px solid #eef2f7;font-size:12.8px">
+      <span style="color:#64748b;font-size:11px;font-weight:700;min-width:30px">${h.date}</span>
+      <span style="flex:1;line-height:1.5">${h.text}</span>
+      ${h.pill?`<span style="padding:1px 8px;border-radius:999px;font-size:10.5px;font-weight:700;color:${h.pc};background:${h.pb}">${h.pill}</span>`:""}</div>`).join(""):`<div class="empty">履歴はまだありません</div>`}</div>
+    <div class="acts" style="margin-top:12px"><button class="btn ghost" onclick="closeM()">閉じる</button></div>`;
+  $("#scrim").classList.add("show");
+}
+/* ===== 🛠 対応センター：アラート→確認→対応→正常化 を1画面で導く ===== */
+let AC_DONE={};
+function acFldJp(f){return {del_place:"お届け場所",col_place:"回収場所",lend_time:"お届け時間",return_time:"回収時間",insurance:"補償",opt_c:"チャイルドシート",opt_j:"ジュニアシート",opt_b:"ベビーシート"}[f]||f}
+// 整合の相違をカルテ(詳細)から統一（予約情報↔OP どちらの値で揃えるか）。押す前に確認・後で元に戻せる。
+async function acResolve(id,fi,target){
+  const st=tok(); if(!st){toast("ログインが必要");return}
+  const fs=RESV_CONF[id]||[]; const it=fs[fi]; if(!it)return;
+  const isTime=(it.field==="lend_time"||it.field==="return_time");
+  const value=(target==="resv")?it.op:it.resv, from=(target==="resv")?it.resv:it.op;
+  const q=isTime?value:("「"+value+"」"), qf=isTime?from:("「"+from+"」");
+  if(!sure(`${acFldJp(it.field)}を ${q} に統一（${target==="resv"?"予約情報":"マイページ/OP"}の ${qf} → ${q}）。`))return;
+  try{
+    const r=await fetch(FN+"/keydrop-mypage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"resolve",staff_token:st,reservation_id:id,field:it.field,value,target})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.ok){AC_DONE[id+"|"+it.field]={target,from,value};toast("統一しました（正常化）");await loadAll(true);}
+    else toast("失敗："+(j.error||r.status));
+  }catch(e){toast("通信エラー")}
+}
+async function acUndo(id,field){
+  const st=tok(); if(!st)return;
+  const d=AC_DONE[id+"|"+field]; if(!d)return;
+  const isTime=(field==="lend_time"||field==="return_time");
+  const q=isTime?d.from:("「"+d.from+"」");
+  if(!sure(`元に戻す（${acFldJp(field)}を ${q} に戻す）。`))return;
+  try{
+    const r=await fetch(FN+"/keydrop-mypage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"resolve",staff_token:st,reservation_id:id,field,value:d.from,target:d.target})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.ok){delete AC_DONE[id+"|"+field];toast("元に戻しました");await loadAll(true);}
+    else toast("失敗："+(j.error||r.status));
+  }catch(e){toast("通信エラー")}
+}
+/* ===== 📣 通知（マイページURL自動送信）タイミング・テンプレ・トリガー一覧＋ON/OFF ===== */
+const NOTIFY_ROWS=[
+  {ic:"①",name:"初動（LINE ID取得後）",trig:"お客様がフォーム回答→LINE ID取得された予約に、まだ未送信なら送る",tpl:"ご予約ありがとうございます。専用マイページで日時・場所の確認/変更ができます👇（日英併記）＋URL"},
+  {ic:"②",name:"場所未設定リマインド（貸出3日前）",trig:"貸出3日前・OP解決の場所が空 の予約のみ",tpl:"お届け／回収の場所が未設定です。マイページからご登録ください👇 ＋URL"},
+  {ic:"③",name:"前日",trig:"貸出日の前日",tpl:"明日がご利用日です。日時・お届け場所をご確認ください👇 ＋URL"},
+  {ic:"④",name:"返却3時間前",trig:"返却日時の約3時間前（15分毎cronで検知）",tpl:"まもなくご返却のお時間です。回収場所・時間をご確認ください👇 ＋URL"},
+  {ic:"⑤",name:"リクエスト承認/却下時",trig:"スタッフが変更依頼を承認/却下した瞬間（自動・実装済）",tpl:"ご依頼を承り反映しました／今回はお受けできません。＋URL"},
+];
+async function openNotify(){
+  $("#modal").style.maxWidth="720px";
+  const on=!!CFG.mypage_notify_enabled, tm=!!CFG.test_mode;
+  const rows=NOTIFY_ROWS.map(r=>`<div style="border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;margin-bottom:7px">
+    <div style="font-weight:800;font-size:13px">${r.ic} ${esc(r.name)}</div>
+    <div style="font-size:11.5px;color:#334155;margin-top:3px"><b>トリガー：</b>${esc(r.trig)}</div>
+    <div style="font-size:11.5px;color:#64748b;margin-top:2px"><b>テンプレ：</b>${esc(r.tpl)}</div>
+  </div>`).join("");
+  $("#modal").innerHTML=`<h3>📣 マイページ通知（自動送信）</h3>
+    <div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">各通知＝<b>固定テンプレ文＋お客様専用マイページURL</b>を公式LINEへ自動送信。LINE未連携は安全にスキップ。</div>
+    <div style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;background:${on?(tm?'#fff7ed':'#f0fdf4'):'#f1f5f9'};border:1px solid ${on?(tm?'#fed7aa':'#bbf7d0'):'#e2e8f0'};margin-bottom:10px">
+      <div style="font-size:20px">${on?(tm?'🧪':'🟢'):'⛔'}</div>
+      <div style="flex:1;font-size:12.5px">状態：<b>${on?(tm?'テスト送信中（テスト宛先のみ）':'本番ON（お客様に送信）'):'OFF（送信停止）'}</b><br>
+        <span style="color:var(--sub);font-size:11px">test_mode=${tm?'ON':'OFF'} / テスト宛先=${esc(CFG.test_user_id||'未設定')}</span></div>
+      <button class="btn ${on?'dang':'ok'}" onclick="toggleNotify()">${on?'OFFにする':'ONにする'}</button>
+    </div>
+    <div style="max-height:56vh;overflow:auto">${rows}</div>
+    <div style="font-size:11px;color:var(--sub);margin-top:8px">⚠️ 本番送信の前に：①<b>@SNS Auto を #sapporo_user_action に招待</b> ②まず<b>test_mode=ON＋自分のuserID</b>で検証→問題なければ本番ON。<br>タイミング/テンプレの調整は Edge Function <code>mypage-notify</code> で可能。15分毎cronで自動実行。</div>
+    <div class="acts" style="margin-top:10px"><button class="btn ghost" onclick="openCfg()">⚙️ test_mode/宛先の設定へ</button><button class="btn ghost" onclick="closeM()">閉じる</button></div>`;
+  $("#scrim").classList.add("show");
+}
+async function toggleNotify(){
+  if(!tok()){toast("ログインが必要です");return}
+  const next=!CFG.mypage_notify_enabled;
+  if(next&&!CFG.test_mode){if(!sure("本番ONにします（お客様に実際に送信されます）。テスト未実施なら先にtest_modeで確認を。"))return;}
+  try{await api("spk_line_config?id=eq.1",{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({mypage_notify_enabled:next})});
+    CFG.mypage_notify_enabled=next;toast(next?"通知をONにしました":"通知をOFFにしました");openNotify();
+  }catch(e){toast("保存失敗（ログイン要）")}
+}
+// ===== 📲 マイページ利用状況（送信→開封→操作 のファネル。アクティブ/スルーが分かる）=====
+function fmtDT(s){ if(!s)return"-"; const d=new Date(s); if(isNaN(d))return"-"; const p=n=>("0"+n).slice(-2); return p(d.getMonth()+1)+"/"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); }
+function daysSince(s){const d=new Date(s);if(isNaN(d))return 0;return (Date.now()-d.getTime())/86400000;}
+function usageStat(r){
+  const id=r.id, v=VIEWS[id], sent=SENDS[id], reach=LINE_SET.has(id);
+  const acted=(CHG[id]||[]).some(c=>c.source==="customer");
+  if(v)return {k:"active",chip:acted?"🟢 アクティブ・操作あり":"🟢 アクティブ",c:"#0e7a3b",b:"#dcfce7",acted};
+  if(sent&&sent.status==="sent"){
+    // 送信後2日以上たっても未開封＝スルー、それ未満＝送信済(未開封・様子見)
+    if(daysSince(sent.at)>=2)return {k:"through",chip:"🟡 スルー（2日以上未開封）",c:"#b45309",b:"#fef3c7"};
+    return {k:"sent",chip:"🔵 送信済（未開封）",c:"#0284c7",b:"#e0f2fe"};
+  }
+  if(reach)return {k:"unsent",chip:"⚪ 未送信（LINE連携済）",c:"#475569",b:"#e2e8f0"};
+  return {k:"noline",chip:"⚫ LINE未連携",c:"#64748b",b:"#f1f5f9"};
+}
+function openUsage(){
+  const rows=RES.map(r=>({r,u:usageStat(r)}));
+  const cnt={active:0,sent:0,through:0,unsent:0,noline:0}; rows.forEach(x=>cnt[x.u.k]++);
+  const reachN=rows.filter(x=>x.u.k!=="noline").length;
+  const sentN=rows.filter(x=>SENDS[x.r.id]&&SENDS[x.r.id].status==="sent").length;
+  // 本日 新規に初回マイページURLを送った件数（sent_atが本日=JST）
+  const isToday=s=>{if(!s)return false;const d=new Date(s);if(isNaN(d))return false;return (d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2))===today();};
+  const todayNewN=rows.filter(x=>SENDS[x.r.id]&&SENDS[x.r.id].status==="sent"&&isToday(SENDS[x.r.id].at)).length;
+  const openN=cnt.active;
+  const issuedN=RES.filter(r=>r.mypage_token).length;   // マイページ発行済み（token付与）
+  const noTok=RES.filter(r=>!r.mypage_token);
+  const rate=(a,b)=>b>0?Math.round(a/b*100)+"%":"–";
+  const stat=(n,l,c)=>`<div style="flex:1;min-width:74px;background:${c}12;border:1px solid ${c}44;border-radius:10px;padding:8px 6px;text-align:center"><div style="font-size:20px;font-weight:800;color:${c}">${n}</div><div style="font-size:10.5px;color:#475569;font-weight:700">${l}</div></div>`;
+  const fchip=(k,l)=>`<button onclick="UFILTER='${k}';openUsage()" style="padding:5px 11px;border-radius:999px;border:1px solid ${UFILTER===k?"#0F1F45":"#cbd5e1"};background:${UFILTER===k?"#0F1F45":"#fff"};color:${UFILTER===k?"#fff":"#475569"};font-weight:700;font-size:12px;cursor:pointer">${l}</button>`;
+  let list=rows.filter(x=>UFILTER==="all"||x.u.k===UFILTER);
+  list.sort((a,b)=>{const o={active:0,sent:1,through:2,unsent:3,noline:4};return (o[a.u.k]-o[b.u.k])||((a.r.lend_date||"").localeCompare(b.r.lend_date||""));});
+  const row=x=>{const r=x.r,u=x.u,v=VIEWS[r.id],sent=SENDS[r.id],acted=(CHG[r.id]||[]).some(c=>c.source==="customer");
+    return `<div onclick="closeM();selectRes('${r.id}')" style="display:flex;gap:8px;align-items:center;padding:8px 4px;border-top:1px solid #eef2f7;font-size:12.5px;cursor:pointer">
+      <div style="flex:1;min-width:0"><b>${esc(r.name||"")}</b>様 <span class="otatag" style="background:${otaColor(r.ota)}">${esc(otaLabel(r.ota))}</span> <span style="color:#94a3b8;font-size:11px">${esc(r.id)}</span><br>
+        <span style="color:#64748b;font-size:11px">利用 ${esc(r.lend_date||"")}〜${esc(r.return_date||"")}</span></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;align-items:center;min-width:0">
+        <span style="font-size:10.5px;color:${r.mypage_token?"#0e7a3b":"#dc2626"}" title="マイページ発行(固有URL)">${r.mypage_token?"🪪発行済":"🪪未発行"}</span>
+        <span style="font-size:10.5px;color:${LINE_SET.has(r.id)?"#0e7a3b":"#cbd5e1"}">${LINE_SET.has(r.id)?"LINE連携":"LINE無"}</span>
+        <span style="font-size:10.5px;color:${sent&&sent.status==="sent"?"#334155":"#cbd5e1"}">${sent&&sent.status==="sent"?"送信"+fmtDT(sent.at):"未送信"}</span>
+        <span style="font-size:10.5px;color:${v?"#0e7a3b":"#cbd5e1"}">${v?"開封"+v.count+"回・"+fmtDT(v.last):"未開封"}</span>
+        ${acted?`<span style="font-size:10.5px;color:#7c3aed">✍️操作</span>`:""}
+        <span style="padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:800;color:${u.c};background:${u.b};white-space:nowrap">${u.chip}</span>
+      </div></div>`;};
+  $("#modal").style.maxWidth="720px";
+  $("#modal").innerHTML=`<h3>📲 マイページ 利用状況</h3>
+    <div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">現在〜未来の予約${RES.length}件。LINEでURL送信→開封→操作 のファネル。<b>🔵送信済=送った直後（未開封）</b>／<b>🟢アクティブ=開封済</b>／<b>🟡スルー=送信後2日以上たっても未開封</b>。</div>
+    <div style="margin-bottom:10px;padding:10px 12px;border-radius:10px;background:${noTok.length?'#fef2f2':'#f0fdf4'};border:1.5px solid ${noTok.length?'#fecaca':'#bbf7d0'}">
+      <div style="font-weight:800;font-size:13.5px;color:${noTok.length?'#b91c1c':'#0e7a3b'}">🪪 マイページ発行：${issuedN}/${RES.length}件（${rate(issuedN,RES.length)}）${noTok.length?'':' ✓ 全予約者に付与済み'}</div>
+      ${noTok.length
+        ?`<div style="font-size:11.5px;color:#b91c1c;margin-top:5px">未発行 ${noTok.length}件：${noTok.slice(0,6).map(r=>esc(r.id)).join("、")}${noTok.length>6?' 他':''} <button onclick="issueTokens()" style="margin-left:6px;padding:3px 12px;border-radius:8px;border:0;background:#b91c1c;color:#fff;font-weight:800;font-size:11.5px;cursor:pointer">今すぐ発行</button></div>`
+        :`<div style="font-size:11px;color:#475569;margin-top:2px">全お客様に固有マイページURLが用意されています（新規予約にもDB既定で自動付与）。</div>`}
+      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed ${noTok.length?'#fecaca':'#bbf7d0'};font-size:13px;font-weight:800;color:#0284c7">📤 本日の新規送信（初回マイページURL）：${todayNewN}件</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+      ${stat(cnt.active,"🟢 アクティブ","#0e9f50")}${stat(cnt.sent,"🔵 送信済(未開封)","#0284c7")}${stat(cnt.through,"🟡 スルー","#d97706")}${stat(cnt.unsent,"⚪ 未送信","#64748b")}${stat(cnt.noline,"⚫ LINE未連携","#94a3b8")}</div>
+    <div style="font-size:11.5px;color:#475569;margin-bottom:10px;text-align:center">LINE連携率 <b>${rate(reachN,RES.length)}</b>（${reachN}/${RES.length}） ／ 送信済 <b>${sentN}</b> ／ 開封率 <b>${rate(openN,sentN)}</b>（開封${openN}/送信${sentN}）</div>
+    <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+      ${fchip("all","すべて "+RES.length)}${fchip("active","🟢 アクティブ "+cnt.active)}${fchip("sent","🔵 送信済 "+cnt.sent)}${fchip("through","🟡 スルー "+cnt.through)}${fchip("unsent","⚪ 未送信 "+cnt.unsent)}${fchip("noline","⚫ LINE未連携 "+cnt.noline)}</div>
+    <div style="max-height:60vh;overflow:auto">${list.length?list.map(row).join(""):`<div class="empty">該当なし</div>`}</div>
+    <div class="acts" style="margin-top:12px"><button class="btn ghost" onclick="closeM()">閉じる</button></div>`;
+  $("#scrim").classList.add("show");
+}
+// 未発行の予約に固有マイページtokenを発行（通常はDB既定で自動付与＝ほぼ不要。念のための手動発行）
+async function issueTokens(){
+  const miss=RES.filter(r=>!r.mypage_token);
+  if(!miss.length){toast("全件発行済みです");return}
+  if(!sure(miss.length+"件にマイページを発行しますか？"))return;
+  let ok=0;
+  for(const r of miss){
+    const tok=(crypto&&crypto.randomUUID)?crypto.randomUUID():("t"+Date.now()+Math.round(Math.random()*1e6));
+    try{await api("reservations?id=eq."+encodeURIComponent(r.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({mypage_token:tok})});r.mypage_token=tok;ok++;}catch(e){}
+  }
+  toast(ok+"件にマイページを発行しました");openUsage();
+}
+function closeM(){$("#scrim").classList.remove("show");$("#modal").style.maxWidth=""}
+$("#scrim").addEventListener("click",e=>{if(e.target.id==="scrim")closeM()});
+
+/* ===== マイページ 仕様＝使い方マニュアル（ユーザー側／スタッフ側）===== */
+let MANTAB="user";
+function openManual(){$("#modal").style.maxWidth="760px";renderManual();$("#scrim").classList.add("show")}
+function setManTab(t){MANTAB=t;renderManual()}
+function renderManual(){
+  const tab=(k,l)=>`<button onclick="setManTab('${k}')" style="flex:1;padding:9px 6px;border:0;border-radius:9px;font-weight:800;font-size:13px;cursor:pointer;${MANTAB===k?"background:#0F1F45;color:#fff":"background:#eef2f7;color:#475569"}">${l}</button>`;
+  const sec=(t,body)=>`<div style="margin:14px 0 4px;font-weight:800;font-size:14px;color:#0F1F45;border-left:4px solid #FABE00;padding-left:8px">${t}</div><div style="font-size:12.8px;line-height:1.75;color:#334155">${body}</div>`;
+  const chip=(t,c)=>`<span style="display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;background:${c};color:#fff">${t}</span>`;
+  const USER=`
+    ${sec("マイページとは",`全予約に発行される<b>お客様専用URL</b>（LINEで個別送信・非公開）。予約内容の確認と、場所・時間・オプション・補償・キャンセルの変更/依頼を1画面で行えます。表示は常に<b>最新の予約情報</b>（OPシートと連動）。`)}
+    ${sec("お客様が見られるもの",`・予約内容（車両クラス／利用日時／人数／<b>オプション</b>／<b>補償</b>／ステータス）<br>・お届け先・回収先の場所と時間<br>・車両状態チェック（傷）＝<b>出発日 AM8:00 から</b>閲覧可<br>・当日のリアルタイム追跡（スタッフ移動中）<br>・<b>🕘 最近の履歴</b>（誰が・何を・いつ変更/依頼したか）`)}
+    ${sec("お客様ができる変更と受付ルール",`
+      <table style="width:100%;border-collapse:collapse;margin-top:4px">
+      <tr style="background:#f1f5f9"><th style="text-align:left;padding:6px;font-size:11.5px">項目</th><th style="text-align:left;padding:6px;font-size:11.5px">受付ルール</th><th style="text-align:left;padding:6px;font-size:11.5px">反映</th></tr>
+      <tr><td style="padding:6px;border-top:1px solid #e5e9f0"><b>お届け</b>の場所・時間</td><td style="padding:6px;border-top:1px solid #e5e9f0"><b>24時間前まで</b>：その場で変更／<b>24時間以内</b>：承認制</td><td style="padding:6px;border-top:1px solid #e5e9f0">即時 or ${chip("承認後","#b45309")}</td></tr>
+      <tr><td style="padding:6px;border-top:1px solid #e5e9f0"><b>回収</b>の場所・時間</td><td style="padding:6px;border-top:1px solid #e5e9f0"><b>2時間前まで</b>：その場で変更／以降は公式LINE</td><td style="padding:6px;border-top:1px solid #e5e9f0">即時</td></tr>
+      <tr><td style="padding:6px;border-top:1px solid #e5e9f0">オプション（チャイルド/ジュニアシート）</td><td style="padding:6px;border-top:1px solid #e5e9f0">依頼制（在庫確認のうえ確定）／<b>貸出前日19:00まで</b></td><td style="padding:6px;border-top:1px solid #e5e9f0">${chip("承認後","#b45309")}</td></tr>
+      <tr><td style="padding:6px;border-top:1px solid #e5e9f0">補償プラン</td><td style="padding:6px;border-top:1px solid #e5e9f0">依頼制：<b>貸出前まで</b>（貸出完了後は変更不可）</td><td style="padding:6px;border-top:1px solid #e5e9f0">${chip("承認後","#b45309")}</td></tr>
+      <tr><td style="padding:6px;border-top:1px solid #e5e9f0">キャンセル</td><td style="padding:6px;border-top:1px solid #e5e9f0">申請制（規定に同意→申請）</td><td style="padding:6px;border-top:1px solid #e5e9f0">${chip("承認後","#b45309")}</td></tr>
+      <tr><td style="padding:6px;border-top:1px solid #e5e9f0">🟢 早め回収（返却準備完了）</td><td style="padding:6px;border-top:1px solid #e5e9f0"><b>回収希望時間の目安を選んで</b>お知らせ（確約ではない）</td><td style="padding:6px;border-top:1px solid #e5e9f0">${chip("承認後","#b45309")}</td></tr>
+      </table>`)}
+    ${sec("依頼したあとの流れ",`①お客様が依頼 → ②「🕘最近の履歴」に<b>確認中</b>で表示 → ③スタッフが承認/却下 → ④<b>処理後にLINEで自動通知</b>＋履歴が<b>反映済</b>／<b>見送り</b>に変わる。`)}`;
+  const STAFF=`
+    ${sec("この画面の役割",`お客様のマイページの変更・依頼を<b>確認して処理する</b>ための管理コンソール。基本は<b>見るだけ・ログ</b>（場所はSSパトロールで自動最新化）。操作は<b>承認/却下</b>と<b>確認済みチェック</b>のみ。`)}
+    ${sec("📝 フォーム済/未 バッジ と ⚠️異常値BOX",`各カードにバッジ：<b>🏠HP予約</b>（場所は予約時入力・フォーム不要）／<b>📝フォーム済</b>／<b>フォーム未</b>。<br><b>⚠️ 異常値・要確認BOX</b>＝システム/導線の問題を抱えた予約が集まる：<br>・<b>OTA予約でフォーム未回答なのに場所が入っている</b>（出所不明＝データ書き込みミス等の疑い）<br>・<b>予約情報 ≠ マイページ/OP の相違</b>（フォーム未・非HP）<br>→ カルテで出所を🕘変更履歴/LINE・電話で確認し、正しければ「✅確認済み」、差は「統一」で揃える。<br>※HPは予約時に場所が入るのでフォーム未でも正常（対象外）。フォーム済の差も正常（対象外）。<br>・<b>SS（フォーム）≠OP</b> は別で「🔴要確認・修正」列（フォーム回答とOPの食い違い＝手動対応の確認）。`)}
+    ${sec("ボードの6カテゴリ（この画面でやること＝情報整理と確認）",`どの予約の情報整理が必要かを見てアクション。<br>
+      ①${chip("情報相違(SS≠OP)","#dc2626")} フォーム(SS)とOPが不一致（主にスタッフ手動入力）＝確認・修正<br>
+      ②${chip("異常値・要確認","#e11d48")} システム/導線の問題＝確認。<b>場所がどこか(フォーム/予約情報)にあるのにOPに反映されていない</b>／フォーム未回答なのに場所あり(出所不明)／予約情報≠OP／フォーム≠予約情報。※「場所があるのに場所情報なしに落ちる」類は全部ここで拾う<br>
+      ③${chip("変更リクエスト","#b45309")} お客様がマイページでオプション/補償の変更を依頼＝承認/却下＋関連TODO<br>
+      ④${chip("位置情報更新あり","#7c3aed")} フォームで場所が更新された（迷子）＝確認<br>
+      ⑤${chip("情報変更","#b91c1c")} お客様がマイページで場所/時間を変更（DEL24h前/COL2h前）＝確認＋OPタスク調整<br>
+      ⑥${chip("場所情報なし","#64748b")} <b>どのソース(フォーム/予約情報/OP)にも場所が無い</b>＝真の未回答・未確定ユーザー。LINE ID有りなら場所催促を自動化可（📣通知②）<br>
+      <span style="font-size:11px;color:#64748b">※どこかに場所があるのに⑥に入ることはありません（その状態は②異常値で拾う）。お客様がフォーム（エルメ受付/SS）で回答済みなら場所ありとして扱い、マイページにも表示されます（予約番号完全一致で判定）。</span>`)}
+    ${sec("⑦ 想定エラーと対応（多くは公式LINEで解消）",`・マイページが開けない（デバイス/通信）／・リクエストしたが回答がない・ステータス変わらない／・時間・場所を変更したが反映されない／・LINEを使わない・共有したくない。<br>基本は公式LINEでのご案内で解消。運用は<b>LINEより管理画面中心</b>（マイページ利用率に連動）：情報相違/異常値/変更リクエスト/情報変更(場所時間)/場所なし のチェックと処理。`)}
+    ${sec("🕘 変更履歴（誰が・どこから・何を）",`ヘッダー「🕘 履歴」で全予約の変更/依頼を新しい順に一覧。各予約のカルテにも<b>「🕘 変更履歴（どこから登録・編集したか）」</b>があり、<b>📝フォーム／📱マイページ／👤担当</b>のバッジで<b>どこから</b>変更したかが分かります。`)}
+    ${sec("📲 マイページ利用状況（アクティブ/スルー）",`ヘッダー「📲 利用状況」で、LINEでURLを送った後<b>お客様がマイページを開いたか</b>を一覧化。<b>🟢アクティブ</b>=開封済（操作の有無も表示）／<b>🟡スルー</b>=送信済だが未開封／<b>⚪未送信</b>=LINE連携済だが未送信／<b>⚫LINE未連携</b>。上部にLINE連携率・開封率のファネル。行タップでカルテへ。「未開封」の連携済ユーザーには📣通知で開封を促せます。`)}
+    ${sec("🔔 変更依頼の承認/却下（重要）",`「🔔 変更依頼」を開く → 各依頼に<b>[承認]</b>/<b>[却下]</b>。<br>・<b>承認</b>＝<b>実際に反映</b>されます：補償→予約に反映／オプション→予約＋OPシート／お届け場所・時間(24h以内)→反映／キャンセル→<b>予約キャンセル＋配車解除</b>。同時に<b>お客様へLINE通知</b>。<br>・<b>却下</b>＝反映せず<b>お客様へLINE通知</b>（見送り）。<br><b>※承認/却下は取り消せません</b>。特にキャンセル承認は配車も解除されるので内容を確認のうえ実行。`)}
+    ${sec("ステータスの意味",`${chip("確認中","#b45309")}=お客様が依頼・未処理／${chip("承認・反映済","#0e7a3b")}=承認して反映済み／${chip("見送り","#64748b")}=却下／情報変更(applied)=お客様が即時変更した記録。`)}
+    ${sec("💳 差額決済（追加オプション/補償）",`オプション・補償の変更を<b>承認</b>すると、差額を自動計算します。<br>・<b>追加（プラス）</b>＝Square決済リンクを自動発行し、お客様へLINE送信。入金は自動検知で反映。<br>・<b>減額（マイナス）</b>＝<b>返金は手動</b>（Slackに返金額が出るのでSquareで払い戻し）。<br>OPシートの決済バッジは<b>${chip("💳通常決済","#16a34a")}（OTA/JLN）</b>と<b><span style="background:#fef9c3;color:#a16207;font-weight:700;padding:1px 6px;border-radius:4px">追加未/追加済</span>（追加分）</b>を<b>分けて表示</b>＝どちらが未決済か一目で分かり督促できます。`)}
+    ${sec("カルテ / スタッフメモ",`電話・LINEで受けた依頼や特記事項を予約ごとに記録。タグ（要注意/常連/連絡取れない 等）も付けられます。`)}
+    ${sec("⚙️ トリガー設定",`お客様LINEへの自動送信（傷チェック／位置追跡／御礼）のON/OFFとタイミング。テストモードあり。`)}
+    ${sec("注意点",`・場所表示は<b>OPシートと同じ</b>（タスク経由で解決）。この画面から手動で場所を書き換える運用はしない（自動最新化のため）。<br>・SS(フォーム)はGoogle側で最大約5分キャッシュ→お客様変更の反映に数分の遅れ。`)}`;
+  $("#modal").innerHTML=`<h3>📖 マイページ 使い方マニュアル</h3>
+    <div style="display:flex;gap:6px;margin-bottom:6px">${tab("user","👤 お客様側の動き")}${tab("staff","🧑‍💼 スタッフ側（この管理画面）")}</div>
+    <div style="max-height:66vh;overflow:auto;padding-right:4px">${MANTAB==="user"?USER:STAFF}</div>
+    <div class="acts" style="margin-top:14px"><button class="btn ghost" onclick="closeM()">閉じる</button></div>
+    <div style="font-size:11px;color:var(--sub);margin-top:8px">HANDYMAN 札幌 マイページ仕様（2026-07-05 現在）</div>`;
+}
+async function saveCfg(){
+  try{await api("spk_line_config?id=eq.1",{method:"PATCH",headers:{Prefer:"return=minimal"},
+    body:JSON.stringify({damage_enabled:!!CFG.damage_enabled,track_enabled:!!CFG.track_enabled,thanks_enabled:!!CFG.thanks_enabled,
+      test_mode:!!CFG.test_mode,test_user_id:CFG.test_user_id||"",lead_min:parseInt(CFG.lead_min)||30,mypage_notify_enabled:!!CFG.mypage_notify_enabled})});
+    toast("設定を保存しました");closeM();
+  }catch(e){toast("保存失敗（ログイン要）")}
+}
+
+// 30秒ごと自動更新（選択は維持）
+setInterval(()=>{if(tok())loadAll(true).catch(()=>{})},30000);
+
+function showLogin(msg){
+  // 古い/無効トークンを掃除してからログイン画面
+  try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.indexOf("sb-")===0&&k.indexOf("auth-token")>=0)localStorage.removeItem(k);}}catch(e){}
+  $("#app").innerHTML=`<div class="login"><div class="logo" style="font-size:22px;color:#0F1F45;margin-bottom:4px">HAND<b style="color:#0e7a6b">Y</b>MAN</div>
+    <div style="font-weight:800;margin-bottom:4px">マイページ管理 ログイン</div>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:14px">本体APPと同じアカウントでログイン</div>
+    <input id="le" type="email" placeholder="メールアドレス" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="email">
+    <input id="lp" type="password" placeholder="パスワード" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn pri" style="width:100%;padding:13px" onclick="doLogin()">ログイン</button>
+    <div id="lerr" style="color:#b91c1c;font-size:12px;margin-top:8px">${msg?esc(msg):""}</div></div>`;
+}
+// 起動
+if(!tok())showLogin();
+else loadAll().catch(e=>{const m=String(e.message||"");
+  if(m.indexOf("401")>=0||m.toLowerCase().indexOf("jwt")>=0||m.toLowerCase().indexOf("token")>=0)showLogin("ログインの有効期限が切れました。再度ログインしてください。");
+  else $("#app").innerHTML=`<div class="empty">読み込み失敗：${esc(m)}<br><button class="btn ghost" onclick="location.reload()" style="margin-top:10px">再読込</button> <button class="btn pri" onclick="showLogin()" style="margin-top:10px">ログイン画面へ</button></div>`;});
+async function doLogin(){
+  const email=($("#le").value||"").trim().toLowerCase(),password=($("#lp").value||"").trim();
+  if(!email||!password){$("#lerr").textContent="メールとパスワードを入力してください";return}
+  $("#lerr").textContent="ログイン中…";
+  try{const r=await fetch(SB+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json"},body:JSON.stringify({email,password})});
+    const d=await r.json();
+    if(!r.ok||!d.access_token){$("#lerr").textContent="ログイン失敗："+(d.error_description||d.msg||d.error||"メール/パスワードをご確認ください");return}
+    localStorage.setItem("sb-ckrxttbnawkclshczsia-auth-token",JSON.stringify(d));
+    $("#app").innerHTML='<div class="spin"></div>';
+    loadAll().catch(e=>{const m=String(e.message||e);if(m.indexOf("401")>=0)showLogin("再ログインしてください");else showErr("読込: "+m)});
+  }catch(e){$("#lerr").textContent="通信エラー："+String(e.message||e)}
+}
+</script>
+</body>
+</html>

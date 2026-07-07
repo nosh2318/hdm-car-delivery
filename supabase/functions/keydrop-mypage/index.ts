@@ -443,6 +443,42 @@ Deno.serve(async (req) => {
     return json({ ok: true, requested: true, kind: map[reqType] }, 200, origin);
   }
 
+  // ── decide: KEYDROP管理画面からの承認/却下（keydrop_mypage_changes の requested を処理）──
+  if (action === "decide") {
+    const staffToken = String(p.staff_token || "").trim();
+    const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
+    if (!who.ok) return json({ error: "unauthorized" }, 401, origin);
+    const actor = "staff:" + (((await who.json().catch(() => ({}))) as any)?.email || "kd-admin");
+    const changeId = p.change_id;
+    const decision = String(p.decision || "").trim(); // approved | rejected
+    if (!changeId || !["approved", "rejected"].includes(decision)) return json({ error: "パラメータ不正" }, 400, origin);
+    const cRows = await sbGet("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}&select=id,reservation_id,store,field,new_value,note,payload,status&limit=1`);
+    const c = cRows[0];
+    if (!c) return json({ error: "対象が見つかりません" }, 404, origin);
+    if (c.status !== "requested") return json({ error: "既に処理済みです" }, 409, origin);
+    const M2 = mkStore(c.store === "nha" ? "nha" : "spk");
+    const rid2 = String(c.reservation_id);
+    const pl = (c.payload && typeof c.payload === "object") ? c.payload : {};
+    if (decision === "approved") {
+      // 実反映：補償／オプション（場所時間は即時反映済・readyは印のみ・cancelは既存keydrop返金フロー）
+      if (c.field === "insurance" && pl.insurance) {
+        await sbPatch(M2.resv, `id=eq.${encodeURIComponent(rid2)}`, { insurance: String(pl.insurance) });
+        const its = await sbGet(M2.tasks, `reservation_id=eq.${encodeURIComponent(rid2)}&deleted=not.is.true&select=_id`).catch(() => []);
+        for (const t of its) await sbPatch(M2.tasks, `_id=eq.${encodeURIComponent(String(t._id))}`, { insurance: String(pl.insurance) });
+      } else if (c.field === "option") {
+        const rp: Record<string, unknown> = {};
+        if (pl.opt_b != null) rp.opt_b = Number(pl.opt_b) || 0;
+        if (pl.opt_c != null) rp.opt_c = Number(pl.opt_c) || 0;
+        if (pl.opt_j != null) rp.opt_j = Number(pl.opt_j) || 0;
+        if (Object.keys(rp).length) await sbPatch(M2.resv, `id=eq.${encodeURIComponent(rid2)}`, rp);
+      }
+    }
+    await sbPatch("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: decision, actor });
+    const rr = (await sbGet(M2.resv, `id=eq.${encodeURIComponent(rid2)}&select=name`).catch(() => []))[0] || {};
+    await notifySlack(`${decision === "approved" ? "✅ *承認*" : "🚫 *却下*"} [KEYDROP] ${rr.name || ""}様 ${rid2}\n依頼: ${c.note || c.field}（${c.new_value || ""}）\n担当: ${actor}`, M2.slack);
+    return json({ ok: true, decided: decision }, 200, origin);
+  }
+
   // ── 変更リクエストの承認（SPK現場が押す）→ reservations/tasks に反映＋change_reqクリア＋顧客へ反映メール ──
   if (action === "approve_change") {
     const pay0 = (await sbGet("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}&select=change_req`).catch(() => []))[0];
