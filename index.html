@@ -791,6 +791,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
         .geolocate-btn:hover { background: #f5f5f5; }
         .geolocate-btn:active { transform: scale(0.9); }
+        /* 地図全画面で“前に戻れない”を防ぐ常時表示の戻るチップ（左上・検索バーに被らない位置） */
+        .kd-mapback {
+            position: absolute; top: 10px; left: 10px; z-index: 1002;
+            height: 36px; padding: 0 13px 0 10px; border-radius: 999px;
+            background: rgba(255,255,255,.96); border: 1px solid #e5e5e5;
+            box-shadow: 0 2px 8px rgba(0,0,0,.2); cursor: pointer;
+            display: flex; align-items: center; gap: 3px;
+            font-size: 13px; font-weight: 800; color: #1a1a1a; line-height: 1;
+        }
+        .kd-mapback:hover { background: #f5f5f5; }
+        .kd-mapback:active { transform: scale(0.94); }
+        /* 検索バーは戻るチップの右に寄せて重なりを回避（戻るチップ付き地図のみ） */
+        .kd-hasback .map-search-bar { left: 96px; }
         /* 選択した住所をマップ下部に常時表示（スクロール不要・ぱっと見で届け先が分かる） */
         .kd-pin-overlay {
             position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 1000;
@@ -1419,6 +1432,33 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         document.body.appendChild(o);
     }
     window.kdBackToAreaSelect = kdBackToAreaSelect;
+    // ── 統一「戻る」：今の画面/ステップから“1つ前”へ確実に戻す（地図全画面で詰まらない導線）──
+    function kdFlowBack() {
+        try {
+            var s = (state && state.screen) || 'top';
+            // 予約フロー：payment→terms→form→options→confirm→step_vehicle→(お届け地図)→エリア選択
+            if (s === 'payment') { state.screen = 'terms'; return render(); }
+            if (s === 'terms')   { state.screen = 'form'; return render(); }
+            if (s === 'form')    { state.screen = 'options'; return render(); }
+            if (s === 'options') { state.screen = 'confirm'; return render(); }
+            if (s === 'confirm') { state.screen = 'step_vehicle'; return render(); }
+            if (s === 'step_vehicle') { state.screen = 'top'; return render(); }
+            // 地図画面：回収ステップなら お届け(地図) へ、お届けステップなら エリア選択 へ
+            if (s === 'top' || s === 'step_location') {
+                if (state.locStep === 'collection') {
+                    state.locStep = 'delivery';
+                    state.collectionConfirmed = false;
+                    if (typeof renderLocPanel === 'function') renderLocPanel();
+                    return;
+                }
+                return kdBackToAreaSelect();
+            }
+            if (s === 'mypage') { return kdBackToAreaSelect(); }
+            // 既定：エリア選択に戻す
+            return kdBackToAreaSelect();
+        } catch (e) { try { return kdBackToAreaSelect(); } catch (e2) {} }
+    }
+    window.kdFlowBack = kdFlowBack;
     async function kdShowAreaGate() {
         const qs = new URLSearchParams(location.search);
         if (window.__kdAppCtx) return; // area/mypage/paid あり＝アプリ文脈→ゲート不要
@@ -2863,8 +2903,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <div id="carStrip">${renderCarStrip()}</div>
                     <div id="dateStrip">${renderStepDateStrip()}</div>
                     <div id="delAddrPanel">${renderDeliveryAddrPanel()}</div>
-                    <div id="mapWrap" class="kd-mapwrap">
+                    <div id="mapWrap" class="kd-mapwrap kd-hasback">
                         <div id="map" style="height:100%;"></div>
+                        <button class="kd-mapback" onclick="kdFlowBack()" title="${t('back')}">‹ ${t('back')}</button>
                         <div class="map-search-bar">
                             <div class="map-search-icon">🔍</div>
                             <input type="text" id="addressSearch" class="map-search-input"
@@ -2957,8 +2998,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div style="display:flex;flex:1;min-height:calc(100vh - 60px);">
                 <!-- Left: Map -->
                 <div style="flex:1;position:relative;">
-                    <div id="mapWrap" style="position:relative;height:100%;">
+                    <div id="mapWrap" class="kd-hasback" style="position:relative;height:100%;">
                         <div id="map" style="height:100%;"></div>
+                        <button class="kd-mapback" onclick="kdFlowBack()" title="${t('back')}">‹ ${t('back')}</button>
                         <div class="map-search-bar">
                             <div class="map-search-icon">🔍</div>
                             <input type="text" id="addressSearch" class="map-search-input"
@@ -3066,8 +3108,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div class="location-layout">
                 <!-- Left: Map -->
                 <div class="location-map-col">
-                    <div id="mapWrap" style="position:relative; height:100%; min-height:400px;">
+                    <div id="mapWrap" class="kd-hasback" style="position:relative; height:100%; min-height:400px;">
                         <div id="map" style="height:100%;"></div>
+                        <button class="kd-mapback" onclick="kdFlowBack()" title="${t('back')}">‹ ${t('back')}</button>
                         <div class="map-search-bar">
                             <div class="map-search-icon">🔍</div>
                             <input type="text" id="addressSearch" class="map-search-input"
