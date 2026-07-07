@@ -238,7 +238,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1";
-const ADMIN_VER="kd1.5 KEYDROP専用(失効時は再ログイン)";
+const ADMIN_VER="kd1.6 KEYDROP専用(店舗別直URL対応)";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=s=>document.querySelector(s);
 function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
@@ -246,7 +246,9 @@ window.onerror=function(msg,src,ln){showErr(msg+" @"+ln);return false};
 window.addEventListener("unhandledrejection",e=>showErr("Promise: "+(e.reason&&e.reason.message||e.reason)));
 const MYURL="https://keydrop.jp/mypage.html?t=";
 // ▼ 店舗切替（札幌reservations / 那覇nha_reservations・KEYDROP予約は KD-=札幌 / KDN-=那覇）
-let STORE=localStorage.getItem("kd_admin_store")||"spk";
+// 店舗の初期値：①URL ?store=nha/spk（各店の直URL・最優先）②前回選択(localStorage) ③既定spk
+let STORE=(new URLSearchParams(location.search).get("store")||"").toLowerCase();
+STORE=(STORE==="nha"||STORE==="spk")?STORE:(localStorage.getItem("kd_admin_store")||"spk");
 function RTBL(){return STORE==="nha"?"nha_reservations":"reservations";}
 function RORD(){return STORE==="nha"?"start_date":"lend_date";}
 function RRET(){return STORE==="nha"?"end_date":"return_date";}
