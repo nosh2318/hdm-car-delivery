@@ -1,0 +1,7 @@
+file '/Users/noritakaoshita/hdm-car-delivery/promo/keydrop_call_car_20s_d/work/01-open.mp4'
+file '/Users/noritakaoshita/hdm-car-delivery/promo/keydrop_call_car_20s_d/work/02-road.mp4'
+file '/Users/noritakaoshita/hdm-car-delivery/promo/keydrop_call_car_20s_d/work/03-split.mp4'
+file '/Users/noritakaoshita/hdm-car-delivery/promo/keydrop_call_car_20s_d/work/04-handoff.mp4'
+file '/Users/noritakaoshita/hdm-car-delivery/promo/keydrop_call_car_20s_d/work/05-hokkaido.mp4'
+file '/Users/noritakaoshita/hdm-car-delivery/promo/keydrop_call_car_20s_d/work/06-area.mp4'
+file '/Users/noritakaoshita/hdm-car-delivery/promo/keydrop_call_car_20s_d/work/07-end.mp4'

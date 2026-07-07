@@ -474,8 +474,12 @@ Deno.serve(async (req) => {
       }
     }
     await sbPatch("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: decision, actor });
-    const rr = (await sbGet(M2.resv, `id=eq.${encodeURIComponent(rid2)}&select=name`).catch(() => []))[0] || {};
-    await notifySlack(`${decision === "approved" ? "✅ *承認*" : "🚫 *却下*"} [KEYDROP] ${rr.name || ""}様 ${rid2}\n依頼: ${c.note || c.field}（${c.new_value || ""}）\n担当: ${actor}`, M2.slack);
+    const rr = (await sbGet(M2.resv, `id=eq.${encodeURIComponent(rid2)}&select=name,mail`).catch(() => []))[0] || {};
+    // 顧客へメール通知（keydrop_notifications→keydrop-send-mailがResendで送信・マイページURL入り）
+    if (rr.mail && String(rr.mail).includes("@")) {
+      await sbPost("keydrop_notifications", { reservation_id: rid2, store: M2.store, to_email: rr.mail, type: "mypage_decision", sent: false, payload: { name: rr.name || "", decision, label: c.note || c.field, detail: c.new_value || "" } }).catch(() => {});
+    }
+    await notifySlack(`${decision === "approved" ? "✅ *承認*" : "🚫 *却下*"} [KEYDROP] ${rr.name || ""}様 ${rid2}\n依頼: ${c.note || c.field}（${c.new_value || ""}）\n担当: ${actor}\n→ 顧客へメール通知`, M2.slack);
     return json({ ok: true, decided: decision }, 200, origin);
   }
 

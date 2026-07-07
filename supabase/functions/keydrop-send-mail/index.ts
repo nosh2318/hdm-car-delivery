@@ -101,6 +101,28 @@ function withFooter(m: { subject: string; body: string }) {
   m.body += `\n──────────\n※このメールは送信専用です。ご返信いただいてもお答えできません。\n　お問い合わせは公式LINE（${LINE_ID}）／TEL ${TEL}（9:00〜19:00）へ。\n`;
   return m;
 }
+function buildPlaceReminder(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "";
+  return {
+    subject: `【KEY-DROP】お届け場所のご確認（3日前）｜予約番号: ${id}`,
+    text: `${p.name || "お客様"} 様\n\nいつもありがとうございます。3日後にお届け予定です。\nスムーズなお引き渡しのため、お届け／回収の「場所・時間」に間違いがないかご確認ください。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\nお届け　　：${dt(p.lend_date, p.lend_time)}\n　　場所　：${p.del_place || "（未確定）"}\nご返却　　：${dt(p.return_date, p.return_time)}\n　　場所　：${p.col_place || p.del_place || "（未確定）"}\n━━━━━━━━━━━━━━━━━━━━\n\n■ 場所・時間の変更・入力\nマイページから直接ご変更・ご入力いただけます（ログイン不要）。\n${mypageLink(n)}\n※お届けの時間・場所の変更は出発48時間前まで／回収は返却2時間前まで（運営の承認後に反映）。\n※場所が「未確定」の方は、お手数ですがマイページからご入力をお願いいたします。\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n` };
+}
+function buildReturnReminder(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "";
+  return {
+    subject: `【KEY-DROP】ご返却のご案内（前日）｜予約番号: ${id}`,
+    text: `${p.name || "お客様"} 様\n\nいつもありがとうございます。明日がご返却予定日です。\n回収の時間・場所をご確認ください。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\nご返却　　：${dt(p.return_date, p.return_time)}\n　回収場所：${p.col_place || p.del_place || "（ご指定の場所）"}\n━━━━━━━━━━━━━━━━━━━━\n\n■ 当日について\nご指定の時間・場所にスタッフが回収にあがります。安全に停車・受け渡しができる場所でお待ちください。\n・早めのご返却が可能な場合は、マイページの「返却準備ができた」からお知らせください。\n・回収時間・場所の変更は返却2時間前までマイページから承ります（運営の承認後に反映）。\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n緊急連絡先：${TEL} ／ 営業時間 9:00〜19:00\n\nCARデリバリー KEY-DROP\n` };
+}
+function buildDecision(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "";
+  const approved = p.decision === "approved";
+  const label = p.label || "ご依頼", detail = p.detail ? `（${p.detail}）` : "";
+  return {
+    subject: approved ? `【KEY-DROP】ご依頼を承認しました｜予約番号: ${id}` : `【KEY-DROP】ご依頼について｜予約番号: ${id}`,
+    text: approved
+      ? `${p.name || "お客様"} 様\n\nマイページからいただいた${label}${detail}を確認し、承認・反映いたしました。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\n内容　　　：${label}${detail}\n状態　　　：✅ 承認・反映済み\n━━━━━━━━━━━━━━━━━━━━\n\n■ ご確認\nマイページで最新の予約内容をご確認いただけます（ログイン不要）。\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n`
+      : `${p.name || "お客様"} 様\n\nマイページからいただいた${label}${detail}を確認いたしました。\n誠に恐れ入りますが、今回は下記のとおり承れませんでした。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\n内容　　　：${label}${detail}\n状態　　　：今回は見送りとさせていただきました\n━━━━━━━━━━━━━━━━━━━━\n\n詳細・別のご希望については、お手数ですが公式LINEよりご連絡ください。\n\n■ ご確認\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n` };
+}
 function buildMail(n: any) {
   switch (n.type) {
     case "confirm": return withFooter(buildConfirm(n));
@@ -110,6 +132,9 @@ function buildMail(n: any) {
     case "reminder": return withFooter(buildReminder(n));
     case "track_delivering": return withFooter(buildTrack(n, false));
     case "track_collecting": return withFooter(buildTrack(n, true));
+    case "mypage_decision": return withFooter(buildDecision(n));
+    case "reminder_place": return withFooter(buildPlaceReminder(n));
+    case "reminder_return": return withFooter(buildReturnReminder(n));
     default: return buildCancelRequest(n); // 運営向け（cancel_request）はフッター無し
   }
 }
