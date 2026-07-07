@@ -26,6 +26,10 @@ const TEL = "050-1785-2711";
 function yen(n: unknown) { return "¥" + Number(n || 0).toLocaleString("ja-JP"); }
 function dt(d: unknown, t: unknown) { return (d || "") + (t ? " " + t : ""); }
 function mypageLink(n: any) {
+  // 🔑 新方式：トークンURL（ログイン不要）。予約完了時に発行される mypage_token を使う。
+  const tok = n?._mypage_token || (n?.payload && n.payload.mypage_token) || "";
+  if (tok) return "https://keydrop.jp/mypage.html?t=" + encodeURIComponent(tok);
+  // フォールバック：旧ログインURL（予約番号+メール）
   const id = n?.reservation_id || "", mail = n?.to_email || "";
   if (id && mail) return MYPAGE_URL + "&id=" + encodeURIComponent(id) + "&mail=" + encodeURIComponent(mail);
   return MYPAGE_URL;
@@ -121,6 +125,12 @@ Deno.serve(async (req) => {
   for (const n of rows) {
     try {
       if (!n.to_email || String(n.to_email).indexOf("@") < 0) throw new Error("宛先不正: " + n.to_email);
+      // 🔑 マイページtoken取得（ログイン不要URL用）。payloadに無ければ予約から引く。
+      if (n.reservation_id && !(n.payload && n.payload.mypage_token)) {
+        const tbl = String(n.reservation_id).toUpperCase().startsWith("KDN-") ? "nha_reservations" : "reservations";
+        const rr = await sbGet(`${tbl}?id=eq.${encodeURIComponent(n.reservation_id)}&select=mypage_token`);
+        if (rr[0]?.mypage_token) n._mypage_token = rr[0].mypage_token;
+      }
       const m = buildMail(n);
       const r = await resendSend(n.to_email, m.subject, m.body);
       if (!r.ok) throw new Error("resend: " + r.err);
