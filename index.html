@@ -3209,9 +3209,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // 今やる所だけ軽く光らせる（減光はしない）
         if (stage === 2) {
             if (sb) sb.classList.add('kd-need-loc'); // 場所ステップ＝検索バーを軽く点滅
-        } else if (stage === 3) {
-            if (confirmBtn && !confirmBtn.disabled) confirmBtn.classList.add('kd-cta-blink'); // 前進ボタンを点滅
         }
+        if (confirmBtn && !confirmBtn.disabled) confirmBtn.classList.add('kd-cta-blink'); // 「次へ」枠を点滅（押せる時は常に）
     }
     // ステップpill（お届け=黄 / 回収=黒 / 車両）
     function stepPills(n) {
@@ -3273,7 +3272,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         var d = state.datetime;
         var s = d.startDate ? formatDateLabel(d.startDate) : t('dateWord');
         var e = d.endDate ? formatDateLabel(d.endDate) : t('dateWord');
-        var blink = state.dateDefault ? ' kd-cta-blink' : '';
+        var blink = ' kd-cta-blink';
         return '<div class="kd-datebar' + blink + '" onclick="openDatePicker()">'
             + '<span class="kd-db-edit">📅 変更</span>'
             + '<div class="kd-db-card s"><span class="kd-db-lbl">🚚 ' + t('delDate') + '</span><span class="kd-db-v">' + s + '</span><span class="kd-db-tm">' + (d.startTime || '--:--') + '</span></div>'
@@ -5715,7 +5714,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             step1sub: '上のフォームで日時を選択', step2sub: 'マップをタップしてピンを置く',
             deliverable: '台デリバリー可能', classes: 'クラス', noVehicle: '該当する車両がありません',
             noVehicleSub: '日程やクラスを変更してお試しください', searching: '車両を検索中...',
-            seats: '人乗り', available: '台空き', availMany: '空きあり', availFew: '残りわずか', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決める', decideDeliverHere: '✓ この場所に決める', decideCollectHere: '✓ この場所に決める', taxiDelivPrompt: '📍 下記指定場所にお届けします', taxiCollectPrompt: '🏁 下記指定場所で回収します', taxiDelivCta: '次へ ›', taxiCollectCta: '回収場所を決定', taxiPickDel: 'お届け先を指定してください', taxiPickCol: '回収先を指定してください', areaDeliverBadge: '🚗 ご指定場所に車をお届け', dow: ['日', '月', '火', '水', '木', '金', '土'], dateWord: '日付', dpPickStart: '📅 お届けの日付を選んでください', dpPickEnd: '🏁 回収の日付を選んでください', dpSameHint: '※日帰り(同日返却)は「お届け日」をもう一度タップ', dpSameDay: '🚗 日帰り（同日返却・1日）', dpRoundtrip: '日帰り', dpStartBadge: '開始', dpEndBadge: '終了', dpTitle: '日程を選択', dpReset: '↺ やり直す', dpConfirm: '確認',
+            seats: '人乗り', available: '台空き', availMany: '空きあり', availFew: '残りわずか', days: '日間', select: '選択', deliveryPlace: 'お届け場所', decideHere: '✓ この場所に決める', decideDeliverHere: '✓ この場所に決める', decideCollectHere: '✓ この場所に決める', taxiDelivPrompt: '📍 下記指定場所にお届けします', taxiCollectPrompt: '🏁 下記指定場所で回収します', taxiDelivCta: '次へ ›', taxiCollectCta: '回収場所を決定', taxiPickDel: '日時/お届け場所を選定', taxiPickCol: '回収先を指定してください', areaDeliverBadge: '🚗 ご指定場所に車をお届け', dow: ['日', '月', '火', '水', '木', '金', '土'], dateWord: '日付', dpPickStart: '📅 お届けの日付を選んでください', dpPickEnd: '🏁 回収の日付を選んでください', dpSameHint: '※日帰り(同日返却)は「お届け日」をもう一度タップ', dpSameDay: '🚗 日帰り（同日返却・1日）', dpRoundtrip: '日帰り', dpStartBadge: '開始', dpEndBadge: '終了', dpTitle: '日程を選択', dpReset: '↺ やり直す', dpConfirm: '確認',
             noAddress: '該当する住所が見つかりません',
             // Confirm
             confirmTitle: '予約内容の確認', estimate: 'お支払い見積もり', taxIncl: '税込',
