@@ -1264,9 +1264,9 @@ function showLogin(msg){
   try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.indexOf("sb-")===0&&k.indexOf("auth-token")>=0)localStorage.removeItem(k);}}catch(e){}
   $("#app").innerHTML=`<div class="login"><div class="logo" style="font-size:22px;color:#0e7490;margin-bottom:4px">KEY<b style="color:#FABE00">◦</b>DROP <span style="font-size:12px;color:#64748b">マイページ管理</span></div>
     <div style="font-weight:800;margin-bottom:4px">マイページ管理 ログイン</div>
-    <div style="font-size:12px;color:var(--sub);margin-bottom:14px">本体APPと同じアカウントでログイン</div>
-    <input id="le" type="email" placeholder="メールアドレス" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="email">
-    <input id="lp" type="password" placeholder="パスワード" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()">
+    <div style="font-size:12px;color:var(--sub);margin-bottom:14px">本体APPと同じ「名前＋番号」でログイン</div>
+    <input id="le" type="text" placeholder="ID（名前・例 oshita）" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <input id="lp" type="password" placeholder="番号（パスワード）" inputmode="numeric" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="btn pri" style="width:100%;padding:13px" onclick="doLogin()">ログイン</button>
     <div id="lerr" style="color:#b91c1c;font-size:12px;margin-top:8px">${msg?esc(msg):""}</div></div>`;
 }
@@ -1276,12 +1276,18 @@ else loadAll().catch(e=>{const m=String(e.message||"");
   if(m.indexOf("401")>=0||m.toLowerCase().indexOf("jwt")>=0||m.toLowerCase().indexOf("token")>=0)showLogin("ログインの有効期限が切れました。再度ログインしてください。");
   else $("#app").innerHTML=`<div class="empty">読み込み失敗：${esc(m)}<br><button class="btn ghost" onclick="location.reload()" style="margin-top:10px">再読込</button> <button class="btn pri" onclick="showLogin()" style="margin-top:10px">ログイン画面へ</button></div>`;});
 async function doLogin(){
-  const email=($("#le").value||"").trim().toLowerCase(),password=($("#lp").value||"").trim();
-  if(!email||!password){$("#lerr").textContent="メールとパスワードを入力してください";return}
+  let id=($("#le").value||"").trim().toLowerCase();const password=($("#lp").value||"").trim();
+  if(!id||!password){$("#lerr").textContent="名前と番号を入力してください";return}
   $("#lerr").textContent="ログイン中…";
-  try{const r=await fetch(SB+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json"},body:JSON.stringify({email,password})});
-    const d=await r.json();
-    if(!r.ok||!d.access_token){$("#lerr").textContent="ログイン失敗："+(d.error_description||d.msg||d.error||"メール/パスワードをご確認ください");return}
+  // 名前＋番号方式：@spk.hdm→@nha.hdm の順で自動試行。@付き入力ならそのまま使う。
+  const cand = id.includes("@") ? [id] : [id+"@spk.hdm", id+"@nha.hdm"];
+  async function tryLogin(email){
+    const r=await fetch(SB+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json"},body:JSON.stringify({email,password})});
+    const d=await r.json();return (r.ok&&d.access_token)?d:null;
+  }
+  try{
+    let d=null;for(const em of cand){d=await tryLogin(em);if(d)break;}
+    if(!d){$("#lerr").textContent="ログイン失敗：名前または番号をご確認ください";return}
     localStorage.setItem("sb-ckrxttbnawkclshczsia-auth-token",JSON.stringify(d));
     $("#app").innerHTML='<div class="spin"></div>';
     loadAll().catch(e=>{const m=String(e.message||e);if(m.indexOf("401")>=0)showLogin("再ログインしてください");else showErr("読込: "+m)});
