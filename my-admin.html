@@ -1262,7 +1262,7 @@ setInterval(()=>{if(tok())loadAll(true).catch(()=>{})},30000);
 function showLogin(msg){
   // 古い/無効トークンを掃除してからログイン画面
   try{for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k.indexOf("sb-")===0&&k.indexOf("auth-token")>=0)localStorage.removeItem(k);}}catch(e){}
-  $("#app").innerHTML=`<div class="login"><div class="logo" style="font-size:22px;color:#0F1F45;margin-bottom:4px">HAND<b style="color:#0e7a6b">Y</b>MAN</div>
+  $("#app").innerHTML=`<div class="login"><div class="logo" style="font-size:22px;color:#0e7490;margin-bottom:4px">KEY<b style="color:#FABE00">◦</b>DROP <span style="font-size:12px;color:#64748b">マイページ管理</span></div>
     <div style="font-weight:800;margin-bottom:4px">マイページ管理 ログイン</div>
     <div style="font-size:12px;color:var(--sub);margin-bottom:14px">本体APPと同じアカウントでログイン</div>
     <input id="le" type="email" placeholder="メールアドレス" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="email">
