@@ -193,8 +193,15 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 <div class="toast" id="toast"></div>
 
 <script>
-const VER = "kd1.2 KEYDROPマイページ(統一・予約番号+メールログイン対応)";
+const VER = "kd1.3 KEYDROPマイページ(統一/車種名は店舗別カタログ)";
 const FN = "https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
+const SB_BASE = "https://ckrxttbnawkclshczsia.supabase.co";
+const KD_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+let CATALOG=null; // 店舗別クラスカタログ(公開ビュー)＝車種名の唯一の正
+async function fetchCatalog(store){
+  const view=(store==="nha")?"public_keydrop_classes_nha_v":"public_keydrop_classes_v";
+  try{const r=await fetch(SB_BASE+"/rest/v1/"+view+"?select=value&limit=1",{headers:{apikey:KD_ANON}});const j=await r.json();const raw=j&&j[0]&&j[0].value;const p=(typeof raw==="string")?JSON.parse(raw):raw;return (p&&p.items)||null;}catch(e){return null;}
+}
 const TOKEN = new URLSearchParams(location.search).get("t") || "";
 const RO = new URLSearchParams(location.search).get("ro")==="1"; // スタッフ確認用=閲覧専用（編集・依頼を一切させない）
 // トークンURL(?t=)が無い入口（サイトのメニュー等）＝予約番号＋メールでログイン。EFはtoken か resId+mail の両方に対応。
@@ -473,11 +480,10 @@ function readyState(){const c=readyLatest();return c?c.status:"none"}
 function readyTime(){const c=readyLatest();if(!c)return"";const m=String(c.new_value||"").match(/(\d{1,2}:\d{2})/);return m?m[1]:""}
 function render(){
   const d=DATA, r=d.reservation;
-  const _store=(d&&d.store)||"spk"; // 店舗別クラス名（那覇=nha は車種が違う）
-  const CLSMAP=(_store==="nha")
-    ?{A:"アルファード",A2:"アルファード",B:"ワンボックス（ヴェルファイア/ノア/セレナ）",B2:"ワンボックス",C:"コンパクトSUV（ヤリスクロス/ライズ）",D:"ワンボックス（セレナM/ノアM）",F:"コンパクト（ヴィッツ/ノート/アクア）",H:"ハイブリッド（プリウス/プリウスα）",S:"ハリアー"}
-    :{A:"アルファード/ヴェルファイア",B:"ノア/デリカ",C:"ロッキー/CX-3",S:"ハリアー/CX-5",F:"ルーミー/ソリオ",H:"カローラ/アクセラ"};
-  const cls=CLSMAP[r.vehicle]||r.vehicle;
+  // 車両名は店舗別の公開カタログ(CATALOG=正)から。取得失敗時のみ最小フォールバック。マイページ仕様は統一・車両は那覇/札幌で別。
+  const _ci=(CATALOG&&CATALOG[r.vehicle])||null;
+  const _fb={A:"アルファード/ヴェルファイア",A2:"アルファード/ヴェルファイア",B:"ノア/デリカD5",B2:"ノア",C:"ロッキー/CX-3",D:"ノア/セレナ",S:"ハリアー/CX-5",F:"ルーミー/ソリオ",H:"カローラ/アクセラ"};
+  const cls=(_ci&&_ci.vehicles)?_ci.vehicles:(_fb[r.vehicle]||r.vehicle);
   const cap={A:8,A2:8,B:8,B2:8,D:8,C:5,S:5,F:5,H:5}[r.vehicle]||0;  // クラス別 最大乗車定員（車両スペック・ユーザー数ではない）
   const cancelled=(r.status==="キャンセル"||r.status==="cancelled");
   const stLabel = d.pendingCancel ? t('st_cancel_req') : (cancelled ? t('st_cancelled') : t('st_confirmed'));
@@ -983,6 +989,7 @@ async function doMypageLogin(){
   const {json}=await call("lookup",{});
   if(!json||!json.ok){LOGIN.resId="";LOGIN.mail="";showLoginForm((json&&json.error)||t('login_fail'));return}
   DATA=json;
+  CATALOG=await fetchCatalog(json.store);
   try{document.title=(json.reservation.name||t('guest'))+" | HANDYMAN "+json.label}catch(e){}
   render();
 }
@@ -991,6 +998,7 @@ async function load(){
   const {status,json}=await call("lookup",{});
   if(!json.ok){ if(!TOKEN){LOGIN.resId="";LOGIN.mail="";showLoginForm(json.error||t('login_fail'));return;} $("#app").innerHTML=`<div class="center">${esc(json.error||t('not_found'))}</div>`;return}
   DATA=json;
+  CATALOG=await fetchCatalog(json.store); // 店舗別の正しい車種名（那覇/札幌でラインナップが違う）
   try{document.title=(json.reservation.name||t('guest'))+" | HANDYMAN "+json.label}catch(e){}
   render();
 }
