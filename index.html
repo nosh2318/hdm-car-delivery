@@ -1432,29 +1432,41 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         document.body.appendChild(o);
     }
     window.kdBackToAreaSelect = kdBackToAreaSelect;
-    // ── 統一「戻る」：今の画面/ステップから“1つ前”へ確実に戻す（地図全画面で詰まらない導線）──
+    // ── 統一「戻る」＝“1つ前の画面”へ。ナビ履歴スタックで全戻るボタンを一本化 ──
+    //   render() 内の kdNavTrack() が画面遷移を記録（前進はpush・既訪画面へ戻ったら巻き戻し）。
+    //   kdFlowBack() は履歴を1つ pop。履歴が空＝ファネル先頭のみ エリア選択へ。
+    var kdNavStack = [];      // 訪問履歴（"screen|locStep" のキー配列）
+    var kdNavLast;            // 直近のキー
+    var kdNavPopping = false; // 戻る操作中フラグ（戻り先を再push しない）
+    function kdNavKey() { return ((state && state.screen) || 'top') + '|' + ((state && state.locStep) || ''); }
+    function kdNavTrack() {
+        try {
+            var k = kdNavKey();
+            if (kdNavLast === undefined) { kdNavLast = k; return; }
+            if (k === kdNavLast) return;
+            if (kdNavPopping) { kdNavPopping = false; }
+            else {
+                var idx = kdNavStack.lastIndexOf(k); // 既に訪れた画面へ戻った→そこまで巻き戻す
+                if (idx >= 0) { kdNavStack.length = idx; }
+                else { kdNavStack.push(kdNavLast); if (kdNavStack.length > 40) kdNavStack.shift(); }
+            }
+            kdNavLast = k;
+        } catch (e) {}
+    }
+    window.kdNavTrack = kdNavTrack;
     function kdFlowBack() {
         try {
-            var s = (state && state.screen) || 'top';
-            // 予約フロー：payment→terms→form→options→confirm→step_vehicle→(お届け地図)→エリア選択
-            if (s === 'payment') { state.screen = 'terms'; return render(); }
-            if (s === 'terms')   { state.screen = 'form'; return render(); }
-            if (s === 'form')    { state.screen = 'options'; return render(); }
-            if (s === 'options') { state.screen = 'confirm'; return render(); }
-            if (s === 'confirm') { state.screen = 'step_vehicle'; return render(); }
-            if (s === 'step_vehicle') { state.screen = 'top'; return render(); }
-            // 地図画面：回収ステップなら お届け(地図) へ、お届けステップなら エリア選択 へ
-            if (s === 'top' || s === 'step_location') {
-                if (state.locStep === 'collection') {
-                    state.locStep = 'delivery';
-                    state.collectionConfirmed = false;
-                    if (typeof renderLocPanel === 'function') renderLocPanel();
-                    return;
-                }
-                return kdBackToAreaSelect();
+            if (kdNavStack.length) {
+                var prev = kdNavStack.pop();
+                var p = String(prev).split('|');
+                kdNavPopping = true;
+                state.screen = p[0] || 'top';
+                state.locStep = p[1] || 'delivery';
+                if (state.locStep === 'delivery') state.collectionConfirmed = false;
+                kdNavLast = kdNavKey();
+                return render();
             }
-            if (s === 'mypage') { return kdBackToAreaSelect(); }
-            // 既定：エリア選択に戻す
+            // 履歴なし＝ファネル先頭（お届け地図）→ エリア選択
             return kdBackToAreaSelect();
         } catch (e) { try { return kdBackToAreaSelect(); } catch (e2) {} }
     }
@@ -2263,7 +2275,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     ? `<button class="kp-confirm kd-cta-blink" onclick="collectionDecideGo()">${t('taxiCollectCta')}</button>`
                     : `<button class="kp-confirm" disabled>${t('taxiCollectCta')}</button>`;
                 if (state.deliveryAddr) th += `<button class="kp-opt kd-same kd-cta-blink" onclick="sameCollectionGo()">🔁 ${t('sameAsDeliveryBtn')}<div class="kp-opt-sub">${state.deliveryAddr}</div></button>`;
-                th += `<button onclick="state.screen='options'; render();" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
+                th += `<button onclick="kdFlowBack();" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
                 ov.innerHTML = th;
                 return;
             }
@@ -2279,7 +2291,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 h += `<button class="kp-opt kd-cta-blink" onclick="sameCollectionGo()"><b>②</b> ${t('sameAsDeliveryBtn')}${state.deliveryAddr ? `<div class="kp-opt-sub">${state.deliveryAddr}</div>` : ''}</button>`;
             }
             h += '</div>';
-            h += `<button onclick="state.screen='options'; render();" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
+            h += `<button onclick="kdFlowBack();" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
             ov.innerHTML = h;
             return;
         }
@@ -2618,6 +2630,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 kdFunnelLog(_scr, _stepNo);
             }
         } catch (e) {}
+
+        // ── ナビ履歴を記録（統一「戻る」用）──
+        try { if (typeof kdNavTrack === 'function') kdNavTrack(); } catch (e) {}
 
         let html = '';
         try {
@@ -3451,7 +3466,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <!-- 検索条件サマリー（固定）：お届け＝黄 / 回収＝黒。日付はここで変更可 -->
                 <div style="background:#fff;border-bottom:1px solid #eee;padding:11px 16px;">
                     <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-                        <button onclick="state.screen='top'; render();" style="background:#f1f1f1;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex:none;">‹ ${t('back')}</button>
+                        <button onclick="kdFlowBack();" style="background:#f1f1f1;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;flex:none;">‹ ${t('back')}</button>
                         <div style="flex:1;"></div>
                         <button onclick="state.vehDateOpen=!state.vehDateOpen; render();" style="background:${state.vehDateOpen?'#1a1a1a':'#FABE00'};color:${state.vehDateOpen?'#fff':'#1a1a1a'};border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;flex:none;">📅 ${t('vehDateChange')} ${state.vehDateOpen?'▴':'▾'}</button>
                     </div>
@@ -3540,9 +3555,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
-                <button class="screen-header-back" onclick="state.screen='step_vehicle'; render();">←</button>
+                <button class="screen-header-back" onclick="kdFlowBack();">←</button>
                 <span class="screen-header-title">${t('confirmTitle')}</span>
-                <button onclick="state.screen='step_vehicle'; render();" style="margin-left:auto;background:#f1f1f1;border:none;border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;">${t('backToVehSel')}</button>
+                <button onclick="kdFlowBack();" style="margin-left:auto;background:#f1f1f1;border:none;border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;">${t('backToVehSel')}</button>
             </div>
             ${renderBookingProgress(1)}
             <div class="confirm-screen screen-fade">
@@ -3598,7 +3613,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
-                <button class="screen-header-back" onclick="state.screen='options'; render();">←</button>
+                <button class="screen-header-back" onclick="kdFlowBack();">←</button>
                 <span class="screen-header-title">${t('hdrBooker')}</span>
             </div>
             ${renderBookingProgress(2)}
@@ -3645,7 +3660,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
 
                 <button class="btn-primary" id="formNext" onclick="submitForm()">${t('next')}</button>
-                <button class="btn-secondary" onclick="state.screen='options'; render();">${t('back')}</button>
+                <button class="btn-secondary" onclick="kdFlowBack();">${t('back')}</button>
             </div>
         `;
     }
@@ -3691,7 +3706,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
-                <button class="screen-header-back" onclick="state.screen='confirm'; render();">←</button>
+                <button class="screen-header-back" onclick="kdFlowBack();">←</button>
                 <span class="screen-header-title">${t('optionsTitle')}</span>
             </div>
             ${renderBookingProgress(3)}
@@ -3788,7 +3803,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 ` : ''}
 
                 <button class="btn-primary" onclick="enterCollectionStep();">${t('next')}</button>
-                <button class="btn-secondary" onclick="state.screen='confirm'; render();">${t('back')}</button>
+                <button class="btn-secondary" onclick="kdFlowBack();">${t('back')}</button>
             </div>
         `;
     }
@@ -3803,7 +3818,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
-                <button class="screen-header-back" onclick="state.screen='form'; render();">←</button>
+                <button class="screen-header-back" onclick="kdFlowBack();">←</button>
                 <span class="screen-header-title">${t('termsTitle')}</span>
             </div>
             ${renderBookingProgress(4)}
@@ -3852,7 +3867,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <label for="termsCheck" style="font-weight:600;">${t('termsAgree')}</label>
                 </div>
                 <button class="btn-primary" ${!state.termsAgreed ? 'disabled' : ''} onclick="if(state.termsAgreed){state.screen='payment'; render();}">${t('termsNext')}</button>
-                <button class="btn-secondary" onclick="state.screen='form'; render();">${t('back')}</button>
+                <button class="btn-secondary" onclick="kdFlowBack();">${t('back')}</button>
             </div>
         `;
     }
@@ -3946,7 +3961,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="header-actions"></div>
             </div>
             <div class="screen-header">
-                <button class="screen-header-back" onclick="state.screen='terms'; render();">←</button>
+                <button class="screen-header-back" onclick="kdFlowBack();">←</button>
                 <span class="screen-header-title">${t('paymentTitle')}</span>
             </div>
             ${renderBookingProgress(5)}
@@ -4002,7 +4017,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div id="cardError" style="display:none;font-size:11.5px;color:#dc2626;font-weight:700;margin:2px 0 6px;"></div>
                 <div style="font-size:10.5px;color:#94a3b8;margin-bottom:12px;line-height:1.6;">${t('cardSafeNote')}</div>
                 <button class="btn-primary" id="payBtn" style="margin-top:2px;" onclick="payWithCard();">¥${finalTotal.toLocaleString()}${t('paymentPay')}</button>
-                <button class="btn-secondary" onclick="state.screen='terms'; render();">${t('back')}</button>
+                <button class="btn-secondary" onclick="kdFlowBack();">${t('back')}</button>
             </div>
         `;
     }
