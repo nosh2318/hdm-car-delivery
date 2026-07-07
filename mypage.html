@@ -193,7 +193,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 <div class="toast" id="toast"></div>
 
 <script>
-const VER = "kd1.0 KEYDROPマイページ(HANDYMAN内容)";
+const VER = "kd1.1 KEYDROPマイページ(店舗別クラス名)";
 const FN = "https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
 const TOKEN = new URLSearchParams(location.search).get("t") || "";
 const RO = new URLSearchParams(location.search).get("ro")==="1"; // スタッフ確認用=閲覧専用（編集・依頼を一切させない）
@@ -463,8 +463,12 @@ function readyState(){const c=readyLatest();return c?c.status:"none"}
 function readyTime(){const c=readyLatest();if(!c)return"";const m=String(c.new_value||"").match(/(\d{1,2}:\d{2})/);return m?m[1]:""}
 function render(){
   const d=DATA, r=d.reservation;
-  const cls={A:"アルファード/ヴェルファイア",B:"ノア/デリカ",C:"ロッキー/CX-3",S:"ハリアー/CX-5",F:"ルーミー/ソリオ",H:"カローラ/アクセラ"}[r.vehicle]||r.vehicle;
-  const cap={A:8,A2:8,B:8,B2:8,C:5,S:5,F:5,H:5}[r.vehicle]||0;  // クラス別 最大乗車定員（車両スペック・ユーザー数ではない）
+  const _store=(d&&d.store)||"spk"; // 店舗別クラス名（那覇=nha は車種が違う）
+  const CLSMAP=(_store==="nha")
+    ?{A:"アルファード",A2:"アルファード",B:"ワンボックス（ヴェルファイア/ノア/セレナ）",B2:"ワンボックス",C:"コンパクトSUV（ヤリスクロス/ライズ）",D:"ワンボックス（セレナM/ノアM）",F:"コンパクト（ヴィッツ/ノート/アクア）",H:"ハイブリッド（プリウス/プリウスα）",S:"ハリアー"}
+    :{A:"アルファード/ヴェルファイア",B:"ノア/デリカ",C:"ロッキー/CX-3",S:"ハリアー/CX-5",F:"ルーミー/ソリオ",H:"カローラ/アクセラ"};
+  const cls=CLSMAP[r.vehicle]||r.vehicle;
+  const cap={A:8,A2:8,B:8,B2:8,D:8,C:5,S:5,F:5,H:5}[r.vehicle]||0;  // クラス別 最大乗車定員（車両スペック・ユーザー数ではない）
   const cancelled=(r.status==="キャンセル"||r.status==="cancelled");
   const stLabel = d.pendingCancel ? t('st_cancel_req') : (cancelled ? t('st_cancelled') : t('st_confirmed'));
   const opts=[]; if(r.opt_c)opts.push(t('opt_child')+"×"+r.opt_c); if(r.opt_b)opts.push(t('opt_baby')+"×"+r.opt_b);
