@@ -361,6 +361,10 @@ Deno.serve(async (req) => {
       let cj: any = {};
       try { cj = cur[0].changed_json && typeof cur[0].changed_json === "object" ? cur[0].changed_json : (cur[0].changed_json ? JSON.parse(cur[0].changed_json) : {}); } catch { cj = {}; }
       cj.kd_customer_changed_at = new Date().toISOString();
+      // 🔴 OP戻り防止（HANDYMAN同様）：SSパトロールが _ssPlace/_ssTime をフォーム値へ戻すのを防ぐ。
+      // 場所は _placeSource=customer で保護＋_ssPlaceに新値／時間は _timeChange(最優先表示)＋_ssTime に新値。
+      if (patch.place !== undefined) { cj._ssPlace = String(patch.place); cj._placeSource = "customer"; }
+      if (patch.time !== undefined) { cj._ssTime = String(patch.time); cj._timeChange = String(patch.time); }
       await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(taskId)}`, { ...patch, memo: newMemo, changed_json: cj });
     }
     // DELタスク：place=お届け場所 / time=お届け時間 ＋ 参照(col_place/return_time)
