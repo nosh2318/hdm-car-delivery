@@ -238,13 +238,23 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1";
-const ADMIN_VER="kd1.0 KEYDROP専用(HANDYMAN内容)";
+const ADMIN_VER="kd1.1 KEYDROP専用(札幌/那覇切替)";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=s=>document.querySelector(s);
 function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
 window.onerror=function(msg,src,ln){showErr(msg+" @"+ln);return false};
 window.addEventListener("unhandledrejection",e=>showErr("Promise: "+(e.reason&&e.reason.message||e.reason)));
 const MYURL="https://keydrop.jp/mypage.html?t=";
+// ▼ 店舗切替（札幌reservations / 那覇nha_reservations・KEYDROP予約は KD-=札幌 / KDN-=那覇）
+let STORE=localStorage.getItem("kd_admin_store")||"spk";
+function RTBL(){return STORE==="nha"?"nha_reservations":"reservations";}
+function RORD(){return STORE==="nha"?"start_date":"lend_date";}
+function RRET(){return STORE==="nha"?"end_date":"return_date";}
+function LPF(){return STORE==="nha"?"nha":"spk";} // line_*/config テーブル接頭辞
+function RSEL(){return STORE==="nha"
+ ? "id,name,ota,lend_date:start_date,return_date:end_date,lend_time:del_time,return_time:col_time,del_time,col_time,vehicle:vehicle_class,del_place,col_place,visit_type,return_type,people,opt_b,opt_c,opt_j,insurance,status,mypage_token,mypage_locked,staff_note,tel,mail,admin_checked_at,admin_checked_by"
+ : "id,name,ota,lend_date,return_date,lend_time,return_time,del_time,col_time,vehicle,del_place,col_place,visit_type,return_type,people,opt_b,opt_c,opt_j,insurance,status,mypage_token,mypage_locked,staff_note,tel,mail,admin_checked_at,admin_checked_by";}
+function setStore(s){if(s===STORE)return;STORE=s;localStorage.setItem("kd_admin_store",s);SEL=null;SELTASKS=null;if(tok())loadAll();}
 let CFG={},RES=[],CHG={},FILTER="userchg",Q="",SEL=null,SELTASKS=null,VIEW="changes",CFILTER="req",STAFF=[],OPERATOR=localStorage.getItem("admin_op")||"",TODAY_ONLY=false,LAST_LOAD=0,DAYF="all";
 let SENDS={},VIEWS={},UFILTER="all"; // SENDS=mypage URL送信ログ, VIEWS=マイページ開封(mypage_views)
 function fmtClock(ms){if(!ms)return"—";const d=new Date(ms);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+":"+String(d.getSeconds()).padStart(2,"0")}
@@ -279,12 +289,12 @@ function ago(days){const d=new Date();d.setDate(d.getDate()-days);return d.getFu
 
 async function loadAll(keepSel){
   const [cfg,res,chg,stf,links,sends,views]=await Promise.all([
-    api("spk_line_config?id=eq.1&select=*"),
-    api("reservations?ota=eq.KEYDROP&return_date=gte."+today()+"&status=not.in.(%22%E3%82%AD%E3%83%A3%E3%83%B3%E3%82%BB%E3%83%AB%22,cancelled)&order=lend_date.asc&limit=400&select=id,name,ota,lend_date,return_date,lend_time,return_time,del_time,col_time,vehicle,del_place,col_place,visit_type,return_type,people,opt_b,opt_c,opt_j,insurance,status,mypage_token,mypage_locked,staff_note,tel,mail,admin_checked_at,admin_checked_by"),
-    api("keydrop_mypage_changes?order=created_at.desc&limit=500&select=id,reservation_id,field,old_value,new_value,source,status,note,actor,created_at"),
+    api(LPF()+"_line_config?id=eq.1&select=*").catch(()=>[]),
+    api(RTBL()+"?ota=eq.KEYDROP&"+RRET()+"=gte."+today()+"&status=not.in.(%22%E3%82%AD%E3%83%A3%E3%83%B3%E3%82%BB%E3%83%AB%22,cancelled)&order="+RORD()+".asc&limit=400&select="+RSEL()),
+    api("keydrop_mypage_changes?order=created_at.desc&limit=500&select=id,reservation_id,store,field,old_value,new_value,source,status,note,actor,created_at"),
     api("staff?select=name&order=name.asc").catch(()=>[]),
-    api("spk_line_links?select=resv_no,line_user_id,del_place,col_place,del_time,col_time,answered_at&limit=5000").catch(()=>[]),
-    api("spk_line_sends?action=eq.mypage_initial&order=sent_at.desc&limit=3000&select=resv_no,status,sent_at").catch(()=>[]),
+    api(LPF()+"_line_links?select=resv_no,line_user_id,del_place,col_place,del_time,col_time,answered_at&limit=5000").catch(()=>[]),
+    api(LPF()+"_line_sends?action=eq.mypage_initial&order=sent_at.desc&limit=3000&select=resv_no,status,sent_at").catch(()=>[]),
     api("mypage_views?select=reservation_id,first_at,last_at,view_count&limit=5000").catch(()=>[]),
   ]);
   CFG=cfg[0]||{}; RES=res||[]; STAFF=(stf||[]).map(s=>s.name).filter(Boolean);
@@ -293,7 +303,8 @@ async function loadAll(keepSel){
   VIEWS={}; (views||[]).forEach(v=>{ if(v.reservation_id) VIEWS[v.reservation_id]={first:v.first_at,last:v.last_at,count:v.view_count}; });
   // エルメ受付フォーム(spk_line_links)＝SSと同一ソース。ライブSSシートに無い回答をここで補完（フォーム回答済み判定・場所あり判定に使う）
   LINK_MAP={}; (links||[]).forEach(l=>{ if(!l.resv_no)return; const del=String(l.del_place||"").trim(),col=String(l.col_place||"").trim(); if(del||col) LINK_MAP[l.resv_no]={del,col,delTime:String(l.del_time||"").trim(),colTime:String(l.col_time||"").trim(),ts:l.answered_at||""}; });
-  CHG={}; (chg||[]).forEach(c=>{(CHG[c.reservation_id]=CHG[c.reservation_id]||[]).push(c)});
+  // 現在の店舗の変更のみ（store列 or KDN-接頭辞で判定）
+  CHG={}; (chg||[]).forEach(c=>{const isNha=(c.store==="nha")||String(c.reservation_id||"").toUpperCase().startsWith("KDN-");if((STORE==="nha")!==isNha)return;(CHG[c.reservation_id]=CHG[c.reservation_id]||[]).push(c)});
   render();
   // OPタスクから ①場所マップ(実際の場所は tasks._ssPlace) ②フォーム再回答(_ssAlert) を集める
   try{
@@ -547,6 +558,10 @@ function renderInner(){
   const rc=RES.filter(stReq).length;  // 変更依頼バッジ＝承認待ちの依頼(変更リクエスト)のみ。情報変更(即時反映済)は含めない
   $("#app").innerHTML=`
   <div class="hd"><div class="logo">KEY<b>◦</b>DROP <span style="font-size:10px;background:#FABE00;color:#083344;padding:1px 7px;border-radius:999px;margin-left:4px">専用</span></div><div class="t">KEYDROP マイページ管理 <span style="font-size:10px;color:#94a3b8;font-weight:600">${ADMIN_VER}</span></div>
+    <div class="storesw" style="display:flex;gap:4px;margin-left:12px">
+      <button onclick="setStore('spk')" style="font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px;border:1px solid ${STORE==="spk"?"#0e7490":"#cbd5e1"};background:${STORE==="spk"?"#0e7490":"#fff"};color:${STORE==="spk"?"#fff":"#475569"};cursor:pointer">札幌</button>
+      <button onclick="setStore('nha')" style="font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px;border:1px solid ${STORE==="nha"?"#0e7490":"#cbd5e1"};background:${STORE==="nha"?"#0e7490":"#fff"};color:${STORE==="nha"?"#fff":"#475569"};cursor:pointer">那覇</button>
+    </div>
     <div class="sp"></div>
     <select class="opsel ${OPERATOR?"":"need"}" onchange="setOp(this.value)">
       <option value="">担当者を選択…</option>
@@ -655,7 +670,7 @@ async function applyReanswer(taskId,field,val){
   if(!needOp())return;
   if(!sure("フォーム再回答の内容をこの予約に反映して"))return;
   try{
-    await api("reservations?id=eq."+encodeURIComponent(SEL),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({[field]:val})});
+    await api(RTBL()+"?id=eq."+encodeURIComponent(SEL),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({[field]:val})});
     await patchTaskCj(taskId,{_ssPlace:val,_placeSource:"manual",_ssAlert:""});
     toast("反映しました");await loadAll(true);selectRes(SEL,true);
   }catch(e){toast("反映失敗（ログイン要）")}
@@ -733,7 +748,7 @@ async function checkRes(id){
   if(!needOp())return;
   if(!sure("この予約を確認済みにして"))return;
   const now=new Date().toISOString();
-  try{await api("reservations?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({admin_checked_at:now,admin_checked_by:OPERATOR})});
+  try{await api(RTBL()+"?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({admin_checked_at:now,admin_checked_by:OPERATOR})});
     const r=RES.find(x=>x.id===id);if(r){r.admin_checked_at=now;r.admin_checked_by=OPERATOR;}
     toast("確認済みにしました（確認済みBOXへ）");render();
   }catch(e){toast("更新失敗（ログイン要）")}
@@ -741,7 +756,7 @@ async function checkRes(id){
 async function uncheckRes(id){
   if(!needOp())return;
   if(!sure("未対応に戻して"))return;
-  try{await api("reservations?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({admin_checked_at:null})});
+  try{await api(RTBL()+"?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({admin_checked_at:null})});
     const r=RES.find(x=>x.id===id);if(r)r.admin_checked_at=null;
     toast("未対応に戻しました");render();
   }catch(e){toast("更新失敗（ログイン要）")}
@@ -906,7 +921,7 @@ async function decide(id,status){
   const st=tok(); if(!st){toast("ログインが必要です");return}
   try{
     const r=await fetch(FN+"/keydrop-mypage",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"decide",staff_token:st,change_id:id,decision:status})});
+      body:JSON.stringify({action:"decide",staff_token:st,change_id:id,decision:status,store:STORE})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok||!j.ok){toast("処理失敗："+(j.error||r.status));return}
     const c=Object.values(CHG).flat().find(x=>x.id===id);if(c){c.status=status;c.actor=OPERATOR;}
@@ -942,14 +957,14 @@ async function staffEditSave(field){
     const rp={};
     if(field==="del_place")rp.del_place=v; if(field==="col_place")rp.col_place=v;
     if(field==="lend_time"){rp.lend_time=v;rp.del_time=v;} if(field==="return_time"){rp.return_time=v;rp.col_time=v;}
-    await api("reservations?id=eq."+encodeURIComponent(SEL),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify(rp)});
+    await api(RTBL()+"?id=eq."+encodeURIComponent(SEL),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify(rp)});
     const isCol=field==="col_place"||field==="return_time";
     const task=(SELTASKS||[]).find(t=>String(t._id).slice(0,2)===(isCol?"c-":"d-"));
     if(task){
       if(field.indexOf("place")>=0)await patchTaskCj(task._id,{_ssPlace:v,_placeSource:"manual",_ssAlert:""});
       else{await api("tasks?_id=eq."+encodeURIComponent(task._id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({time:v})});await patchTaskCj(task._id,{_ssTime:v});}
     }
-    await api("keydrop_mypage_changes",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({reservation_id:SEL,store:"spk",field,old_value:cur,new_value:v,source:"staff",actor:OPERATOR,status:"applied",note:"管理画面で変更"})});
+    await api("keydrop_mypage_changes",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({reservation_id:SEL,store:STORE,field,old_value:cur,new_value:v,source:"staff",actor:OPERATOR,status:"applied",note:"管理画面で変更"})});
     toast("変更しました");closeM();await loadAll(true);selectRes(SEL,true);
   }catch(e){toast("変更失敗（ログイン要）")}
 }
@@ -960,7 +975,7 @@ async function saveNote(id){
   const ta=document.getElementById("knote");if(!ta)return;
   const note=ta.value.trim();
   if(!sure("カルテを保存して"))return;
-  try{await api("reservations?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},
+  try{await api(RTBL()+"?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=minimal"},
     body:JSON.stringify({staff_note:note,staff_note_at:new Date().toISOString(),staff_note_by:OPERATOR})});
     const r=RES.find(x=>x.id===id);if(r)r.staff_note=note;
     toast("カルテを保存しました");render();
@@ -1067,7 +1082,7 @@ async function acResolve(id,fi,target){
   const q=isTime?value:("「"+value+"」"), qf=isTime?from:("「"+from+"」");
   if(!sure(`${acFldJp(it.field)}を ${q} に統一（${target==="resv"?"予約情報":"マイページ/OP"}の ${qf} → ${q}）。`))return;
   try{
-    const r=await fetch(FN+"/keydrop-mypage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"resolve",staff_token:st,reservation_id:id,field:it.field,value,target})});
+    const r=await fetch(FN+"/keydrop-mypage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"resolve",staff_token:st,reservation_id:id,field:it.field,value,target,store:STORE})});
     const j=await r.json().catch(()=>({}));
     if(r.ok&&j.ok){AC_DONE[id+"|"+it.field]={target,from,value};toast("統一しました（正常化）");await loadAll(true);}
     else toast("失敗："+(j.error||r.status));
@@ -1080,7 +1095,7 @@ async function acUndo(id,field){
   const q=isTime?d.from:("「"+d.from+"」");
   if(!sure(`元に戻す（${acFldJp(field)}を ${q} に戻す）。`))return;
   try{
-    const r=await fetch(FN+"/keydrop-mypage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"resolve",staff_token:st,reservation_id:id,field,value:d.from,target:d.target})});
+    const r=await fetch(FN+"/keydrop-mypage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"resolve",staff_token:st,reservation_id:id,field,value:d.from,target:d.target,store:STORE})});
     const j=await r.json().catch(()=>({}));
     if(r.ok&&j.ok){delete AC_DONE[id+"|"+field];toast("元に戻しました");await loadAll(true);}
     else toast("失敗："+(j.error||r.status));
@@ -1119,7 +1134,7 @@ async function toggleNotify(){
   if(!tok()){toast("ログインが必要です");return}
   const next=!CFG.mypage_notify_enabled;
   if(next&&!CFG.test_mode){if(!sure("本番ONにします（お客様に実際に送信されます）。テスト未実施なら先にtest_modeで確認を。"))return;}
-  try{await api("spk_line_config?id=eq.1",{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({mypage_notify_enabled:next})});
+  try{await api(LPF()+"_line_config?id=eq.1",{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({mypage_notify_enabled:next})});
     CFG.mypage_notify_enabled=next;toast(next?"通知をONにしました":"通知をOFFにしました");openNotify();
   }catch(e){toast("保存失敗（ログイン要）")}
 }
@@ -1193,7 +1208,7 @@ async function issueTokens(){
   let ok=0;
   for(const r of miss){
     const tok=(crypto&&crypto.randomUUID)?crypto.randomUUID():("t"+Date.now()+Math.round(Math.random()*1e6));
-    try{await api("reservations?id=eq."+encodeURIComponent(r.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({mypage_token:tok})});r.mypage_token=tok;ok++;}catch(e){}
+    try{await api(RTBL()+"?id=eq."+encodeURIComponent(r.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({mypage_token:tok})});r.mypage_token=tok;ok++;}catch(e){}
   }
   toast(ok+"件にマイページを発行しました");openUsage();
 }
@@ -1249,7 +1264,7 @@ function renderManual(){
     <div style="font-size:11px;color:var(--sub);margin-top:8px">HANDYMAN 札幌 マイページ仕様（2026-07-05 現在）</div>`;
 }
 async function saveCfg(){
-  try{await api("spk_line_config?id=eq.1",{method:"PATCH",headers:{Prefer:"return=minimal"},
+  try{await api(LPF()+"_line_config?id=eq.1",{method:"PATCH",headers:{Prefer:"return=minimal"},
     body:JSON.stringify({damage_enabled:!!CFG.damage_enabled,track_enabled:!!CFG.track_enabled,thanks_enabled:!!CFG.thanks_enabled,
       test_mode:!!CFG.test_mode,test_user_id:CFG.test_user_id||"",lead_min:parseInt(CFG.lead_min)||30,mypage_notify_enabled:!!CFG.mypage_notify_enabled})});
     toast("設定を保存しました");closeM();
