@@ -238,7 +238,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1";
-const ADMIN_VER="kd1.4 KEYDROP専用(正常予約も表示)";
+const ADMIN_VER="kd1.5 KEYDROP専用(失効時は再ログイン)";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=s=>document.querySelector(s);
 function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
@@ -290,12 +290,16 @@ function ago(days){const d=new Date();d.setDate(d.getDate()-days);return d.getFu
 async function loadAll(keepSel){
   const S=STORE; // このロードの店舗を固定（途中で切替わっても混線しない）
   // ① 軽いものだけ先に取得（予約は数件〜数十件）
+  let authFail=false;
+  const isAuthErr=e=>{const m=String((e&&e.message)||e||"");return m.indexOf("401")>=0||m.indexOf("403")>=0||m.toLowerCase().indexOf("jwt")>=0;};
   const [cfg,res,chg,stf]=await Promise.all([
     api(LPF()+"_line_config?id=eq.1&select=*").catch(()=>[]),
-    api(RTBL()+"?ota=eq.KEYDROP&"+RRET()+"=gte."+today()+"&status=not.in.(%22%E3%82%AD%E3%83%A3%E3%83%B3%E3%82%BB%E3%83%AB%22,cancelled)&order="+RORD()+".asc&limit=400&select="+RSEL()).catch(()=>[]),
-    api("keydrop_mypage_changes?order=created_at.desc&limit=300&select=id,reservation_id,store,field,old_value,new_value,source,status,note,actor,created_at").catch(()=>[]),
+    api(RTBL()+"?ota=eq.KEYDROP&"+RRET()+"=gte."+today()+"&status=not.in.(%22%E3%82%AD%E3%83%A3%E3%83%B3%E3%82%BB%E3%83%AB%22,cancelled)&order="+RORD()+".asc&limit=400&select="+RSEL()).catch(e=>{if(isAuthErr(e))authFail=true;return[];}),
+    api("keydrop_mypage_changes?order=created_at.desc&limit=300&select=id,reservation_id,store,field,old_value,new_value,source,status,note,actor,created_at").catch(e=>{if(isAuthErr(e))authFail=true;return[];}),
     api("staff?select=name&order=name.asc").catch(()=>[]),
   ]);
+  // 🔑 トークン失効(401/403)を握りつぶさず再ログインへ（空盤面で"動かない"に見える事故を防ぐ）
+  if(authFail){showLogin("ログインの有効期限が切れました。再度ログインしてください。");return;}
   if(S!==STORE)return; // ロード中に店舗が切替わったら破棄（古い結果で上書きしない）
   const ids=(res||[]).map(r=>r.id).filter(Boolean);
   // ② 予約IDに絞って重いテーブルを取得（1.3万行→対象数件。空なら取得しない）
