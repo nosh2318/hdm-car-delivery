@@ -393,6 +393,15 @@ Deno.serve(async (req) => {
     ].filter(Boolean);
     await notifySlack(lines.join("\n"), M.slack);
 
+    // 4) KEYDROP独自の変更ログに記録（マイページ履歴＋将来のKEYDROP my-admin用）＝HANDYMANのmypage_changesと切り分け
+    const chgLog = async (field: string, oldV: any, newV: any) => {
+      await sbPost("keydrop_mypage_changes", { reservation_id: resId, store: M.store, field, old_value: String(oldV ?? ""), new_value: String(newV ?? ""), source: "customer", status: "applied", note: "マイページ変更(即時反映)" }).catch(() => {});
+    };
+    if (delPlace !== null) await chgLog("del_place", r.del_place, delPlace);
+    if (lendTime !== null) await chgLog("lend_time", r.lend_time || r.del_time, lendTime);
+    if (colPlace !== null) await chgLog("col_place", r.col_place, colPlace);
+    if (returnTime !== null) await chgLog("return_time", r.return_time || r.col_time, returnTime);
+
     return json({
       ok: true,
       updated: {
@@ -402,6 +411,36 @@ Deno.serve(async (req) => {
         return_time: returnTime !== null ? returnTime : r.return_time,
       },
     }, 200, origin);
+  }
+
+  // ── 早め返却（返却準備完了・希望回収時間の目安）＝申請（承認制）──
+  if (action === "ready") {
+    const st0 = String(r.status || "");
+    if (st0 === "cancelled" || st0 === "キャンセル" || st0 === "cancel") return json({ error: "キャンセル済みの予約です" }, 409, origin);
+    const already = await sbGet("keydrop_mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&field=eq.ready&status=eq.requested&select=id&limit=1`).catch(() => []);
+    if (already[0]) return json({ ok: true, alreadyRequested: true }, 200, origin);
+    const rdyTime = (typeof p.time === "string" && /^\d{1,2}:\d{2}$/.test(p.time.trim())) ? p.time.trim() : "";
+    const newVal = rdyTime ? `返却準備完了(早め回収OK) 希望時間 ${rdyTime}〜` : "返却準備完了(早め回収OK)";
+    await sbPost("keydrop_mypage_changes", { reservation_id: resId, store: M.store, field: "ready", old_value: "", new_value: newVal, source: "customer", status: "requested", note: rdyTime ? `希望回収時間の目安 ${rdyTime}〜` : "予定時間より早い回収OK" });
+    await notifySlack(`🟢 *早め回収OK（返却準備完了）* ${resId} ${r.name || ""}様\n利用:${r.lend_date}〜${r.return_date} / 予定回収:${r.return_time || r.col_time || "-"}${rdyTime ? ` / 🕒希望:${rdyTime}〜` : ""}`, M.slack);
+    return json({ ok: true, requested: true }, 200, origin);
+  }
+
+  // ── オプション/補償/受渡方法の変更依頼（承認制・即反映しない）──
+  if (action === "request") {
+    const st1 = String(r.status || "");
+    if (st1 === "cancelled" || st1 === "キャンセル" || st1 === "cancel") return json({ error: "キャンセル済みの予約は変更できません" }, 409, origin);
+    const reqType = String(p.req_type || "").trim();
+    const detail = String(p.detail || "").trim().slice(0, 300);
+    const map: Record<string, string> = { option: "有料オプション(シート類)変更", method: "貸出/返却方法(区分)変更", insurance: "補償(免責)変更" };
+    if (!map[reqType]) return json({ error: "リクエスト種別が不正です" }, 400, origin);
+    if (detail.length < 1) return json({ error: "変更内容を入力してください" }, 400, origin);
+    const already = await sbGet("keydrop_mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&field=eq.${reqType}&status=eq.requested&select=id&limit=1`).catch(() => []);
+    if (already[0]) return json({ ok: true, alreadyRequested: true, message: "同じ内容の依頼を受付済みです" }, 200, origin);
+    const payload = (p.target && typeof p.target === "object") ? p.target : null;
+    await sbPost("keydrop_mypage_changes", { reservation_id: resId, store: M.store, field: reqType, old_value: "", new_value: detail, source: "customer", status: "requested", note: map[reqType], payload });
+    await notifySlack(`🟡 *${map[reqType]}の依頼* ${resId} ${r.name || ""}様\n利用:${r.lend_date}〜${r.return_date}\n依頼内容: ${detail}\n→ 管理で対応してください`, M.slack);
+    return json({ ok: true, requested: true, kind: map[reqType] }, 200, origin);
   }
 
   // ── 変更リクエストの承認（SPK現場が押す）→ reservations/tasks に反映＋change_reqクリア＋顧客へ反映メール ──
