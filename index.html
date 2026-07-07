@@ -4045,6 +4045,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const v = state.selectedVehicle;
         const cls = VEHICLE_CLASSES[v?.type] || {};
         const resId = state._lastResId || 'HDM' + Date.now().toString().slice(-8);
+        const mpMail = state._lastMail || '';
+        const mypageUrl = 'https://keydrop.jp/?mypage=1&id=' + encodeURIComponent(resId) + (mpMail ? '&mail=' + encodeURIComponent(mpMail) : '');
         const startLabel = formatDateLabel(state.datetime.startDate);
         const endLabel = formatDateLabel(state.datetime.endDate);
 
@@ -4106,6 +4108,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <span style="font-size:16px;">📱</span>
                             <span>${t('checkMypage')}</span>
                         </div>
+                    </div>
+                </div>
+
+                <div style="text-align:left;margin-bottom:16px;">
+                    <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:8px;">${t('mpUrlLabel')}</div>
+                    <div style="background:#f0f7ff;border:1px solid #93c5fd;border-radius:10px;padding:12px;">
+                        <div style="font-size:12px;color:#1d4ed8;word-break:break-all;line-height:1.6;margin-bottom:10px;">${mypageUrl}</div>
+                        <button type="button" onclick="copyResId(this,'${mypageUrl}')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px solid #2563eb;border-radius:8px;background:#fff;color:#2563eb;font-weight:800;font-size:13px;cursor:pointer;">
+                            <span>${t('copyUrl')}</span><span style="font-size:13px;">📋</span>
+                        </button>
                     </div>
                 </div>
 
@@ -5736,7 +5748,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             total: '合計（税込）',
             // Complete
             completeTitle: 'ご予約が完了しました', resNo: '予約番号', copyResId: '予約番号をコピー', copyResIdHint: 'タップでコピーできます',
-            nextStep: '次のステップ', emailSent: '確認メールを送信しました', checkMypage: 'マイページで予約状況を確認',
+            nextStep: '次のステップ', emailSent: '確認メールを送信しました', checkMypage: 'マイページで予約状況を確認', mpUrlLabel: '📱 マイページURL（メールが届かない場合はこちら）', copyUrl: 'URLをコピー',
             goTop: 'トップに戻る',
             hdrBooker: '予約者情報', bookerSection: '👤 予約者情報',
             bookerDesc: 'ご予約者さまの情報を入力してください。運転される方が異なる場合は下のチェックを入れてください。',
@@ -5846,7 +5858,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             paypayName: 'PayPay', paypayDesc: 'Pay via PayPay app',
             total: 'Total (incl. tax)',
             completeTitle: 'Booking Confirmed!', resNo: 'Reservation No.', copyResId: 'Copy reservation number', copyResIdHint: 'Tap to copy',
-            nextStep: 'Next Steps', emailSent: 'Confirmation email sent', checkMypage: 'Check status on My Page',
+            nextStep: 'Next Steps', emailSent: 'Confirmation email sent', checkMypage: 'Check status on My Page', mpUrlLabel: '📱 My Page URL (use this if the email does not arrive)', copyUrl: 'Copy URL',
             goTop: 'Back to Top',
             hdrBooker: 'Booker Information', bookerSection: '👤 Booker Information',
             bookerDesc: "Please enter the booker's details. If the driver is different, check the box below.",
@@ -5956,7 +5968,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             paypayName: 'PayPay', paypayDesc: '使用PayPay App付款',
             total: '合計（含稅）',
             completeTitle: '預約已完成！', resNo: '預約編號', copyResId: '複製預約編號', copyResIdHint: '點擊即可複製',
-            nextStep: '下一步', emailSent: '已發送確認郵件', checkMypage: '在我的頁面確認預約狀態',
+            nextStep: '下一步', emailSent: '已發送確認郵件', checkMypage: '在我的頁面確認預約狀態', mpUrlLabel: '📱 我的頁面網址（若未收到郵件請用此連結）', copyUrl: '複製網址',
             goTop: '回到首頁',
             hdrBooker: '預約者資訊', bookerSection: '👤 預約者資訊',
             bookerDesc: '請輸入預約者資訊。若駕駛人不同，請勾選下方選項。',
@@ -6066,7 +6078,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             paypayName: 'PayPay', paypayDesc: 'PayPay 앱으로 결제',
             total: '합계 (세금 포함)',
             completeTitle: '예약이 완료되었습니다!', resNo: '예약 번호', copyResId: '예약 번호 복사', copyResIdHint: '탭하면 복사됩니다',
-            nextStep: '다음 단계', emailSent: '확인 이메일을 보냈습니다', checkMypage: '마이페이지에서 예약 상태 확인',
+            nextStep: '다음 단계', emailSent: '확인 이메일을 보냈습니다', checkMypage: '마이페이지에서 예약 상태 확인', mpUrlLabel: '📱 마이페이지 URL (이메일이 오지 않으면 여기로)', copyUrl: 'URL 복사',
             goTop: '처음으로',
             hdrBooker: '예약자 정보', bookerSection: '👤 예약자 정보',
             bookerDesc: '예약자분의 정보를 입력해 주세요. 운전하시는 분이 다른 경우 아래에 체크해 주세요.',
