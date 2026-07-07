@@ -238,7 +238,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1";
-const ADMIN_VER="kd1.8 KEYDROP専用(フォーム系判定OFF・正常表示)";
+const ADMIN_VER="kd1.9 KEYDROP専用(店舗を色/店名で明示)";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=s=>document.querySelector(s);
 function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
@@ -587,12 +587,16 @@ function renderInner(){
   // 時系列順（お届け日→時間）。ステータスは色・点滅で分かるので並びは日付優先。
   list.sort((a,b)=>((a.lend_date||"")+ (a.lend_time||"")).localeCompare((b.lend_date||"")+(b.lend_time||"")));
   const rc=RES.filter(stReq).length;  // 変更依頼バッジ＝承認待ちの依頼(変更リクエスト)のみ。情報変更(即時反映済)は含めない
+  const TH=STORE==="nha"?{bg:"#c2410c",name:"那覇",emoji:"🌺"}:{bg:"#0e7490",name:"札幌",emoji:"❄️"};
+  const swBtn=(s,emo,nm)=>`<button onclick="setStore('${s}')" style="font-size:14px;font-weight:900;padding:7px 16px;border-radius:999px;cursor:pointer;border:2px solid #fff;${STORE===s?`background:#fff;color:${TH.bg}`:"background:transparent;color:#fff;opacity:.7"}">${STORE===s?"● ":""}${emo} ${nm}</button>`;
   $("#app").innerHTML=`
-  <div class="hd"><div class="logo">KEY<b>◦</b>DROP <span style="font-size:10px;background:#FABE00;color:#083344;padding:1px 7px;border-radius:999px;margin-left:4px">専用</span></div><div class="t">KEYDROP マイページ管理 <span style="font-size:10px;color:#94a3b8;font-weight:600">${ADMIN_VER}</span> <span style="font-size:10px;color:#fbbf24;font-weight:800;background:#0b3a4a;padding:1px 7px;border-radius:6px">診断 店=${STORE} 予約${RES.length}件 ${tok()?"認証OK":"未認証"}</span></div>
-    <div class="storesw" style="display:flex;gap:4px;margin-left:12px">
-      <button onclick="setStore('spk')" style="font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px;border:1px solid ${STORE==="spk"?"#0e7490":"#cbd5e1"};background:${STORE==="spk"?"#0e7490":"#fff"};color:${STORE==="spk"?"#fff":"#475569"};cursor:pointer">札幌</button>
-      <button onclick="setStore('nha')" style="font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px;border:1px solid ${STORE==="nha"?"#0e7490":"#cbd5e1"};background:${STORE==="nha"?"#0e7490":"#fff"};color:${STORE==="nha"?"#fff":"#475569"};cursor:pointer">那覇</button>
+  <div class="hd" style="background:${TH.bg}"><div class="logo">KEY<b>◦</b>DROP</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-left:12px">
+      <span style="font-size:19px;font-weight:900;color:#fff;background:rgba(255,255,255,.2);padding:5px 16px;border-radius:11px;letter-spacing:.06em;white-space:nowrap">${TH.emoji} ${TH.name}店</span>
+      <span style="font-size:12px;color:#fff;opacity:.9;white-space:nowrap">を表示中・予約${RES.length}件 ${tok()?"":"<b style=color:#fde047>⚠未ログイン</b>"}</span>
     </div>
+    <div class="storesw" style="display:flex;gap:8px;margin-left:18px">${swBtn("spk","❄️","札幌")}${swBtn("nha","🌺","那覇")}</div>
+    <span style="font-size:9px;color:#fff;opacity:.55;margin-left:10px">${ADMIN_VER}</span>
     <div class="sp"></div>
     <select class="opsel ${OPERATOR?"":"need"}" onchange="setOp(this.value)">
       <option value="">担当者を選択…</option>
