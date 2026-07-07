@@ -23,6 +23,12 @@ const TPL: Record<string, (u: string, r: any) => string> = {
   mypage_return3h: (u) => `【HANDYMAN 札幌デリバリー】まもなくご返却のお時間です（約3時間後）。回収の場所・時間をご確認ください👇\nPickup is in about 3 hours. Please review the pickup place & time 👇\n${u}`,
 };
 
+// 無人貸出・乗り捨ての担当が付いた予約は、貸出/返却リマインドを自動送信しない（スタッフ手動運用）。
+//   貸出担当(d-タスク)が無人/乗り捨て → 場所未設定(②)・前日(③)リマインドを止める
+//   返却担当(c-タスク)が乗り捨て/無人 → 返却3時間前(④)リマインドを止める
+//   ①初動のマイページ案内は残す。将来 全体自動ONでもこの2種は除外を維持する。
+const UNATTENDED_RE = /無人|乗り?捨/;
+
 async function callLinePush(store: string, resvNo: string, action: string, message: string): Promise<any> {
   const secret = Deno.env.get("LINEPUSH_SECRET");
   if (!secret) return { ok: false, reason: "no_secret" };
@@ -77,6 +83,26 @@ Deno.serve(async (req) => {
     }
   }
 
+  // 無人貸出・乗り捨て判定用: リマインド候補予約の d-(貸出) / c-(返却) タスク担当を取得
+  const remIds = resvs
+    .filter((r: any) => linked.has(r.id) && r.mypage_token &&
+      (r.lend_date === d1 || r.lend_date === d3 || r.return_date === today || r.return_date === d1))
+    .map((r: any) => r.id);
+  const lendAsg: Record<string, string> = {};
+  const colAsg: Record<string, string> = {};
+  for (let i = 0; i < remIds.length; i += 60) {
+    const chunk = remIds.slice(i, i + 60).map((x: string) => encodeURIComponent(x)).join(",");
+    if (!chunk) continue;
+    const ts = await sbGet("tasks", `reservation_id=in.(${chunk})&deleted=not.is.true&select=reservation_id,_id,assignee`);
+    for (const t of ts) {
+      const id = String(t._id || "");
+      if (id.startsWith("d-")) lendAsg[t.reservation_id] = String(t.assignee || "");
+      else if (id.startsWith("c-")) colAsg[t.reservation_id] = String(t.assignee || "");
+    }
+  }
+  const unLend = (id: string) => lendAsg[id] && UNATTENDED_RE.test(lendAsg[id]);
+  const unCol = (id: string) => colAsg[id] && UNATTENDED_RE.test(colAsg[id]);
+
   const nowMs = Date.now();
   const results: any[] = [];
   const push = async (r: any, action: string) => {
@@ -93,12 +119,12 @@ Deno.serve(async (req) => {
     if (!linked.has(r.id) || !r.mypage_token) continue;
     // ① 初動（LINE ID取得後、まだ送っていなければ）
     await push(r, "mypage_initial");
-    // ② 場所未設定リマインド（貸出3日前・OP解決場所が空）
-    if (r.lend_date === d3 && !(placeByRes[r.id])) await push(r, "mypage_place");
-    // ③ 前日
-    if (r.lend_date === d1) await push(r, "mypage_daybefore");
-    // ④ 返却3時間前（返却日時が now〜now+3h+window内）
-    if (r.return_date && r.return_date >= today) {
+    // ② 場所未設定リマインド（貸出3日前・OP解決場所が空）※無人貸出は除外
+    if (r.lend_date === d3 && !(placeByRes[r.id]) && !unLend(r.id)) await push(r, "mypage_place");
+    // ③ 前日 ※無人貸出は除外
+    if (r.lend_date === d1 && !unLend(r.id)) await push(r, "mypage_daybefore");
+    // ④ 返却3時間前（返却日時が now〜now+3h+window内）※乗り捨て/無人返却は除外
+    if (r.return_date && r.return_date >= today && !unCol(r.id)) {
       const rt = (r.return_time || r.col_time || "18:00");
       if (/^\d{1,2}:\d{2}$/.test(rt)) {
         const dep = new Date(`${r.return_date}T${rt}:00+09:00`).getTime();

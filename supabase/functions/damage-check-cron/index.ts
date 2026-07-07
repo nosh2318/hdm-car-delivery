@@ -16,9 +16,11 @@ function json(o: unknown) { return new Response(JSON.stringify(o), { headers: { 
 const enc = encodeURIComponent;
 
 const STORES: Record<string, any> = {
-  spk: { tasks: "tasks", typeCol: "type", typeVals: ["DEL"], timeCol: "time", resvCol: "reservation_id", otaCol: "ota", cfg: "spk_line_config", sends: "spk_line_sends", doneCol: "done", defLead: 30 },
-  nha: { tasks: "nha_tasks", typeCol: "内容", typeVals: ["PUB", "DEL", "来店"], timeCol: "時間", resvCol: "予約番号", otaCol: "OTA", cfg: "nha_line_config", sends: "nha_line_sends", doneCol: null, defLead: 60 },
+  spk: { tasks: "tasks", typeCol: "type", typeVals: ["DEL"], timeCol: "time", resvCol: "reservation_id", otaCol: "ota", assigneeCol: "assignee", cfg: "spk_line_config", sends: "spk_line_sends", doneCol: "done", defLead: 30 },
+  nha: { tasks: "nha_tasks", typeCol: "内容", typeVals: ["PUB", "DEL", "来店"], timeCol: "時間", resvCol: "予約番号", otaCol: "OTA", assigneeCol: "担当", cfg: "nha_line_config", sends: "nha_line_sends", doneCol: null, defLead: 60 },
 };
+// 無人貸出・乗り捨ては傷チェック自動送信の対象外（担当欄でスタッフが手動運用）。将来 全体で自動ONになっても、この2種は除外を維持する。
+const UNATTENDED_RE = /無人|乗り?捨/;
 
 Deno.serve(async (req) => {
   if (req.headers.get("x-cron-secret") !== CRON_SECRET) return new Response("unauthorized", { status: 401 });
@@ -35,12 +37,13 @@ Deno.serve(async (req) => {
   const nowMin = nowJST.getUTCHours() * 60 + nowJST.getUTCMinutes();
 
   // タスク取得（列名は日本語含むのでencode）
-  let q = `${S.tasks}?date=eq.${today}&${enc(S.typeCol)}=in.(${S.typeVals.map(enc).join(",")})&${enc(S.resvCol)}=not.is.null&select=${enc(S.resvCol)},${enc(S.timeCol)},assigned_vehicle,${enc(S.otaCol)}`;
+  let q = `${S.tasks}?date=eq.${today}&${enc(S.typeCol)}=in.(${S.typeVals.map(enc).join(",")})&${enc(S.resvCol)}=not.is.null&select=${enc(S.resvCol)},${enc(S.timeCol)},assigned_vehicle,${enc(S.otaCol)},${enc(S.assigneeCol)}`;
   if (S.doneCol) q += `&${enc(S.doneCol)}=eq.false`;
   const tasks = await sbGet(q);
-  const cands = (tasks as any[]).map((t) => ({ resv: t[S.resvCol], time: t[S.timeCol], veh: t.assigned_vehicle, ota: t[S.otaCol] }))
+  const cands = (tasks as any[]).map((t) => ({ resv: t[S.resvCol], time: t[S.timeCol], veh: t.assigned_vehicle, ota: t[S.otaCol], asg: t[S.assigneeCol] }))
     .filter((t) => {
       if (!t.resv || !t.veh) return false;
+      if (t.asg && UNATTENDED_RE.test(String(t.asg))) return false; // 無人貸出・乗り捨ては自動送信しない
       if (!t.time || !/^\d{1,2}:\d{2}/.test(t.time)) return false;
       const [h, m] = t.time.split(":").map(Number);
       const until = (h * 60 + m) - nowMin;

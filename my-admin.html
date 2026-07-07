@@ -238,7 +238,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1";
-const ADMIN_VER="kd1.7 KEYDROP専用(診断表示付き)";
+const ADMIN_VER="kd1.8 KEYDROP専用(フォーム系判定OFF・正常表示)";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=s=>document.querySelector(s);
 function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
@@ -258,7 +258,7 @@ function RSEL(){return STORE==="nha"
  : "id,name,ota,lend_date,return_date,lend_time,return_time,del_time,col_time,vehicle,del_place,col_place,visit_type,return_type,people,opt_b,opt_c,opt_j,insurance,status,mypage_token,mypage_locked,staff_note,tel,mail,admin_checked_at,admin_checked_by";}
 function setStore(s){
   try{
-    if(s===STORE){showErr("既に"+(s==="nha"?"那覇":"札幌")+"を表示中です");return;}
+    if(s===STORE){toast("既に"+(s==="nha"?"那覇":"札幌")+"を表示中です");return;}
     STORE=s;try{localStorage.setItem("kd_admin_store",s);}catch(e){}
     SEL=null;SELTASKS=null;RES=[];CHG={};LINK_MAP={};SS_MAP={};
     if(typeof render==="function")render();
@@ -414,8 +414,10 @@ function opPlaceOf(r){const p=PLACE_MAP[r.id]||{};return{del:String(p.del||r.del
 function coreP(s){return String(s||"").replace(/[\s　]/g,"").replace(/\d{1,2}[:：]\d{2}.*$/,"").trim()}
 // SS(芯) と OP(芯) が実質的に食い違うか（双方向の包含で住所⇔名称のブレを許容）
 function placeConflict(ss,op){const a=coreP(ss),b=coreP(op);if(!a||!b)return false;return !(a.includes(b)||b.includes(a))}
-function stMismatch(r){return MISMATCH_RES.has(r.id)}                                                // 🔴 情報相違＝要確認・修正
-function stReanswer(r){return ALERT_RES.has(r.id)}                                                   // ⑤フォーム再回答(迷子)
+// KEYDROPはエルメ(LINE)受付フォーム/SSを使わない＝フォーム系判定(相違/迷子/異常値)は常にfalse。
+// 顧客管理はメール送付のマイページ経由なので、有効な要対応は「変更リクエスト(req)」「情報変更(userchg)」「場所/時間なし(miss)」のみ。
+function stMismatch(r){return false}                                                                 // 🔴 情報相違(SS≠OP)＝KEYDROP対象外
+function stReanswer(r){return false}                                                                 // ⑤フォーム再回答(迷子)＝KEYDROP対象外
 // SS回答日時(JST文字列)→epoch ms
 function ssTimeMs(s){if(!s)return NaN;const m=String(s).match(/(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?/);if(!m)return NaN;return Date.parse(m[1]+"-"+String(m[2]).padStart(2,"0")+"-"+String(m[3]).padStart(2,"0")+"T"+String(m[4]).padStart(2,"0")+":"+m[5]+":"+(m[6]||"00")+"+09:00")}
 function fmtT(ms){if(isNaN(ms))return"不明";const d=new Date(ms);return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
@@ -457,6 +459,7 @@ function hasPlace(r){const p=opPlaceOf(r);return !!(String(p.del||"").trim()||St
 //  ② HPなのに場所がない（HPは予約時に場所が入るはず→無いのは異常）
 //  ③ 場所があるのにOPシートタスクに場所がない（フォーム/予約に場所ありなのに生成済みOPタスクが空＝同期漏れ）
 function stAbnormalConf(r){
+  return false; // KEYDROPはフォーム(SS)を使わない＝「フォーム未回答なのに場所あり」等の異常値判定は成立しない（誤検知の元）。予約情報の場所は正常。
   const s=placeSources(r),op=opPlaceOf(r);
   const opDel=String(op.del||"").trim(),opCol=String(op.col||"").trim();
   // ① 非HP・フォーム未回答なのに場所あり
