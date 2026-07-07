@@ -18,8 +18,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 .hd .t{font-weight:800;font-size:14px}
 .hd .sp{margin-left:auto}
 .movebar{display:flex;align-items:center;gap:10px;padding:6px 14px;background:#eef4ff;border-bottom:1px solid #d6e2f5;overflow:hidden;min-height:34px}
-.movebar.has{animation:mbBlink 1.3s ease-in-out infinite}
-@keyframes mbBlink{0%,100%{background:#eef4ff;box-shadow:inset 0 0 0 2px #bfdbfe}50%{background:#fff4e0;box-shadow:inset 0 0 0 2px #f59e0b}}
+.movebar.has{background:#fff4e0;box-shadow:inset 0 0 0 2px #f59e0b}
+/* 旧mbBlink無限アニメ(box-shadow連続再描画=重さの原因)は撤去。静的ハイライトに変更 */
 .movebar .mb-lbl{font-size:11px;font-weight:800;color:#1e40af;white-space:nowrap;flex:none}
 .movebar .mb-empty{font-size:12px;color:#94a3b8}
 .movebar .mb-scroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin;flex:1;min-width:0;-webkit-overflow-scrolling:touch}
@@ -29,9 +29,9 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 .movebar .mb-chip:hover{background:#f0f6ff;border-color:#3b82f6}
 @media(max-width:640px){.movebar{padding:6px 10px;gap:7px}.movebar .mb-lbl{font-size:10px}.movebar .mb-chip{font-size:11px;padding:4px 9px}}
 .hd button{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
-.hd button.alert{background:var(--danger);animation:blink 1.2s infinite}
+.hd button.alert{background:var(--danger)}
 .opsel{background:#fff;color:var(--ink);border:0;border-radius:8px;padding:7px 10px;font-weight:800;font-size:12.5px;max-width:150px}
-.opsel.need{background:#FABE00;color:#0F1F45;animation:blink 1.4s infinite}
+.opsel.need{background:#FABE00;color:#0F1F45}
 .miniedit{margin-left:8px;font-size:11px;font-weight:800;color:var(--accent);background:#eafaf5;border:1px solid #b7e6da;border-radius:999px;padding:2px 9px;cursor:pointer;vertical-align:middle}
 /* layout */
 .main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:12px;padding:12px;align-items:stretch;height:calc(100vh - 52px)}
@@ -109,7 +109,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 .actline.a-chg{background:#ffeceb;color:#b91c1c}
 .actline.a-miss{background:#f1f5f9;color:#475569}
 .actline.a-ack{background:#e9f9ef;color:#0e7a4a}
-.li .pop{position:absolute;right:8px;top:8px;font-size:10px;font-weight:800;color:#fff;background:var(--gold);border-radius:999px;padding:1px 7px;animation:pop 1.4s infinite}
+.li .pop{position:absolute;right:8px;top:8px;font-size:10px;font-weight:800;color:#fff;background:var(--gold);border-radius:999px;padding:1px 7px}
 .li .pop.chg{background:var(--ok);animation:none}
 .li .pop.reans{background:#7c3aed}
 .li .pop.chg2{background:var(--danger)}
