@@ -238,7 +238,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1";
-const ADMIN_VER="kd1.9 KEYDROP専用(店舗を色/店名で明示)";
+const ADMIN_VER="kd2.0 通知一覧を全メール実態に全更新";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=s=>document.querySelector(s);
 function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
@@ -1138,22 +1138,32 @@ async function acUndo(id,field){
 }
 /* ===== 📣 通知（マイページURL自動送信）タイミング・テンプレ・トリガー一覧＋ON/OFF ===== */
 const NOTIFY_ROWS=[
-  {ic:"①",name:"初動（LINE ID取得後）",trig:"お客様がフォーム回答→LINE ID取得された予約に、まだ未送信なら送る",tpl:"ご予約ありがとうございます。専用マイページで日時・場所の確認/変更ができます👇（日英併記）＋URL"},
-  {ic:"②",name:"場所未設定リマインド（貸出3日前）",trig:"貸出3日前・OP解決の場所が空 の予約のみ",tpl:"お届け／回収の場所が未設定です。マイページからご登録ください👇 ＋URL"},
-  {ic:"③",name:"前日",trig:"貸出日の前日",tpl:"明日がご利用日です。日時・お届け場所をご確認ください👇 ＋URL"},
-  {ic:"④",name:"返却3時間前",trig:"返却日時の約3時間前（15分毎cronで検知）",tpl:"まもなくご返却のお時間です。回収場所・時間をご確認ください👇 ＋URL"},
-  {ic:"⑤",name:"リクエスト承認/却下時",trig:"スタッフが変更依頼を承認/却下した瞬間（自動・実装済）",tpl:"ご依頼を承り反映しました／今回はお受けできません。＋URL"},
+  {ic:"①",name:"予約確定",ch:"メール",st:"ON",trig:"ご決済完了時（keydrop-pay）",tpl:"ご予約が確定しました。予約内容＋マイページURL（確認/変更/キャンセル）"},
+  {ic:"②",name:"お届け場所の確認（3日前）",ch:"メール",st:"ON",trig:"お届け3日前（cron keydrop-place-reminder・10:00JST）",tpl:"場所・時間に間違いがないかご確認・ご入力を＋マイページURL"},
+  {ic:"③",name:"前日リマインド",ch:"メール",st:"ON",trig:"お届け前日（cron keydrop-reminder・18:00JST）",tpl:"明日が貸出予定日です。最新のご予約内容をご確認＋マイページURL"},
+  {ic:"④",name:"返却前日",ch:"メール",st:"ON",trig:"返却前日（cron keydrop-return-reminder・17:00JST）",tpl:"明日がご返却予定日です。回収の時間・場所をご確認＋マイページURL"},
+  {ic:"⑤",name:"傷チェックURL",ch:"メール",st:"ON（本日ON）",trig:"当日お届け・毎朝8時JST（cron keydrop-damage-check）※配車＆傷共有ONの車両のみ",tpl:"ご出発前に車両の傷・ヘコミをご確認ください＋傷チェックURL"},
+  {ic:"⑥",name:"御礼",ch:"メール",st:"ON（本日ON）",trig:"返却翌日（cron keydrop-thanks・10:00JST）",tpl:"先日はご利用ありがとうございました。またのご利用をお待ちしております（URLなし）"},
+  {ic:"⑦",name:"お届け出発",ch:"メール",st:"ボタン(接続予定)",trig:"スタッフが🚚出発ボタン（Phase B：KEYDROP予約をメール送信に接続予定）",tpl:"まもなくお届けです。地図で現在地・待ち合わせ場所を確認＋追跡URL"},
+  {ic:"⑧",name:"回収に向かう",ch:"メール",st:"ボタン(接続予定)",trig:"スタッフが🧭回収ボタン（Phase B）",tpl:"回収に向かっています。地図で現在地を確認＋追跡URL"},
+  {ic:"⑨",name:"到着のお知らせ",ch:"メール",st:"ボタン(接続予定)",trig:"スタッフが📱到着ボタン（Phase B・本日テンプレ追加）",tpl:"只今スタッフが到着しました。ご準備をお願いします（お届けはナンバー付き・URLなし）"},
+  {ic:"⑩",name:"変更依頼の承認/却下",ch:"メール",st:"ON",trig:"スタッフが承認/却下した瞬間（keydrop-mypage decide）",tpl:"ご依頼を承認・反映／今回は見送り＋マイページURL"},
+  {ic:"⑪",name:"キャンセル受付／確定",ch:"メール",st:"自動",trig:"顧客がキャンセル依頼→受付メール／運営が確定→返金メール",tpl:"キャンセル依頼を受付／キャンセル確定・返金額をご案内"},
+  {ic:"⑫",name:"変更確定",ch:"メール",st:"自動",trig:"変更が反映された時（change_done）",tpl:"ご依頼の変更を反映しました＋マイページURL"},
 ];
 async function openNotify(){
   $("#modal").style.maxWidth="720px";
   const on=!!CFG.mypage_notify_enabled, tm=!!CFG.test_mode;
-  const rows=NOTIFY_ROWS.map(r=>`<div style="border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;margin-bottom:7px">
-    <div style="font-weight:800;font-size:13px">${r.ic} ${esc(r.name)}</div>
+  const stC=(s)=>!s?{bg:"#f1f5f9",fg:"#475569"}:s.indexOf("OFF")>=0?{bg:"#fee2e2",fg:"#b91c1c"}:s.indexOf("ボタン")>=0?{bg:"#fef3c7",fg:"#92400e"}:{bg:"#dcfce7",fg:"#15803d"};
+  const rows=NOTIFY_ROWS.map(r=>{const sc=stC(r.st);return `<div style="border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;margin-bottom:7px">
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-weight:800;font-size:13px">${r.ic} ${esc(r.name)}</span>
+      <span style="font-size:10px;font-weight:800;border-radius:999px;padding:1px 7px;background:#e0f2fe;color:#0369a1">📧 メール</span>
+      ${r.st?`<span style="font-size:10px;font-weight:800;border-radius:999px;padding:1px 7px;background:${sc.bg};color:${sc.fg}">${esc(r.st)}</span>`:""}</div>
     <div style="font-size:11.5px;color:#334155;margin-top:3px"><b>トリガー：</b>${esc(r.trig)}</div>
     <div style="font-size:11.5px;color:#64748b;margin-top:2px"><b>テンプレ：</b>${esc(r.tpl)}</div>
-  </div>`).join("");
-  $("#modal").innerHTML=`<h3>📣 マイページ通知（自動送信）</h3>
-    <div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">各通知＝<b>固定テンプレ文＋お客様専用マイページURL</b>を公式LINEへ自動送信。LINE未連携は安全にスキップ。</div>
+  </div>`}).join("");
+  $("#modal").innerHTML=`<h3>📣 顧客通知 一覧（KEY-DROP）</h3>
+    <div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">KEYDROPは<b>全て📧メール</b>（noreply@keydrop.jp・keydrop-send-mail）。LINEは使いません。札幌/那覇とも同じKEY-DROPブランドで送信。<b>ボタン(接続予定)</b>＝出発/回収/到着はテンプレ準備済み、APPボタン→メール接続はPhase Bで対応。</div>
     <div style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;background:${on?(tm?'#fff7ed':'#f0fdf4'):'#f1f5f9'};border:1px solid ${on?(tm?'#fed7aa':'#bbf7d0'):'#e2e8f0'};margin-bottom:10px">
       <div style="font-size:20px">${on?(tm?'🧪':'🟢'):'⛔'}</div>
       <div style="flex:1;font-size:12.5px">状態：<b>${on?(tm?'テスト送信中（テスト宛先のみ）':'本番ON（お客様に送信）'):'OFF（送信停止）'}</b><br>
@@ -1161,7 +1171,7 @@ async function openNotify(){
       <button class="btn ${on?'dang':'ok'}" onclick="toggleNotify()">${on?'OFFにする':'ONにする'}</button>
     </div>
     <div style="max-height:56vh;overflow:auto">${rows}</div>
-    <div style="font-size:11px;color:var(--sub);margin-top:8px">⚠️ 本番送信の前に：①<b>@SNS Auto を #sapporo_user_action に招待</b> ②まず<b>test_mode=ON＋自分のuserID</b>で検証→問題なければ本番ON。<br>タイミング/テンプレの調整は Edge Function <code>mypage-notify</code> で可能。15分毎cronで自動実行。</div>
+    <div style="font-size:11px;color:var(--sub);margin-top:8px">送信基盤＝<code>keydrop-send-mail</code>（Resend・毎分cron）。テンプレ/タイミングの調整は Edge Function とpg_cron（keydrop-place-reminder/reminder/return-reminder/damage-check/thanks）で可能。傷チェックは配車＆傷共有ONの車両のみ対象。</div>
     <div class="acts" style="margin-top:10px"><button class="btn ghost" onclick="openCfg()">⚙️ test_mode/宛先の設定へ</button><button class="btn ghost" onclick="closeM()">閉じる</button></div>`;
   $("#scrim").classList.add("show");
 }
