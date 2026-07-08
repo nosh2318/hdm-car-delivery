@@ -97,9 +97,36 @@ function buildTrack(n: any, collecting: boolean) {
   return { subject: `CARデリバリー KEY-DROP ${head}（予約番号 ${id}）`, body:
     `${p.name || "お客様"} 様\n\n${lead}\n下のリンクから、地図でスタッフの現在地と待ち合わせ場所をリアルタイムにご確認いただけます（アプリのインストールは不要です）。\n\n▶ 地図を開く\n${url}\n\n・地図で「📍今いる場所を共有」を押していただくと、より正確に合流できます（任意）。\n・マイページからもご確認いただけます：\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）／TEL ${TEL}（9:00〜19:00）\n\nCARデリバリー KEY-DROP\n` };
 }
-function withFooter(m: { subject: string; body: string }) {
-  m.body += `\n──────────\n※このメールは送信専用です。ご返信いただいてもお答えできません。\n　お問い合わせは公式LINE（${LINE_ID}）／TEL ${TEL}（9:00〜19:00）へ。\n`;
+function withFooter(m: any) {
+  // 一部テンプレは {text} を返すため body に正規化（旧バグ: body未定義で"undefined"送信を防止）
+  const base = (m.body != null ? m.body : (m.text != null ? m.text : ""));
+  m.body = base + `\n──────────\n※このメールは送信専用です。ご返信いただいてもお答えできません。\n　お問い合わせは公式LINE（${LINE_ID}）／TEL ${TEL}（9:00〜19:00）へ。\n`;
   return m;
+}
+// ④ 傷チェック（毎朝8時・当日お届け）＝傷チェックURLのみ（HANDYMAN同方針）
+function buildDamageCheck(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "";
+  return { subject: `【KEY-DROP】ご利用車両 傷チェックのご案内（予約番号: ${id}）`, body:
+    `${p.name || "お客様"} 様\n\n本日ご利用予定の車両について、傷チェックのご案内です。\nご出発前に、下記URLから車両の状態（傷・ヘコミ）をご確認ください（アプリのインストールは不要です）。\n\n▶ 車両 傷チェック\n${p.damage_url || ""}\n\n気になる点がございましたら、車両お引き渡し時に担当スタッフまでお申し付けください。\n※ご出発後の申告は対応いたしかねる場合がございます。\n\nCARデリバリー KEY-DROP\n` };
+}
+// ⑤ 御礼（返却翌日）＝URLなし（HANDYMAN同方針）
+function buildThanks(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "";
+  return { subject: `【KEY-DROP】先日はご利用ありがとうございました（予約番号: ${id}）`, body:
+    `${p.name || "お客様"} 様\n\n先日はCARデリバリー KEY-DROP をご利用いただき、誠にありがとうございました。\nその後、お変わりなくお過ごしでしょうか。\n\n数あるサービスの中から当店をお選びいただけましたこと、スタッフ一同、心より感謝申し上げます。\nお車での道中やご旅行が、素敵なお時間となっておりましたら幸いです。\n\nまたのご利用を、心よりお待ち申し上げております。\n\nCARデリバリー KEY-DROP\n` };
+}
+// ⑨ 到着のお知らせ（到着ボタン）＝URLなし（HANDYMAN同方針）お届け/回収で文面別
+function buildArrival(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "", collecting = !!p.collecting;
+  const plate = String(p.plate || "").trim();
+  if (collecting) {
+    return { subject: `【KEY-DROP】ご返却場所到着のお知らせ（予約番号: ${id}）`, body:
+      `${p.name || "お客様"} 様\n\n回収スタッフがご返却場所に到着いたしました。\nご準備できましたら対応のほどお願い申し上げます。\n何卒よろしくお願いいたします。\n\nCARデリバリー KEY-DROP\n` };
+  }
+  return { subject: `【KEY-DROP】車両到着のお知らせ（予約番号: ${id}）`, body:
+    `${p.name || "お客様"} 様\n\nお待たせいたしました。只今スタッフが到着いたしました。\nご準備整い次第、受け取り対応をお願いいたします。引き続きどうぞ宜しくお願い申し上げます。`
+    + (plate ? `\n\n対象車両のナンバーは ${plate} でございます。` : "")
+    + `\n\nCARデリバリー KEY-DROP\n` };
 }
 function buildPlaceReminder(n: any) {
   const p = n.payload || {}, id = n.reservation_id || "";
@@ -123,8 +150,15 @@ function buildDecision(n: any) {
       ? `${p.name || "お客様"} 様\n\nマイページからいただいた${label}${detail}を確認し、承認・反映いたしました。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\n内容　　　：${label}${detail}\n状態　　　：✅ 承認・反映済み\n━━━━━━━━━━━━━━━━━━━━\n\n■ ご確認\nマイページで最新の予約内容をご確認いただけます（ログイン不要）。\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n`
       : `${p.name || "お客様"} 様\n\nマイページからいただいた${label}${detail}を確認いたしました。\n誠に恐れ入りますが、今回は下記のとおり承れませんでした。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\n内容　　　：${label}${detail}\n状態　　　：今回は見送りとさせていただきました\n━━━━━━━━━━━━━━━━━━━━\n\n詳細・別のご希望については、お手数ですが公式LINEよりご連絡ください。\n\n■ ご確認\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n` };
 }
+// オプション/補償/受渡 変更依頼の受付（未確定・承認制）
+function buildRequestAck(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "";
+  return { subject: `【KEY-DROP】変更のご依頼を受け付けました（予約番号 ${id}）`, body:
+    `${p.name || "お客様"} 様\n\n下記の変更のご依頼を受け付けました。\n※この時点では *まだ確定しておりません（未確定）* 。\n担当が内容を確認のうえ、確定・ご連絡いたします。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\nご依頼内容：${p.label || "変更のご依頼"}${p.detail ? `（${p.detail}）` : ""}\n状態　　　：🕓 確認中（未確定）\n━━━━━━━━━━━━━━━━━━━━\n\n■ ご確認\n現在の状況はマイページでご確認いただけます（🕓確認中と表示されます）。\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n` };
+}
 function buildMail(n: any) {
   switch (n.type) {
+    case "request_ack": return withFooter(buildRequestAck(n));
     case "confirm": return withFooter(buildConfirm(n));
     case "cancel_ack": return withFooter(buildCancelAck(n));
     case "cancel_done": return withFooter(buildCancelDone(n));
@@ -135,6 +169,9 @@ function buildMail(n: any) {
     case "mypage_decision": return withFooter(buildDecision(n));
     case "reminder_place": return withFooter(buildPlaceReminder(n));
     case "reminder_return": return withFooter(buildReturnReminder(n));
+    case "damage_check": return withFooter(buildDamageCheck(n));
+    case "thanks": return withFooter(buildThanks(n));
+    case "arrival": return withFooter(buildArrival(n));
     default: return buildCancelRequest(n); // 運営向け（cancel_request）はフッター無し
   }
 }

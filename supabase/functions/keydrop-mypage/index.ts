@@ -476,6 +476,10 @@ Deno.serve(async (req) => {
     if (already[0]) return json({ ok: true, alreadyRequested: true, message: "同じ内容の依頼を受付済みです" }, 200, origin);
     const payload = (p.target && typeof p.target === "object") ? p.target : null;
     await sbPost("keydrop_mypage_changes", { reservation_id: resId, store: M.store, field: reqType, old_value: "", new_value: detail, source: "customer", status: "requested", note: map[reqType], payload });
+    // 顧客へ「受け付けました（未確定・確認中）」メール（承認制の依頼＝オプション/補償/受渡）
+    if (r.mail && String(r.mail).indexOf("@") > 0) {
+      await sbPost("keydrop_notifications", { reservation_id: resId, store: M.store, to_email: r.mail, type: "request_ack", sent: false, payload: { name: r.name || "", label: map[reqType], detail } }).catch(() => {});
+    }
     await notifySlack(`🟡 *${map[reqType]}の依頼* ${resId} ${r.name || ""}様\n利用:${r.lend_date}〜${r.return_date}\n依頼内容: ${detail}\n→ 管理で対応してください`, M.slack);
     return json({ ok: true, requested: true, kind: map[reqType] }, 200, origin);
   }
