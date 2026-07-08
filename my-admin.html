@@ -238,7 +238,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1";
-const ADMIN_VER="kd2.2 ヘッダー整列(横書き統一)";
+const ADMIN_VER="kd2.3 クラス名を店舗別カタログから(那覇F=アクア等)";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=s=>document.querySelector(s);
 function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
@@ -273,7 +273,9 @@ const TIMES=(()=>{let a=[];for(let h=9;h<=19;h++){a.push(("0"+h).slice(-2)+":00"
 function setOp(v){OPERATOR=v;localStorage.setItem("admin_op",v);render()}
 function needOp(){if(!OPERATOR){toast("先に担当者を選んでください");return false}return true}
 function sure(msg){return window.confirm("本当に"+msg+"よろしいですか？")}
-const CLS={A:"アルファード/ヴェル",B:"ノア/デリカ",C:"ロッキー/CX-3",S:"ハリアー/CX-5",F:"ルーミー/ソリオ",H:"カローラ/アクセラ"};
+const CLS={A:"アルファード/ヴェル",B:"ノア/デリカ",C:"ロッキー/CX-3",S:"ハリアー/CX-5",F:"ルーミー/ソリオ",H:"カローラ/アクセラ"}; // 札幌フォールバック
+let KCAT={}; // 店舗別クラスカタログ(公開ビュー・車種名の正)＝那覇/札幌で車種が違うため
+function clsLabel(v){const c=KCAT[v]||{};return c.vehicles||c.label||CLS[v]||"";}
 const CLSC={A:"#7c3aed",B:"#0284c7",C:"#059669",S:"#d97706",F:"#db2777",H:"#64748b"};
 // 流入先(OTA)ラベル＋色
 const OTAL={J:"じゃらん",R:"楽天",S:"skyticket",O:"エアトリ",RC:"レンタカーcom",G:"GoGoOut",HP:"オフィシャル",SP:"オフィシャル",direct:"直販",KEYDROP:"KEYDROP"};
@@ -326,6 +328,8 @@ async function loadAll(keepSel){
     if(S!==STORE)return;
   }
   CFG=cfg[0]||{}; RES=res||[]; STAFF=(stf||[]).map(s=>s.name).filter(Boolean);
+  // 店舗別クラスカタログ（車種名の正・那覇/札幌で違う）を取得
+  try{const cv=await api((STORE==="nha"?"public_keydrop_classes_nha_v":"public_keydrop_classes_v")+"?select=value&limit=1").catch(()=>[]);const raw=cv&&cv[0]&&cv[0].value;const pp=(typeof raw==="string")?JSON.parse(raw):raw;KCAT=(pp&&pp.items)||{};}catch(e){KCAT={};}
   LINE_SET=new Set((links||[]).filter(l=>l.resv_no&&l.line_user_id).map(l=>l.resv_no));
   SENDS={}; (sends||[]).forEach(s=>{ if(s.resv_no&&!SENDS[s.resv_no]) SENDS[s.resv_no]={at:s.sent_at,status:s.status}; }); // 最新のURL送信
   VIEWS={}; (views||[]).forEach(v=>{ if(v.reservation_id) VIEWS[v.reservation_id]={first:v.first_at,last:v.last_at,count:v.view_count}; });
@@ -816,7 +820,7 @@ function detailHtml(){
     <div class="dnm">${esc(r.name||"—")} 様</div>
     <div class="dbadges">
       <div class="dbadge"><span class="dl">🎫 予約番号</span><span class="dv">${esc(r.id)}</span></div>
-      <div class="dbadge" style="background:${CLSC[r.vehicle]||'#64748b'};color:#fff;border:0"><span class="dl" style="color:rgba(255,255,255,.85)">🚗 クラス</span><span class="dv">${esc(r.vehicle)}（${esc(CLS[r.vehicle]||"")}）</span></div>
+      <div class="dbadge" style="background:${CLSC[r.vehicle]||'#64748b'};color:#fff;border:0"><span class="dl" style="color:rgba(255,255,255,.85)">🚗 クラス</span><span class="dv">${esc(r.vehicle)}（${esc(clsLabel(r.vehicle))}）</span></div>
       <div class="dbadge" style="background:${otaColor(r.ota)};color:#fff;border:0"><span class="dl" style="color:rgba(255,255,255,.85)">🌐 流入先</span><span class="dv">${esc(otaLabel(r.ota))}</span></div>
     </div>
     <div class="dst">${esc(r.status||"予約確定")}</div>
