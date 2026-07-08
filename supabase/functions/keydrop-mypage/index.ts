@@ -110,6 +110,35 @@ async function notifySlack(text: string, channel?: string): Promise<void> {
     if (!d.ok) console.error("[notifySlack] failed:", JSON.stringify(d));
   } catch (e) { console.error("[notifySlack] error:", String(e)); }
 }
+// SPKと同じ Block Kit カード形式（見やすい）で運営通知
+async function notifySlackCard(o: { emoji: string; title: string; name?: string; resId: string; ota?: string; period?: string; vehicle?: string; lines?: string[]; action?: string }, channel?: string): Promise<void> {
+  const token = Deno.env.get("SLACK_BOT_TOKEN");
+  const ch = channel || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
+  if (!token || !ch) { console.log("[notifySlackCard] no token/ch (skip):", o.title); return; }
+  const fields: any[] = [
+    { type: "mrkdwn", text: `*お客様*\n${o.name || "-"} 様` },
+    { type: "mrkdwn", text: `*予約番号*\n\`${o.resId}\`` },
+  ];
+  if (o.ota) fields.push({ type: "mrkdwn", text: `*予約もと*\n${o.ota}` });
+  if (o.period) fields.push({ type: "mrkdwn", text: `*利用期間*\n${o.period}` });
+  if (o.vehicle) fields.push({ type: "mrkdwn", text: `*車両*\n${o.vehicle}` });
+  const blocks: any[] = [
+    { type: "header", text: { type: "plain_text", text: `${o.emoji} ${o.title}`, emoji: true } },
+    { type: "section", fields },
+  ];
+  if (o.lines && o.lines.length) blocks.push({ type: "section", text: { type: "mrkdwn", text: o.lines.join("\n") } });
+  if (o.action) blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: o.action }] });
+  blocks.push({ type: "divider" });
+  try {
+    const r = await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "content-type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ channel: ch, text: `${o.emoji} ${o.title}｜${o.name || ""}様 ${o.resId}`, blocks }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!d.ok) console.error("[notifySlackCard] failed:", JSON.stringify(d));
+  } catch (e) { console.error("[notifySlackCard] error:", String(e)); }
+}
 
 // ★ 店舗別テーブル/タスク/Slack/列マッピング。store指定が無ければ予約番号接頭辞 KDN- で那覇を推論。
 //   SELECTはPostgRESTエイリアス(alias:col)で那覇の列名(start_*/vehicle_class)を札幌の項目名(lend_*/vehicle)へ揃える＝本体ロジック無改修。
@@ -304,17 +333,22 @@ Deno.serve(async (req) => {
     if (st === "cancelled" || st === "キャンセル" || st === "cancel") {
       return json({ error: "キャンセル済みの予約は変更できません" }, 409, origin);
     }
-    // 出発24時間前を過ぎていたらオンライン変更不可（→公式LINE）
-    if (within24h(r.lend_date, r.lend_time || r.del_time || "")) {
-      return json({ error: "出発24時間前を過ぎているため、変更は公式LINEにて承ります", lineOnly: true }, 409, origin);
-    }
-
     // 入力（与えられた項目だけ変更）。場所は文字列、時間は営業時間内30分刻み。
     const has = (k: string) => Object.prototype.hasOwnProperty.call(p, k);
     const delPlace = has("del_place") ? String(p.del_place || "").trim() : null;
     const colPlace = has("col_place") ? String(p.col_place || "").trim() : null;
     const lendTime = has("lend_time") ? String(p.lend_time || "").trim() : null;
     const returnTime = has("return_time") ? String(p.return_time || "").trim() : null;
+
+    // 時間軸（SPKと統一）：お届け(場所/時間)＝出発24時間前まで即時 ／ 回収(場所/時間)＝返却2時間前まで即時。以降は公式LINE。
+    const _delChg = (delPlace !== null || lendTime !== null);
+    const _colChg = (colPlace !== null || returnTime !== null);
+    if (_delChg && within24h(r.lend_date, r.lend_time || r.del_time || "")) {
+      return json({ error: "お届けの変更は出発24時間前まで。以降は公式LINEにて承ります", lineOnly: true }, 409, origin);
+    }
+    if (_colChg && hoursUntil(r.return_date, r.return_time || r.col_time || "") < 2) {
+      return json({ error: "回収の変更は返却2時間前まで。以降は公式LINEにて承ります", lineOnly: true }, 409, origin);
+    }
 
     if (delPlace !== null && delPlace.length < 2) return json({ error: "お届け場所が不正です" }, 400, origin);
     if (colPlace !== null && colPlace.length < 2) return json({ error: "回収場所が不正です" }, 400, origin);
@@ -381,17 +415,20 @@ Deno.serve(async (req) => {
     if (Object.keys(colTaskPatch).length) await patchTask(`c-${resId}`, colTaskPatch);
     }
 
-    // 3) 運営へSlack通知（OPシート連動・任意env）
-    const lines = [
-      `🔔 *マイページ変更* （顧客が予約内容を変更しました）`,
-      `予約番号: ${resId} / ${r.name || ""}様`,
-      `お届け: ${r.lend_date} ${lendTime !== null ? `→ *${lendTime}*` : (r.lend_time || "")}`,
-      delPlace !== null ? `お届け場所 → *${delPlace}*` : null,
-      `回収: ${r.return_date} ${returnTime !== null ? `→ *${returnTime}*` : (r.return_time || "")}`,
-      colPlace !== null ? `回収場所 → *${colPlace}*` : null,
-      `※配車表/OPシートに反映済み・ご確認ください`,
-    ].filter(Boolean);
-    await notifySlack(lines.join("\n"), M.slack);
+    // 3) 運営へSlack通知（SPKと同じ Block Kit カード・見やすく）
+    const chLines: string[] = [];
+    if (delPlace !== null) chLines.push(`• お届け場所：${r.del_place || "（未設定）"} → *${delPlace}*`);
+    if (lendTime !== null) chLines.push(`• お届け時間：${r.lend_time || r.del_time || "-"} → *${lendTime}*`);
+    if (colPlace !== null) chLines.push(`• 回収場所：${r.col_place || "（未設定）"} → *${colPlace}*`);
+    if (returnTime !== null) chLines.push(`• 回収時間：${r.return_time || r.col_time || "-"} → *${returnTime}*`);
+    await notifySlackCard({
+      emoji: "✏️", title: "マイページで変更（即時反映済）",
+      name: r.name, resId, ota: "KEYDROP" + (M.store === "nha" ? "（那覇）" : "（札幌）"),
+      period: `${r.lend_date || ""} ${r.lend_time || r.del_time || ""} 〜 ${r.return_date || ""} ${r.return_time || r.col_time || ""}`,
+      vehicle: r.vehicle || "",
+      lines: chLines.length ? ["*変更内容*", ...chLines] : undefined,
+      action: "✅ OPシートに反映済み・*対応不要*（内容をご確認ください）",
+    }, M.slack);
 
     // 4) KEYDROP独自の変更ログに記録（マイページ履歴＋将来のKEYDROP my-admin用）＝HANDYMANのmypage_changesと切り分け
     const chgLog = async (field: string, oldV: any, newV: any) => {
