@@ -543,7 +543,7 @@ function render(){
       ${editable?`<span class="edit ${r.col_place?"":"call"}" onclick="mapPicker('col_place')">${r.col_place?t('edit'):t('set_it')}</span>`:""}</div></div>
     <div class="row"><div class="k">${t('col_dt')}</div><div class="v">${esc(dateTime(r.return_date,r.return_time))}${chgBadge('return_time')}
       ${editable?`<span class="edit" onclick="editField('return_time')">${t('time_edit')}</span>`:""}</div></div>
-    ${editable?`<div class="hint">${t('dp_hint')}</div>`:""}
+    <div class="hint">${t('dp_hint')}</div>
   </div>
 
   <div class="card">
