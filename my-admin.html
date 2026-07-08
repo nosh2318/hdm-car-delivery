@@ -238,7 +238,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1";
-const ADMIN_VER="kd2.0 通知一覧を全メール実態に全更新";
+const ADMIN_VER="kd2.1 変更リクエスト=change_req読取+承認配線";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=s=>document.querySelector(s);
 function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
@@ -314,13 +314,14 @@ async function loadAll(keepSel){
   if(S!==STORE)return; // ロード中に店舗が切替わったら破棄（古い結果で上書きしない）
   const ids=(res||[]).map(r=>r.id).filter(Boolean);
   // ② 予約IDに絞って重いテーブルを取得（1.3万行→対象数件。空なら取得しない）
-  let links=[],sends=[],views=[];
+  let links=[],sends=[],views=[],kdpay=[];
   if(ids.length){
     const inList="("+ids.map(encodeURIComponent).join(",")+")";
-    [links,sends,views]=await Promise.all([
+    [links,sends,views,kdpay]=await Promise.all([
       api(LPF()+"_line_links?resv_no=in."+inList+"&select=resv_no,line_user_id,del_place,col_place,del_time,col_time,answered_at").catch(()=>[]),
       api(LPF()+"_line_sends?action=eq.mypage_initial&resv_no=in."+inList+"&order=sent_at.desc&select=resv_no,status,sent_at").catch(()=>[]),
       api("mypage_views?reservation_id=in."+inList+"&select=reservation_id,first_at,last_at,view_count").catch(()=>[]),
+      api("keydrop_payments?reservation_id=in."+inList+"&select=reservation_id,change_req,change_req_at").catch(()=>[]),
     ]);
     if(S!==STORE)return;
   }
@@ -332,6 +333,13 @@ async function loadAll(keepSel){
   LINK_MAP={}; (links||[]).forEach(l=>{ if(!l.resv_no)return; const del=String(l.del_place||"").trim(),col=String(l.col_place||"").trim(); if(del||col) LINK_MAP[l.resv_no]={del,col,delTime:String(l.del_time||"").trim(),colTime:String(l.col_time||"").trim(),ts:l.answered_at||""}; });
   // 現在の店舗の変更のみ（store列 or KDN-接頭辞で判定）
   CHG={}; (chg||[]).forEach(c=>{const isNha=(c.store==="nha")||String(c.reservation_id||"").toUpperCase().startsWith("KDN-");if((STORE==="nha")!==isNha)return;(CHG[c.reservation_id]=CHG[c.reservation_id]||[]).push(c)});
+  // 🔑 KEYDROP変更リクエストの正本＝keydrop_payments.change_req(pending)。keydrop_mypage_changesは未使用のため、ここでCHGに合流し「変更リクエスト」列に出す（従来は空テーブルを読み対応不要に落ちていた）
+  const _rmap={}; (RES||[]).forEach(r=>_rmap[r.id]=r);
+  (kdpay||[]).forEach(p=>{const cr=p&&p.change_req; if(!cr||cr.status!=="pending")return; const r=_rmap[p.reservation_id]; if(!r)return; const at=p.change_req_at||cr.requested_at||new Date().toISOString();
+    const push=(field,ov,nv)=>{ if(nv==null||String(nv).trim()==="")return; (CHG[p.reservation_id]=CHG[p.reservation_id]||[]).push({id:"KDCHG-"+p.reservation_id,reservation_id:p.reservation_id,store:STORE,field,old_value:ov||"",new_value:nv,source:"customer",status:"requested",created_at:at,_kdchange:true}); };
+    if(cr.del){ push("del_place",r.del_place,cr.del.place); push("lend_time",r.lend_time||r.del_time,cr.del.time); }
+    if(cr.col){ push("col_place",r.col_place,cr.col.place); push("return_time",r.return_time||r.col_time,cr.col.time); }
+  });
   render();
   // OPタスクから ①場所マップ(実際の場所は tasks._ssPlace) ②フォーム再回答(_ssAlert) を集める
   try{
@@ -948,6 +956,20 @@ async function ackChange(id){
 function setF(f){FILTER=f;render()}
 async function decide(id,status){
   if(!needOp())return;
+  // KEYDROP場所/時間の変更リクエスト(keydrop_payments.change_req由来)は approve_change/reject_change を呼ぶ
+  if(String(id).indexOf("KDCHG-")===0){
+    const resv=String(id).slice(6); const r=RES.find(x=>x.id===resv)||{};
+    if(!sure(status==="approved"?"この変更を承認して予約に反映しますか？（顧客へメール通知）":"この変更を差し戻しますか？（反映しません・顧客へ通知）"))return;
+    try{
+      const body=r.mypage_token?{action:(status==="approved"?"approve_change":"reject_change"),token:r.mypage_token,store:STORE}
+                               :{action:(status==="approved"?"approve_change":"reject_change"),resId:resv,mail:r.mail,store:STORE};
+      const rr=await fetch(FN+"/keydrop-mypage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+      const j=await rr.json().catch(()=>({}));
+      if(!rr.ok||!j.ok){toast("処理失敗："+(j.error||rr.status));return}
+      toast(status==="approved"?"変更を承認・反映＋通知しました":"変更を差し戻しました");SEL=null;loadAll();
+    }catch(e){toast("処理失敗（通信）")}
+    return;
+  }
   const c0=Object.values(CHG).flat().find(x=>x.id===id);
   const applyNote=(c0&&["insurance","option","cancel"].includes(c0.field))
     ? (status==="approved"?(c0.field==="cancel"?"\n※承認するとキャンセル確定（配車解除）＋顧客へLINE通知します":"\n※承認すると内容を予約に反映＋顧客へLINE通知します"):"\n※却下すると顧客へLINE通知します")
