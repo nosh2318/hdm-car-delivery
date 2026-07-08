@@ -910,11 +910,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         #kdMapGuide .kd-mg-bubble b { color:inherit; }
         #kdMapGuide .kd-mg-bubble.col b { color:#FABE00; }
         /* 中央ピン・マスコットの真上に出る吹き出し（OverlayViewでピンに追従） */
-        .kd-mascot-bubble { position:absolute; transform:translate(-50%, calc(-100% - 56px)); background:#16181d; color:#ffffff; font-size:12.5px; font-weight:800; padding:9px 15px; border-radius:14px; line-height:1.35; text-align:center; max-width:260px; box-shadow:0 5px 16px rgba(0,0,0,.32); pointer-events:none; z-index:5; }
-        .kd-mascot-bubble::after { content:''; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%); width:0; height:0; border:7px solid transparent; border-top-color:#16181d; border-bottom:0; }
-        .kd-mascot-bubble.col { background:#2563eb; color:#fff; }
-        .kd-mascot-bubble.col::after { border-top-color:#2563eb; }
-        .kd-mascot-bubble b { color:inherit; }
+        .kd-mascot-bubble { position:absolute; transform:translate(-50%, calc(-100% - 56px)); background:linear-gradient(to left,#1657d6 0%,#5a97f0 100%); color:#ffffff; font-size:12.5px; font-weight:900; padding:9px 15px; border-radius:14px; line-height:1.35; text-align:center; max-width:260px; box-shadow:0 5px 16px rgba(22,87,214,.34); pointer-events:none; z-index:5; }
+        .kd-mascot-bubble::after { content:''; position:absolute; left:50%; bottom:-7px; transform:translateX(-50%); width:0; height:0; border:7px solid transparent; border-top-color:#1657d6; border-bottom:0; }
+        .kd-mascot-bubble.col { background:linear-gradient(to left,#1657d6 0%,#5a97f0 100%); color:#fff; }
+        .kd-mascot-bubble.col::after { border-top-color:#1657d6; }
+        .kd-mascot-bubble b { color:#FABE00; font-style:normal; }
         .kd-mascot-bubble.col b { color:#FABE00; }
         .kd-mascot-bubble.kd-pop { animation:kdBubblePop .4s cubic-bezier(.18,.9,.32,1.2); }
         /* 車両画面：モバイル=縦積み（地図上・リスト下シート）／PC=縦割り（地図左・リスト右） */
