@@ -13,7 +13,7 @@
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
   font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:13.5px;line-height:1.5}
 /* header */
-.hd{display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));background:#0e7490;color:#fff;position:sticky;top:0;z-index:20}
+.hd{display:flex;flex-wrap:wrap;row-gap:8px;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));background:#0e7490;color:#fff;position:sticky;top:0;z-index:20}
 .hd .logo{font-weight:900;font-size:16px}.hd .logo b{color:#FABE00}
 .hd .t{font-weight:800;font-size:14px}
 .hd .sp{margin-left:auto}
@@ -28,9 +28,9 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 .movebar .mb-chip b{color:#0F1F45}.movebar .mb-chip i{color:#64748b;font-style:normal;font-size:11px;margin-left:3px}
 .movebar .mb-chip:hover{background:#f0f6ff;border-color:#3b82f6}
 @media(max-width:640px){.movebar{padding:6px 10px;gap:7px}.movebar .mb-lbl{font-size:10px}.movebar .mb-chip{font-size:11px;padding:4px 9px}}
-.hd button{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
+.hd button{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap;flex:0 0 auto;line-height:1.2}
 .hd button.alert{background:var(--danger)}
-.opsel{background:#fff;color:var(--ink);border:0;border-radius:8px;padding:7px 10px;font-weight:800;font-size:12.5px;max-width:150px}
+.opsel{background:#fff;color:var(--ink);border:0;border-radius:8px;padding:7px 10px;font-weight:800;font-size:12.5px;max-width:170px;white-space:nowrap;flex:0 0 auto}
 .opsel.need{background:#FABE00;color:#0F1F45}
 .miniedit{margin-left:8px;font-size:11px;font-weight:800;color:var(--accent);background:#eafaf5;border:1px solid #b7e6da;border-radius:999px;padding:2px 9px;cursor:pointer;vertical-align:middle}
 /* layout */
@@ -238,7 +238,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1";
-const ADMIN_VER="kd2.1 変更リクエスト=change_req読取+承認配線";
+const ADMIN_VER="kd2.2 ヘッダー整列(横書き統一)";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=s=>document.querySelector(s);
 function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
@@ -596,7 +596,7 @@ function renderInner(){
   list.sort((a,b)=>((a.lend_date||"")+ (a.lend_time||"")).localeCompare((b.lend_date||"")+(b.lend_time||"")));
   const rc=RES.filter(stReq).length;  // 変更依頼バッジ＝承認待ちの依頼(変更リクエスト)のみ。情報変更(即時反映済)は含めない
   const TH=STORE==="nha"?{bg:"#c2410c",name:"那覇",emoji:"🌺"}:{bg:"#0e7490",name:"札幌",emoji:"❄️"};
-  const swBtn=(s,emo,nm)=>`<button onclick="setStore('${s}')" style="font-size:14px;font-weight:900;padding:7px 16px;border-radius:999px;cursor:pointer;border:2px solid #fff;${STORE===s?`background:#fff;color:${TH.bg}`:"background:transparent;color:#fff;opacity:.7"}">${STORE===s?"● ":""}${emo} ${nm}</button>`;
+  const swBtn=(s,emo,nm)=>`<button onclick="setStore('${s}')" style="font-size:14px;font-weight:900;padding:7px 16px;border-radius:999px;cursor:pointer;border:2px solid #fff;white-space:nowrap;flex:0 0 auto;${STORE===s?`background:#fff;color:${TH.bg}`:"background:transparent;color:#fff;opacity:.7"}">${STORE===s?"● ":""}${emo} ${nm}</button>`;
   $("#app").innerHTML=`
   <div class="hd" style="background:${TH.bg}"><div class="logo">KEY<b>◦</b>DROP</div>
     <div style="display:flex;align-items:center;gap:10px;margin-left:12px">
