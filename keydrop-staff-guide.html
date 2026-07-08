@@ -99,7 +99,9 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{border:1px soli
 <tr><td>前日</td><td>ご予約内容の確認</td></tr>
 <tr><td>返却前日</td><td>ご返却のご案内</td></tr>
 <tr><td><b>当日 朝8:00</b></td><td><b>車両 傷チェックURL</b></td></tr>
-<tr><td>お客様が変更</td><td>変更確定（＋現場Slackにも通知）</td></tr>
+<tr><td>お客様が場所/時間を変更（即時）</td><td>OPシート自動反映＋現場Slackに「✏️変更（対応不要）」通知</td></tr>
+<tr><td>オプション/補償/キャンセルを依頼</td><td>現場Slackに「🟡要承認」通知（顧客画面は🕓確認中）</td></tr>
+<tr><td>依頼を承認／却下</td><td>お客様へ「承認・反映しました／今回は見送り」メール＋現場Slack</td></tr>
 <tr><td>返却翌日</td><td>御礼</td></tr>
 </table>
 <div style="font-size:12.5px;color:var(--sub);margin-top:8px">※お客様の「場所・時間の変更」は<b>マイページで即時反映</b>されOPシートも自動更新。スタッフの手入力は不要です。</div>
@@ -107,11 +109,13 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{border:1px soli
 
 <div class="card">
 <h2><span class="n">4</span>お客様の変更ルール（マイページ）</h2>
-<ul>
-<li><b>お届け（場所・時間）</b>：出発<b>24時間前まで</b>即時変更（以降は担当が確認後に反映）。</li>
-<li><b>回収（場所・時間）</b>：返却<b>2時間前まで</b>変更可。</li>
-<li>それ以降は<b>公式LINE</b>にて承ります（マイページには期限を明記済み）。</li>
-</ul>
+<p style="margin:0 0 10px;font-size:13.5px"><b>変更は2種類</b>あります。</p>
+<table>
+<tr><th>種類</th><th>対象</th><th>扱い</th></tr>
+<tr><td><span class="pill auto">即時</span></td><td>お届け・回収の<b>場所／時間</b></td><td>承認不要ですぐ反映（お届け＝出発24h前まで／回収＝返却2h前まで／以降は公式LINE）</td></tr>
+<tr><td><span class="pill staff">承認制</span></td><td><b>オプション／補償／キャンセル</b>（料金に関わる）</td><td>お客様が「変更依頼」→ 現場Slackに<b>🟡要承認</b> → 管理コンソールで承認/却下 → お客様へ結果メール。依頼中は顧客画面に🕓確認中</td></tr>
+</table>
+<div style="font-size:12.5px;color:var(--sub);margin-top:8px">※即時変更＝スタッフ対応不要（確認のみ）。承認制＝管理コンソール（変更リクエスト）で承認/却下が必要です。</div>
 </div>
 
 <div class="card">
