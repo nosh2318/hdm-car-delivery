@@ -194,7 +194,7 @@ function hoursUntil(date: string, time: string): number {
 function nowJst(): string { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().replace("T", " "); }
 function parseCJ(t: any): any { let cj = t?.changed_json; if (typeof cj === "string") { try { cj = JSON.parse(cj); } catch { cj = {}; } } return cj || {}; }
 function resolveTaskPlace(t: any): string { if (!t) return ""; const cj = parseCJ(t); const place = String(t.place || ""); if (cj._placeSource === "manual") return place; return String(cj._ssPlace || place || ""); }
-function resolveTaskTime(t: any): string { if (!t) return ""; const cj = parseCJ(t); return String(cj._timeChange || cj._ssTime || t.time || ""); }
+function resolveTaskTime(t: any): string { if (!t) return ""; const cj = parseCJ(t); return String(t.timeChange || cj._timeChange || cj._ssTime || t.time || ""); }
 function taskOptNum(t: any, k: string): number { if (!t) return 0; const cj = parseCJ(t); return Number(cj[k]) || 0; }
 
 Deno.serve(async (req) => {
@@ -265,7 +265,13 @@ Deno.serve(async (req) => {
       } catch (_) { return null; }
     })() : Promise.resolve(null);
     const fleetP = sbGet(M.fleet, `reservation_id=eq.${enc}&select=vehicle_code`);
-    const opTasksP = sbGet(M.tasks, `reservation_id=eq.${enc}&deleted=not.is.true&select=_id,place,time,insurance,changed_json`).catch(() => []);
+    // ★ 那覇OPシート(nha_tasks)は札幌(tasks)と別構造：予約番号で紐付け・日本語列(時間/送迎場所/集客/返却/変更)。
+    //   OPの「変更」列(=timeChange)を読み取り、OP時間変更をマイページに反映する（札幌はchanged_json._timeChangeに入る）。
+    const opTasksP = (M.store === "nha"
+      ? sbGet("nha_tasks", `${encodeURIComponent("予約番号")}=eq.${enc}&deleted=not.is.true&select=_id,${encodeURIComponent("内容")},${encodeURIComponent("時間")},${encodeURIComponent("送迎場所")},${encodeURIComponent("集客")},${encodeURIComponent("返却")},${encodeURIComponent("変更")},${encodeURIComponent("確定")},changed_json`)
+          .then((rows: any[]) => (rows || []).map((t: any) => { const isC = String(t._id || "").startsWith("c-"); return { _id: t._id, place: isC ? (t["集客"] || t["送迎場所"]) : t["送迎場所"], time: isC ? (t["返却"] || t["時間"]) : t["時間"], timeChange: t["変更"], insurance: t["確定"], changed_json: t.changed_json }; }))
+      : sbGet(M.tasks, `reservation_id=eq.${enc}&deleted=not.is.true&select=_id,place,time,insurance,changed_json`)
+      ).catch(() => []);
     // 変更履歴＝KEYDROP独自ログ（keydrop_mypage_changes）＝HANDYMANの mypage_changes と切り分け
     const chgP = sbGet("keydrop_mypage_changes", `reservation_id=eq.${enc}&order=created_at.desc&limit=12&select=field,old_value,new_value,source,status,actor,created_at`).catch(() => []);
     const payP = sbGet("keydrop_payments", `reservation_id=eq.${enc}&select=cancel_requested_at,cancel_reason,change_req`).catch(() => []);
@@ -686,10 +692,21 @@ Deno.serve(async (req) => {
     const reason = String(p.reason || "").trim().slice(0, 500);
     const nowIso = new Date().toISOString();
 
-    // 1) キャンセル依頼マーカーを keydrop_payments に記録（reservationsには changed_json 列が無いため）。
-    //    statusは変えない＝運営が返金判断後にSPK adminで確定。SPKはこの列を読んで一覧表示する。
-    await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`,
-      { cancel_requested_at: nowIso, cancel_reason: reason || null });
+    // 1) キャンセル依頼マーカーを keydrop_payments に記録（statusは変えない＝運営が返金判断後にSPK adminで確定）。
+    //    ★行が無い予約でも記録できるよう upsert（既存ならpatch／無ければinsert）。
+    const _kpExist = await sbGet("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}&select=reservation_id&limit=1`).catch(() => []);
+    if (_kpExist.length) {
+      await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`,
+        { cancel_requested_at: nowIso, cancel_reason: reason || null });
+    } else {
+      await sbPost("keydrop_payments", { reservation_id: resId, store: M.store, cancel_requested_at: nowIso, cancel_reason: reason || null }).catch(() => {});
+    }
+    // 1-b) ★KEYDROP管理(my-admin)は keydrop_mypage_changes(field=cancel) を「変更リクエスト」に表示する。
+    //      keydrop_payments だけでは my-admin に出ないため、requested を記録（重複は防ぐ）。マイページの申請済み判定もこれで立つ。
+    const _cDup = await sbGet("keydrop_mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&field=eq.cancel&status=eq.requested&select=id&limit=1`).catch(() => []);
+    if (!_cDup.length) {
+      await sbPost("keydrop_mypage_changes", { reservation_id: resId, store: M.store, field: "cancel", old_value: String(r.status || ""), new_value: "キャンセル申請", source: "customer", status: "requested", note: reason || "キャンセル申請" }).catch(() => {});
+    }
 
     // 1.5) 顧客へ「キャンセル依頼を受け付けました」メールをキュー投入（GAS送信ワーカーが reserve@ から送信）
     if (r.mail && String(r.mail).indexOf("@") > 0) {
@@ -708,13 +725,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 2) 配車表/OPシートに出るよう d-/c- タスクのmemoに🔴依頼マーカー（存在すれば）
+    // 2) 配車表/OPシートに出るよう d-/c-/w-(洗車) タスクのmemoに🔴依頼マーカー（存在すれば）
     const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
     const marker = `🔴キャンセル依頼(${stamp})${reason ? "：" + reason : ""}`;
     if (M.store === "nha") {
       await nhaPatchTasks(resId, null, null, marker); // 那覇：nha_tasksのメモに🔴キャンセル依頼マーカー
     } else {
-    for (const tid of [`d-${resId}`, `c-${resId}`]) {
+    for (const tid of [`d-${resId}`, `c-${resId}`, `w-${resId}`]) {
       const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(tid)}&select=_id,memo`);
       if (!cur[0]) continue;
       const memo = String(cur[0].memo || "");
