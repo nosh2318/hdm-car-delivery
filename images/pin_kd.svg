@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" width="48" height="64">
   <!-- ground shadow -->
-  <ellipse cx="24" cy="60" rx="7" ry="2.2" fill="#000" opacity=".18"/>
-  <!-- GO風 丸みのあるバルーンピン body -->
-  <path d="M24 2 C13.5 2 5 10.5 5 21 C5 33.5 20.5 51 23.1 58.6 C23.4 59.5 24.6 59.5 24.9 58.6 C27.5 51 43 33.5 43 21 C43 10.5 34.5 2 24 2 Z"
-        fill="#FABE00" stroke="#e0a900" stroke-width="1"/>
-  <!-- 中央 白丸 -->
-  <circle cx="24" cy="21" r="8" fill="#fff"/>
-  <circle cx="24" cy="21" r="8" fill="none" stroke="#e0a900" stroke-width="1" opacity=".5"/>
+  <ellipse cx="24" cy="60" rx="7.5" ry="2.3" fill="#000" opacity=".18"/>
+  <!-- GO風 膨らんだ丸型バルーン(縁なし・金) -->
+  <path d="M24 1.5 C11.6 1.5 1.5 11 1.5 22 C1.5 31 10 39 22.3 57.6 C23 58.8 25 58.8 25.7 57.6 C38 39 46.5 31 46.5 22 C46.5 11 36.4 1.5 24 1.5 Z" fill="#FABE00"/>
+  <!-- 中央 大きい白丸 -->
+  <circle cx="24" cy="21.5" r="9.5" fill="#fff"/>
 </svg>
