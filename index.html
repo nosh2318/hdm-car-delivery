@@ -2200,6 +2200,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // Show all classes (A→H), with DB availability info
         const classOrder = ['A', 'A2', 'B', 'B2', 'C', 'S', 'F', 'H'];
         const filteredClasses = state.selectedClass ? [state.selectedClass] : classOrder;
+        // ★v2：その店舗が実際に持つクラスだけ（エリア別＝合算にしない）。state.vehicles＝店舗別マスター(kdViewNameで_v/_nha_v切替)。
+        const storeTypes = new Set((state.vehicles || []).filter(v => VEHICLE_CLASSES[v.type] && VEHICLE_CLASSES[v.type].show !== false).map(v => v.type));
 
         if (!v2on()) html += `<div class="vehicle-count-banner">${t('availableCarBanner')}</div>`;  // v2は「この場所へお届けできる車」バナー非表示
         // クーポンは全車対象 → 一覧先頭に全幅バナー（適用で全カードに割引が反映される）
@@ -2214,6 +2216,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         for (const type of filteredClasses) {
             const cls = VEHICLE_CLASSES[type];
             if (!cls) continue;
+            if (v2on() && storeTypes.size && !storeTypes.has(type)) continue;   // ★v2：この店舗が持たないクラスは出さない（合算防止）
             const price = priceOf(type);
             const totalPrice = classTotal(type);
             const dbVehicles = dbGrouped[type] || [];
