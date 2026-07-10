@@ -1131,6 +1131,17 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </style>
 </head>
 <body>
+<!-- 🛠 メンテナンス中オーバーレイ（全画面・操作不可／解除は下の div ＋ script を削除するだけ・?maint=0 でスタッフ確認用に一時非表示） -->
+<div id="kdMaint" style="position:fixed;inset:0;z-index:2147483647;background:#123a5e;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif">
+  <div style="font-size:54px;line-height:1;margin-bottom:20px">🛠</div>
+  <div style="font-size:26px;font-weight:800;letter-spacing:.04em;margin-bottom:14px">只今メンテナンス中です</div>
+  <div style="font-size:15px;line-height:1.9;opacity:.92;max-width:420px">
+    ただいまシステムメンテナンスを行っております。<br>ご迷惑をおかけしますが、しばらく経ってから再度アクセスしてください。<br>
+    <span style="display:block;margin-top:12px;font-size:13px;opacity:.75">We are currently under maintenance.<br>Please try again later.</span>
+  </div>
+  <div style="margin-top:22px;font-size:13px;opacity:.75">お急ぎの方は公式LINE / お電話 050-1785-2711 まで</div>
+</div>
+<script>(function(){try{ if(/[?&]maint=0/.test(location.search)){var m=document.getElementById('kdMaint'); if(m)m.remove();} else {document.documentElement.style.overflow='hidden';} }catch(e){}})();</script>
 <!-- 🎬 起動スプラッシュ（3秒・タップでスキップ・セッション1回／?splash=1で強制表示・?splash=0で無効／スマホ=縦画像・PC=横画像） -->
 <style>#kdSplash{position:fixed;inset:0;z-index:2147483600;background-color:#123a5e;background-image:url('images/splash_go.jpg');background-position:center;background-size:cover;background-repeat:no-repeat;opacity:1;transition:opacity .45s ease;cursor:pointer}@media(min-width:768px){#kdSplash{background-image:url('images/splash_go_pc.jpg')}}</style>
 <div id="kdSplash"></div>
@@ -1262,8 +1273,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // 起動高速化フラグ：エリア未選択（ゲート表示）のときは予約アプリの重い初期化を行わない。
     //   area/mypage/paid のいずれかがあれば「アプリ文脈」=初期化する。無ければゲートのみ（軽い）。
     window.__kdAppCtx = true; /* ゲート廃止：常にマップ(アプリ)文脈で起動 */
-    /* ★v2フロー(?flow=v2)：マップ先行(91%離脱)をやめ「日付+車両+クーポンを先／お届け場所は車両選択の後」。旧フローは無傷で並走。 */
+    /* ★v2フロー(?flow=v2)：マップ先行(91%離脱)をやめ「日付+車両+クーポンを先／お届け場所は車両選択の後」。旧フローは無傷で並走。PCは対象外(モバイル/taxiUIのみ)。 */
     var KD_FLOW_V2 = /[?&]flow=v2/.test(location.search);
+    function v2on() { try { return KD_FLOW_V2 && kdTaxiOn(); } catch (e) { return false; } }
     function KD_API_STORE() { return KD_AREAS[KD_STORE].api; }          // 'spk' | 'nha'（Edge Functionへ）
     // ── 自社ファネル計測（どこから入り/どこに止まり/どこで離脱）。匿名・PIIなし ──
     function kdSource() {
@@ -2155,7 +2167,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <button onclick="state.vehDateOpen=true; render(); var e=document.querySelector('.app-header'); if(e)e.scrollIntoView({behavior:'smooth',block:'start'});" style="background:#FABE00;color:#1a1a1a;border:none;border-radius:11px;padding:14px 26px;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(250,190,0,.45);">${t('changeDateBtn')}</button>
                 <div style="font-size:11px;line-height:1.8;margin-top:18px;color:#aaa;">${t('noVacOtherPre')}<a href="https://lin.ee/ZxBknUv" target="_blank" style="color:#1a1a1a;font-weight:700;text-decoration:underline;">${t('navContact')}</a>${t('noVacOtherSuf')}</div>
             </div>`;
-        if (!state.availableVehicles.length) return apologyHtml;
+        if (!v2on() && !state.availableVehicles.length) return apologyHtml;  // v2は空車なしでも全車種カタログを表示（日付で絞る）
 
         // Class filter（空車があるときだけ表示）
         html += `<div class="class-chips">`;
@@ -2192,18 +2204,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const dbVehicles = dbGrouped[type] || [];
             const availCount = dbVehicles.length;
             const seats = dbVehicles[0]?.seats || (type === 'A' || type === 'B' ? 8 : 5);
-            if (availCount === 0) { idx++; continue; }
+            if (availCount === 0 && !v2on()) { idx++; continue; }   // v2は満車でもカタログとして表示（日付変更へ誘導）
+            const isFull = availCount === 0;                         // v2のみ到達しうる（この日程は満車）
             const providers = [...new Set(dbVehicles.map(providerOf))].filter(Boolean).join(' / ');
+            const availBadge = isFull
+                ? `<span style="font-weight:700;color:#dc2626">✕ 満車（日付変更で表示）</span>`
+                : `<span style="font-weight:700;color:${availCount >= 5 ? '#16a34a' : '#ea580c'}">${availCount >= 5 ? '◯ ' + t('availMany') : '△ ' + t('availFew')}</span>`;
+            const cardAct = isFull ? 'openDatePicker()' : `selectClass('${type}')`;
+            const selBtn = isFull
+                ? `<button class="vc-select-btn" style="background:#e5e7eb;color:#8a919c;" onclick="event.stopPropagation(); openDatePicker();">📅 ${t('changeDateBtn')}</button>`
+                : `<button class="vc-select-btn" onclick="event.stopPropagation(); selectClass('${type}')">${t('select')}</button>`;
 
             html += `
-                <div class="vehicle-card" style="animation:vehicleFadeIn .3s ease ${idx * 0.06}s both;" onclick="selectClass('${type}')">
+                <div class="vehicle-card" style="animation:vehicleFadeIn .3s ease ${idx * 0.06}s both;${isFull ? 'opacity:.6;' : ''}" onclick="${cardAct}">
                     <div class="vc-icon ${type}">${cls.img ? `<img src="${kdImg(cls.img)}" onerror="this.onerror=null;this.src='${cls.img}'" alt="${cls.name}" loading="lazy" decoding="async">` : (cls.icon || '🚗')}</div>
                     <div class="vc-body">
                         <div class="vc-class-tag ${type}">${clsName(type) || (type + t('classSuffix'))}</div>
                         <div class="vc-name" title="${locModel(cls.vehicles)}">${locModel(cls.vehicles)}</div>
                         <div class="vc-specs">
                             <span>👥 ${seats}${t('seats')}</span>
-                            <span style="font-weight:700;color:${availCount >= 5 ? '#16a34a' : '#ea580c'}">${availCount >= 5 ? '◯ ' + t('availMany') : '△ ' + t('availFew')}</span>
+                            ${availBadge}
                         </div>
                         ${providers ? `<div style="font-size:11px;color:#888;font-weight:600;margin-top:3px;">🏢 ${t('providedShort')}: ${providers}</div>` : ''}
                     </div>
@@ -2214,7 +2234,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                              <div style="font-size:9px;color:#dc2626;font-weight:900;line-height:1;">🎟10%OFF適用中</div>`
                           : `<div class="vc-price">¥${totalPrice.toLocaleString()}</div>`}
                         <div class="vc-price-unit">${days}${t('daysSuffix')}</div>
-                        <button class="vc-select-btn" onclick="event.stopPropagation(); selectClass('${type}')">${t('select')}</button>
+                        ${selBtn}
                     </div>
                 </div>`;
             idx++; shown++;
@@ -2359,7 +2379,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function deliveryDecideGo() {
         state.deliveryConfirmed = true;
         // v2：車両は選択済み＝お届け場所を確定したら車両画面に戻らず「確認」へ進む
-        if (KD_FLOW_V2 && state.selectedVehicle) { state.placeExact = true; state.screen = 'confirm'; render(); return; }
+        if (v2on() && state.selectedVehicle) { state.placeExact = true; state.screen = 'confirm'; render(); return; }
         goToVehicleStep();
     }
     // ── ステップ①：お届け場所を「この場所に決める」→ ②日付を解禁 ──
@@ -2692,7 +2712,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 html = renderLocationScreen();
                 break;
             case 'step_vehicle':
-                html = renderVehicleScreen();
+                html = v2on() ? renderV2StartScreen() : renderVehicleScreen();
                 break;
             case 'confirm':
                 html = renderConfirmScreen();
@@ -3335,8 +3355,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     function kdDpEarliest() { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 2); return d; }
     function openDatePicker() {
-        // ★ステップ制：taxiお届けで①場所未決定なら日付を開かせない（流れに沿わないと触れない）
-        if (kdTaxiOn() && state.locStep !== 'collection' && !state.deliveryConfirmed && !state.placeSet) {
+        // ★ステップ制：お届け場所マップ画面(top/step_location)で①場所未決定なら日付を開かせない。車両画面(v2エントリ)では常に開ける。
+        if (kdTaxiOn() && (state.screen === 'top' || state.screen === 'step_location') && state.locStep !== 'collection' && !state.deliveryConfirmed && !state.placeSet) {
             if (typeof toast === 'function') toast(t('needPlaceFirst'));
             return;
         }
@@ -3501,6 +3521,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     // ── 次画面：車両（結果）。上部にお届け＝黄/回収＝黒のサマリーを固定し条件一致車両のみ ──
+    // ★v2 エントリ（スマホのみ）：マップなし＝日付＋車両＋クーポンを1画面。ステップを可視化。
+    function renderV2StartScreen() {
+        const steps = ['① ' + t('stepDate') + '・' + t('v2car'), '② ' + t('v2confirm'), '③ ' + t('stepPlace'), '④ ' + t('v2info')];
+        const stepbar = `<div style="display:flex;gap:5px;padding:9px 12px 5px;background:#fff;">`
+            + steps.map(function (s, i) { return `<span style="flex:1;text-align:center;font-size:9.5px;font-weight:900;padding:5px 2px;border-radius:7px;background:${i === 0 ? '#fff8e6' : '#eef1f5'};color:${i === 0 ? '#a06f00' : '#9aa3b0'};border:1.5px solid ${i === 0 ? '#FABE00' : 'transparent'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s}</span>`; }).join('')
+            + `</div>`;
+        return `
+            <div class="app-header">
+                <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
+                <div class="header-actions">
+                    <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">🗺 ${t('areaReselect')}</button><button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
+                </div>
+            </div>
+            <div class="screen-fade" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+                ${stepbar}
+                <div style="background:#fff;border-bottom:1px solid #eee;padding:4px 14px 10px;">
+                    <div style="font-size:11px;color:#a07c00;font-weight:900;margin:4px 0 5px;">📅 ${t('v2dateLabel')}</div>
+                    ${kdDateBar()}
+                </div>
+                <div class="panel-content" id="panelContent" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">${renderVehiclePanel()}</div>
+            </div>
+        `;
+    }
+
     function renderVehicleScreen() {
         const sL = formatDateLabel(state.datetime.startDate), eL = formatDateLabel(state.datetime.endDate);
         const days = getDayCount();
@@ -4385,7 +4429,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (v) {
             state.selectedVehicle = v;
             state.selectedClassType = v.type;
-            if (KD_FLOW_V2 && !state.placeExact) {
+            if (v2on() && !state.placeExact) {
                 // v2：車を選んだら→お届け場所を地図で正確にピン→その後 確認へ
                 state.locStep = 'delivery';
                 state.deliveryConfirmed = false; state.placeSet = false;
@@ -6453,7 +6497,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         } catch (e) {}
         // ★v2：マップ先行をやめ「日付+車両+クーポン」を先に見せる。在庫算出用にエリア内(非空港)の市中心座標を仮設定＝正確なお届け場所は車両選択の後にピン。
-        if (KD_FLOW_V2) {
+        if (v2on()) {
             try {
                 var _v2c = (typeof KD_STORE !== 'undefined' && KD_STORE === 'naha') ? { lat: 26.2124, lng: 127.6792 } : { lat: 43.0687, lng: 141.3508 };
                 state.deliveryLat = _v2c.lat; state.deliveryLng = _v2c.lng;
@@ -6466,7 +6510,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         resetHeroTimer();
         setTimeout(function () { try { applyStepFocus(); } catch (e) {} }, 80); // 初回描画後にステップ誘導を反映
         loadGooglePlaces(); // 検索用Google Placesを非同期ロード（失敗時はNominatim）
-        if (KD_FLOW_V2) { setTimeout(function () { try { fetchAvailableVehicles(); } catch (e) {} }, 60); }
+        if (v2on()) { setTimeout(function () { try { fetchAvailableVehicles(); } catch (e) {} }, 60); }
     }
     </script>
     <script src="chat.js?v=4" defer></script>
