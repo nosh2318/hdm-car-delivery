@@ -4759,7 +4759,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         state.locStep = 'delivery';
         state.dateExpanded = false;
         state.placeExact = false;
-        if (v2on()) { state.v2Area = false; state.v2Date = false; }   // ★ロゴ＝一番最初(エリア選択)に戻す
+        // ★ロゴ＝全てクリアして最初から
+        state.promoApplied = false;
+        state.collectionLat = null; state.collectionLng = null; state.collectionAddr = ''; state.collectionAddrFull = ''; state.sameCollection = false; state.collectionConfirmed = false;
+        state.deliveryConfirmed = false; state.placeSet = false;
+        if (v2on()) { state.v2Area = false; state.v2Date = false; }   // ★一番最初(エリア選択)に戻す
         state.screen = v2on() ? 'step_vehicle' : 'top';   // ★v2のTOP＝日付/車両の入口（マップではない）
         render();
     }
@@ -6609,6 +6613,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (v2on()) { setTimeout(function () { try { fetchAvailableVehicles(); } catch (e) {} }, 60); }
     }
     </script>
-    <script src="chat.js?v=4" defer></script>
+    <!-- chat.js（よくある質問フローティング）は 2026-07-10 撤去。復活＝この行を戻す -->
 </body>
 </html>
