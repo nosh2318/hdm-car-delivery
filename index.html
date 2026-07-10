@@ -3534,7 +3534,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         var cur = (typeof KD_STORE !== 'undefined') ? KD_STORE : 'sapporo';
         if (a === 'sendai' || a === 'fukuoka') return;              // 準備中＝無効
         if (a === cur) { state.v2Area = true; render(); setTimeout(function(){ try{ fetchAvailableVehicles(); }catch(e){} }, 40); }
-        else { try { sessionStorage.setItem('kd_v2area_auto', '1'); } catch(e){} kdSwitchArea(a); }  // 別店舗＝?area=で再読込→自動でエリア確定
+        else { try { sessionStorage.setItem('kd_v2switch', JSON.stringify({ dt: state.datetime, v2Date: !!state.v2Date })); } catch(e){} kdSwitchArea(a); }  // 別店舗＝?area=で再読込→日付/ステップ引継ぎで新エリアの車両に連動
     }
     function renderV2StartScreen() {
         const areaDone = !!state.v2Area, dateDone = !!state.v2Date;
@@ -3556,9 +3556,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const AREAS = [['naha', t('gLbl_naha'), true], ['sapporo', t('gLbl_sapporo'), true], ['sendai', t('gLbl_sendai'), false], ['fukuoka', t('gLbl_fukuoka'), false]];
         const areaBtns = AREAS.map(function (a) {
             var id = a[0], label = a[1], ok = a[2];
-            if (!ok) return `<button disabled style="padding:8px 3px;border-radius:9px;border:1.5px solid #e5e7eb;background:#f3f4f6;color:#b6bcc6;font-size:12px;font-weight:900;cursor:not-allowed;">${label}</button>`;
+            if (!ok) return `<button disabled style="padding:9px 3px;border-radius:9px;border:1.5px solid #e5e7eb;background:#f3f4f6;color:#b6bcc6;font-size:12px;font-weight:900;cursor:not-allowed;">${label}</button>`;
             var sel = areaDone && id === _cur;
-            return `<button onclick="kdV2Area('${id}')" class="${(!areaDone) ? 'v2-area-blink' : ''}" style="padding:8px 3px;border-radius:9px;border:2px solid ${sel ? '#0e9f50' : '#FABE00'};background:${sel ? '#f0fdf4' : '#fffbeb'};color:#1a1a1a;font-size:12.5px;font-weight:900;cursor:pointer;">📍${label}${sel ? '✓' : ''}</button>`;
+            var stl = sel
+                ? 'border:2px solid #b45309;background:#FABE00;color:#1a1a1a;box-shadow:0 3px 9px rgba(250,190,0,.55);'   // 選択中＝金の塗り＋影
+                : (!areaDone ? 'border:2px solid #FABE00;background:#fffbeb;color:#1a1a1a;'                              // 未選択＝黄色（点滅）
+                             : 'border:1.5px solid #d1d5db;background:#fff;color:#9aa3b0;');                              // 非選択（切替可・控えめ）
+            return `<button onclick="kdV2Area('${id}')" class="${(!areaDone) ? 'v2-area-blink' : ''}" style="padding:9px 3px;border-radius:9px;${stl}font-size:12.5px;font-weight:900;cursor:pointer;">📍${label}${sel ? ' ✓' : ''}</button>`;
         }).join('');
         const areaBlock = `<div style="background:#fff;border-bottom:1px solid #eee;padding:9px 14px 11px;">
             <div style="font-size:12px;color:${areaDone ? '#0e9f50' : '#a06f00'};font-weight:900;margin-bottom:7px;">${areaDone ? t('stepArea') + ' ✓' : t('v2selectArea')}</div>
@@ -6552,8 +6556,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 state.deliveryLat = _v2c.lat; state.deliveryLng = _v2c.lng;
                 state.deliveryAddr = ''; state.deliveryAddrCanon = ''; state.placeExact = false;
                 state.v2Area = false; state.v2Date = false;   // ★エリア→日付→車両 の順に解禁（明確なステップ誘導）
-                try { if (sessionStorage.getItem('kd_v2area_auto')) { sessionStorage.removeItem('kd_v2area_auto'); state.v2Area = true; } } catch (e) {}  // エリア切替直後は再タップ不要
                 kdEnsureDefaultDate();
+                // ★エリア切替(那覇⇄札幌)の連動：切替前の日付・ステップを引き継ぎ、新エリアの空車を即表示（グレーに戻さない）
+                try {
+                    var _sw = JSON.parse(sessionStorage.getItem('kd_v2switch') || 'null');
+                    sessionStorage.removeItem('kd_v2switch');
+                    if (_sw) { state.v2Area = true; if (_sw.dt && _sw.dt.startDate) state.datetime = _sw.dt; if (_sw.v2Date) state.v2Date = true; }
+                } catch (e) {}
                 state.screen = 'step_vehicle';
             } catch (e) {}
         }
