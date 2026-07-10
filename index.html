@@ -1326,6 +1326,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             var store = (storeArg !== undefined) ? storeArg : '';
             if (storeArg === undefined) { try { store = KD_API_STORE(); } catch (e) { store = ''; } }
             var ref = kdSource();
+            // ★ 端末(PC/スマホ/タブレット)を判定してアクセス全体に記録
+            var _ua = (navigator.userAgent || '');
+            var _dev = /iPad|Tablet|PlayBook|Silk|(Android(?!.*Mobile))/i.test(_ua) ? 'tablet'
+                     : (/Mobile|iPhone|iPod|Android|Windows Phone|IEMobile|BlackBerry|Opera Mini/i.test(_ua) ? 'mobile' : 'pc');
             fetch(SUPABASE_URL + '/rest/v1/kd_funnel_log', {
                 method: 'POST', keepalive: true,
                 headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
@@ -1333,7 +1337,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     session_id: sid, step: step, step_number: stepNo, store: store, referrer: ref,
                     utm_medium: sessionStorage.getItem('kd_med') || '',
                     utm_campaign: sessionStorage.getItem('kd_camp') || '',
-                    ref_host: sessionStorage.getItem('kd_refhost') || ''
+                    ref_host: sessionStorage.getItem('kd_refhost') || '',
+                    device: _dev, ua: _ua.slice(0, 200)
                 })
             }).catch(function () { });
         } catch (e) { }
@@ -3560,7 +3565,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             try { localStorage.setItem('kd_selectedArea', JSON.stringify({ area: a, ts: Date.now() })); } catch (e) {}
             var c = (a === 'naha') ? { lat: 26.2124, lng: 127.6792 } : { lat: 43.0687, lng: 141.3508 };
             state.deliveryLat = c.lat; state.deliveryLng = c.lng; state.deliveryAddr = ''; state.deliveryAddrCanon = ''; state.placeExact = false;
+            state.collectionLat = null; state.collectionLng = null; state.collectionAddr = ''; state.sameCollection = false;
             state.selectedClass = null; state.availableVehicles = []; state.v2Area = true;
+            // ★地図を作り直す（前エリアのピン/中心を引き継がない＝切替先の中心・ズームで表示）
+            try { if (typeof deliveryMarker !== 'undefined' && deliveryMarker && deliveryMarker.setMap) deliveryMarker.setMap(null); } catch (e) {}
+            try { if (typeof collectionMarker !== 'undefined' && collectionMarker && collectionMarker.setMap) collectionMarker.setMap(null); } catch (e) {}
+            try { if (typeof kdAreaCircle !== 'undefined' && kdAreaCircle && kdAreaCircle.setMap) kdAreaCircle.setMap(null); } catch (e) {}
+            try { deliveryMarker = null; } catch (e) {}
+            try { collectionMarker = null; } catch (e) {}
+            try { kdAreaCircle = null; } catch (e) {}
+            map = null; state.mapReady = false;
             render();                                              // 新エリア名で即再描画
             await fetchVehicles();                                 // 新エリアの車両/価格/設定を読み込み
             try { fetchAvailableVehicles(); } catch (e) {}         // 空車再計算（新エリア）
