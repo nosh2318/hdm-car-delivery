@@ -256,6 +256,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
         .mypage-header-btn { display: flex; align-items: center; gap: 2px; padding: 4px 8px; background: white; color: #1a1a1a; border: 1.5px solid #1a1a1a; border-radius: 14px; font-size: 10px; font-weight: 700; cursor: pointer; transition: all .2s; }
         .mypage-header-btn:hover { background: #FABE00; border-color: #FABE00; }
+        /* ★v2ヘッダー：?（ヘルプ）/ 🔑（マイページ）/ 言語 / メニュー を「? 鍵 言語 メニュー」の順に（flex order・v2限定） */
+        .kd-h-ic { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #e2e2e8; background: rgba(0,0,0,.04); font-size: 14px; font-weight: 900; color: #1a1a1a; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex: none; font-family: inherit; padding: 0; line-height: 1; }
+        .kd-h-help { color: #dc2626; }
+        .v2hdr { gap: 6px; }
+        .v2hdr .kd-h-help { order: 1; }
+        .v2hdr .kd-h-my { order: 2; }
+        .v2hdr .kd-lang-h { order: 3; }
+        .v2hdr .hamburger-btn { order: 4; }
 
         /* ── Hamburger Menu ── */
         .hamburger-btn { background: none; border: none; cursor: pointer; padding: 4px; flex: none; display: flex; flex-direction: column; gap: 4px; justify-content: center; width: 28px; height: 28px; }
@@ -2196,7 +2204,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (!v2on()) html += `<div class="vehicle-count-banner">${t('availableCarBanner')}</div>`;  // v2は「この場所へお届けできる車」バナー非表示
         // クーポンは全車対象 → 一覧先頭に全幅バナー（適用で全カードに割引が反映される）
         html += promoOn()
-          ? `<div class="kd-cpn-list done">✅ 全車両 10%OFFクーポン適用中（下の全車が割引価格）</div>`
+          ? (v2on()
+              ? `<div class="kd-cpn-list done" onclick="removePromo()" style="cursor:pointer;">✅ 10%OFFクーポン適用中（タップで取り消し）</div>`
+              : `<div class="kd-cpn-list done">✅ 全車両 10%OFFクーポン適用中（下の全車が割引価格）</div>`)
           : `<div class="kd-cpn-list" onclick="applyPromo()">🎟 全車両 10%OFFクーポン配布中！タップで全車に適用</div>`;
 
         html += `<div class="vehicle-list">`;
@@ -3529,12 +3539,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // ── 次画面：車両（結果）。上部にお届け＝黄/回収＝黒のサマリーを固定し条件一致車両のみ ──
     // ★v2 エントリ（スマホのみ）：マップなし＝日付＋車両＋クーポンを1画面。ステップを可視化。
     function kdV2PickArea() { state.v2Area = true; render(); setTimeout(function(){ try{ fetchAvailableVehicles(); }catch(e){} }, 40); }
-    // ★v2 エリア選択：那覇/札幌のみ有効。現在の店舗なら即解禁、別店舗ならその店舗で再読込。仙台/福岡は準備中。
-    function kdV2Area(a) {
-        var cur = (typeof KD_STORE !== 'undefined') ? KD_STORE : 'sapporo';
+    // ★v2 エリア選択：那覇/札幌のみ有効。別エリアは【再読込せず】その場で車両を差し替え（＝エリアと車両を連動）。仙台/福岡は準備中。
+    async function kdV2Area(a) {
         if (a === 'sendai' || a === 'fukuoka') return;              // 準備中＝無効
-        if (a === cur) { state.v2Area = true; render(); setTimeout(function(){ try{ fetchAvailableVehicles(); }catch(e){} }, 40); }
-        else { try { sessionStorage.setItem('kd_v2switch', JSON.stringify({ dt: state.datetime, v2Date: !!state.v2Date })); } catch(e){} kdSwitchArea(a); }  // 別店舗＝?area=で再読込→日付/ステップ引継ぎで新エリアの車両に連動
+        var cur = (typeof KD_STORE !== 'undefined') ? KD_STORE : 'sapporo';
+        if (a === cur) { state.v2Area = true; render(); setTimeout(function(){ try{ fetchAvailableVehicles(); }catch(e){} }, 40); return; }
+        try {
+            KD_STORE = a;                                           // 店舗を切替（以後のDB取得は新エリアへ）
+            try { localStorage.setItem('kd_selectedArea', JSON.stringify({ area: a, ts: Date.now() })); } catch (e) {}
+            var c = (a === 'naha') ? { lat: 26.2124, lng: 127.6792 } : { lat: 43.0687, lng: 141.3508 };
+            state.deliveryLat = c.lat; state.deliveryLng = c.lng; state.deliveryAddr = ''; state.deliveryAddrCanon = ''; state.placeExact = false;
+            state.selectedClass = null; state.availableVehicles = []; state.v2Area = true;
+            render();                                              // 新エリア名で即再描画
+            await fetchVehicles();                                 // 新エリアの車両/価格/設定を読み込み
+            try { fetchAvailableVehicles(); } catch (e) {}         // 空車再計算（新エリア）
+            render();
+            try { if (window.history && history.replaceState) { var sp = new URLSearchParams(location.search); sp.set('area', a); history.replaceState({}, '', location.pathname + '?' + sp.toString()); } } catch (e) {}
+        } catch (err) {
+            try { sessionStorage.setItem('kd_v2switch', JSON.stringify({ dt: state.datetime, v2Date: !!state.v2Date })); } catch (e) {}
+            kdSwitchArea(a);                                        // 失敗時＝従来の再読込にフォールバック
+        }
     }
     function renderV2StartScreen() {
         const areaDone = !!state.v2Area, dateDone = !!state.v2Date;
@@ -3585,7 +3609,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         return `
             <div class="app-header">
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
-                <div class="header-actions">
+                <div class="header-actions v2hdr">
+                    <button class="kd-h-ic kd-h-help" onclick="location.href='guide.html'" title="${t('navUsage')}">?</button>
+                    <button class="kd-h-ic kd-h-my" onclick="location.href='mypage.html'" title="${t('navMypage')}">🔑</button>
                     <button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
                 </div>
             </div>
@@ -4067,6 +4093,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       try{ kdFunnelLog('coupon_tap',9); }catch(e){}
       render();
     }
+    function removePromo(){ state.promoApplied=false; render(); }   // ★クーポン取り消し（もう一度タップで戻せる）
     function ensurePromoBubble(){
       var ps=document.getElementById('phoneScreen'); if(!ps) return null;
       var b=document.getElementById('kdCpnPromo');
