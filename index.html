@@ -2981,7 +2981,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         return `
             <div class="app-header">
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
-                <div class="header-actions">
+                ${v2on() ? kdV2HeaderActions() : `<div class="header-actions">
                     <nav class="pc-nav">
                         <a href="#" onclick="kdBackToAreaSelect(); return false;" class="kd-area-pc">🗺 エリア選択（札幌/那覇）</a>
                         <a href="#" onclick="location.href='mypage.html'; return false;">${t('navMypage')}</a>
@@ -2992,7 +2992,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <button class="kd-area-m" onclick="kdBackToAreaSelect()" title="${t('areaReselect')}">🗺 エリア選択</button><button class="hamburger-btn" onclick="openMenu()">
                         <span></span><span></span><span></span>
                     </button>
-                </div>
+                </div>`}
             </div>
             <div class="top-body">
               <!-- モバイル用キービジュアル帯（PCは非表示・左ビジュアルが担当） -->
@@ -3570,6 +3570,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             kdSwitchArea(a);                                        // 失敗時＝従来の再読込にフォールバック
         }
     }
+    // ★v2共通ヘッダー（? ヘルプ / 🔑 マイページ / 言語(自動注入) / メニュー）
+    function kdV2HeaderActions() {
+        return `<div class="header-actions v2hdr">
+            <button class="kd-h-ic kd-h-help" onclick="location.href='guide.html'" title="${t('navUsage')}">?</button>
+            <button class="kd-h-ic kd-h-my" onclick="location.href='mypage.html'" title="${t('navMypage')}">🔑</button>
+            <button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
+        </div>`;
+    }
     function renderV2StartScreen() {
         const areaDone = !!state.v2Area, dateDone = !!state.v2Date;
         const cur = !areaDone ? 0 : (!dateDone ? 1 : 2);   // 0=エリア 1=日付 2=車両
@@ -3619,11 +3627,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         return `
             <div class="app-header">
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
-                <div class="header-actions v2hdr">
-                    <button class="kd-h-ic kd-h-help" onclick="location.href='guide.html'" title="${t('navUsage')}">?</button>
-                    <button class="kd-h-ic kd-h-my" onclick="location.href='mypage.html'" title="${t('navMypage')}">🔑</button>
-                    <button class="hamburger-btn" onclick="openMenu()"><span></span><span></span><span></span></button>
-                </div>
+                ${kdV2HeaderActions()}
             </div>
             <div class="screen-fade" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
                 ${kdAdBar()}
@@ -4753,7 +4757,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         state.formData = null;
         state.locStep = 'delivery';
         state.dateExpanded = false;
-        state.screen = 'top';
+        state.placeExact = false;
+        state.screen = v2on() ? 'step_vehicle' : 'top';   // ★v2のTOP＝日付/車両の入口（マップではない）
         render();
     }
 
