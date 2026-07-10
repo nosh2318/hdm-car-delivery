@@ -2396,8 +2396,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // お届け場所を決めたら→そのまま車へ（回収場所は車を選んだ後＝オプションの次に聞く）
     function deliveryDecideGo() {
         state.deliveryConfirmed = true;
-        // v2：車両は選択済み＝お届け場所を確定したら車両画面に戻らず「確認」へ進む
-        if (v2on() && state.selectedVehicle) { state.placeExact = true; state.screen = 'confirm'; render(); return; }
+        // v2：オプションの後にお届け場所を確定→そのまま回収場所へ（車両/確認は済んでいる）
+        if (v2on() && state.selectedVehicle) { state.placeExact = true; enterCollectionStep(); return; }
         goToVehicleStep();
     }
     // ── ステップ①：お届け場所を「この場所に決める」→ ②日付を解禁 ──
@@ -2410,6 +2410,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function reopenPlaceStep() {              // 「変更」＝①に戻す（②③を再ロック）
         state.placeSet = false;
         if (typeof render === 'function') render();
+    }
+    // ★v2：オプションの次＝お届け場所ステップ（マップ）を開く（お届け→回収→情報の順）
+    function enterDeliveryStep() {
+        state.locStep = 'delivery';
+        state.deliveryConfirmed = false; state.placeSet = false;
+        state.screen = 'top';
+        render();
     }
     // オプションの次＝回収場所ステップ（マップ）を開く。回収ピンはお届け地点に初期配置（同じならそのまま）。
     function enterCollectionStep() {
@@ -3985,7 +3992,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
                 ` : ''}
 
-                <button class="btn-primary" onclick="enterCollectionStep();">${t('next')}</button>
+                <button class="btn-primary" onclick="v2on()?enterDeliveryStep():enterCollectionStep();">${t('next')}</button>
                 <button class="btn-secondary" onclick="kdFlowBack();">${t('back')}</button>
             </div>
         `;
@@ -4512,15 +4519,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (v) {
             state.selectedVehicle = v;
             state.selectedClassType = v.type;
-            if (v2on() && !state.placeExact) {
-                // v2：車を選んだら→お届け場所を地図で正確にピン→その後 確認へ
-                state.locStep = 'delivery';
-                state.deliveryConfirmed = false; state.placeSet = false;
-                state.screen = 'top';
-                render();
-                return;
-            }
-            state.screen = 'confirm';
+            state.screen = 'confirm';   // v2も車両→確認（お届け場所はオプションの後に聞く＝仕様の順）
             render();
         }
     }
