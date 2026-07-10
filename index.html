@@ -3766,14 +3766,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
 
                 <div class="confirm-details">
-                    <div class="confirm-row">
+                    ${v2on() ? '' : `<div class="confirm-row">
                         <span class="confirm-row-label">📍 ${t('deliveryPlace')}</span>
                         <span class="confirm-row-value">${state.deliveryAddr}</span>
                     </div>
                     <div class="confirm-row">
                         <span class="confirm-row-label">📍 ${t('collectionPlaceL')}</span>
                         <span class="confirm-row-value">${(state.sameCollection === false && state.collectionAddr) ? state.collectionAddr : (state.deliveryAddr + t('sameAsDelivery'))}</span>
-                    </div>
+                    </div>`}
                     <div class="confirm-row">
                         <span class="confirm-row-label">📅 ${t('rental')}</span>
                         <span class="confirm-row-value">${startLabel} ${state.datetime.startTime}</span>
