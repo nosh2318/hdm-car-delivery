@@ -101,6 +101,12 @@
   </div>
 
   <div class="card" style="margin-bottom:12px">
+    <h2>📱 端末別内訳（PC / スマホ / タブレット）</h2>
+    <div id="deviceBox"><div class="mut">読み込み中…（2026-07-10〜記録開始・数日で傾向が出ます）</div></div>
+    <div class="mut" style="margin-top:6px">アクセスの端末構成と、端末ごとの決済到達・完了CVR。スマホ主体か等で導線/表示の最適化に使う。</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
     <h2>🎟 クーポン効果（タップ数 / タップ後の進行率）</h2>
     <div id="coupon"><div class="mut">読み込み中…（031 SQL適用後に表示）</div></div>
     <div class="mut" style="margin-top:6px">車両一覧の先頭にある「全車10%OFF」バナーをタップした人が、その後どれだけ決済・完了へ進んだか。クーポンが背中を押せているかを CVR で見る。</div>
@@ -243,6 +249,21 @@ async function renderTrend(){
   box.innerHTML=h;
 }
 
+async function renderDevice(){
+  try{
+    const rows=await q('public_kd_device_v?select=*');
+    const box=document.getElementById('deviceBox'); if(!box) return;
+    if(!rows.length){ box.innerHTML='<div class="mut">まだデータがありません（記録開始直後）。</div>'; return; }
+    const LBL={mobile:'\ud83d\udcf1 \u30b9\u30de\u30db',pc:'\ud83d\udcbb PC',tablet:'\ud83d\udcf2 \u30bf\u30d6\u30ec\u30c3\u30c8',unknown:'\u2753 \u4e0d\u660e'};
+    const total=rows.reduce((a,r)=>a+(+r.sessions||0),0)||1;
+    let h='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    rows.forEach(r=>{ const v=+r.sessions||0, cv=+r.completed||0, rp=+r.reached_payment||0, share=Math.round(v/total*100), cvr=v?pct(cv/v):'\u2013';
+      h+='<div class="card" style="background:#0e131b;flex:1;min-width:130px"><h2>'+(LBL[r.device]||r.device)+'</h2><div class="big">'+v+'</div><div class="mut">\u69cb\u6210\u6bd4 '+share+'% \uff0f \u6c7a\u6e08\u5230\u9054 '+rp+' \uff0f \u5b8c\u4e86 '+cv+'\uff08CVR '+cvr+'\uff09</div></div>';
+    });
+    h+='</div>';
+    box.innerHTML=h;
+  }catch(e){ const box=document.getElementById('deviceBox'); if(box) box.innerHTML='<div class="mut">\u7aef\u672b\u30d3\u30e5\u30fc\u672a\u53d6\u5f97\uff08'+esc(e.message)+'\uff09</div>'; }
+}
 async function load(){
   let funnel,src;
   try{ funnel=await q('public_kd_funnel_v?select=*'); src=await q('public_kd_source_v?select=*'); }
@@ -266,7 +287,7 @@ async function load(){
   document.getElementById('mVisit').textContent=visit;
   document.getElementById('mCv').textContent=cv;
   document.getElementById('mCvr').textContent='CVR '+(visit?pct(cv/visit):'–');
-  window.__lastReach=reach; await actLoad(); renderActions(reach);
+  window.__lastReach=reach; await actLoad(); renderActions(reach); renderDevice();
 
   // funnel render（TOP→完了）※実際の遷移順で並べる（step番号順ではない）
   // 実順(2026-07-10新フロー): 日付車両(入口)→確認→オプション→お届け/回収場所(マップ)→情報→約款→決済→完了 ＝ step番号順
