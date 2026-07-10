@@ -2375,9 +2375,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     // 回収場所を決めたら→お客様情報フォームへ
     function collectionDoneGo() { if (!ensureDateOrder()) return; state.screen = 'form'; render(); }
-    // 回収：①②を押したら「確定場所」を表示→「車両を見る」で次画面へ
-    function collectionDecideGo() { state.collectionConfirmed = true; renderLocPanel(); }
-    function sameCollectionGo() { useSameCollection(); state.collectionConfirmed = true; renderLocPanel(); }
+    // 回収：「決定」を押したら“確認だけの地図画面”を挟まず直接お客様情報へ（お届けの決定と同じ挙動＝重複画面を廃止）
+    function collectionDecideGo() { state.collectionConfirmed = true; collectionDoneGo(); }
+    function sameCollectionGo() { useSameCollection(); state.collectionConfirmed = true; collectionDoneGo(); }
     function reopenCollection() { state.collectionConfirmed = false; renderLocPanel(); }
     // 場所の「決定」＝ここで初めて“次へ”が出る（重複なし・意図を明確に）
     function confirmDeliveryLoc() { state.deliveryConfirmed = true; renderLocPanel(); }
