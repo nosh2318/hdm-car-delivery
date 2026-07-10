@@ -2366,6 +2366,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         let html = kdOvToggleBtn() + (!ng ? kdAdBar() : '');
         if (ng) {
             html += `<div class="kp-row"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr">${body}</div></div></div>`;
+        } else if (_taxi && v2on()) {
+            // ★v2：住所メイン＋決定済みの日付/時間を表示＋「次へ」常時点滅（ステップ/この場所に決める は無し）
+            const _s = formatDateLabel(dt.startDate), _e = formatDateLabel(dt.endDate);
+            html += `<div style="flex:1 1 100% !important;order:1;">
+                <div class="kp-row" style="margin-bottom:7px;"><span class="kp-ic">${ic}</span><div class="kp-body"><div class="kp-lbl">${t('deliveryPlace')}</div><div class="kp-addr" style="font-size:15px;font-weight:800;line-height:1.4;">${body}</div></div></div>
+                <div style="display:flex;gap:8px;margin-bottom:9px;">
+                    <div style="flex:1;background:#fffbf0;border:1px solid #FABE00;border-radius:9px;padding:6px 9px;"><div style="font-size:10px;color:#a07c00;font-weight:900;">🚚 ${t('delDate')}</div><div style="font-size:12px;font-weight:800;color:#1a1a1a;">${_s || '--'} ${dt.startTime || ''}</div></div>
+                    <div style="flex:1;background:#1a1a1a;border-radius:9px;padding:6px 9px;"><div style="font-size:10px;color:#FABE00;font-weight:900;">🏁 ${t('returnLabel')}</div><div style="font-size:12px;font-weight:800;color:#fff;">${_e || '--'} ${dt.endTime || ''}</div></div>
+                </div>
+                <button class="kp-confirm kd-cta-blink" onclick="deliveryDecideGo()" style="width:100%;">${_delCta}</button>
+            </div>`;
         } else if (_taxi) {
             // ── ステップ制：①場所を決める → ②日付を決める → ③次へ（順番通りにしか進めない・可視化）──
             const placeSet = !!state.placeSet;          // ①完了フラグ（この場所に決める を押した）
