@@ -1099,9 +1099,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             /* 横並び時はスライダー写真を隠してテキストを潰さない */
             .kd-ov-deliver .kd-adbanner .pic { display: none; }
             .kd-ov-deliver .kd-adbanner .tx { padding-left: 14px; }
-            /* 回収①②も横並び・同幅 */
-            .kd-pin-overlay .kd-col-opts { display: flex; gap: 10px; }
-            .kd-pin-overlay .kd-col-opts .kp-opt { flex: 1 1 0; margin-top: 0; }
+            /* 回収①②も横並び・同幅・同じ高さで整列（崩れ防止） */
+            .kd-pin-overlay .kd-col-opts { display: flex; gap: 10px; align-items: stretch; }
+            .kd-pin-overlay .kd-col-opts .kp-opt { flex: 1 1 0; min-width: 0; margin-top: 0; display: flex; flex-direction: column; justify-content: center; }
+            .kd-pin-overlay .kd-col-opts .kp-opt-sub { white-space: normal; }
         }
         html.taxiui .kd-pin-overlay .kp-opt.kd-same { border: 2px solid #FABE00; background: #fffbeb; }
         .kd-od-date { margin: 11px 0 6px; }
