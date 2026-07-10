@@ -2323,13 +2323,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             // taxiUI: お届けと同じ clean sheet（質問見出し＋お届けと同じ＋住所＋決定）
             if (kdTaxiOn()) {
                 const _cc = !!state.collectionAddr && !state.sameCollection;
-                let th = kdOvToggleBtn() + kdAdBar() + (kdTaxiOn() ? '' : '<div class="kd-q">' + t('taxiCollectPrompt') + '</div>');
+                let th = kdOvToggleBtn() + (v2on() ? '' : kdAdBar()) + (kdTaxiOn() ? '' : '<div class="kd-q">' + t('taxiCollectPrompt') + '</div>');
                 th += `<div class="kp-row"><span class="kp-ic">📍</span><div class="kp-body"><div class="kp-lbl">${t('collectionPlaceL')}</div><div class="kp-addr">${state.collectionAddr || t('orPickOnMap')}</div></div></div>`;
                 th += (_cc && dateOk)
                     ? `<button class="kp-confirm kd-cta-blink" onclick="collectionDecideGo()">${t('taxiCollectCta')}</button>`
                     : `<button class="kp-confirm" disabled>${t('taxiCollectCta')}</button>`;
                 if (state.deliveryAddr) th += `<button class="kp-opt kd-same kd-cta-blink" onclick="sameCollectionGo()">🔁 ${t('sameAsDeliveryBtn')}<div class="kp-opt-sub">${state.deliveryAddr}</div></button>`;
                 th += `<button onclick="kdFlowBack();" style="margin-top:6px;width:100%;padding:7px;background:none;border:none;font-size:11.5px;font-weight:700;color:#888;cursor:pointer;">‹ ${t('back')}</button>`;
+                if (v2on()) th += kdAdBar();   // ★v2：スライダーを一番下に
                 ov.innerHTML = th;
                 return;
             }
