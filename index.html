@@ -3526,6 +3526,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // ── 次画面：車両（結果）。上部にお届け＝黄/回収＝黒のサマリーを固定し条件一致車両のみ ──
     // ★v2 エントリ（スマホのみ）：マップなし＝日付＋車両＋クーポンを1画面。ステップを可視化。
     function kdV2PickArea() { state.v2Area = true; render(); setTimeout(function(){ try{ fetchAvailableVehicles(); }catch(e){} }, 40); }
+    // ★v2 エリア選択：那覇/札幌のみ有効。現在の店舗なら即解禁、別店舗ならその店舗で再読込。仙台/福岡は準備中。
+    function kdV2Area(a) {
+        var cur = (typeof KD_STORE !== 'undefined') ? KD_STORE : 'sapporo';
+        if (a === 'sendai' || a === 'fukuoka') return;              // 準備中＝無効
+        if (a === cur) { state.v2Area = true; render(); setTimeout(function(){ try{ fetchAvailableVehicles(); }catch(e){} }, 40); }
+        else { try { sessionStorage.setItem('kd_v2area_auto', '1'); } catch(e){} kdSwitchArea(a); }  // 別店舗＝?area=で再読込→自動でエリア確定
+    }
     function renderV2StartScreen() {
         const areaDone = !!state.v2Area, dateDone = !!state.v2Date;
         const cur = !areaDone ? 0 : (!dateDone ? 1 : 2);   // 0=エリア 1=日付 2=車両
@@ -3541,11 +3548,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 var mk = st === 'done' ? '✓' : (i + 1);
                 return `<span style="flex:1;text-align:center;font-size:9.5px;font-weight:900;padding:5px 2px;border-radius:7px;background:${bg};color:${fg};border:1.5px solid ${bd};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${mk} ${s}</span>`;
             }).join('') + `</div>`;
-        // ① エリア（未確定なら光る・確定で下が解禁）
+        // ① エリア：那覇/札幌/仙台/福岡の4ボタン（那覇・札幌のみ有効／仙台・福岡=準備中）。未確定なら光る。
+        const _cur = (typeof KD_STORE !== 'undefined' && KD_STORE === 'naha') ? 'naha' : 'sapporo';
+        const AREAS = [['naha', t('gLbl_naha'), true], ['sapporo', t('gLbl_sapporo'), true], ['sendai', t('gLbl_sendai'), false], ['fukuoka', t('gLbl_fukuoka'), false]];
+        const areaBtns = AREAS.map(function (a) {
+            var id = a[0], label = a[1], ok = a[2];
+            if (!ok) return `<button disabled style="padding:12px 6px;border-radius:11px;border:1.5px solid #e5e7eb;background:#f3f4f6;color:#b6bcc6;font-size:14px;font-weight:900;cursor:not-allowed;line-height:1.35;">📍 ${label}<div style="font-size:9.5px;font-weight:800;margin-top:2px;">${t('gSoon')}</div></button>`;
+            var sel = areaDone && id === _cur;
+            return `<button onclick="kdV2Area('${id}')" class="${(!areaDone) ? 'kd-cta-blink' : ''}" style="padding:12px 6px;border-radius:11px;border:2px solid ${sel ? '#0e9f50' : '#FABE00'};background:${sel ? '#f0fdf4' : '#fffbeb'};color:#1a1a1a;font-size:15px;font-weight:900;cursor:pointer;line-height:1.3;">📍 ${label}${sel ? ' ✓' : ''}</button>`;
+        }).join('');
         const areaBlock = `<div style="background:#fff;border-bottom:1px solid #eee;padding:9px 14px 11px;">
-            <div style="font-size:11px;color:${areaDone ? '#0e9f50' : '#a06f00'};font-weight:900;margin-bottom:6px;">① ${t('stepArea')}${areaDone ? ' ✓' : ''}</div>
-            <button onclick="kdV2PickArea()" class="${areaDone ? '' : 'kd-cta-blink'}" style="width:100%;padding:13px;border-radius:11px;border:2px solid ${areaDone ? '#86efac' : '#FABE00'};background:${areaDone ? '#f0fdf4' : '#fffbeb'};color:#1a1a1a;font-size:15px;font-weight:900;cursor:pointer;">📍 ${areaName}${areaDone ? '（選択中）' : ' ' + t('v2pickArea')}</button>
-            ${areaDone ? `<button onclick="kdBackToAreaSelect()" style="margin-top:7px;background:none;border:none;color:#0369a1;font-size:12px;font-weight:800;text-decoration:underline;cursor:pointer;">🗺 ${t('areaReselect')}</button>` : ''}
+            <div style="font-size:11px;color:${areaDone ? '#0e9f50' : '#a06f00'};font-weight:900;margin-bottom:7px;">① ${t('stepArea')}${areaDone ? ' ✓' : ''}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${areaBtns}</div>
         </div>`;
         // ② 日付（エリア未確定はロック）
         const dateLock = !areaDone;
@@ -3553,13 +3567,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div style="font-size:11px;color:${dateDone ? '#0e9f50' : '#a06f00'};font-weight:900;margin-bottom:6px;">② ${t('stepDate')}・${t('v2timeWord')}${dateDone ? ' ✓' : ''}${dateLock ? ' 🔒' : ''}</div>
             <div class="${(!dateLock && !dateDone) ? 'kd-cta-blink' : ''}" style="border-radius:11px;">${kdDateBar()}</div>
         </div>`;
-        // ③ 車両（日付未確定はロック＝薄いグレー）
-        const vehBlock = dateDone
-            ? `<div class="panel-content" id="panelContent" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">${renderVehiclePanel()}</div>`
-            : `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:34px 22px;text-align:center;color:#9aa3b0;opacity:.85;">
-                    <div style="font-size:38px;margin-bottom:12px;filter:grayscale(1);">🚗</div>
-                    <div style="font-size:14px;font-weight:900;color:#64748b;line-height:1.7;">${areaDone ? '③ ' + t('v2vehLockDate') : '③ ' + t('v2vehLockArea')}</div>
-               </div>`;
+        // ③ 車両：初期から全車を表示。日付未確定はグレー＋押せない（何のサイトかが一目で分かる）。
+        const vehHint = dateDone ? '' : (areaDone ? ('📅 ' + t('v2vehLockDate')) : ('① ' + t('v2vehLockArea')));
+        const vehBlock = `<div style="flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;">
+            ${dateDone ? '' : `<div style="flex:none;background:#fff8e6;border-bottom:1px solid #FABE00;color:#a06f00;font-size:12px;font-weight:900;text-align:center;padding:8px 10px;">${vehHint}</div>`}
+            <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;${dateDone ? '' : 'pointer-events:none;opacity:.5;filter:grayscale(.75);'}">
+                <div class="panel-content" id="panelContent">${renderVehiclePanel()}</div>
+            </div>
+        </div>`;
         return `
             <div class="app-header">
                 <div class="app-logo" onclick="resetAndGoTop();" style="cursor:pointer;"><img src="images/logo_header.png?v=3" alt="KEYDROP Car Delivery Service"></div>
@@ -6534,6 +6549,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 state.deliveryLat = _v2c.lat; state.deliveryLng = _v2c.lng;
                 state.deliveryAddr = ''; state.deliveryAddrCanon = ''; state.placeExact = false;
                 state.v2Area = false; state.v2Date = false;   // ★エリア→日付→車両 の順に解禁（明確なステップ誘導）
+                try { if (sessionStorage.getItem('kd_v2area_auto')) { sessionStorage.removeItem('kd_v2area_auto'); state.v2Area = true; } } catch (e) {}  // エリア切替直後は再タップ不要
                 kdEnsureDefaultDate();
                 state.screen = 'step_vehicle';
             } catch (e) {}
