@@ -150,7 +150,7 @@
 const SB='https://ckrxttbnawkclshczsia.supabase.co';
 const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
 const H={apikey:AK,Authorization:'Bearer '+AK};
-const STEPS=['','TOP(マップ)','車両選択','オプション','情報入力','確認','約款','決済','完了'];
+const STEPS=['','日付・車両','確認','オプション','お届け/回収場所','情報入力','約款','決済','完了'];
 const MAXSTEP=8;
 
 // ===== 🎯 施策ログ（狙い→実績）。kd_actions テーブルがあればDBから読み書き、無ければ下の埋め込み(閲覧のみ) =====
@@ -174,7 +174,7 @@ function chip(st){ const c=STCHIP[st]||['#64748b',st]; return '<span style="disp
 function renderActions(reach){
   let hero='–';
   if(reach && reach[1]){ const top=reach[1], passed=reach[2]||0, p=top?passed/top:0;
-    hero='🎯 いま動かしたい指標：<b>TOP→車両選択 通過率</b> ＝ <b style="color:'+(p>=0.1?'#16a34a':'#dc2626')+'">'+pct(p)+'</b>（'+passed+'/'+top+'）　※下の施策の多くはこの数字を上げるため';
+    hero='🎯 いま動かしたい指標：<b>日付・車両→確認 通過率</b> ＝ <b style="color:'+(p>=0.1?'#16a34a':'#dc2626')+'">'+pct(p)+'</b>（'+passed+'/'+top+'）　※下の施策の多くはこの数字を上げるため';
   }
   var hEl=document.getElementById('actHero'); if(hEl) hEl.innerHTML=hero;
   const editable=!!ACTIONS_DB;
@@ -269,8 +269,8 @@ async function load(){
   window.__lastReach=reach; await actLoad(); renderActions(reach);
 
   // funnel render（TOP→完了）※実際の遷移順で並べる（step番号順ではない）
-  // 実順: TOP→車両選択→確認→オプション→情報入力→約款→決済→完了。confirmはstep5だが実際はstep_vehicleの直後。
-  const FLOW=[1,2,5,3,4,6,7,8];
+  // 実順(2026-07-10新フロー): 日付車両(入口)→確認→オプション→お届け/回収場所(マップ)→情報→約款→決済→完了 ＝ step番号順
+  const FLOW=[1,2,3,4,5,6,7,8];
   const base=Math.max(reach[FLOW[0]],1);
   let leakStep=-1,leakNext=-1,leakLost=-1;
   for(let k=0;k<FLOW.length-1;k++){ const a=reach[FLOW[k]],b=reach[FLOW[k+1]]; if(a>=3){const lost=a-b; if(lost>leakLost){leakLost=lost;leakStep=FLOW[k];leakNext=FLOW[k+1];}} }

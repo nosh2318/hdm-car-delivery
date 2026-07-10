@@ -2715,7 +2715,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             if (state.screen && window._kdLastStep !== state.screen) {
                 window._kdLastStep = state.screen;
                 var _scr = state.screen;
-                var _stepNo = ({ top: 1, step_vehicle: 2, options: 3, form: 4, confirm: 5, terms: 6, payment: 7, complete: 8 })[_scr] || 0;
+                // ★2026-07-10 新フロー順：日付/車両(入口)→確認→オプション→お届け/回収場所(top=マップ)→情報→約款→決済→完了
+                var _stepNo = ({ step_vehicle: 1, confirm: 2, options: 3, top: 4, form: 5, terms: 6, payment: 7, complete: 8 })[_scr] || 0;
                 var _store = '';
                 try { _store = (typeof KD_API_STORE === 'function') ? KD_API_STORE() : (state.area || ''); } catch (e) { _store = (state.area || ''); }
                 if (typeof gtag === 'function') {
