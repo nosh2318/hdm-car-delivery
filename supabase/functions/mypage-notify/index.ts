@@ -22,7 +22,7 @@ const TPL: Record<string, (u: string, r: any) => string> = {
   mypage_daybefore: (u) => `【HANDYMAN 札幌デリバリー】明日がご利用日です。日時・お届け場所を今一度ご確認ください👇\nYour rental starts tomorrow. Please review the date/time & location 👇\n${u}`,
   mypage_return3h: (u) => `【HANDYMAN 札幌デリバリー】まもなくご返却のお時間です（約3時間後）。回収の場所・時間をご確認ください👇\nPickup is in about 3 hours. Please review the pickup place & time 👇\n${u}`,
   // 返却日の朝に送る（返却案内＋早め回収ボタンの使い方・訴求）
-  mypage_returnday: (u, r) => `【HANDYMAN 札幌デリバリー】\n本日がご返却日です🚗（回収予定 ${((r && (r.return_time || r.col_time)) || "")}）\n\nもし予定より早くご返却の準備ができましたら、マイページの【🟢 返却の準備ができました（早めの回収OK）】ボタンを押してください。スケジュールに余裕があれば早めに回収へ伺います（確約ではありません）。\nご返却場所・時間のご確認、早め回収のご希望はこちらから👇\nIf you're ready to return early, tap the green "Ready for pickup" button on your page. Check return details here 👇\n${u}`,
+  mypage_returnday: (u, r) => `【HANDYMAN 札幌デリバリー】\nこの度はHANDYMANをご利用いただきまして誠にありがとうございます。\n本日がご返却日です🚗（回収予定 ${((r && (r.return_time || r.col_time)) || "")}）\n\nもし予定より早くご返却の準備ができましたら、マイページの【🟢 返却の準備ができました（早めの回収OK）】ボタンを押してください。スケジュールに余裕があれば早めに回収へ伺います（確約ではありません）。\nご返却場所・時間のご確認、早め回収のご希望はこちらから👇\nIf you're ready to return early, tap the green "Ready for pickup" button on your page. Check return details here 👇\n${u}`,
 };
 
 // 無人貸出・乗り捨ての担当が付いた予約は、貸出/返却リマインドを自動送信しない（スタッフ手動運用）。
@@ -125,8 +125,8 @@ Deno.serve(async (req) => {
     if (r.lend_date === d3 && !(placeByRes[r.id]) && !unLend(r.id)) await push(r, "mypage_place");
     // ③ 前日 ※無人貸出は除外
     if (r.lend_date === d1 && !unLend(r.id)) await push(r, "mypage_daybefore");
-    // ③' 返却日の朝(8時以降)に「本日返却日＋早め回収ボタンの使い方・訴求」を1回（札幌のみ・乗り捨て/無人返却は除外）
-    if (r.return_date === today && new Date(Date.now() + 9 * 3600 * 1000).getUTCHours() >= 8 && !unCol(r.id)) await push(r, "mypage_returnday");
+    // ③' 返却日の朝(9時以降)に「本日返却日＋早め回収ボタンの使い方・訴求」を1回（札幌のみ・乗り捨て/無人返却は除外）※8時=傷チェックと被らせないため9時
+    if (r.return_date === today && new Date(Date.now() + 9 * 3600 * 1000).getUTCHours() >= 9 && !unCol(r.id)) await push(r, "mypage_returnday");
     // ④ 返却3時間前（返却日時が now〜now+3h+window内）※乗り捨て/無人返却は除外
     if (r.return_date && r.return_date >= today && !unCol(r.id)) {
       const rt = (r.return_time || r.col_time || "18:00");

@@ -120,7 +120,7 @@ function buildReturnday(n: any) {
   const p = n.payload || {}, id = n.reservation_id || "";
   const rt = String(p.return_time || p.col_time || "");
   return { subject: `【KEY-DROP】本日がご返却日です（予約番号: ${id}）`, body:
-    `${p.name || "お客様"} 様\n\n本日がご返却日です🚗${rt ? `（回収予定 ${rt}）` : ""}\n\nもし予定より早くご返却の準備ができましたら、マイページの【🟢 返却の準備ができました（早めの回収OK）】ボタンを押してください。スケジュールに余裕があれば早めに回収へ伺います（確約ではありません）。\nご返却場所・時間のご確認、早め回収のご希望はこちらから👇\nIf you're ready to return early, tap the green "Ready for pickup" button on your page. Check return details here 👇\n${mypageLink(n)}\n\nCARデリバリー KEY-DROP\n` };
+    `${p.name || "お客様"} 様\n\nこの度はCARデリバリー KEY-DROP をご利用いただきまして誠にありがとうございます。\n本日がご返却日です🚗${rt ? `（回収予定 ${rt}）` : ""}\n\nもし予定より早くご返却の準備ができましたら、マイページの【🟢 返却の準備ができました（早めの回収OK）】ボタンを押してください。スケジュールに余裕があれば早めに回収へ伺います（確約ではありません）。\nご返却場所・時間のご確認、早め回収のご希望はこちらから👇\nIf you're ready to return early, tap the green "Ready for pickup" button on your page. Check return details here 👇\n${mypageLink(n)}\n\nCARデリバリー KEY-DROP\n` };
 }
 // ⑨ 到着のお知らせ（到着ボタン）＝URLなし（HANDYMAN同方針）お届け/回収で文面別
 function buildArrival(n: any) {

@@ -28,8 +28,9 @@ Deno.serve(async (req) => {
   const nowJ = new Date(Date.now() + 9 * 3600 * 1000);
   const today = nowJ.toISOString().slice(0, 10);
   const hh = nowJ.getUTCHours(); // JST hour
-  if (hh < 8 && !testMode) {
-    return new Response(JSON.stringify({ ok: true, skipped: "before_8am_jst", hh }), { headers: { "content-type": "application/json" } });
+  // 9時ゲート（8時=傷チェックメールと被らせないため。日帰りでも 8時=傷チェック / 9時=返却案内 に分離）
+  if (hh < 9 && !testMode) {
+    return new Response(JSON.stringify({ ok: true, skipped: "before_9am_jst", hh }), { headers: { "content-type": "application/json" } });
   }
 
   const stores = [
