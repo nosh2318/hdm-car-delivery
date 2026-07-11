@@ -1,0 +1,90 @@
+// Supabase Edge Function: keydrop-returnday
+// KEYDROP予約の「返却日の朝(8時以降)」に、返却のご案内＋早め回収ボタンの訴求を1回だけ送る。
+//   ① LINE連携済み(={store}_line_links に userId 有) → line-push で LINE 送信
+//   ② 未連携(no_userid)/LINE失敗 → keydrop_notifications に returnday を enqueue → keydrop-send-mail が Resend でメール送信
+// 対象: reservations(ota=KEYDROP・spk) と nha_reservations(ota=KEYDROP・nha)。キャンセル除外・token必須。
+// dedup: {store}_line_sends に action=mypage_returnday 行 or keydrop_notifications に type=returnday 行があれば処理済み。
+// 起動: pg_cron が x-cron-secret 付きで叩く（*/30）。POST {test:true} で 8時ゲート無視のドライ動作確認。
+// deploy: functions deploy keydrop-returnday --no-verify-jwt / secrets: CRON_SECRET, FUNC_SECRET
+
+const SB_URL = Deno.env.get("SUPABASE_URL")!;
+const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const CRON_SECRET = Deno.env.get("CRON_SECRET")!;
+const FUNC_SECRET = Deno.env.get("FUNC_SECRET")!;
+const H = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json" };
+const MYPAGE = "https://keydrop.jp/mypage.html?t=";
+
+async function sbGet(p: string): Promise<any[]> {
+  const r = await fetch(`${SB_URL}/rest/v1/${p}`, { headers: H });
+  return r.ok ? await r.json() : [];
+}
+async function sbPost(p: string, b: unknown) {
+  return fetch(`${SB_URL}/rest/v1/${p}`, { method: "POST", headers: { ...H, Prefer: "return=minimal" }, body: JSON.stringify(b) });
+}
+function lineMsg(url: string, rt: string): string {
+  return `【CARデリバリー KEY-DROP】\n本日がご返却日です🚗${rt ? `（回収予定 ${rt}）` : ""}\n\nもし予定より早くご返却の準備ができましたら、マイページの【🟢 返却の準備ができました（早めの回収OK）】ボタンを押してください。スケジュールに余裕があれば早めに回収へ伺います（確約ではありません）。\nご返却場所・時間のご確認、早め回収のご希望はこちらから👇\nIf you're ready to return early, tap the green "Ready for pickup" button on your page 👇\n${url}`;
+}
+
+Deno.serve(async (req) => {
+  const sec = req.headers.get("x-cron-secret") || "";
+  if (!CRON_SECRET || sec !== CRON_SECRET) return new Response("forbidden", { status: 403 });
+  const body: any = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+  const testMode = body.test === true;
+
+  const nowJ = new Date(Date.now() + 9 * 3600 * 1000);
+  const today = nowJ.toISOString().slice(0, 10);
+  const hh = nowJ.getUTCHours(); // JST hour
+  if (hh < 8 && !testMode) {
+    return new Response(JSON.stringify({ ok: true, skipped: "before_8am_jst", hh }), { headers: { "content-type": "application/json" } });
+  }
+
+  const stores = [
+    { key: "spk", resv: "reservations", colCol: "return_date", sel: "id,name,mail,mypage_token,status,return_time,col_time" },
+    { key: "nha", resv: "nha_reservations", colCol: "end_date", sel: "id,name,mail,mypage_token,status,col_time" },
+  ];
+  const out: any[] = [];
+
+  for (const s of stores) {
+    const resvs = await sbGet(`${s.resv}?ota=eq.KEYDROP&${s.colCol}=eq.${today}&select=${s.sel}&limit=300`);
+    for (const r of resvs) {
+      const st = String(r.status || "").toLowerCase();
+      if (st.includes("cancel") || st.includes("キャンセル")) continue;
+      if (!r.mypage_token) continue;
+
+      // dedup（LINE試行済み or メールenqueue済みなら何もしない）
+      const priorLine = await sbGet(`${s.key}_line_sends?resv_no=eq.${encodeURIComponent(r.id)}&action=eq.mypage_returnday&select=id&limit=1`);
+      const priorMail = await sbGet(`keydrop_notifications?reservation_id=eq.${encodeURIComponent(r.id)}&type=eq.returnday&select=id&limit=1`);
+      if ((priorLine[0]) || (priorMail[0])) continue;
+      if (testMode) { out.push({ id: r.id, store: s.key, ch: "dry" }); continue; }
+
+      const url = MYPAGE + encodeURIComponent(r.mypage_token);
+      const rt = String(r.return_time || r.col_time || "");
+
+      // ① LINE試行（line-push が {store}_line_sands に sent/no_userid を記録＝次回dedup）
+      let lr: any = { ok: false, reason: "line_err" };
+      try {
+        const resp = await fetch(`${SB_URL}/functions/v1/line-push`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
+          body: JSON.stringify({ secret: FUNC_SECRET, store: s.key, resv_no: r.id, action: "mypage_returnday", message: lineMsg(url, rt) }),
+        });
+        lr = await resp.json();
+      } catch (_e) { lr = { ok: false, reason: "line_fetch_err" }; }
+
+      if (lr && lr.ok) { out.push({ id: r.id, store: s.key, ch: "line" }); continue; }
+
+      // ② LINE不可 → メールenqueue（メアド有時のみ）
+      if (r.mail && String(r.mail).indexOf("@") >= 0) {
+        await sbPost("keydrop_notifications", {
+          type: "returnday", reservation_id: r.id, to_email: r.mail, store: s.key, sent: false,
+          payload: { name: r.name || "", return_time: r.return_time || "", col_time: r.col_time || "", mypage_token: r.mypage_token },
+        });
+        out.push({ id: r.id, store: s.key, ch: "email", reason: lr?.reason || null });
+      } else {
+        out.push({ id: r.id, store: s.key, ch: "none", reason: "no_line_no_email" });
+      }
+    }
+  }
+
+  return new Response(JSON.stringify({ ok: true, today, processed: out.length, detail: out }), { headers: { "content-type": "application/json" } });
+});

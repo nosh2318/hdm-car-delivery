@@ -115,6 +115,13 @@ function buildThanks(n: any) {
   return { subject: `【KEY-DROP】先日はご利用ありがとうございました（予約番号: ${id}）`, body:
     `${p.name || "お客様"} 様\n\n先日はCARデリバリー KEY-DROP をご利用いただき、誠にありがとうございました。\nその後、お変わりなくお過ごしでしょうか。\n\n数あるサービスの中から当店をお選びいただけましたこと、スタッフ一同、心より感謝申し上げます。\nお車での道中やご旅行が、素敵なお時間となっておりましたら幸いです。\n\nまたのご利用を、心よりお待ち申し上げております。\n\nCARデリバリー KEY-DROP\n` };
 }
+// ⑧' 返却日の朝（早め回収ボタン訴求）＝LINE未連携者へのメールフォールバック
+function buildReturnday(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "";
+  const rt = String(p.return_time || p.col_time || "");
+  return { subject: `【KEY-DROP】本日がご返却日です（予約番号: ${id}）`, body:
+    `${p.name || "お客様"} 様\n\n本日がご返却日です🚗${rt ? `（回収予定 ${rt}）` : ""}\n\nもし予定より早くご返却の準備ができましたら、マイページの【🟢 返却の準備ができました（早めの回収OK）】ボタンを押してください。スケジュールに余裕があれば早めに回収へ伺います（確約ではありません）。\n\nご返却場所・時間のご確認、早め回収のご希望はこちらから👇\n${mypageLink(n)}\n\nCARデリバリー KEY-DROP\n` };
+}
 // ⑨ 到着のお知らせ（到着ボタン）＝URLなし（HANDYMAN同方針）お届け/回収で文面別
 function buildArrival(n: any) {
   const p = n.payload || {}, id = n.reservation_id || "", collecting = !!p.collecting;
@@ -171,6 +178,7 @@ function buildMail(n: any) {
     case "reminder_return": return withFooter(buildReturnReminder(n));
     case "damage_check": return withFooter(buildDamageCheck(n));
     case "thanks": return withFooter(buildThanks(n));
+    case "returnday": return withFooter(buildReturnday(n));
     case "arrival": return withFooter(buildArrival(n));
     default: return buildCancelRequest(n); // 運営向け（cancel_request）はフッター無し
   }

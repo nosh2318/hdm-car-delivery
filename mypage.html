@@ -193,7 +193,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 <div class="toast" id="toast"></div>
 
 <script>
-const VER = "kd1.3 KEYDROPマイページ(統一/車種名は店舗別カタログ)";
+const VER = "kd1.4 スタッフ閲覧=顧客と同一UI(編集のみ無効)/返却日通知";
 const FN = "https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
 const SB_BASE = "https://ckrxttbnawkclshczsia.supabase.co";
 const KD_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
@@ -490,7 +490,7 @@ function render(){
   const opts=[]; if(r.opt_c)opts.push(t('opt_child')+"×"+r.opt_c); if(r.opt_b)opts.push(t('opt_baby')+"×"+r.opt_b);
   if(r.opt_j)opts.push(t('opt_junior')+"×"+r.opt_j); if(r.opt_usb)opts.push("USB");
   const optStr = opts.length?opts.join("・"):t('none');
-  const editable = !d.pendingCancel && !cancelled && !RO;  // RO(スタッフ閲覧)は編集不可
+  const editable = !d.pendingCancel && !cancelled;  // ★スタッフ閲覧(ro=1)も顧客と同一UIを表示。編集の"実行"だけ call() のROガードで無効化（＝見た目は同じ・変更編集ができないだけ）
 
   $("#app").innerHTML = `
   ${RO?`<div style="background:#0F1F45;color:#fff;text-align:center;padding:9px 12px;font-size:13px;font-weight:700">🔒 スタッフ確認用（閲覧のみ・編集/依頼はできません）</div>`:""}
