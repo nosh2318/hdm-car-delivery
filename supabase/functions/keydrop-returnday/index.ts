@@ -1,18 +1,15 @@
 // Supabase Edge Function: keydrop-returnday
-// KEYDROP予約の「返却日の朝(8時以降)」に、返却のご案内＋早め回収ボタンの訴求を1回だけ送る。
-//   ① LINE連携済み(={store}_line_links に userId 有) → line-push で LINE 送信
-//   ② 未連携(no_userid)/LINE失敗 → keydrop_notifications に returnday を enqueue → keydrop-send-mail が Resend でメール送信
-// 対象: reservations(ota=KEYDROP・spk) と nha_reservations(ota=KEYDROP・nha)。キャンセル除外・token必須。
-// dedup: {store}_line_sends に action=mypage_returnday 行 or keydrop_notifications に type=returnday 行があれば処理済み。
-// 起動: pg_cron が x-cron-secret 付きで叩く（*/30）。POST {test:true} で 8時ゲート無視のドライ動作確認。
-// deploy: functions deploy keydrop-returnday --no-verify-jwt / secrets: CRON_SECRET, FUNC_SECRET
+// KEYDROP予約の「返却日の朝(8時以降)」に、返却のご案内＋早め回収ボタンの訴求を【メールで】1回だけ送る。
+//   keydrop_notifications に type=returnday を enqueue → keydrop-send-mail が Resend でメール送信。
+// 対象: reservations(ota=KEYDROP・spk) と nha_reservations(ota=KEYDROP・nha)。キャンセル除外・token/メール必須。
+// dedup: keydrop_notifications に type=returnday 行があれば処理済み。
+// 起動: pg_cron が x-cron-secret 付きで叩く（*/30）。POST {test:true} で 8時ゲート無視のドライ確認。
+// deploy: functions deploy keydrop-returnday --no-verify-jwt / secrets: CRON_SECRET
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET")!;
-const FUNC_SECRET = Deno.env.get("FUNC_SECRET")!;
 const H = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json" };
-const MYPAGE = "https://keydrop.jp/mypage.html?t=";
 
 async function sbGet(p: string): Promise<any[]> {
   const r = await fetch(`${SB_URL}/rest/v1/${p}`, { headers: H });
@@ -20,9 +17,6 @@ async function sbGet(p: string): Promise<any[]> {
 }
 async function sbPost(p: string, b: unknown) {
   return fetch(`${SB_URL}/rest/v1/${p}`, { method: "POST", headers: { ...H, Prefer: "return=minimal" }, body: JSON.stringify(b) });
-}
-function lineMsg(url: string, rt: string): string {
-  return `【CARデリバリー KEY-DROP】\n本日がご返却日です🚗${rt ? `（回収予定 ${rt}）` : ""}\n\nもし予定より早くご返却の準備ができましたら、マイページの【🟢 返却の準備ができました（早めの回収OK）】ボタンを押してください。スケジュールに余裕があれば早めに回収へ伺います（確約ではありません）。\nご返却場所・時間のご確認、早め回収のご希望はこちらから👇\nIf you're ready to return early, tap the green "Ready for pickup" button on your page 👇\n${url}`;
 }
 
 Deno.serve(async (req) => {
@@ -50,39 +44,18 @@ Deno.serve(async (req) => {
       const st = String(r.status || "").toLowerCase();
       if (st.includes("cancel") || st.includes("キャンセル")) continue;
       if (!r.mypage_token) continue;
+      if (!r.mail || String(r.mail).indexOf("@") < 0) { out.push({ id: r.id, store: s.key, ch: "none", reason: "no_email" }); continue; }
 
-      // dedup（LINE試行済み or メールenqueue済みなら何もしない）
-      const priorLine = await sbGet(`${s.key}_line_sends?resv_no=eq.${encodeURIComponent(r.id)}&action=eq.mypage_returnday&select=id&limit=1`);
-      const priorMail = await sbGet(`keydrop_notifications?reservation_id=eq.${encodeURIComponent(r.id)}&type=eq.returnday&select=id&limit=1`);
-      if ((priorLine[0]) || (priorMail[0])) continue;
+      // dedup（メールenqueue済みなら何もしない）
+      const prior = await sbGet(`keydrop_notifications?reservation_id=eq.${encodeURIComponent(r.id)}&type=eq.returnday&select=id&limit=1`);
+      if (prior[0]) continue;
       if (testMode) { out.push({ id: r.id, store: s.key, ch: "dry" }); continue; }
 
-      const url = MYPAGE + encodeURIComponent(r.mypage_token);
-      const rt = String(r.return_time || r.col_time || "");
-
-      // ① LINE試行（line-push が {store}_line_sands に sent/no_userid を記録＝次回dedup）
-      let lr: any = { ok: false, reason: "line_err" };
-      try {
-        const resp = await fetch(`${SB_URL}/functions/v1/line-push`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
-          body: JSON.stringify({ secret: FUNC_SECRET, store: s.key, resv_no: r.id, action: "mypage_returnday", message: lineMsg(url, rt) }),
-        });
-        lr = await resp.json();
-      } catch (_e) { lr = { ok: false, reason: "line_fetch_err" }; }
-
-      if (lr && lr.ok) { out.push({ id: r.id, store: s.key, ch: "line" }); continue; }
-
-      // ② LINE不可 → メールenqueue（メアド有時のみ）
-      if (r.mail && String(r.mail).indexOf("@") >= 0) {
-        await sbPost("keydrop_notifications", {
-          type: "returnday", reservation_id: r.id, to_email: r.mail, store: s.key, sent: false,
-          payload: { name: r.name || "", return_time: r.return_time || "", col_time: r.col_time || "", mypage_token: r.mypage_token },
-        });
-        out.push({ id: r.id, store: s.key, ch: "email", reason: lr?.reason || null });
-      } else {
-        out.push({ id: r.id, store: s.key, ch: "none", reason: "no_line_no_email" });
-      }
+      await sbPost("keydrop_notifications", {
+        type: "returnday", reservation_id: r.id, to_email: r.mail, store: s.key, sent: false,
+        payload: { name: r.name || "", return_time: r.return_time || "", col_time: r.col_time || "", mypage_token: r.mypage_token },
+      });
+      out.push({ id: r.id, store: s.key, ch: "email" });
     }
   }
 
