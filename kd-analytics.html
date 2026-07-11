@@ -266,7 +266,7 @@ async function renderDevice(){
 }
 async function load(){
   let funnel,src;
-  try{ funnel=await q('public_kd_funnel_v?select=*'); src=await q('public_kd_source_v?select=*'); }
+  try{ funnel=await q('public_kd_funnel2_v?select=*'); src=await q('public_kd_source_v?select=*'); }
   catch(e){
     document.getElementById('errbox').innerHTML='<div class="err">⚠️ 集計ビューがまだありません（<b>028 SQL未適用</b>）。Supabase SQL Editorで 028_kd_funnel_views.sql を1回RUNしてください。<br>'+esc(e.message)+'</div>';
     return;
