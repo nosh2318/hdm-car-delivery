@@ -196,6 +196,35 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 const VER = "kd1.4 スタッフ閲覧=顧客と同一UI(編集のみ無効)/返却日通知";
 const FN = "https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
 const SB_BASE = "https://ckrxttbnawkclshczsia.supabase.co";
+// 免許証 事前登録（Drive保存GAS＋license_uploads完了印）
+const GAS_LIC_URL = "https://script.google.com/macros/s/AKfycbyR29DN3sCW2addxE8_Elg2tvCPaopPJPNLlc4JNbQTXemwwVQkbaDER-blieKdMy0P/exec";
+const GAS_LIC_SECRET = "hdm-lic-7c3f9a21";
+const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+async function uploadLicense(){
+  const r = DATA && DATA.reservation; if(!r) return;
+  if(RO){ alert("スタッフ確認用のため登録はできません"); return; }
+  const inp = document.getElementById('licFiles');
+  const files = (inp && inp.files) ? [...inp.files] : [];
+  const msg = document.getElementById('licMsg'), btn = document.getElementById('licBtn');
+  if(!files.length){ msg.style.color="#c00"; msg.textContent="免許証の画像を選択してください"; return; }
+  btn.disabled = true; btn.textContent = "送信中..."; msg.style.color="#6b7784"; msg.textContent = "送信中... 0/"+files.length;
+  let ok = 0;
+  for(let i=0;i<files.length;i++){
+    try{
+      const b64 = await new Promise((res,rej)=>{ const rd=new FileReader(); rd.onload=()=>res(String(rd.result).split(',')[1]); rd.onerror=rej; rd.readAsDataURL(files[i]); });
+      const resp = await fetch(GAS_LIC_URL,{ method:"POST", body:JSON.stringify({ secret:GAS_LIC_SECRET, store:"spk", resId:r.id, custName:r.name||"", label:"front_"+(i+1), fileName:"front_"+(i+1)+"_"+Date.now()+".jpg", mime:files[i].type||"image/jpeg", b64:b64 }) });
+      const jr = await resp.json().catch(()=>({})); if(resp.ok && jr.ok) ok++;
+      msg.textContent = "送信中... "+(i+1)+"/"+files.length;
+    }catch(e){}
+  }
+  if(ok>0){
+    try{ await fetch(SB_BASE+"/rest/v1/license_uploads?on_conflict=reservation_id",{ method:"POST", headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON, "Content-Type":"application/json", Prefer:"resolution=merge-duplicates,return=minimal" }, body:JSON.stringify({ reservation_id:r.id, store:"spk", cnt:ok, drivers:ok, last_at:new Date().toISOString() }) }); }catch(e){}
+    const box=document.getElementById('licBox'), dn=document.getElementById('licDone');
+    if(box) box.style.display="none"; if(dn) dn.style.display="block";
+  }else{
+    btn.disabled=false; btn.textContent="この内容で登録する"; msg.style.color="#c00"; msg.textContent="送信に失敗しました。通信環境をご確認のうえ再度お試しください。";
+  }
+}
 const KD_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 let CATALOG=null; // 店舗別クラスカタログ(公開ビュー)＝車種名の唯一の正
 async function fetchCatalog(store){
@@ -555,6 +584,18 @@ function render(){
           : `<div class="dashed">${t('damage_prep')}</div>`)
       : `<div class="dashed"><span class="pill wait">${t('damage_locked')}</span><div style="margin-top:8px"><b>${t('damage_open8')}</b></div></div>`}
   </div>
+
+  ${(!cancelled) ? `<div class="card">
+    <h2><span class="em">🪪</span>運転免許証の事前登録</h2>
+    <div class="note">当日の受け渡しをスムーズにするため、運転される方 全員分の運転免許証（表面）の事前ご登録にご協力ください。アプリ不要・スマホで撮影して送信できます。</div>
+    <div id="licDone" style="display:none;color:#0a7d34;font-weight:800;margin-top:8px">✅ ご登録ありがとうございます。</div>
+    <div id="licBox" style="margin-top:8px">
+      <input id="licFiles" type="file" accept="image/*" multiple capture="environment" style="width:100%;font-size:15px;margin-bottom:6px">
+      <div class="note" style="font-size:12px;color:var(--sub)">運転者が複数の場合は、全員分の表面を選択してください。</div>
+      <button class="bigbtn" id="licBtn" ${RO?'disabled':''} onclick="uploadLicense()">この内容で登録する</button>
+      <div id="licMsg" style="margin-top:8px;font-size:13px"></div>
+    </div>
+  </div>` : ""}
 
   <div class="card">
     <h2><span class="em">🛰</span>${t('track_title')}</h2>

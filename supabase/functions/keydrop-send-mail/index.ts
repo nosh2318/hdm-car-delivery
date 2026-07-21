@@ -163,8 +163,20 @@ function buildRequestAck(n: any) {
   return { subject: `【KEY-DROP】変更のご依頼を受け付けました（予約番号 ${id}）`, body:
     `${p.name || "お客様"} 様\n\n下記の変更のご依頼を受け付けました。\n※この時点では *まだ確定しておりません（未確定）* 。\n担当が内容を確認のうえ、確定・ご連絡いたします。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\nご依頼内容：${p.label || "変更のご依頼"}${p.detail ? `（${p.detail}）` : ""}\n状態　　　：🕓 確認中（未確定）\n━━━━━━━━━━━━━━━━━━━━\n\n■ ご確認\n現在の状況はマイページでご確認いただけます（🕓確認中と表示されます）。\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n` };
 }
+// ⑩ 免許証 事前登録リマインド（出発3日前/2日前/前日・未提出者のみ）
+function buildLicenseReminder(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "";
+  const off = Number(p.offset || 3);
+  const link = mypageLink(n);
+  const head = off >= 3 ? "ご出発が近づいてまいりました" : (off === 2 ? "ご出発2日前となりました" : "いよいよ明日がご出発です");
+  const body = `${p.name || "お客様"} 様\n\n${head}。\n当日の受け渡しをスムーズに行うため、運転免許証の「事前ご登録」にご協力をお願いいたします。\n運転される方 全員分（表面）を、下記マイページから事前にご登録いただけます（アプリのインストールは不要です・スマホで撮影→送信）。\n\n▶ マイページ（免許証の事前登録）\n${link}\n`
+    + (off === 1 ? "\n※事前登録がお済みでないと、当日お手続きにお時間をいただく場合がございます。\n" : "")
+    + `\nCARデリバリー KEY-DROP\n`;
+  return { subject: `【KEY-DROP】運転免許証 事前ご登録のお願い（予約番号: ${id}）`, body };
+}
 function buildMail(n: any) {
   switch (n.type) {
+    case "license_reminder": return withFooter(buildLicenseReminder(n));
     case "request_ack": return withFooter(buildRequestAck(n));
     case "confirm": return withFooter(buildConfirm(n));
     case "cancel_ack": return withFooter(buildCancelAck(n));
