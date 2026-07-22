@@ -327,6 +327,8 @@ const TX={
  hist_note:{ja:"ご依頼は担当が確認し、処理後にLINEでお知らせします。状況はこの画面に反映されます。",en:"Requests are reviewed by staff and notified via LINE after processing. Status is shown here.",zh:"申請將由專員確認，處理後透過LINE通知。狀態會顯示於此。",ko:"요청은 담당자가 확인 후 LINE으로 안내합니다. 상태는 이 화면에 반영됩니다."},
  foot_contact:{ja:"お問い合わせ",en:"Contact",zh:"聯絡我們",ko:"문의"},
  foot_private:{ja:"このページはお客様専用です。URLの共有はお控えください。",en:"This page is for you only. Please do not share the URL.",zh:"此頁面為您專屬，請勿分享網址。",ko:"이 페이지는 고객 전용입니다. URL 공유를 삼가주세요."},
+ terms_title:{ja:"📄 貸渡約款・個人情報のお取り扱い",en:"📄 Rental Terms & Privacy",zh:"📄 租賃條款・個人資料處理",ko:"📄 대여약관・개인정보 취급"},
+ terms_hint:{ja:"タップで開く（確認のみ）",en:"Tap to open (view only)",zh:"點擊展開（僅供確認）",ko:"탭하여 열기(확인용)"},
  // dialogs
  cancel_btn:{ja:"やめる",en:"Cancel",zh:"取消",ko:"취소"},
  no_change:{ja:"変更がありません",en:"No changes",zh:"沒有變更",ko:"변경 사항 없음"},
@@ -507,6 +509,113 @@ function readyLatest(){const rc=((DATA&&DATA.recentChanges)||[]).filter(c=>c.fie
 function readyState(){const c=readyLatest();return c?c.status:"none"}
 // 希望時間の目安（new_value末尾の HH:MM を抽出）
 function readyTime(){const c=readyLatest();if(!c)return"";const m=String(c.new_value||"").match(/(\d{1,2}:\d{2})/);return m?m[1]:""}
+// 貸渡約款（札幌・那覇 共通・多言語 日/英/繁/韓。マイページ最下部に折りたたみ表示・確認のみ/サイン不要）
+const TERMS = {
+ja:`
+<div style="font-weight:800;color:#0F1F45;margin:2px 0 6px">個人情報のお取り扱いについて</div>
+<p>1. 借受人（貸渡契約の申込をしようとする者を含みます。）及び運転者は当社が下記の目的で個人情報を利用することに同意するものとします。</p>
+<p style="padding-left:1em">a. 貸渡証作成等、レンタカーに関する基本通達（自旅第138号 平成7年6月13日）に基づく義務を履行するため。<br>b. 借受人又は運転者の本人確認及び審査を行うため。<br>c. 商品開発・お客様満足向上等を目的としたアンケート調査のため。<br>d. 個人を識別・特定できない形態に加工した統計データを作成するため。</p>
+<p>2. 貸出期間中に通信型カーナビ及びドライブレコーダーから取得する情報を統計的に集計・分析し、個人を識別・特定できない形態に加工した統計データを第三者に提供することに同意するものとします。加工データを個人特定可能な状態に戻すことは禁止します。</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">第1章 総則</div>
+<h4 style="margin:8px 0 3px;font-size:13px">第1条（約款の適用）</h4>
+<p>1. 当社は、この約款及び細則を定めるところにより、貸渡自動車（レンタカー）を借受人に貸し渡し、借受人はこれを借り受けます。定めのない事項は、法令又は一般の慣習によります。<br>2. 当社は、法令等に反しない範囲で特約に応ずることがあり、特約はこの約款に優先します。</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">第2章 予約</div>
+<h4 style="margin:8px 0 3px;font-size:13px">第2条（予約の申し込み）</h4>
+<p>1. 借受人は、当社の承認を得て予約を取消することができます。<br>2. 借受開始時刻を1時間以上経過しても契約締結手続に着手しないときは、予約は取消されたものとします。<br>3. この場合、借受人は所定の予約取消手数料を支払い、当社は受領済の予約金を返還します。<br>4. 当社の都合で予約が取消され又は契約が締結されなかったときは、受領済の予約金を返還します。</p>
+<h4 style="margin:8px 0 3px;font-size:13px">第3条（予約の変更）</h4>
+<p>借受人は、借受条件を変更しようとするときは、あらかじめ当社の承諾を受けなければなりません。</p>
+<h4 style="margin:8px 0 3px;font-size:13px">第4条（予約の取り消し等）</h4>
+<p>天災・盗難・リコール等、借受人・当社いずれの責めにもよらない事由で契約が締結されなかったときは、予約は取消され、受領済の予約金を返還します。</p>
+<h4 style="margin:8px 0 3px;font-size:13px">第5条（代替レンタカー）</h4>
+<p>予約の車種クラスを貸渡できないとき、当社は代替レンタカーを申し入れることができます。借受人が承諾したときは単価の低い方の料金で貸し渡し、承諾しないときは予約を取消でき、支払済みの予約金は返還します。</p>
+<h4 style="margin:8px 0 3px;font-size:13px">第6条（免責）</h4>
+<p>予約が取消され又は契約が締結されなかったことについて、第4条・第5条の措置を除き、当社及び借受人は相互に何らの請求をしません。</p>
+<h4 style="margin:8px 0 3px;font-size:13px">第7条（予約業務の代行）</h4>
+<p>借受人は、旅行代理店・提携会社等（代行業者）を通じて予約の申込み・変更・取消しを行うことができます。</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">第3章 貸渡し</div>
+<h4 style="margin:8px 0 3px;font-size:13px">第8条（貸渡契約の締結）</h4>
+<p>1. 借受人は借受条件を、当社は約款・料金表等により貸渡条件を明示して契約を締結します。<br>2. 契約締結時、借受人は所定の貸渡料金を支払います。<br>3〜5. 借受人は契約締結時までに運転者全員の運転免許証を提示又は提出し、免許停止・取消し・失効中の者を運転者に加えないことを保証します。<br>6. 当社は基本通達に基づき運転免許証により運転者の種類・番号を貸渡証に記載する義務を負い、そのため免許証の提示・提出を求めることができます（国外・外国運転免許証を含む）。<br>7〜8. 当社は本人確認書類の提出、携帯電話番号の告知、クレジットカード又は現金による支払い等を求めることができます。</p>
+<p style="font-size:11px;color:#8a94a0;margin-top:10px">※本約款は概要抜粋です。正式な全文は貸渡時にご確認いただけます。</p>
+`,
+en:`
+<div style="font-weight:800;color:#0F1F45;margin:2px 0 6px">Handling of Personal Information</div>
+<p>1. The renter (including a person applying for a rental contract) and drivers consent to our use of their personal information for the following purposes:</p>
+<p style="padding-left:1em">a. To fulfill obligations under the rental-car notification (Ji-Ryo No.138, June 13, 1995), such as preparing the rental certificate.<br>b. To verify identity and screen the renter or drivers.<br>c. To conduct surveys for product development and improving customer satisfaction.<br>d. To create statistical data processed so that individuals cannot be identified.</p>
+<p>2. You consent to us statistically aggregating/analyzing information obtained from the connected car navigation and drive recorder during the rental period, and providing such data—processed so individuals cannot be identified—to third parties. Restoring processed data to an identifiable state is prohibited.</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">Chapter 1 General Provisions</div>
+<h4 style="margin:8px 0 3px;font-size:13px">Article 1 (Application)</h4>
+<p>1. We rent the vehicle to the renter under these terms and rules; the renter borrows it accordingly. Matters not stipulated follow laws and general custom.<br>2. We may agree to special provisions not contrary to law; such provisions take precedence over these terms.</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">Chapter 2 Reservation</div>
+<h4 style="margin:8px 0 3px;font-size:13px">Article 2 (Reservation Application)</h4>
+<p>1. The renter may cancel a reservation with our approval.<br>2. If procedures are not started within 1 hour after the rental start time, the reservation is deemed cancelled.<br>3. In that case the renter pays the prescribed cancellation fee, and we refund any deposit received.<br>4. If a reservation is cancelled or a contract is not concluded due to our circumstances, we refund any deposit received.</p>
+<h4 style="margin:8px 0 3px;font-size:13px">Article 3 (Change of Reservation)</h4>
+<p>To change rental conditions, the renter must obtain our consent in advance.</p>
+<h4 style="margin:8px 0 3px;font-size:13px">Article 4 (Cancellation)</h4>
+<p>If a contract is not concluded due to reasons beyond the responsibility of either party (disaster, theft, recall, etc.), the reservation is cancelled and any deposit received is refunded.</p>
+<h4 style="margin:8px 0 3px;font-size:13px">Article 5 (Alternative Vehicle)</h4>
+<p>If we cannot provide the reserved class, we may offer an alternative vehicle. If accepted, we charge the lower of the two rates; if not accepted, the renter may cancel and any paid deposit is refunded.</p>
+<h4 style="margin:8px 0 3px;font-size:13px">Article 6 (Exemption)</h4>
+<p>Except for the measures in Articles 4 and 5, neither party shall make any claim against the other regarding cancellation or non-conclusion of a contract.</p>
+<h4 style="margin:8px 0 3px;font-size:13px">Article 7 (Agency)</h4>
+<p>The renter may apply for, change, or cancel a reservation through a travel agency or partner (agent).</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">Chapter 3 Rental</div>
+<h4 style="margin:8px 0 3px;font-size:13px">Article 8 (Conclusion of Contract)</h4>
+<p>1. The renter states rental conditions and we present rental terms via the terms and fee table to conclude the contract.<br>2. At conclusion, the renter pays the prescribed rental fee.<br>3–5. By conclusion, the renter presents/submits the driver's license of all drivers and warrants that no driver is under license suspension, revocation, or expiration.<br>6. Under the notification, we must record each driver's license type and number on the rental certificate, and may request presentation/submission of licenses (including international/foreign licenses).<br>7–8. We may request identity documents, a mobile phone number, and payment by credit card or cash.</p>
+<p style="font-size:11px;color:#8a94a0;margin-top:10px">*This is a summary. The full official terms are available at the time of rental.</p>
+`,
+zh:`
+<div style="font-weight:800;color:#0F1F45;margin:2px 0 6px">個人資料之處理</div>
+<p>1. 承租人（含申請租賃契約者）及駕駛人同意本公司為下列目的使用其個人資料：</p>
+<p style="padding-left:1em">a. 為履行租車相關基本通達（自旅第138號 平成7年6月13日）之義務，如製作租賃證等。<br>b. 為進行承租人或駕駛人之身分確認及審查。<br>c. 為商品開發、提升顧客滿意度等進行問卷調查。<br>d. 為製作已加工至無法識別特定個人之統計資料。</p>
+<p>2. 您同意本公司將租賃期間由聯網導航及行車記錄器所取得之資訊進行統計彙整與分析，並將加工至無法識別特定個人之統計資料提供予第三方。禁止將加工資料還原為可識別個人之狀態。</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">第1章 總則</div>
+<h4 style="margin:8px 0 3px;font-size:13px">第1條（條款之適用）</h4>
+<p>1. 本公司依本條款及細則將租賃車輛（租車）出租予承租人，承租人據此承租。未規定事項依法令或一般慣例。<br>2. 本公司於不違反法令之範圍內得接受特約，特約優先於本條款。</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">第2章 預約</div>
+<h4 style="margin:8px 0 3px;font-size:13px">第2條（預約申請）</h4>
+<p>1. 承租人經本公司同意得取消預約。<br>2. 逾承租開始時間1小時仍未著手締約手續者，視為取消預約。<br>3. 此時承租人應支付所定預約取消手續費，本公司退還已收預約金。<br>4. 因本公司事由致預約取消或未締約者，退還已收預約金。</p>
+<h4 style="margin:8px 0 3px;font-size:13px">第3條（預約變更）</h4>
+<p>承租人欲變更承租條件時，應事先取得本公司同意。</p>
+<h4 style="margin:8px 0 3px;font-size:13px">第4條（預約之取消等）</h4>
+<p>因天災、竊盜、召回等非可歸責於雙方之事由致未締約者，預約取消並退還已收預約金。</p>
+<h4 style="margin:8px 0 3px;font-size:13px">第5條（替代車輛）</h4>
+<p>本公司無法提供所預約車種等級時，得提出替代車輛。承租人同意時以較低費率出租；不同意時得取消預約，並退還已付預約金。</p>
+<h4 style="margin:8px 0 3px;font-size:13px">第6條（免責）</h4>
+<p>除第4條、第5條之措施外，就預約取消或未締約，本公司與承租人相互不為任何請求。</p>
+<h4 style="margin:8px 0 3px;font-size:13px">第7條（預約業務之代辦）</h4>
+<p>承租人得透過旅行社、合作公司等（代辦業者）進行預約之申請、變更或取消。</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">第3章 租賃</div>
+<h4 style="margin:8px 0 3px;font-size:13px">第8條（租賃契約之締結）</h4>
+<p>1. 承租人載明承租條件，本公司依條款、費率表等明示租賃條件並締約。<br>2. 締約時承租人支付所定租賃費用。<br>3〜5. 承租人應於締約前提示或提交全體駕駛人之駕照，並保證無吊扣、吊銷、失效之駕駛人。<br>6. 本公司依基本通達須將駕駛人之駕照種類與號碼記載於租賃證，並得要求提示、提交駕照（含國際、外國駕照）。<br>7〜8. 本公司得要求提交身分證明文件、告知手機號碼，並以信用卡或現金付款。</p>
+<p style="font-size:11px;color:#8a94a0;margin-top:10px">※本條款為摘要。正式全文將於交車時供您確認。</p>
+`,
+ko:`
+<div style="font-weight:800;color:#0F1F45;margin:2px 0 6px">개인정보의 취급에 대하여</div>
+<p>1. 임차인(대여계약 신청자 포함) 및 운전자는 당사가 아래 목적으로 개인정보를 이용하는 데 동의합니다.</p>
+<p style="padding-left:1em">a. 대여증 작성 등 렌터카 관련 기본통달(지려 제138호, 1995.6.13.)에 따른 의무 이행을 위하여.<br>b. 임차인·운전자의 본인확인 및 심사를 위하여.<br>c. 상품개발·고객만족 향상 등을 위한 설문조사를 위하여.<br>d. 개인을 식별·특정할 수 없도록 가공한 통계데이터 작성을 위하여.</p>
+<p>2. 대여기간 중 통신형 내비게이션 및 블랙박스에서 취득한 정보를 통계적으로 집계·분석하여, 개인을 식별할 수 없도록 가공한 통계데이터를 제3자에게 제공하는 데 동의합니다. 가공데이터를 개인 식별 가능한 상태로 복원하는 것은 금지합니다.</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">제1장 총칙</div>
+<h4 style="margin:8px 0 3px;font-size:13px">제1조(약관의 적용)</h4>
+<p>1. 당사는 본 약관 및 세칙에 따라 대여차량(렌터카)을 임차인에게 대여하고 임차인은 이를 임차합니다. 정함이 없는 사항은 법령 또는 일반 관습에 따릅니다.<br>2. 당사는 법령에 반하지 않는 범위에서 특약에 응할 수 있으며, 특약은 본 약관에 우선합니다.</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">제2장 예약</div>
+<h4 style="margin:8px 0 3px;font-size:13px">제2조(예약 신청)</h4>
+<p>1. 임차인은 당사의 승인을 얻어 예약을 취소할 수 있습니다.<br>2. 대여 개시시각을 1시간 이상 경과해도 계약 체결 절차에 착수하지 않은 경우 예약은 취소된 것으로 봅니다.<br>3. 이 경우 임차인은 소정의 예약취소 수수료를 지급하고, 당사는 수령한 예약금을 반환합니다.<br>4. 당사 사정으로 예약이 취소되거나 계약이 체결되지 않은 경우 수령한 예약금을 반환합니다.</p>
+<h4 style="margin:8px 0 3px;font-size:13px">제3조(예약 변경)</h4>
+<p>임차인은 임차 조건을 변경하려는 경우 사전에 당사의 승낙을 받아야 합니다.</p>
+<h4 style="margin:8px 0 3px;font-size:13px">제4조(예약의 취소 등)</h4>
+<p>천재·도난·리콜 등 임차인·당사 어느 쪽의 책임에도 의하지 않는 사유로 계약이 체결되지 않은 경우 예약은 취소되며 수령한 예약금을 반환합니다.</p>
+<h4 style="margin:8px 0 3px;font-size:13px">제5조(대체 차량)</h4>
+<p>예약한 차종 등급을 대여할 수 없는 경우 당사는 대체 차량을 제안할 수 있습니다. 임차인이 승낙하면 더 낮은 요금으로 대여하고, 승낙하지 않으면 예약을 취소할 수 있으며 지급한 예약금은 반환합니다.</p>
+<h4 style="margin:8px 0 3px;font-size:13px">제6조(면책)</h4>
+<p>제4조·제5조의 조치를 제외하고, 예약 취소 또는 계약 미체결에 대해 당사와 임차인은 상호 어떠한 청구도 하지 않습니다.</p>
+<h4 style="margin:8px 0 3px;font-size:13px">제7조(예약업무의 대행)</h4>
+<p>임차인은 여행대리점·제휴사 등(대행업자)을 통해 예약의 신청·변경·취소를 할 수 있습니다.</p>
+<div style="font-weight:800;color:#0F1F45;margin:14px 0 4px;border-top:1px solid #eee;padding-top:10px">제3장 대여</div>
+<h4 style="margin:8px 0 3px;font-size:13px">제8조(대여계약의 체결)</h4>
+<p>1. 임차인은 임차 조건을, 당사는 약관·요금표 등으로 대여 조건을 명시하여 계약을 체결합니다.<br>2. 체결 시 임차인은 소정의 대여요금을 지급합니다.<br>3~5. 임차인은 체결 시까지 모든 운전자의 운전면허증을 제시·제출하고, 면허 정지·취소·실효 중인 자를 운전자에 포함하지 않음을 보증합니다.<br>6. 당사는 기본통달에 따라 운전면허증으로 운전자의 종류·번호를 대여증에 기재할 의무가 있어 면허증 제시·제출을 요청할 수 있습니다(국제·외국 면허증 포함).<br>7~8. 당사는 본인확인 서류 제출, 휴대전화번호 고지, 신용카드 또는 현금 결제 등을 요청할 수 있습니다.</p>
+<p style="font-size:11px;color:#8a94a0;margin-top:10px">※본 약관은 요약본입니다. 정식 전문은 대여 시 확인하실 수 있습니다.</p>
+`
+};
 function render(){
   const d=DATA, r=d.reservation;
   // 車両名は店舗別の公開カタログ(CATALOG=正)から。取得失敗時のみ最小フォールバック。マイページ仕様は統一・車両は那覇/札幌で別。
@@ -651,6 +760,11 @@ function render(){
     return `<div class="card"><h2><span class="em">🕘</span>${t('recent_hist')}</h2>`+
       list.map(h=>`<div class="hrow"><span class="hdate">${h.date}</span><span class="htx">${h.text}</span>${h.pill?`<span class="hpill" style="color:${h.pc};background:${h.pb}">${h.pill}</span>`:""}</div>`).join("")+
       `<div class="note">${t('hist_note')}</div></div>`})()}
+
+  <details style="margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden">
+    <summary style="padding:14px 16px;font-weight:800;font-size:15px;color:#0F1F45;cursor:pointer;display:flex;align-items:center;gap:8px;list-style:none">${t('terms_title')}<span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--sub)">${t('terms_hint')}</span></summary>
+    <div style="max-height:340px;overflow-y:auto;padding:12px 16px 16px;font-size:12px;line-height:1.75;color:#444;border-top:1px solid var(--line)">${TERMS[L]||TERMS.ja}</div>
+  </details>
 
   <div class="foot">
     KEY-DROP ${esc(d.label)}${t('store')} ／ LINE：<a href="https://lin.ee/g6iDNYz">${t('foot_contact')}</a><br>
