@@ -182,6 +182,13 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
   border:1px solid #f5c9a3;border-radius:6px;padding:2px 9px}
 .edit.call{color:#fff;background:var(--warn);border-color:var(--warn);animation:pulse 1.6s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(194,65,12,.4)}60%{box-shadow:0 0 0 6px rgba(194,65,12,0)}}
+@keyframes licpulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.55)}50%{box-shadow:0 0 0 7px rgba(220,38,38,0)}}
+#licAlert{align-items:center;gap:11px;background:#fef2f2;border:2px solid #dc2626;border-radius:14px;padding:13px 15px;margin-bottom:14px;cursor:pointer;animation:licpulse 1.15s ease-in-out infinite}
+#licAlert .la-ic{font-size:26px;flex:none}
+#licAlert .la-tx{flex:1;min-width:0}
+#licAlert .la-tx b{display:block;color:#b91c1c;font-size:15px;font-weight:900;margin-bottom:2px}
+#licAlert .la-tx span{display:block;color:#7f1d1d;font-size:12.5px;line-height:1.55}
+#licAlert .la-go{flex:none;background:#dc2626;color:#fff;font-weight:800;font-size:13px;border-radius:9px;padding:9px 12px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -193,7 +200,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 <div class="toast" id="toast"></div>
 
 <script>
-const VER = "kd1.4 スタッフ閲覧=顧客と同一UI(編集のみ無効)/返却日通知";
+const VER = "kd1.5 免許未提出=上段に赤点滅アラート(顧客のみ・DB照合で登録済みは非表示)";
 const FN = "https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
 const SB_BASE = "https://ckrxttbnawkclshczsia.supabase.co";
 // 免許証 事前登録（Drive保存GAS＋license_uploads完了印）
@@ -259,6 +266,9 @@ const TX={
  login_hint:{ja:"※ メールに届いたマイページURLからは、ログイン不要で開けます。",en:"※ From the My Page URL sent by email, you can open without login.",zh:"※ 透過電子郵件收到的網址可免登入開啟。",ko:"※ 이메일로 받은 URL에서는 로그인 없이 열립니다."},
  not_found:{ja:"予約が見つかりませんでした",en:"Reservation not found",zh:"找不到預約",ko:"예약을 찾을 수 없습니다"},
  your_page:{ja:"様 専用ページ",en:" — Your Reservation Page",zh:" 專屬頁面",ko:"님 전용 페이지"},
+ lic_alert_title:{ja:"運転免許証が未提出です",en:"Driver's license not submitted",zh:"尚未提交駕照",ko:"운전면허증 미제출"},
+ lic_alert_body:{ja:"ご出発をスムーズにするため、運転される方の免許証（表面）を今すぐご登録ください。",en:"Please register the driver's license (front) now for a smooth pickup.",zh:"為使交車順暢，請立即登記駕駛人的駕照（正面）。",ko:"원활한 출발을 위해 지금 운전자의 면허증(앞면)을 등록해 주세요."},
+ lic_alert_btn:{ja:"今すぐ登録 →",en:"Register now →",zh:"立即登記 →",ko:"지금 등록 →"},
  guest:{ja:"お客",en:"Guest",zh:"貴賓",ko:"고객"},
  store:{ja:"店",en:" Store",zh:"店",ko:"점"},
  st_confirmed:{ja:"予約確定",en:"Confirmed",zh:"預約確認",ko:"예약 확정"},
@@ -636,6 +646,12 @@ function render(){
   ${langSwitch()}
   <div class="hello">${esc(r.name||t('guest'))}<span>${t('your_page')}</span></div>
 
+  ${(!RO&&!cancelled)?`<div id="licAlert" style="display:none" onclick="scrollLic()">
+    <div class="la-ic">🪪</div>
+    <div class="la-tx"><b>⚠️ ${t('lic_alert_title')}</b><span>${t('lic_alert_body')}</span></div>
+    <div class="la-go">${t('lic_alert_btn')}</div>
+  </div>`:""}
+
   ${d.pendingCancel?`<div class="banner">${t('banner_cancel')}</div>`:""}
 
   ${(editable&&(!r.del_place||!r.col_place))?`<div class="setbanner" onclick="mapPicker('${!r.del_place?"del_place":"col_place"}')">
@@ -694,7 +710,7 @@ function render(){
       : `<div class="dashed"><span class="pill wait">${t('damage_locked')}</span><div style="margin-top:8px"><b>${t('damage_open8')}</b></div></div>`}
   </div>
 
-  ${(!cancelled) ? `<div class="card">
+  ${(!cancelled) ? `<div class="card" id="liccard">
     <h2><span class="em">🪪</span>運転免許証の事前登録</h2>
     <div class="note">当日の受け渡しをスムーズにするため、運転される方 全員分の運転免許証（表面）の事前ご登録にご協力ください。アプリ不要・スマホで撮影して送信できます。</div>
     <div id="licDone" style="display:none;color:#0a7d34;font-weight:800;margin-top:8px">✅ ご登録ありがとうございます。</div>
@@ -771,6 +787,21 @@ function render(){
     ${t('foot_private')}<br>
     <span style="opacity:.5">${VER}</span>
   </div>`;
+  if(!RO && !cancelled) refreshLicState(r.id);
+}
+
+/* 🪪 免許提出状況をDBで確認→登録済みなら「登録済み」表示＋上段アラート消す／未提出ならアラート点滅 */
+function scrollLic(){const el=document.getElementById('liccard'); if(!el)return; el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.transition='box-shadow .3s'; el.style.boxShadow='0 0 0 3px #dc2626'; setTimeout(function(){el.style.boxShadow=''},1600);}
+async function refreshLicState(rid){
+  if(!rid)return;
+  let cnt=0;
+  try{
+    const res=await fetch(SB_BASE+"/rest/v1/license_uploads?reservation_id=eq."+encodeURIComponent(rid)+"&select=cnt",{headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
+    const j=await res.json(); cnt=(j&&j[0]&&j[0].cnt)||0;
+  }catch(e){ return; } // 通信失敗時はアラート状態を変えない（誤表示防止）
+  const al=document.getElementById('licAlert'), box=document.getElementById('licBox'), dn=document.getElementById('licDone');
+  if(cnt>0){ if(al)al.style.display='none'; if(box)box.style.display='none'; if(dn)dn.style.display='block'; }
+  else { if(al)al.style.display='flex'; }
 }
 
 /* ---- 場所・時間 変更（項目ごとに個別・即反映） ---- */
