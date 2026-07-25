@@ -151,11 +151,25 @@ Deno.serve(async (req) => {
     if (!SQUARE_TOKEN) return json({ error: "Square設定が未構成のため自動返金できません（手動返金後にautoRefund:falseで確定してください）" }, 503);
     if (!pay.square_payment_id) return json({ error: "Square決済IDが無いため自動返金不可。Square Dashboardで手動返金してください" }, 409);
     try {
+      // ★2026-07-25 二重返金の防波堤：ユニークなidempotency_keyにする前に、Square上で既に返金済みでないか確認。
+      //   既に返金済みなら再返金せずDBだけ同期して終了。
+      const chk = await fetch(`${SQUARE_API}/v2/payments/${encodeURIComponent(pay.square_payment_id)}`, {
+        headers: { Authorization: `Bearer ${SQUARE_TOKEN}`, "Square-Version": "2024-06-04" },
+      });
+      const cj = await chk.json();
+      const alreadyRefunded = Number(cj?.payment?.refunded_money?.amount || 0);
+      if (alreadyRefunded > 0) {
+        await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`,
+          { status: "refunded", refund_amount: alreadyRefunded, cancel_fee: fee, cancel_rate: rate, refunded_at: new Date().toISOString() });
+        return json({ ok: true, alreadyRefundedOnSquare: true, refunded: alreadyRefunded });
+      }
+      // ★2026-07-25 idempotency_key をユニーク化（固定キーだと過去のFAILEDがキャッシュされ、残高回復後も再返金できない不具合の根治）。
+      //   タイムスタンプ付きで毎回新規リクエスト → FAILED後も再試行できる。二重返金は上のrefunded_moneyチェック＋pay.status=refundedガードで防止。
       const r = await fetch(`${SQUARE_API}/v2/refunds`, {
         method: "POST",
         headers: { Authorization: `Bearer ${SQUARE_TOKEN}`, "content-type": "application/json", "Square-Version": "2024-06-04" },
         body: JSON.stringify({
-          idempotency_key: `kdrefund-${resId}`,
+          idempotency_key: `kdrefund-${resId}-${Date.now()}`,
           payment_id: pay.square_payment_id,
           amount_money: { amount: refundActual, currency: "JPY" },
           reason: `KEYDROP cancel ${rate}%`,
