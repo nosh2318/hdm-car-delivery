@@ -1810,6 +1810,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const DEFAULT_LNG = (KD_STORE === 'naha') ? 127.6792 : 141.3508;
     // 現在エリアの中心（KD_STOREは後から那覇に切替わりうる＝const DEFAULTでなくこれを使う）
     function kdGeoCenter() { return (KD_STORE === 'naha') ? [26.2126, 127.6792] : [43.0687, 141.3508]; }
+    // 住所検索の地域バイアスは「今表示している地図の中心」に追従（エリア切替でKD_STORE/DEFAULT_LATが古くても、地図が示す場所の候補を出す）。地図が無ければお届けピン→エリア既定。
+    function kdSearchCenter() { try { if (map && typeof map.getCenter === 'function') { var c = map.getCenter(); if (c) return [c.lat(), c.lng()]; } } catch (e) {} try { if (state && state.deliveryLat != null) return [state.deliveryLat, state.deliveryLng]; } catch (e) {} return kdGeoCenter(); }
 
     let state = {
         screen: 'top',
@@ -4398,7 +4400,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         gAuto.getPlacePredictions({
             input: query, sessionToken: gToken, language: (window.__gmapsLang || state.lang || 'ja'),
             componentRestrictions: { country: 'jp' },
-            location: new google.maps.LatLng(DEFAULT_LAT, DEFAULT_LNG), radius: 40000,
+            location: new google.maps.LatLng(kdSearchCenter()[0], kdSearchCenter()[1]), radius: 40000,
         }, function (preds, status) {
             if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { photonSearch(query); return; }
             _markEngine('google');
@@ -4446,7 +4448,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const box=document.getElementById('addressSuggestions');
         if(!box)return;
         try{
-            const res=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(query)+'&lat='+DEFAULT_LAT+'&lon='+DEFAULT_LNG+'&limit=8');
+            const res=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(query)+'&lat='+kdSearchCenter()[0]+'&lon='+kdSearchCenter()[1]+'&limit=8');
             const d=await res.json();
             const feats=((d&&d.features)||[]).filter(f=>{const p=(f&&f.properties)||{};return (!p.countrycode||p.countrycode==='JP')&&f.geometry&&f.geometry.coordinates;});
             if(!feats.length){gsiSearch(query);return;}
@@ -5407,7 +5409,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         _mpEditSearchTimer = setTimeout(() => {
             if (typeof gReady !== 'undefined' && gReady && gAuto) {
                 try {
-                    gAuto.getPlacePredictions({ input: q, sessionToken: gToken, language: 'ja', componentRestrictions: { country: 'jp' }, location: new google.maps.LatLng(kdGeoCenter()[0], kdGeoCenter()[1]), radius: 40000 }, function (preds, status) {
+                    gAuto.getPlacePredictions({ input: q, sessionToken: gToken, language: 'ja', componentRestrictions: { country: 'jp' }, location: new google.maps.LatLng(kdSearchCenter()[0], kdSearchCenter()[1]), radius: 40000 }, function (preds, status) {
                         if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) { mpEditPhotonSearch(q); return; }
                         box.innerHTML = preds.slice(0, 6).map(function (p) {
                             return '<div style="padding:9px 11px;border-bottom:1px solid #f0f0f0;cursor:pointer;font-size:12px;" onmouseover="this.style.background=\'#f5f8ff\'" onmouseout="this.style.background=\'#fff\'" onclick="mpEditPickGoogle(\'' + p.place_id + '\')">📍 ' + p.description + '</div>';
@@ -5435,7 +5437,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const box = document.getElementById('mpEditSuggest'); if (!box) return;
         (async () => {
             try {
-                const res = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lang=default&lat=' + kdGeoCenter()[0] + '&lon=' + kdGeoCenter()[1] + '&limit=7');
+                const res = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lang=default&lat=' + kdSearchCenter()[0] + '&lon=' + kdSearchCenter()[1] + '&limit=7');
                 const d = await res.json();
                 const feats = ((d && d.features) || []).filter(f => { const p = (f && f.properties) || {}; return (!p.countrycode || p.countrycode === 'JP') && f.geometry && f.geometry.coordinates; });
                 if (!feats.length) { box.innerHTML = '<div style="padding:10px;font-size:12px;color:#999;">該当する場所が見つかりません</div>'; box.style.display = 'block'; return; }
