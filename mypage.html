@@ -10,7 +10,7 @@
 <title>KEY-DROP マイページ</title>
 <style>
 :root{
-  --bg:#e7ecf1; --card:#fff; --ink:#1c2430; --sub:#6b7784; --line:#e3e8ee;
+  --bg:#f5efe4; --card:#fff; --ink:#1c2430; --sub:#6b7784; --line:#e6ddcd;
   --accent:#0F1F45; --accent-d:#0a1836; --warn:#c2410c; --danger:#b91c1c; --gold:#b8860b;
   --r:16px; --shadow:0 3px 16px rgba(20,30,45,.09);
 }
@@ -22,8 +22,8 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .top{padding:22px 4px 12px;display:flex;align-items:center;gap:10px}
 .logo{font-weight:800;letter-spacing:.5px;font-size:19px}
 .logo b{color:var(--accent)}
-.store{margin-left:auto;font-size:12px;color:var(--sub);border:1px solid var(--line);
-  padding:3px 10px;border-radius:999px;background:#fff}
+.store{margin-left:auto;font-size:14px;font-weight:800;color:#fff;border:none;box-shadow:0 2px 6px rgba(15,31,69,.22);white-space:nowrap;
+  padding:6px 15px;border-radius:999px;background:#0F1F45}
 .langsw{display:flex;gap:4px;margin:0 0 10px;flex-wrap:wrap}
 .langsw button{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--line);
   background:#fff;color:var(--sub);cursor:pointer}
@@ -41,6 +41,62 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .hero .hero-car{width:40%;max-width:180px;flex:none;object-fit:contain;
   filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
 .hero.no-img{}
+/* ── 新ヒーロー(KV・店舗別背景はJSで背景画像を設定) ── */
+.nhero{position:relative;border-radius:var(--r);overflow:hidden;color:#fff;margin:6px 0 14px;min-height:300px;box-shadow:var(--shadow);
+  background:linear-gradient(180deg,rgba(3,8,28,.26) 0%,rgba(4,14,40,.08) 42%,rgba(3,8,28,.5) 100%)}
+.nhero::before{content:"";position:absolute;left:0;right:0;top:0;height:92px;background:linear-gradient(180deg,rgba(3,8,28,.58),rgba(3,8,28,0))}
+.nhero .nh-logo{position:absolute;top:14px;left:14px;height:26px;z-index:3;filter:drop-shadow(0 1px 4px rgba(0,0,0,.45))}
+.nhero .nh-lang{position:absolute;top:14px;right:12px;z-index:4;display:flex;gap:3px}
+.nhero .nh-lang button{border:1.5px solid #FABE00;background:rgba(255,255,255,.16);color:#fff;font-size:10.5px;font-weight:800;padding:3px 7px;border-radius:8px;cursor:pointer;animation:langGlow 1.3s ease-in-out infinite}
+@keyframes langGlow{0%,100%{box-shadow:0 0 0 0 rgba(250,190,0,0);border-color:#FABE00}50%{box-shadow:0 0 0 3px rgba(250,190,0,.6);border-color:#ffd45e}}
+.nhero .nh-lang button.on{background:#fff;color:#0F1F45}
+.nhero .nh-c{position:relative;z-index:2;text-align:center;padding:72px 18px 20px;text-shadow:0 1px 10px rgba(0,0,0,.6),0 1px 3px rgba(0,0,0,.5)}
+.nhero .nh-eye{font-family:"Hiragino Mincho ProN",serif;font-size:13px;font-style:italic;letter-spacing:2px;opacity:.85;margin-bottom:6px}
+.nhero .nh-oki{font-family:"Hiragino Mincho ProN",serif;font-size:50px;font-weight:800;color:#FABE00;line-height:1;letter-spacing:.14em;padding-left:.14em;text-shadow:0 3px 20px rgba(0,0,0,.5)}
+.nhero .nh-name{margin-top:12px;font-family:"Hiragino Mincho ProN",serif;font-size:14px;letter-spacing:1px;opacity:.95}
+.nhero .nh-cd{margin-top:14px;display:inline-flex;align-items:baseline;gap:8px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);padding:7px 16px;border-radius:999px}
+.nhero .nh-cd b{font-size:26px;font-weight:800;line-height:1}
+.nhero .nh-wx{margin-top:10px;font-size:12px;display:inline-flex;gap:6px;align-items:center;background:rgba(0,0,0,.2);padding:4px 12px;border-radius:999px}
+.nhero .nh-wx b{font-size:14px}
+.nhero .nh-st{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;opacity:.92;z-index:2}
+.divlabel{display:flex;align-items:center;gap:10px;margin:16px 4px 12px;color:var(--sub);font-size:11px;letter-spacing:3px;font-weight:800}
+.divlabel::before,.divlabel::after{content:"";flex:1;height:1px;background:#e6ddcd}
+.acc{background:#fff;border:1px solid #e6ddcd;border-radius:16px;margin-bottom:11px;box-shadow:0 5px 16px rgba(10,59,71,.05);overflow:hidden}
+.acc>summary{list-style:none;cursor:pointer;padding:15px 15px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;color:var(--accent-d)}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary .ic{font-size:17px}
+.acc>summary .chev{order:9;margin-left:auto;transition:.25s;color:var(--sub);font-size:12px}
+.acc[open]>summary .chev{transform:rotate(180deg)}
+@keyframes glowPulseN{0%,100%{box-shadow:0 5px 16px rgba(10,59,71,.05)}50%{box-shadow:0 0 0 3px rgba(224,135,106,.3),0 6px 18px rgba(10,59,71,.06)}}
+@keyframes blinkN{0%,100%{opacity:.3}50%{opacity:1}}
+.acc:not([open]){animation:glowPulseN 2.4s ease-in-out infinite}
+.acc:not([open])>summary .chev{color:#e0876a}
+.acc:not([open])>summary::after{content:"未確認";font-size:9px;font-weight:800;color:#fff;background:#e0876a;border-radius:999px;padding:2px 7px;animation:blinkN 1.1s ease-in-out infinite}
+.acc>.accb{padding:0 15px 15px}
+.acc>.accb .row:first-of-type{border-top:0}
+.spg .city{font-weight:800;font-size:12.5px;color:var(--accent-d);margin:14px 0 2px;display:flex;align-items:center;gap:5px}
+.spg .city:first-child{margin-top:4px}
+.spg .sp{padding:9px 0 9px 20px;border-bottom:1px solid #eceff3}
+.spg .sp:last-child{border-bottom:none}
+.spg .sp .nm{font-size:14px;font-weight:800}
+.spg .sp .ds{font-size:11.5px;color:var(--sub);margin-top:2px;line-height:1.55}
+.spg .sp .mp{display:inline-block;margin-top:5px;font-size:11.5px;font-weight:800;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:999px;padding:3px 11px}
+.oshin{text-align:center;padding:22px 18px;background:linear-gradient(180deg,#0c3f86,#03081c);color:#fff;border-radius:18px;margin:14px 0 6px;font-family:"Hiragino Mincho ProN",serif}
+.oshin p{font-size:13.5px;line-height:1.9;margin:8px 4px 0;opacity:.95}.oshin .sig{font-size:11px;letter-spacing:2px;opacity:.8;margin-top:12px}
+.quizbnr{display:flex;align-items:center;gap:11px;background:linear-gradient(120deg,#0F1F45,#1e3a8a);color:#fff;border-radius:16px;padding:13px 15px;margin-bottom:14px;cursor:pointer;box-shadow:0 6px 18px rgba(15,31,69,.28);position:relative;overflow:hidden}
+.quizbnr::after{content:"";position:absolute;right:-30px;top:-30px;width:90px;height:90px;background:radial-gradient(circle,rgba(56,189,248,.4),transparent 70%)}
+.quizbnr .qb-ic{font-size:26px;flex:0 0 auto;animation:qbwiggle 2s ease-in-out infinite}
+@keyframes qbwiggle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.quizbnr .qb-tx{flex:1;line-height:1.3;min-width:0}
+.quizbnr .qb-tx b{display:block;font-size:15px;font-weight:900}
+.quizbnr .qb-tx span{display:block;font-size:11.5px;opacity:.85;margin-top:1px}
+.quizbnr .qb-go{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:#38bdf8;color:#0F1F45;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px}
+.licalert{display:flex;align-items:center;gap:11px;background:#fef2f2;border:2px solid #dc2626;border-radius:14px;padding:13px 15px;margin-bottom:14px;cursor:pointer;animation:licpulse 1.15s ease-in-out infinite}
+.licalert .la-ic{font-size:26px;flex:none}
+.licalert .la-tx{flex:1;min-width:0}
+.licalert .la-tx b{display:block;color:#b91c1c;font-size:15px;font-weight:900;margin-bottom:2px}
+.licalert .la-tx span{display:block;color:#7f1d1d;font-size:12.5px;line-height:1.55}
+.licalert .la-go{flex:none;background:#dc2626;color:#fff;font-weight:800;font-size:13px;border-radius:9px;padding:9px 12px;white-space:nowrap}
 .card{background:var(--card);border:1px solid #d5dce4;border-radius:var(--r);
   padding:16px;margin-bottom:14px;box-shadow:var(--shadow);overflow:hidden}
 .card h2{margin:-16px -16px 12px;font-size:14px;font-weight:800;display:flex;align-items:center;gap:7px;
@@ -200,7 +256,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 <div class="toast" id="toast"></div>
 
 <script>
-const VER = "kd1.6 アラート文言変更(登録をお願いします)";
+const VER = "kd2.0 新カルテUI（KV/アコーディオン/受取ボタン・那覇沖縄KV・メール）";
 const FN = "https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
 const SB_BASE = "https://ckrxttbnawkclshczsia.supabase.co";
 // 免許証 事前登録（Drive保存GAS＋license_uploads完了印）
@@ -219,13 +275,13 @@ async function uploadLicense(){
   for(let i=0;i<files.length;i++){
     try{
       const b64 = await new Promise((res,rej)=>{ const rd=new FileReader(); rd.onload=()=>res(String(rd.result).split(',')[1]); rd.onerror=rej; rd.readAsDataURL(files[i]); });
-      const resp = await fetch(GAS_LIC_URL,{ method:"POST", body:JSON.stringify({ secret:GAS_LIC_SECRET, store:"spk", resId:r.id, custName:r.name||"", label:"front_"+(i+1), fileName:"front_"+(i+1)+"_"+Date.now()+".jpg", mime:files[i].type||"image/jpeg", b64:b64 }) });
+      const resp = await fetch(GAS_LIC_URL,{ method:"POST", body:JSON.stringify({ secret:GAS_LIC_SECRET, store:((DATA&&DATA.store)||"spk"), resId:r.id, custName:r.name||"", label:"front_"+(i+1), fileName:"front_"+(i+1)+"_"+Date.now()+".jpg", mime:files[i].type||"image/jpeg", b64:b64 }) });
       const jr = await resp.json().catch(()=>({})); if(resp.ok && jr.ok) ok++;
       msg.textContent = "送信中... "+(i+1)+"/"+files.length;
     }catch(e){}
   }
   if(ok>0){
-    try{ await fetch(SB_BASE+"/rest/v1/license_uploads?on_conflict=reservation_id",{ method:"POST", headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON, "Content-Type":"application/json", Prefer:"resolution=merge-duplicates,return=minimal" }, body:JSON.stringify({ reservation_id:r.id, store:"spk", cnt:ok, drivers:ok, last_at:new Date().toISOString() }) }); }catch(e){}
+    try{ await fetch(SB_BASE+"/rest/v1/license_uploads?on_conflict=reservation_id",{ method:"POST", headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON, "Content-Type":"application/json", Prefer:"resolution=merge-duplicates,return=minimal" }, body:JSON.stringify({ reservation_id:r.id, store:((DATA&&DATA.store)||"spk"), cnt:ok, drivers:ok, last_at:new Date().toISOString() }) }); }catch(e){}
     const box=document.getElementById('licBox'), dn=document.getElementById('licDone');
     if(box) box.style.display="none"; if(dn) dn.style.display="block";
   }else{
@@ -256,7 +312,7 @@ let L=detectLang();
 function setLang(k){L=k;localStorage.setItem("mypage_lang",k);closeSheet();render();}
 const TX={
  loading:{ja:"読み込み中…",en:"Loading…",zh:"載入中…",ko:"불러오는 중…"},
- no_key:{ja:"アクセスキーがありません。LINEに届いたURLからお開きください。",en:"No access key. Please open from the URL sent via LINE.",zh:"沒有存取金鑰。請從 LINE 收到的網址開啟。",ko:"액세스 키가 없습니다. LINE으로 받은 URL에서 열어주세요."},
+ no_key:{ja:"アクセスキーがありません。メールに届いたURLからお開きください。",en:"No access key. Please open from the URL sent via email.",zh:"沒有存取金鑰。請從電子郵件收到的網址開啟。",ko:"액세스 키가 없습니다. 이메일로 받은 URL에서 열어주세요."},
  login_title:{ja:"マイページ ログイン",en:"My Page Login",zh:"我的頁面登入",ko:"마이페이지 로그인"},
  login_sub:{ja:"予約番号とご予約時のメールアドレスを入力してください。",en:"Enter your reservation number and the email used for booking.",zh:"請輸入預約編號與預約時的電子郵件。",ko:"예약 번호와 예약 시 이메일을 입력하세요."},
  login_mail:{ja:"メールアドレス",en:"Email",zh:"電子郵件",ko:"이메일"},
@@ -307,7 +363,7 @@ const TX={
  edit:{ja:"変更",en:"Edit",zh:"變更",ko:"변경"},
  set_it:{ja:"📍設定する",en:"📍 Set",zh:"📍 設定",ko:"📍 설정"},
  time_edit:{ja:"時間変更",en:"Change time",zh:"變更時間",ko:"시간 변경"},
- dp_hint:{ja:"⏰ <b>お届け</b>は出発24時間前まで即時変更（以降は担当が確認後に反映）。<br><b>回収</b>は2時間前まで変更いただけます。それ以降は<b>公式LINE</b>にて承ります。",en:"⏰ <b>Delivery</b>: editable instantly up to 24h before (after that, staff confirm). <b>Pickup</b>: editable up to 2h before. Later changes via <b>official LINE</b>.",zh:"⏰ <b>送車</b>：出發前24小時可即時變更（之後由專員確認）。<b>取車</b>：2小時前可變更，之後請透過<b>官方LINE</b>。",ko:"⏰ <b>배달</b>: 출발 24시간 전까지 즉시 변경(이후 담당자 확인). <b>회수</b>: 2시간 전까지 변경 가능. 이후는 <b>공식 LINE</b>."},
+ dp_hint:{ja:"⏰ <b>お届け</b>は出発24時間前まで即時変更（以降は担当が確認後に反映）。<br><b>回収</b>は2時間前まで変更いただけます。それ以降は<b>メール</b>にて承ります。",en:"⏰ <b>Delivery</b>: editable instantly up to 24h before (after that, staff confirm). <b>Pickup</b>: editable up to 2h before. Later changes via <b>email</b>.",zh:"⏰ <b>送車</b>：出發前24小時可即時變更（之後由專員確認）。<b>取車</b>：2小時前可變更，之後請透過<b>電子郵件</b>。",ko:"⏰ <b>배달</b>: 출발 24시간 전까지 즉시 변경(이후 담당자 확인). <b>회수</b>: 2시간 전까지 변경 가능. 이후는 <b>이메일</b>."},
  damage_check:{ja:"車両状態チェック",en:"Vehicle Condition Check",zh:"車輛狀態確認",ko:"차량 상태 체크"},
  damage_view:{ja:"車両の状態を確認する",en:"Check vehicle condition",zh:"確認車輛狀態",ko:"차량 상태 확인"},
  damage_note:{ja:"ご出発前に、傷・へこみの状態をご確認ください。気になる点は引き渡し時にお申し付けください。",en:"Please check scratches/dents before departure. Let us know any concerns at handover.",zh:"出發前請確認刮痕／凹痕。如有疑問請於交車時告知。",ko:"출발 전 흠집·찌그러짐을 확인하세요. 인수 시 문의해 주세요."},
@@ -327,14 +383,14 @@ const TX={
  track_del_btn:{ja:"📦 お届けの追跡",en:"📦 Track delivery",zh:"📦 追蹤送車",ko:"📦 배달 추적"},
  track_col_btn:{ja:"🔄 回収の追跡",en:"🔄 Track pickup",zh:"🔄 追蹤取車",ko:"🔄 회수 추적"},
  moving:{ja:"● 移動中",en:"● Moving",zh:"● 移動中",ko:"● 이동 중"},
- track_note:{ja:"上は表示イメージです。<b>お届け／回収それぞれ</b>のボタンから、スタッフの現在地マップ（全画面）を開けます。移動中は「● 移動中」が点きます（開始時にLINEでもお知らせ）。",en:"Above is a preview. Use the <b>Delivery / Pickup</b> buttons to open the staff's live map (full screen). '● Moving' lights up while en route (also notified via LINE).",zh:"以上為示意。使用<b>送車／取車</b>按鈕開啟專員即時地圖（全螢幕）。移動中會亮起「● 移動中」（開始時也會透過LINE通知）。",ko:"위는 예시입니다. <b>배달/회수</b> 버튼으로 담당자 실시간 지도(전체화면)를 열 수 있습니다. 이동 중에는 '● 이동 중'이 켜집니다(시작 시 LINE으로도 안내)."},
+ track_note:{ja:"上は表示イメージです。<b>お届け／回収それぞれ</b>のボタンから、スタッフの現在地マップ（全画面）を開けます。移動中は「● 移動中」が点きます（開始時にメールでもお知らせ）。",en:"Above is a preview. Use the <b>Delivery / Pickup</b> buttons to open the staff's live map (full screen). '● Moving' lights up while en route (also notified via email).",zh:"以上為示意。使用<b>送車／取車</b>按鈕開啟專員即時地圖（全螢幕）。移動中會亮起「● 移動中」（開始時也會透過電子郵件通知）。",ko:"위는 예시입니다. <b>배달/회수</b> 버튼으로 담당자 실시간 지도(전체화면)를 열 수 있습니다. 이동 중에는 '● 이동 중'이 켜집니다(시작 시 이메일로도 안내)."},
  cancel:{ja:"キャンセル",en:"Cancellation",zh:"取消",ko:"취소"},
  cancel_apply:{ja:"キャンセルを申請する",en:"Request cancellation",zh:"申請取消",ko:"취소 신청"},
  cancel_note:{ja:"キャンセル規定・料金をご確認のうえ申請いただけます。申請後、担当者が内容を確認し確定・ご連絡します。",en:"Please review the cancellation policy before requesting. Staff will confirm and contact you.",zh:"請確認取消規定與費用後申請。申請後專員將確認並聯繫您。",ko:"취소 규정·요금을 확인 후 신청하세요. 신청 후 담당자가 확인·연락드립니다."},
  cancel_done:{ja:"🕓 キャンセル申請済み",en:"🕓 Cancellation requested",zh:"🕓 已申請取消",ko:"🕓 취소 신청 완료"},
  cancel_wait:{ja:"担当者が確認しご連絡します。",en:"Staff will confirm and contact you.",zh:"專員將確認並與您聯繫。",ko:"담당자가 확인 후 연락드립니다."},
  recent_hist:{ja:"最近の履歴",en:"Recent Activity",zh:"最近紀錄",ko:"최근 이력"},
- hist_note:{ja:"ご依頼は担当が確認し、処理後にLINEでお知らせします。状況はこの画面に反映されます。",en:"Requests are reviewed by staff and notified via LINE after processing. Status is shown here.",zh:"申請將由專員確認，處理後透過LINE通知。狀態會顯示於此。",ko:"요청은 담당자가 확인 후 LINE으로 안내합니다. 상태는 이 화면에 반영됩니다."},
+ hist_note:{ja:"ご依頼は担当が確認し、処理後にメールでお知らせします。状況はこの画面に反映されます。",en:"Requests are reviewed by staff and notified via email after processing. Status is shown here.",zh:"申請將由專員確認，處理後透過電子郵件通知。狀態會顯示於此。",ko:"요청은 담당자가 확인 후 이메일로 안내합니다. 상태는 이 화면에 반영됩니다."},
  foot_contact:{ja:"お問い合わせ",en:"Contact",zh:"聯絡我們",ko:"문의"},
  foot_private:{ja:"このページはお客様専用です。URLの共有はお控えください。",en:"This page is for you only. Please do not share the URL.",zh:"此頁面為您專屬，請勿分享網址。",ko:"이 페이지는 고객 전용입니다. URL 공유를 삼가주세요."},
  terms_title:{ja:"📄 貸渡約款・個人情報のお取り扱い",en:"📄 Rental Terms & Privacy",zh:"📄 租賃條款・個人資料處理",ko:"📄 대여약관・개인정보 취급"},
@@ -357,7 +413,7 @@ const TX={
  ph_col:{ja:"例：札幌駅",en:"e.g. Sapporo Station",zh:"例：札幌車站",ko:"예: 삿포로역"},
  sapporo_st_note:{ja:"⚠️ 札幌駅の南口は停車不可のため、<b>北口</b>をおすすめします。北口でのお受け渡しをご指定ください。",en:"⚠️ Stopping is not allowed at the South exit of Sapporo Station. Please use the <b>North exit</b>.",zh:"⚠️ 札幌車站南口禁止停車，建議使用<b>北口</b>交車。",ko:"⚠️ 삿포로역 남쪽 출구는 정차 불가입니다. <b>북쪽 출구</b>를 이용해 주세요."},
  sub_del:{ja:"お届けの24時間前まで即時反映。以降は担当が確認後に反映します。",en:"Instant up to 24h before delivery. After that, staff confirm.",zh:"送車前24小時內即時反映，之後由專員確認。",ko:"배달 24시간 전까지 즉시 반영. 이후 담당자 확인."},
- sub_col:{ja:"回収の2時間前まで変更できます。以降は公式LINEで承ります。",en:"Editable up to 2h before pickup. Later via official LINE.",zh:"取車前2小時可變更，之後請透過官方LINE。",ko:"회수 2시간 전까지 변경 가능. 이후 공식 LINE."},
+ sub_col:{ja:"回収の2時間前まで変更できます。以降はメールで承ります。",en:"Editable up to 2h before pickup. Later via email.",zh:"取車前2小時可變更，之後請透過電子郵件。",ko:"회수 2시간 전까지 변경 가능. 이후 이메일."},
  map_del_title:{ja:"お届け先の変更",en:"Change delivery location",zh:"變更送車地點",ko:"배달 장소 변경"},
  map_col_title:{ja:"回収先の変更",en:"Change pickup location",zh:"變更取車地點",ko:"회수 장소 변경"},
  map_new_del:{ja:"お届け先の登録",en:"Register delivery location",zh:"登記送車地點",ko:"배달 장소 등록"},
@@ -429,6 +485,44 @@ const TX={
  ready_time_req:{ja:"時間を選んでください",en:"Please select a time",zh:"請選擇時間",ko:"시간을 선택하세요"},
  ready_send:{ja:"この内容で知らせる",en:"Notify",zh:"通知",ko:"알리기"},
  ready_at:{ja:"希望時間の目安",en:"Preferred time",zh:"希望時間",ko:"희망 시간"},
+ // ── 新カルテUI（KV/クイズ/受取ボタン/スポット/しおり）──
+ quiz_hd:{ja:"ご当地クイズに挑戦！",en:"Take the Local Quiz!",zh:"挑戰在地測驗！",ko:"현지 퀴즈에 도전!"},
+ quiz_sub:{ja:"全15問・約1分でわかるご当地ツウ度",en:"15 questions · about 1 min",zh:"共15題・約1分鐘",ko:"전 15문항 · 약 1분"},
+ recv_head:{ja:"車両の受け取り",en:"Vehicle Handover",zh:"車輛領取",ko:"차량 수령"},
+ recv_btn:{ja:"車を受け取りました",en:"I've received the car",zh:"我已取車",ko:"차량을 받았습니다"},
+ recv_hint:{ja:"車両をお受け取りになったら押してください。担当スタッフに通知されます。",en:"Tap once you've received the car. Our staff will be notified.",zh:"取車後請按此，將通知負責人員。",ko:"차량을 받으신 후 눌러 주세요. 담당 직원에게 통지됩니다."},
+ recv_confirm:{ja:"車両を受け取り済みとして完了報告します。よろしいですか？",en:"Report the car as received (complete). Proceed?",zh:"將回報為已取車（完成），確定嗎？",ko:"차량 수령 완료로 보고합니다. 진행할까요?"},
+ recv_done:{ja:"✅ 受け取り完了 済",en:"✅ Received — Complete",zh:"✅ 已取車完成",ko:"✅ 수령 완료"},
+ recv_done_sub:{ja:"受け取り完了を承りました。ありがとうございます。",en:"Your receipt has been recorded. Thank you.",zh:"已收到您的取車回報，謝謝。",ko:"수령 완료가 접수되었습니다. 감사합니다."},
+ recv_toast:{ja:"受け取り完了を送信しました",en:"Receipt reported",zh:"已回報取車",ko:"수령 완료를 보냈습니다"},
+ recv_err:{ja:"送信に失敗しました。通信環境をご確認ください。",en:"Failed to send. Please check your connection.",zh:"傳送失敗，請確認網路。",ko:"전송 실패. 통신 상태를 확인해 주세요."},
+ nh_days_pre:{ja:"ご出発まで",en:"Departure in",zh:"距離出發",ko:"출발까지"},
+ nh_days:{ja:"日",en:" days",zh:"天",ko:"일"},
+ nh_now_spk:{ja:"ただいまの札幌",en:"Now in Sapporo",zh:"此刻札幌",ko:"지금 삿포로"},
+ nh_now_nha:{ja:"ただいまの那覇",en:"Now in Naha",zh:"此刻那霸",ko:"지금 나하"},
+ nh_dl_manage:{ja:"ご予約の管理",en:"Booking & Services",zh:"預約管理",ko:"예약 관리"},
+ nh_drive:{ja:"スタッフおすすめスポット",en:"Staff's Favorite Spots",zh:"員工推薦景點",ko:"직원 추천 스팟"},
+ nh_spot_note:{ja:"🚗 車で行けるおすすめ（サンプル・実際のスタッフおすすめに差し替え予定）",en:"🚗 Great spots to drive to (sample — to be replaced with staff picks).",zh:"🚗 開車可到的推薦（範例・將替換為員工推薦）。",ko:"🚗 차로 갈 수 있는 추천(샘플 · 직원 추천으로 교체 예정)."},
+ nh_map_view:{ja:"🗺 地図で見る",en:"🗺 View on map",zh:"🗺 於地圖查看",ko:"🗺 지도에서 보기"},
+ nh_oshi:{ja:"ようこそ。<br>あなたの旅が、忘れられない一日になりますように。",en:"Welcome.<br>May your trip be an unforgettable day.",zh:"歡迎光臨。<br>願您的旅程成為難忘的一天。",ko:"환영합니다.<br>당신의 여행이 잊지 못할 하루가 되기를."},
+ nh_oshi_spk:{ja:"ようこそ札幌へ。<br>あなたの北海道の旅が、忘れられない一日になりますように。",en:"Welcome to Sapporo.<br>May your Hokkaido trip be an unforgettable day.",zh:"歡迎來到札幌。<br>願您的北海道之旅成為難忘的一天。",ko:"삿포로에 오신 것을 환영합니다.<br>당신의 홋카이도 여행이 잊지 못할 하루가 되기를."},
+ nh_oshi_nha:{ja:"めんそーれ、沖縄へ。<br>あなたの島時間が、忘れられない一日になりますように。",en:"Mensore — welcome to Okinawa.<br>May your island time be an unforgettable day.",zh:"歡迎來到沖繩。<br>願您的島嶼時光成為難忘的一天。",ko:"멘소레, 오키나와에 오신 것을 환영합니다.<br>당신의 섬 시간이 잊지 못할 하루가 되기를."},
+ lic_title:{ja:"免許証アップロード",en:"Driver's License Upload",zh:"駕照上傳",ko:"면허증 업로드"},
+ lic_desc:{ja:"ご出発をスムーズにするため、運転される方の運転免許証（表面）を事前にアップロードください。外国のお客様はパスポート＋国外運転免許証をお願いします。",en:"To speed up your pickup, please upload the driver's license (front) of the person driving. International customers: passport + international driving permit.",zh:"為使交車更順暢，請事先上傳駕駛人的駕照（正面）。外國旅客請上傳護照＋國際駕照。",ko:"원활한 출발을 위해 운전자의 운전면허증(앞면)을 미리 업로드해 주세요. 해외 고객은 여권＋국제운전면허증을 부탁드립니다."},
+ lic_front:{ja:"表面（必須）",en:"Front (required)",zh:"正面（必填）",ko:"앞면 (필수)"},
+ lic_back:{ja:"裏面（任意）",en:"Back (optional)",zh:"背面（選填）",ko:"뒷면 (선택)"},
+ lic_choose:{ja:"📷 画像を選ぶ／撮影",en:"📷 Choose / Take photo",zh:"📷 選擇／拍照",ko:"📷 이미지 선택／촬영"},
+ lic_change:{ja:"変更",en:"Change",zh:"變更",ko:"변경"},
+ lic_add:{ja:"＋ 別の運転者を追加",en:"+ Add another driver",zh:"＋ 新增其他駕駛人",ko:"＋ 다른 운전자 추가"},
+ lic_driver:{ja:"運転者",en:"Driver",zh:"駕駛人",ko:"운전자"},
+ lic_upload:{ja:"アップロードする",en:"Upload",zh:"上傳",ko:"업로드"},
+ lic_uploading:{ja:"アップロード中…",en:"Uploading…",zh:"上傳中…",ko:"업로드 중…"},
+ lic_need_front:{ja:"表面の画像を選んでください",en:"Please select the front image",zh:"請選擇正面影像",ko:"앞면 이미지를 선택해 주세요"},
+ lic_done:{ja:"✓ アップロードが完了しました。ありがとうございます。",en:"✓ Upload complete. Thank you.",zh:"✓ 上傳完成，謝謝。",ko:"✓ 업로드가 완료되었습니다. 감사합니다."},
+ lic_err:{ja:"アップロードに失敗しました。通信環境をご確認のうえ、再度お試しください。",en:"Upload failed. Please check your connection and try again.",zh:"上傳失敗，請確認網路後再試。",ko:"업로드에 실패했습니다. 통신 상태를 확인 후 다시 시도해 주세요."},
+ lic_note:{ja:"画像は本人確認・貸渡手続きのみに使用し、法令に基づき安全に保管します。",en:"Images are used only for identity verification and rental procedures, and stored securely per regulations.",zh:"影像僅用於身分確認及租賃手續，並依法規安全保管。",ko:"이미지는 본인 확인·대여 절차에만 사용되며 법령에 따라 안전하게 보관됩니다."},
+ lic_registered:{ja:"✓ 免許証は登録済みです。ありがとうございます。",en:"✓ Your license is registered. Thank you.",zh:"✓ 您的駕照已登記，謝謝。",ko:"✓ 면허증이 등록되었습니다. 감사합니다."},
+ lic_readd:{ja:"（別の運転者を追加する場合は下からアップできます）",en:"(You can add another driver below.)",zh:"（如需新增其他駕駛人，可於下方上傳。）",ko:"（다른 운전자를 추가하려면 아래에서 업로드하세요.）"},
 };
 const OTANAME={J:{ja:"じゃらん",en:"Jalan",zh:"Jalan",ko:"Jalan"},R:{ja:"楽天トラベル",en:"Rakuten Travel",zh:"樂天旅遊",ko:"라쿠텐 트래블"},S:{ja:"skyticket",en:"skyticket",zh:"skyticket",ko:"skyticket"},O:{ja:"エアトリ",en:"Airtrip",zh:"Airtrip",ko:"에어트립"},RC:{ja:"レンタカードットコム",en:"Rentalcars.com",zh:"Rentalcars",ko:"렌터카닷컴"},G:{ja:"GoGoOut",en:"GoGoOut",zh:"GoGoOut",ko:"GoGoOut"},HP:{ja:"公式サイト",en:"Official site",zh:"官方網站",ko:"공식 사이트"},SP:{ja:"公式サイト",en:"Official site",zh:"官方網站",ko:"공식 사이트"},direct:{ja:"直販",en:"Direct",zh:"直營",ko:"직판"},KEYDROP:{ja:"KEYDROP",en:"KEYDROP",zh:"KEYDROP",ko:"KEYDROP"}};
 function otaName(o){const e=OTANAME[o];return e?(e[L]||e.ja):(o||"-");}
@@ -443,10 +537,62 @@ function tf(k){const e=TX[k];if(!e)return"";const f=e[L]||e.ja;const a=[].slice.
 function langSwitch(){return `<div class="langsw">`+LANGS.map(l=>`<button class="${L===l.k?'on':''}" onclick="setLang('${l.k}')">${l.n}</button>`).join("")+`</div>`;}
 
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-const WD=["日","月","火","水","木","金","土"];
+const WD_L={ja:["日","月","火","水","木","金","土"],en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],zh:["日","一","二","三","四","五","六"],ko:["일","월","화","수","목","금","토"]};
 function fmtDate(d){if(!d)return"";const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d);if(!m)return d;
-  const dt=new Date(+m[1],+m[2]-1,+m[3]);return `${+m[2]}/${+m[3]}(${WD[dt.getDay()]})`}
+  const dt=new Date(+m[1],+m[2]-1,+m[3]);return `${+m[2]}/${+m[3]}(${(WD_L[L]||WD_L.ja)[dt.getDay()]})`}
 function dateTime(d,t){const dd=fmtDate(d);return dd?(dd+(t?" "+t:"")):(t||"—")}
+function daysTo(ds){if(!ds)return null;const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(ds);if(!m)return null;const target=new Date(+m[1],+m[2]-1,+m[3]);const now=new Date();now.setHours(0,0,0,0);target.setHours(0,0,0,0);return Math.round((target-now)/86400000);}
+function nhWxIcon(c){if(c===0)return"☀️";if(c<=2)return"🌤";if(c<=3)return"⛅️";if(c<=48)return"🌫";if(c<=67)return"🌧";if(c<=77)return"🌨";if(c<=82)return"🌦";return"⛈";}
+// 店舗別のご当地設定（KV都市名・背景画像・天気座標・おすすめスポット）
+const STORE_CFG={
+  spk:{kv:"hero-sapporo-kv.jpg",eye:"Welcome To Sapporo",city:{ja:"札幌",en:"Sapporo",zh:"札幌",ko:"삿포로"},lat:43.0642,lng:141.3469,center:{lat:43.0621,lng:141.3544}},
+  nha:{kv:"hero-okinawa-kv.jpg",eye:"Welcome To Okinawa",city:{ja:"沖縄",en:"Okinawa",zh:"沖繩",ko:"오키나와"},lat:26.2124,lng:127.6809,center:{lat:26.2124,lng:127.6809}}
+};
+function storeCfg(){return STORE_CFG[(DATA&&DATA.store)||"spk"]||STORE_CFG.spk;}
+function nhLoadWx(){try{const c=storeCfg();fetch("https://api.open-meteo.com/v1/forecast?latitude="+c.lat+"&longitude="+c.lng+"&current=temperature_2m,weather_code&timezone=Asia%2FTokyo").then(r=>r.json()).then(d=>{if(d&&d.current){var t=document.getElementById("nhWxT");if(t)t.textContent=Math.round(d.current.temperature_2m)+"°";var i=document.getElementById("nhWxIc");if(i)i.textContent=nhWxIcon(d.current.weather_code);}}).catch(()=>{});}catch(e){}}
+// おすすめスポット（店舗別）
+const SPOTS_SPK=[
+ {c:{ja:"札幌市内・近郊",en:"Sapporo & nearby",zh:"札幌市內・近郊",ko:"삿포로 시내·근교"},s:[
+   {n:{ja:"大通公園・さっぽろテレビ塔",en:"Odori Park & Sapporo TV Tower",zh:"大通公園・札幌電視塔",ko:"오도리 공원·삿포로 TV타워"},d:{ja:"札幌の中心。四季のイベントと夜景。",en:"City center. Seasonal events & night views.",zh:"札幌中心，四季活動與夜景。",ko:"삿포로 중심. 사계절 이벤트와 야경."},q:"大通公園"},
+   {n:{ja:"白い恋人パーク",en:"Shiroi Koibito Park",zh:"白色戀人公園",ko:"시로이 코이비토 파크"},d:{ja:"お菓子のテーマパーク。工場見学・手作り体験。",en:"Sweets theme park. Factory tour & hands-on baking.",zh:"甜點主題樂園，工廠參觀與手作體驗。",ko:"과자 테마파크. 공장 견학·수제 체험."},q:"白い恋人パーク"},
+   {n:{ja:"円山動物園",en:"Maruyama Zoo",zh:"圓山動物園",ko:"마루야마 동물원"},d:{ja:"ホッキョクグマやゾウ。家族連れに人気。",en:"Polar bears & elephants. Popular with families.",zh:"北極熊與大象，親子最愛。",ko:"북극곰과 코끼리. 가족에게 인기."},q:"円山動物園"},
+   {n:{ja:"モエレ沼公園",en:"Moerenuma Park",zh:"莫埃來沼公園",ko:"모에레누마 공원"},d:{ja:"イサム・ノグチ設計のアート公園。",en:"Art park designed by Isamu Noguchi.",zh:"野口勇設計的藝術公園。",ko:"이사무 노구치가 설계한 아트 공원."},q:"モエレ沼公園"},
+   {n:{ja:"藻岩山展望台",en:"Mt. Moiwa Observatory",zh:"藻岩山展望台",ko:"모이와산 전망대"},d:{ja:"日本新三大夜景。ロープウェイで山頂へ。",en:"One of Japan's top-3 night views. Ropeway to the summit.",zh:"日本新三大夜景，纜車直達山頂。",ko:"일본 신3대 야경. 로프웨이로 정상까지."},q:"藻岩山"},
+   {n:{ja:"北海道神宮",en:"Hokkaido Shrine",zh:"北海道神宮",ko:"홋카이도 신궁"},d:{ja:"円山の緑に囲まれた札幌の総鎮守。",en:"Sapporo's guardian shrine amid Maruyama's greenery.",zh:"被圓山綠意環繞的札幌總鎮守。",ko:"마루야마 녹지에 둘러싸인 삿포로의 총진수."},q:"北海道神宮"}]}
+];
+const SPOTS_NHA=[
+ {c:{ja:"うるま市",en:"Uruma City",zh:"宇流麻市",ko:"우루마시"},s:[
+   {n:{ja:"海中道路",en:"Kaichu Road",zh:"海中道路",ko:"카이추 로드"},d:{ja:"エメラルドの海を貫く絶景ドライブロード。",en:"A scenic drive straight across the emerald sea.",zh:"貫穿翡翠海的絕景公路。",ko:"에메랄드빛 바다를 가로지르는 절경 드라이브."},u:"sKHP6eKJitsEuKJS6"},
+   {n:{ja:"伊計ビーチ",en:"Ikei Beach",zh:"伊計海灘",ko:"이케이 비치"},d:{ja:"有料の海水浴場。食堂・トイレ・シャワー完備。海水浴やガラスボート体験も。",en:"Paid beach with restaurant, toilets & showers. Swimming and glass-boat rides.",zh:"收費海水浴場，附餐廳・廁所・淋浴，可游泳與玻璃船體驗。",ko:"유료 해수욕장. 식당·화장실·샤워 완비. 해수욕과 유리보트 체험."},u:"deaSBd7UMhZ6nbE89"},
+   {n:{ja:"ぼうけんの国 沖縄",en:"Bouken-no-Kuni Okinawa",zh:"冒險之國 沖繩",ko:"모험의 나라 오키나와"},d:{ja:"釣って見つける体験型の釣り堀・アスレチック。",en:"Hands-on fishing pond & adventure park.",zh:"體驗型釣魚池與探險設施。",ko:"체험형 낚시터·어드벤처 시설."},u:"Drtnoxn8h7DNmmG59"}]},
+ {c:{ja:"恩納村",en:"Onna Village",zh:"恩納村",ko:"온나손"},s:[
+   {n:{ja:"フォレストアドベンチャー",en:"Forest Adventure",zh:"Forest Adventure 森林探險",ko:"포레스트 어드벤처"},d:{ja:"森の中の4つのジップスライド＋クライミング。世代・レベル問わず楽しめる。",en:"4 forest zip-line courses & climbing. Fun for all ages.",zh:"森林中4條滑索與攀爬，各年齡層皆宜。",ko:"숲속 4개 짚라인·클라이밍. 모든 연령 즐길 수 있음."},u:"UMkpLM29FFEbd82y7"}]},
+ {c:{ja:"今帰仁村",en:"Nakijin Village",zh:"今歸仁村",ko:"나키진손"},s:[
+   {n:{ja:"ジャングリア沖縄",en:"Junglia Okinawa",zh:"Junglia 沖繩",ko:"정글리아 오키나와"},d:{ja:"話題の大型テーマパーク。",en:"The talked-about large theme park.",zh:"話題的大型主題樂園。",ko:"화제의 대형 테마파크."},u:"UUmMdAtzAVBWk7Hw5"}]},
+ {c:{ja:"浦添市",en:"Urasoe City",zh:"浦添市",ko:"우라소에시"},s:[
+   {n:{ja:"浦添大公園",en:"Urasoe Ohashi Park",zh:"浦添大公園",ko:"우라소에 대공원"},d:{ja:"庭園・長い滑り台・遊具・飲食店がある緑地公園。",en:"Green park with gardens, a long slide, playground & eateries.",zh:"有庭園・長溜滑梯・遊具・餐飲的綠地公園。",ko:"정원·긴 미끄럼틀·놀이기구·식당이 있는 녹지 공원."},u:"sNLz3qLAwSxCrnes7"}]},
+ {c:{ja:"沖縄市",en:"Okinawa City",zh:"沖繩市",ko:"오키나와시"},s:[
+   {n:{ja:"沖縄こどもの国",en:"Okinawa Zoo & Museum",zh:"沖繩兒童王國",ko:"오키나와 어린이 나라"},d:{ja:"動物園＋博物館。乗り物・屋内遊び場・食事も。",en:"Zoo + museum with rides, indoor play & dining.",zh:"動物園＋博物館，附遊樂設施・室內遊戲・餐飲。",ko:"동물원+박물관. 놀이기구·실내 놀이터·식사."},u:"gdjmN8ztoruoCmTN6"},
+   {n:{ja:"沖縄県総合運動公園",en:"Okinawa Comprehensive Athletic Park",zh:"沖繩縣綜合運動公園",ko:"오키나와현 종합운동공원"},d:{ja:"ビーチ・プール・広場・陸上競技場の大型複合施設。※おすすめは土日祝。",en:"Large complex: beach, pool, lawns & stadium. Best on weekends/holidays.",zh:"海灘・泳池・廣場・田徑場的大型複合設施。建議假日前往。",ko:"해변·수영장·광장·육상경기장 대형 복합시설. 주말·공휴일 추천."},u:"NsLLtbJG9eCparfk6"}]}
+];
+function spots(){return ((DATA&&DATA.store)==="nha")?SPOTS_NHA:SPOTS_SPK;}
+function spotsHTML(groups){var L2=(typeof L!=="undefined")?L:"ja";return '<div class="spg">'+groups.map(function(g){return '<div class="city">📍 '+esc(g.c[L2]||g.c.ja)+'</div>'+g.s.map(function(x){var url=x.u?('https://maps.app.goo.gl/'+x.u):('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(x.q||x.n.ja));return '<div class="sp"><div class="nm">'+esc(x.n[L2]||x.n.ja)+'</div><div class="ds">'+esc(x.d[L2]||x.d.ja)+'</div><a class="mp" href="'+url+'" target="_blank" rel="noopener">'+t('nh_map_view')+'</a></div>';}).join('');}).join('')+'</div>';}
+// ご当地クイズ（店舗別・匿名可・予約token紐付け）
+const QEF="https://ckrxttbnawkclshczsia.supabase.co/functions/v1/quiz-track";
+let _qsess=""; try{_qsess=localStorage.getItem("hdm_quiz_sess")||"";if(!_qsess){_qsess="s"+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36);localStorage.setItem("hdm_quiz_sess",_qsess);}}catch(e){}
+function qtrack(ev,extra){try{fetch(QEF,{method:"POST",headers:{"Content-Type":"application/json"},keepalive:true,body:JSON.stringify(Object.assign({event:ev,store:((DATA&&DATA.store)||"spk"),token:TOKEN||null,lang:(typeof L!=="undefined"?L:"ja"),session:_qsess},extra||{}))}).catch(function(){});}catch(e){}}
+let _qviewed=false;
+window.openQuiz=function(){ qtrack('banner_click'); var st=((DATA&&DATA.store)||"spk"); var ov=document.createElement('div'); ov.id='quizOv'; ov.style.cssText='position:fixed;inset:0;z-index:99999;background:#0b0d10'; ov.innerHTML='<button onclick="closeQuiz()" style="position:absolute;top:calc(env(safe-area-inset-top) + 8px);right:10px;z-index:2;width:38px;height:38px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:19px;font-weight:800;cursor:pointer">✕</button><iframe src="quiz.html?v=2&t='+encodeURIComponent(TOKEN||"")+'&store='+st+'" style="width:100%;height:100%;border:0"></iframe>'; document.body.appendChild(ov); };
+window.closeQuiz=function(){ var o=document.getElementById('quizOv'); if(o)o.remove(); };
+// 車の受け取り完了報告（EF receive_done）
+async function receiveDone(){
+  if(!confirm(t('recv_confirm')))return;
+  var b=document.getElementById('recvBtn'); if(b){b.disabled=true;b.style.opacity=.6;}
+  const {json:j}=await call("receive_done");
+  if(j&&j.dropped){ if(b){b.disabled=false;b.style.opacity=1;} return; }
+  if(j&&j.received){ DATA.received=true; toast(t('recv_toast')); render(); }
+  else { toast(t('recv_err')); if(b){b.disabled=false;b.style.opacity=1;} }
+}
 const IMG_BASE="images/"; // spk-task同梱(同一オリジン・https)
 function trackUrl(resId,trk,type){ // type: "del"=お届け / "col"=回収
   const guide=(type==="col")?"handyman-collection-guide.html":"handyman-delivery-guide.html";
@@ -491,7 +637,7 @@ function histLine(c,mode){
   const cust=src==="customer_form"?{ja:"お客様がフォームで",en:"You (via form)",zh:"您（透過表單）",ko:"고객님이 폼에서"}[L]
             :src==="staff"?{ja:"担当が",en:"Staff",zh:"專員",ko:"담당자가"}[L]
             :{ja:"お客様がマイページで",en:"You (via My Page)",zh:"您（透過本頁）",ko:"고객님이 마이페이지에서"}[L];
-  const PILL={requested:{t:{ja:"確認中",en:"Reviewing",zh:"確認中",ko:"확인 중"}[L],c:"#b45309",b:"#fef3c7"},approved:{t:{ja:"反映済",en:"Applied",zh:"已反映",ko:"반영됨"}[L],c:"#0e7a3b",b:"#dcfce7"},rejected:{t:{ja:"見送り",en:"Declined",zh:"未受理",ko:"보류"}[L],c:"#64748b",b:"#f1f5f9"}};
+  const PILL={requested:{t:{ja:"確認中",en:"Reviewing",zh:"確認中",ko:"확인 중"}[L],c:"#b8860b",b:"#fef3c7"},approved:{t:{ja:"反映済",en:"Applied",zh:"已反映",ko:"반영됨"}[L],c:"#0e7a3b",b:"#dcfce7"},rejected:{t:{ja:"見送り",en:"Declined",zh:"未受理",ko:"보류"}[L],c:"#64748b",b:"#f1f5f9"}};
   let text="",pill=null;
   if(c.status==="applied"){
     if(isC) text={ja:cust+"キャンセルしました",en:cust+" cancelled",zh:cust+"取消了",ko:cust+" 취소했습니다"}[L];
@@ -508,7 +654,7 @@ function histLine(c,mode){
 }
 // その項目の「変更前の値」（適用済みの最新変更のold_value）＝行に「🔄変更前 〇〇」を出す
 function origOf(field){const rc=((DATA&&DATA.recentChanges)||[]).filter(c=>c.field===field&&c.status==="applied");if(!rc.length)return"";const c=rc[0];const ov=String(c.old_value||"").trim(),nv=String(c.new_value||"").trim();return(ov&&ov!==nv)?ov:"";}
-function chgBadge(field){const ov=origOf(field);return ov?`<span style="display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:1px 7px;white-space:nowrap">🔄 ${t('changed_from')} ${esc(ov)}</span>`:"";}
+function chgBadge(field){const ov=origOf(field);return ov?`<span style="display:inline-block;margin-left:8px;font-size:11px;font-weight:700;color:#b8860b;background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:1px 7px;white-space:nowrap">🔄 ${t('changed_from')} ${esc(ov)}</span>`:"";}
 const TIMES=(()=>{let a=[];for(let h=9;h<=19;h++){a.push(("0"+h).slice(-2)+":00");if(h<19)a.push(("0"+h).slice(-2)+":30")}return a})();
 function timeSel(id,val){return `<select id="${id}"><option value="">${{ja:"指定なし",en:"Not specified",zh:"未指定",ko:"미지정"}[L]}</option>`+
   TIMES.map(x=>`<option ${x===val?"selected":""}>${x}</option>`).join("")+`</select>`}
@@ -638,15 +784,27 @@ function render(){
   const opts=[]; if(r.opt_c)opts.push(t('opt_child')+"×"+r.opt_c); if(r.opt_b)opts.push(t('opt_baby')+"×"+r.opt_b);
   if(r.opt_j)opts.push(t('opt_junior')+"×"+r.opt_j); if(r.opt_usb)opts.push("USB");
   const optStr = opts.length?opts.join("・"):t('none');
-  const editable = !d.pendingCancel && !cancelled;  // ★スタッフ閲覧(ro=1)も顧客と同一UIを表示。編集の"実行"だけ call() のROガードで無効化（＝見た目は同じ・変更編集ができないだけ）
+  const editable = !d.pendingCancel && !cancelled;  // ★KEYDROP顧客は編集可。スタッフ閲覧(ro=1)も同一UIを表示し、編集の"実行"だけ call() のROガードで無効化
+  const cfg=storeCfg();
 
   $("#app").innerHTML = `
   ${RO?`<div style="background:#0F1F45;color:#fff;text-align:center;padding:9px 12px;font-size:13px;font-weight:700">🔒 スタッフ確認用（閲覧のみ・編集/依頼はできません）</div>`:""}
-  <div class="top"><div class="logo">KEY<b style="color:#FABE00">◦</b>DROP</div><div class="store">${esc(d.label)}${t('store')}</div></div>
-  ${langSwitch()}
-  <div class="hello">${esc(r.name||t('guest'))}<span>${t('your_page')}</span></div>
 
-  ${(!RO&&!cancelled)?`<div id="licAlert" style="display:none" onclick="scrollLic()">
+  <div class="nhero" style="background-image:linear-gradient(180deg,rgba(3,8,28,.26) 0%,rgba(4,14,40,.08) 42%,rgba(3,8,28,.5) 100%),url('${cfg.kv}');background-position:center 45%;background-size:cover;background-repeat:no-repeat">
+    <img class="nh-logo" src="keydrop-logo-white.png" alt="KEYDROP">
+    <div class="nh-lang">${LANGS.map(l=>`<button class="${L===l.k?'on':''}" onclick="setLang('${l.k}')">${l.k==='ja'?'日':l.n}</button>`).join("")}</div>
+    <div class="nh-c">
+      <div class="nh-eye">${cfg.eye}</div>
+      <div class="nh-oki">${esc(cfg.city[L]||cfg.city.ja)}</div>
+      <div class="nh-name">${esc(r.name||t('guest'))} <span style="opacity:.85">${t('your_page')}</span></div>
+      ${(()=>{const dd=daysTo(r.lend_date);return (dd!=null&&dd>=0)?`<div class="nh-cd"><span>${t('nh_days_pre')}</span><b>${dd}</b><span>${t('nh_days')}</span></div>`:"";})()}
+      <div class="nh-wx"><span id="nhWxIc">☀️</span> ${(DATA&&DATA.store)==="nha"?t('nh_now_nha'):t('nh_now_spk')} <b id="nhWxT">--°</b></div>
+    </div>
+    <div class="nh-st">${esc(stLabel)}</div>
+  </div>
+
+
+  ${(!RO&&!cancelled)?`<div class="licalert" id="licAlert" style="display:none" onclick="scrollLic()">
     <div class="la-ic">🪪</div>
     <div class="la-tx"><b>⚠️ ${t('lic_alert_title')}</b><span>${t('lic_alert_body')}</span></div>
     <div class="la-go">${t('lic_alert_btn')}</div>
@@ -660,35 +818,37 @@ function render(){
     <span>${t('set_tap')}</span></div>
     <div class="sb-go">${t('set_go')}</div></div>`:""}
 
-  <div class="hero">
-    <div class="hero-txt">
-      <div class="rid">${t('rid')} ${esc(r.id)}</div>
-      <div class="car">${esc(r.vehicle)}${t('cls')}${cap>0?` <span style="font-size:14px;font-weight:700;opacity:.9;white-space:nowrap">👥 ${t('capacity')}${cap}${t('people_unit')}</span>`:""}</div>
-      <div class="st">${esc(stLabel)}</div>
-    </div>
-    <img class="hero-car" src="${classImg(r.vehicle)}" alt="${esc(r.vehicle)}"
-      onerror="this.parentNode.classList.add('no-img');this.remove()">
-  </div>
+  ${(!RO&&!cancelled)?`<div class="card">
+    <h2><span class="em">🚗</span>${t('recv_head')}</h2>
+    ${d.received
+      ? `<div style="background:#dcfce7;border:1.5px solid #86efac;border-radius:11px;padding:12px 14px;color:#15803d;font-weight:800;font-size:15px;text-align:center">${t('recv_done')}<div style="font-weight:600;font-size:12px;margin-top:3px">${t('recv_done_sub')}</div></div>`
+      : `<button class="bigbtn" id="recvBtn" onclick="receiveDone()">🚗 ${t('recv_btn')}</button><div class="note" style="margin-top:8px">${t('recv_hint')}</div>`}
+  </div>`:""}
 
   <div style="background:#fff8e6;border:1.5px solid #fde68a;border-radius:14px;padding:13px 15px;margin-bottom:14px">
     <div style="font-weight:800;font-size:14px;color:#8a5a00;display:flex;align-items:center;gap:7px;margin-bottom:6px">📣 ${t('notice_title')}</div>
     <div style="font-size:13px;line-height:1.7;color:#7a4d00">${t('notice_body')}</div>
   </div>
 
-  <div class="card">
-    <h2><span class="em">🚗</span>${t('resv_content')}</h2>
+  <div class="divlabel">旅のしおり</div>
+
+  <details class="acc">
+    <summary><span class="ic">🚗</span>${t('resv_content')}<span class="chev">▾</span></summary>
+    <div class="accb">
     <div class="row"><div class="k">${t('booked_via')}</div><div class="v">${esc(otaName(r.ota))}<span style="color:#94a3b8;font-size:12px;margin-left:6px">${esc(r.id||"")}</span></div></div>
     <div class="row"><div class="k">${t('vehicle_class')}</div><div class="v">${esc(r.vehicle)}（${esc(cls)}）</div></div>
     <div class="row"><div class="k">${t('use_period')}</div><div class="v">${esc(r.lend_date)} ${esc(r.lend_time||"")} 〜 ${esc(r.return_date)} ${esc(r.return_time||"")}</div></div>
     <div class="row"><div class="k">${t('people')}</div><div class="v">${cap>0?cap+t('people_unit'):"-"}</div></div>
     <div class="row"><div class="k">${t('option')}</div><div class="v">${esc(optStr)}
-      ${editable?(pendReq('option')?`<span class="edit" style="background:#fef3c7;color:#b45309;border-color:#fde68a;cursor:default">${t('req_pending')}</span>`:`<span class="edit req" onclick="reqOption()">${t('change_req')}</span>`):""}</div></div>
+      ${editable?(pendReq('option')?`<span class="edit" style="background:#fef3c7;color:#b8860b;border-color:#fde68a;cursor:default">${t('req_pending')}</span>`:`<span class="edit req" onclick="reqOption()">${t('change_req')}</span>`):""}</div></div>
     <div class="row"><div class="k">${t('insurance')}</div><div class="v">${esc(insLabel(insCur())||r.insurance||"-")}
-      ${editable?(pendReq('insurance')?`<span class="edit" style="background:#fef3c7;color:#b45309;border-color:#fde68a;cursor:default">${t('req_pending')}</span>`:`<span class="edit req" onclick="reqInsurance()">${t('change_req')}</span>`):""}</div></div>
-  </div>
+      ${editable?(pendReq('insurance')?`<span class="edit" style="background:#fef3c7;color:#b8860b;border-color:#fde68a;cursor:default">${t('req_pending')}</span>`:`<span class="edit req" onclick="reqInsurance()">${t('change_req')}</span>`):""}</div></div>
+    </div>
+  </details>
 
-  <div class="card">
-    <h2><span class="em">📍</span>${t('deliver_pickup')}</h2>
+  <details class="acc">
+    <summary><span class="ic">📍</span>${t('deliver_pickup')}<span class="chev">▾</span></summary>
+    <div class="accb">
     <div class="row"><div class="k">${t('del_place')}</div><div class="v">${r.del_place?esc(r.del_place):`<span class="unset">${t('unset')}</span>`}${chgBadge('del_place')}
       ${editable?`<span class="edit ${r.del_place?"":"call"}" onclick="mapPicker('del_place')">${r.del_place?t('edit'):t('set_it')}</span>`:""}</div></div>
     <div class="row"><div class="k">${t('del_dt')}</div><div class="v">${esc(dateTime(r.lend_date,r.lend_time))}${chgBadge('lend_time')}
@@ -698,36 +858,53 @@ function render(){
     <div class="row"><div class="k">${t('col_dt')}</div><div class="v">${esc(dateTime(r.return_date,r.return_time))}${chgBadge('return_time')}
       ${editable?`<span class="edit" onclick="editField('return_time')">${t('time_edit')}</span>`:""}</div></div>
     <div class="hint">${t('dp_hint')}</div>
-  </div>
+    </div>
+  </details>
 
-  <div class="card">
-    <h2><span class="em">🩹</span>${t('damage_check')}</h2>
+  <details class="acc">
+    <summary><span class="ic">🗺</span>${t('nh_drive')}<span class="chev">▾</span></summary>
+    <div class="accb">
+      <div class="note" style="margin:0 0 6px">${t('nh_spot_note')}</div>
+      ${spotsHTML(spots())}
+    </div>
+  </details>
+
+  <div class="divlabel">${t('nh_dl_manage')}</div>
+
+  <details class="acc">
+    <summary><span class="ic">🩹</span>${t('damage_check')}<span class="chev">▾</span></summary>
+    <div class="accb">
     ${d.damage.ready
       ? (d.damage.url
           ? `<a class="bigbtn ghost" href="${esc(d.damage.url)}" target="_blank" rel="noopener">${t('damage_view')}</a>
              <div class="note">${t('damage_note')}</div>`
           : `<div class="dashed">${t('damage_prep')}</div>`)
       : `<div class="dashed"><span class="pill wait">${t('damage_locked')}</span><div style="margin-top:8px"><b>${t('damage_open8')}</b></div></div>`}
-  </div>
+    </div>
+  </details>
 
-  ${(!cancelled) ? `<div class="card" id="liccard">
-    <h2><span class="em">🪪</span>運転免許証の事前登録</h2>
-    <div class="note">当日の受け渡しをスムーズにするため、運転される方 全員分の運転免許証（表面）の事前ご登録にご協力ください。アプリ不要・スマホで撮影して送信できます。</div>
-    <div id="licDone" style="display:none;color:#0a7d34;font-weight:800;margin-top:8px">✅ ご登録ありがとうございます。</div>
-    <div id="licBox" style="margin-top:8px">
+  ${(!cancelled) ? `<details class="acc" id="liccard">
+    <summary><span class="ic">🪪</span>${t('lic_title')}<span class="chev">▾</span></summary>
+    <div class="accb">
+    <div class="note" style="margin:0 0 10px">${t('lic_desc')}</div>
+    <div id="licDone" style="display:none;color:#0a7d34;font-weight:800;margin-bottom:10px">${t('lic_registered')}</div>
+    <div id="licBox">
       <input id="licFiles" type="file" accept="image/*" multiple capture="environment" style="width:100%;font-size:15px;margin-bottom:6px">
       <div class="note" style="font-size:12px;color:var(--sub)">運転者が複数の場合は、全員分の表面を選択してください。</div>
-      <button class="bigbtn" id="licBtn" ${RO?'disabled':''} onclick="uploadLicense()">この内容で登録する</button>
+      <button class="bigbtn" id="licBtn" ${RO?'disabled':''} onclick="uploadLicense()">${t('lic_upload')}</button>
       <div id="licMsg" style="margin-top:8px;font-size:13px"></div>
     </div>
-  </div>` : ""}
+    <div class="note" style="margin-top:10px">${t('lic_note')}</div>
+    </div>
+  </details>` : ""}
 
-  <div class="card">
-    <h2><span class="em">🛰</span>${t('track_title')}</h2>
+  <details class="acc">
+    <summary><span class="ic">🛰</span>${t('track_title')}<span class="chev">▾</span></summary>
+    <div class="accb">
     ${d.tracking.active?`<span class="pill on" style="margin-bottom:8px">${t('staff_moving')}</span>`:""}
     <div class="tphone">
       <div class="tp-badge">${d.tracking.active?t('tap_open'):t('preview_img')}</div>
-      <div class="tp-hd"><span class="tp-logo">KEY<b style="color:#FABE00">◦</b>DROP</span><span class="tp-hdsub">${d.tracking.kd_status==="collecting"?t('track_col'):t('track_del')}</span></div>
+      <div class="tp-hd"><span class="tp-logo">KEY-<b>DROP</b></span><span class="tp-hdsub">${d.tracking.kd_status==="collecting"?t('track_col'):t('track_del')}</span></div>
       <div class="tp-status"><span class="tp-dot"></span>${d.tracking.kd_status==="collecting"?t('heading_col'):t('heading_del')}</div>
       <div class="tp-map">
         <div class="tp-route"></div>
@@ -746,36 +923,43 @@ function render(){
         ${t('track_col_btn')}${d.tracking.kd_status==="collecting"?`<span class="livebadge">${t('moving')}</span>`:""}</a>
     </div>
     <div class="note">${t('track_note')}</div>
-  </div>
+    </div>
+  </details>
 
   ${editable?`
-  <div class="card">
-    <h2><span class="em">🟢</span>${t('ready_title')}</h2>
+  <details class="acc">
+    <summary><span class="ic">🟢</span>${t('ready_title')}<span class="chev">▾</span></summary>
+    <div class="accb">
     ${(()=>{const rs=readyState(),rt=readyTime();const tline=rt?`<div style="margin-top:6px;font-size:13px"><b>${t('ready_at')}：</b>${rt}〜</div>`:"";
       if(rs==="requested")return `<div class="dashed"><span class="pill wait">${t('ready_received')}</span>${tline}<div style="margin-top:8px">${t('ready_pending')}</div></div>`;
       if(rs==="approved")return `<div class="dashed" style="border-color:#0e9f50;background:#f0fdf4"><span class="pill" style="background:#dcfce7;color:#0e7a3b">${t('ready_approved')}</span>${tline}<div style="margin-top:8px">${t('ready_approved_note')}</div></div>`;
       if(rs==="rejected")return `<div class="dashed"><span class="pill" style="background:#f1f5f9;color:#64748b">${t('ready_rejected')}</span></div>`;
       return `<button class="bigbtn" style="background:#0e9f50" onclick="openReady()">${t('ready_btn')}</button><div class="note">${t('ready_note')}</div>`;
     })()}
-  </div>`:""}
+    </div>
+  </details>`:""}
 
   ${editable?`
-  <div class="card">
-    <h2><span class="em">🚫</span>${t('cancel')}</h2>
+  <details class="acc">
+    <summary><span class="ic">🚫</span>${t('cancel')}<span class="chev">▾</span></summary>
+    <div class="accb">
     <button class="bigbtn" style="background:#fff;color:var(--danger);border:1.5px solid #f0c2c2" onclick="askCancel()">${t('cancel_apply')}</button>
     <div class="note">${t('cancel_note')}</div>
-  </div>`
+    </div>
+  </details>`
   :(d.pendingCancel?`
-  <div class="card">
-    <h2><span class="em">🚫</span>${t('cancel')}</h2>
-    <div class="dashed"><span class="pill wait">${t('cancel_done')}</span><div style="margin-top:8px">${t('cancel_wait')}</div></div>
-  </div>`:"")}
+  <details class="acc">
+    <summary><span class="ic">🚫</span>${t('cancel')}<span class="chev">▾</span></summary>
+    <div class="accb"><div class="dashed"><span class="pill wait">${t('cancel_done')}</span><div style="margin-top:8px">${t('cancel_wait')}</div></div></div>
+  </details>`:"")}
 
   ${(()=>{const list=(d.history||d.recentChanges||[]).map(c=>histLine(c,"you")).filter(Boolean);
     if(!list.length)return"";
-    return `<div class="card"><h2><span class="em">🕘</span>${t('recent_hist')}</h2>`+
+    return `<details class="acc"><summary><span class="ic">🕘</span>${t('recent_hist')}<span class="chev">▾</span></summary><div class="accb">`+
       list.map(h=>`<div class="hrow"><span class="hdate">${h.date}</span><span class="htx">${h.text}</span>${h.pill?`<span class="hpill" style="color:${h.pc};background:${h.pb}">${h.pill}</span>`:""}</div>`).join("")+
-      `<div class="note">${t('hist_note')}</div></div>`})()}
+      `<div class="note">${t('hist_note')}</div></div></details>`})()}
+
+  <div class="oshin"><div style="font-size:22px">${(DATA&&DATA.store)==="nha"?"🌺":"🌸"}</div><p>${(DATA&&DATA.store)==="nha"?t('nh_oshi_nha'):t('nh_oshi_spk')}</p><div class="sig">— KEY-DROP ${esc(d.label)}${t('store')} —</div></div>
 
   <details style="margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden">
     <summary style="padding:14px 16px;font-weight:800;font-size:15px;color:#0F1F45;cursor:pointer;display:flex;align-items:center;gap:8px;list-style:none">${t('terms_title')}<span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--sub)">${t('terms_hint')}</span></summary>
@@ -783,10 +967,12 @@ function render(){
   </details>
 
   <div class="foot">
-    KEY-DROP ${esc(d.label)}${t('store')} ／ LINE：<a href="https://lin.ee/g6iDNYz">${t('foot_contact')}</a><br>
+    KEY-DROP ${esc(d.label)}${t('store')} ／ ${t('foot_contact')}：ご登録のメールへ<br>
     ${t('foot_private')}<br>
     <span style="opacity:.5">${VER}</span>
   </div>`;
+  nhLoadWx();
+  if(!_qviewed && !RO && !cancelled){ _qviewed=true; qtrack('banner_view'); }
   if(!RO && !cancelled) refreshLicState(r.id);
 }
 
@@ -876,7 +1062,7 @@ function mapPicker(field){
     <div id="mpMap" class="mpmap"><div class="center" style="padding:30px"><div class="spin"></div>${t('map_loading')}</div></div>
     <div class="mppicked">📍 <b id="mpPicked">${esc(mpPicked.place||t('map_unselected'))}</b></div>
     <div id="mpStNote" style="display:none;margin-top:8px;padding:8px 10px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:12.5px;line-height:1.55">${t('sapporo_st_note')}</div>
-    <div class="hint" style="margin-top:8px">${t('map_hint')}<br>${t('sapporo_only')}</div>
+    <div class="hint" style="margin-top:8px">${t('map_hint')}${((DATA&&DATA.store)!=="nha")?`<br>${t('sapporo_only')}`:""}</div>
     <div class="acts" style="margin-top:12px"><button class="btn-cancel" onclick="closeSheet()">${t('cancel_btn')}</button>
       <button class="btn-ok" id="mpBtn" onclick="mpSave()">${applyLbl}</button></div>`;
   $("#scrim").classList.add("show");
@@ -887,7 +1073,7 @@ function mapPicker(field){
 }
 function initMpMap(){
   const el=document.getElementById("mpMap"); if(!el)return;
-  const c=(mpPicked.lat&&mpPicked.lng)?{lat:+mpPicked.lat,lng:+mpPicked.lng}:SPK_CENTER;
+  const c=(mpPicked.lat&&mpPicked.lng)?{lat:+mpPicked.lat,lng:+mpPicked.lng}:(storeCfg().center||SPK_CENTER);
   el.innerHTML="";
   mpMap=new google.maps.Map(el,{center:c,zoom:mpPicked.lat?16:13,disableDefaultUI:true,zoomControl:true,gestureHandling:"greedy",clickableIcons:false});
   mpMarker=new google.maps.Marker({position:c,map:mpMap,draggable:true});
@@ -927,7 +1113,7 @@ function mpSearchInput(){
   _mpDeb=setTimeout(()=>{
     if(!mpAuto){box.style.display="none";return}
     mpAuto.getPlacePredictions({input:q,sessionToken:mpTok,language:gLang(),
-      locationBias:{center:SPK_CENTER,radius:60000},componentRestrictions:{country:"jp"}},(preds,st)=>{
+      locationBias:{center:(storeCfg().center||SPK_CENTER),radius:60000},componentRestrictions:{country:"jp"}},(preds,st)=>{
       if(st!=="OK"||!preds||!preds.length){box.innerHTML='<div class="mpsug-i" style="color:#999">'+t('map_no_hit')+'</div>';box.style.display="block";return}
       box.innerHTML=preds.slice(0,6).map(p=>`<div class="mpsug-i" onclick="mpPick('${p.place_id}')">📍 ${esc(p.description)}</div>`).join("");
       box.style.display="block";
@@ -1188,6 +1374,45 @@ async function load(){
   try{document.title=(json.reservation.name||t('guest'))+" | HANDYMAN "+json.label}catch(e){}
   render();
 }
+/* ★★ 総合計測テレメトリ KEYDROP マイページ（store=kd・メインux-track） __TELEMETRY_MARK__ */
+(function(){
+  try{
+    var STORE="kd", PAGE="mypage";
+    var TK=(new URLSearchParams(location.search)).get("t")||"";
+    var EF="https://ckrxttbnawkclshczsia.supabase.co/functions/v1/ux-track";
+    var SESS=""; try{SESS=sessionStorage.getItem("hdm_ux_sess")||"";}catch(e){}
+    if(!SESS){ SESS="u"+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36); try{sessionStorage.setItem("hdm_ux_sess",SESS);}catch(e){} }
+    function lang(){ try{return (typeof L!=="undefined")?L:"";}catch(e){return "";} }
+    function post(o){ try{fetch(EF,{method:"POST",headers:{"Content-Type":"application/json"},keepalive:true,body:JSON.stringify(o)}).catch(function(){});}catch(e){} }
+    function trk(action,event,value,meta){ post({store:STORE,page:PAGE,action:action,event:event,value:(value==null?null:value),token:TK,session:SESS,lang:lang(),meta:meta||null}); }
+    window.__trk=trk;
+    trk("page","page_view");
+    var t0=Date.now(), maxScroll=0;
+    function scp(){ var h=document.documentElement.scrollHeight-window.innerHeight; if(h<=6)return 100; return Math.min(100,Math.round(window.scrollY/h*100)); }
+    window.addEventListener("scroll",function(){ var p=scp(); if(p>maxScroll)maxScroll=p; },{passive:true});
+    var EMO={"🚗":"resv","📍":"place","🗺":"drive","🩹":"damage","🪪":"license","🛰":"track","🧩":"quiz","🚌":"bus","🎁":"option","🛡":"insurance","⏰":"pickup"};
+    var secTime={}, secOpen={}, seen={};
+    function secKey(el){ var s=el.querySelector("summary"); var tx=s?s.textContent:""; for(var e in EMO){ if(tx.indexOf(e)>=0)return EMO[e]; } return el.id||"sec"; }
+    var io=new IntersectionObserver(function(ents){ ents.forEach(function(en){ var k=secKey(en.target); if(en.isIntersecting){ if(!secOpen[k]){ secOpen[k]=Date.now(); if(!seen[k]){ seen[k]=1; trk("acc_"+k,"section_view"); } } } else if(secOpen[k]){ secTime[k]=(secTime[k]||0)+(Date.now()-secOpen[k])/1000; secOpen[k]=0; } }); },{threshold:0.5});
+    function observeAll(){ try{ document.querySelectorAll("details.acc").forEach(function(el){ io.observe(el); }); }catch(e){} }
+    if(typeof window.render==="function"){ var _r=window.render; window.render=function(){ var x=_r.apply(this,arguments); setTimeout(observeAll,60); return x; }; }
+    setTimeout(observeAll,400);
+    ["reqOption","sendOption","reqInsurance","sendInsurance","askCancel","sendCancel","openReady","confirmReady","saveField","mpSave","mpPick","uploadLicense","licUpload","receiveDone","setLang","openQuiz","scrollLic","closeQuiz","doMypageLogin"].forEach(function(n){ var o=window[n]; if(typeof o!=="function")return; window[n]=function(){ try{trk("btn_"+n,"click");}catch(e){} return o.apply(this,arguments); }; });
+    ["mapPicker","editField"].forEach(function(n){ var o=window[n]; if(typeof o!=="function")return; window[n]=function(f){ try{trk(n+"_"+(f||""),"click");}catch(e){} return o.apply(this,arguments); }; });
+    if(typeof window.call==="function"){ var _c=window.call; window.call=function(a){ try{ if(a&&a!=="lookup")trk("call_"+a,"click"); }catch(e){} return _c.apply(this,arguments); }; }
+    function flush(){
+      var rows=[{store:STORE,page:PAGE,action:"page",event:"page_dwell",value:Math.round((Date.now()-t0)/1000),token:TK,session:SESS,lang:lang()},
+                {store:STORE,page:PAGE,action:"page",event:"scroll",value:maxScroll,token:TK,session:SESS,lang:lang()}];
+      for(var k in secOpen){ if(secOpen[k]){ secTime[k]=(secTime[k]||0)+(Date.now()-secOpen[k])/1000; secOpen[k]=0; } }
+      for(var k in secTime){ if(secTime[k]>=1)rows.push({store:STORE,page:PAGE,action:"acc_"+k,event:"section_dwell",value:Math.round(secTime[k]),token:TK,session:SESS,lang:lang()}); }
+      try{ navigator.sendBeacon(EF, new Blob([JSON.stringify({batch:rows})],{type:"application/json"})); }catch(e){ post({batch:rows}); }
+    }
+    var flushed=false;
+    window.addEventListener("visibilitychange",function(){ if(document.visibilityState==="hidden"&&!flushed){ flushed=true; flush(); setTimeout(function(){flushed=false;},2000); } });
+    window.addEventListener("pagehide",flush);
+  }catch(e){}
+})();
+
 load();
 </script>
 </body>
