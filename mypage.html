@@ -1377,7 +1377,7 @@ async function load(){
 /* ★★ 総合計測テレメトリ KEYDROP マイページ（store=kd・メインux-track） __TELEMETRY_MARK__ */
 (function(){
   try{
-    var STORE="kd", PAGE="mypage";
+    var STORE="kd", PAGE=(((new URLSearchParams(location.search)).get("ro")==="1"))?"karte":"mypage";
     var TK=(new URLSearchParams(location.search)).get("t")||"";
     var EF="https://ckrxttbnawkclshczsia.supabase.co/functions/v1/ux-track";
     var SESS=""; try{SESS=sessionStorage.getItem("hdm_ux_sess")||"";}catch(e){}
