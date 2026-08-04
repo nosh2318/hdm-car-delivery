@@ -416,11 +416,38 @@
   }
 
   let _geocoder = null, meetLoc = null;
+  // ★2026-08-04 目的地住所クリーニング＋ランドマーク座標補正（駅名/空港のジオコーダ誤爆・便名ノイズ対策）
+  function cleanMeetAddr(addr) {
+    var x = String(addr || '').replace(/[（(][^）)]*[）)]/g, '');
+    x = x.replace(/[。．][\s\S]*$/, '');
+    x = x.replace(/[、,][^、,]*便[^、,]*$/, '');
+    x = x.replace(/\s*(?:便名[：:\s]*)?[A-Za-zＡ-Ｚａ-ｚ]{0,4}\s?[0-9０-９]{1,4}\s*便\s*$/, '');
+    return x.replace(/\s+/g, ' ').trim();
+  }
+  var MEET_LANDMARKS = [
+    { re: /新千歳空港/,               lat: 42.77530, lng: 141.69200, name: '新千歳空港' },
+    { re: /札幌駅.*南口|南口.*札幌駅/, lat: 43.06955, lng: 141.35075, name: '札幌駅北口（南口は停車不可のため北口）' },
+    { re: /札幌駅.*北口|北口.*札幌駅/, lat: 43.06955, lng: 141.35075, name: '札幌駅北口' },
+    { re: /札幌駅/,                   lat: 43.06955, lng: 141.35075, name: '札幌駅北口' },
+    { re: /すすきの/,                 lat: 43.05540, lng: 141.35320, name: 'すすきの' },
+    { re: /大通(公園|駅|ビッセ|BISSE)?/, lat: 43.06070, lng: 141.34690, name: '大通' }
+  ];
+  function hasBanchi(s) { return /[0-9０-９]+\s*条|[0-9０-９]+\s*丁目|[0-9０-９]+\s*[-ー－]\s*[0-9０-９]+|[0-9０-９]+\s*番/.test(s); }
+  function matchLandmark(clean) {
+    if (!clean || hasBanchi(clean)) return null;
+    for (var i = 0; i < MEET_LANDMARKS.length; i++) if (MEET_LANDMARKS[i].re.test(clean)) return MEET_LANDMARKS[i];
+    return null;
+  }
   // 住所→座標：リファラ制限キーはGeocoding RESTで弾かれるため地図JSのGeocoderを使用
   function geocodeMeet(addr) {
     if (!gmapReady || !addr) return;
-    const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
+    const clean = cleanMeetAddr(addr);
     if (!clean) return;
+    { const _lm = matchLandmark(clean); if (_lm) {
+        if (!(meetLoc && meetAddrDone === clean)) { meetLoc = new google.maps.LatLng(_lm.lat, _lm.lng); meetAddrDone = clean; meetAddrTrying = ''; }
+        if (!map) { renderMap(); return; }
+        placeMeet(meetLoc, _lm.name || clean); return;
+    } }
     if (meetLoc && clean === meetAddrDone) { placeMeet(meetLoc, clean); return; }
     if (clean === meetAddrTrying) return;
     meetAddrTrying = clean;

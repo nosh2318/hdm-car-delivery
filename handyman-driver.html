@@ -399,11 +399,40 @@
     if (!meetIWClosed) meetIW.open(map, meetMarker);
     fitAll();
   }
+  // ★2026-08-04 目的地住所クリーニング＋ランドマーク座標補正（駅名/空港のジオコーダ誤爆・便名ノイズ対策）
+  function cleanMeetAddr(addr) {
+    var x = String(addr || '').replace(/[（(][^）)]*[）)]/g, '');            // 括弧内除去
+    x = x.replace(/[。．][\s\S]*$/, '');                                      // 句点以降（便名等の補足）を除去 ※日本の住所に「。」は無い
+    x = x.replace(/[、,][^、,]*便[^、,]*$/, '');                              // 「、JAL505便」等の末尾便名クローズを除去
+    x = x.replace(/\s*(?:便名[：:\s]*)?[A-Za-zＡ-Ｚａ-ｚ]{0,4}\s?[0-9０-９]{1,4}\s*便\s*$/, ''); // 末尾フライト便（区切り無し）
+    return x.replace(/\s+/g, ' ').trim();
+  }
+  // 一般名（駅名/空港）は具体的な番地が無い時のみ正規座標に直置き。※札幌駅南口は停車不可のため北口へ誘導
+  var MEET_LANDMARKS = [
+    { re: /新千歳空港/,               lat: 42.77530, lng: 141.69200, name: '新千歳空港' },
+    { re: /札幌駅.*南口|南口.*札幌駅/, lat: 43.06955, lng: 141.35075, name: '札幌駅北口（南口は停車不可のため北口）' },
+    { re: /札幌駅.*北口|北口.*札幌駅/, lat: 43.06955, lng: 141.35075, name: '札幌駅北口' },
+    { re: /札幌駅/,                   lat: 43.06955, lng: 141.35075, name: '札幌駅北口' },
+    { re: /すすきの/,                 lat: 43.05540, lng: 141.35320, name: 'すすきの' },
+    { re: /大通(公園|駅|ビッセ|BISSE)?/, lat: 43.06070, lng: 141.34690, name: '大通' }
+  ];
+  function hasBanchi(s) { return /[0-9０-９]+\s*条|[0-9０-９]+\s*丁目|[0-9０-９]+\s*[-ー－]\s*[0-9０-９]+|[0-9０-９]+\s*番/.test(s); }
+  function matchLandmark(clean) {
+    if (!clean || hasBanchi(clean)) return null;      // 具体的な番地入りは通常のジオコードに任せる
+    for (var i = 0; i < MEET_LANDMARKS.length; i++) if (MEET_LANDMARKS[i].re.test(clean)) return MEET_LANDMARKS[i];
+    return null;
+  }
   // 待ち合わせ住所→座標。リファラ制限キーはGeocoding RESTで弾かれるため、地図JSのGeocoder(Maps JS API経由)を使う
   function geocodeMeet(addr) {
     if (!gmapReady || !addr) return;
-    const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
+    const clean = cleanMeetAddr(addr);
     if (!clean) return;
+    // ★ 駅名/空港など一般名は正規座標に直置き（ジオコーダ誤爆・便名ノイズ対策）
+    { const _lm = matchLandmark(clean); if (_lm) {
+        if (!(meetLoc && meetAddrDone === clean)) { meetLoc = new google.maps.LatLng(_lm.lat, _lm.lng); meetAddrDone = clean; meetAddrTrying = ''; }
+        if (!map) { renderMap(); return; }
+        placeMeet(meetLoc, _lm.name || clean); return;
+    } }
     // 既に解決済みの住所→ジオコードせずピンだけ再配置（map生成タイミングでの取りこぼしを防ぐ）
     if (meetLoc && clean === meetAddrDone) { placeMeet(meetLoc, clean); return; }
     if (clean === meetAddrTrying) return; // 同一住所の多重リクエスト防止
