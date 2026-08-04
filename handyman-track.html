@@ -314,7 +314,7 @@
     const d = lastData;
     const hasDriver = (d.driver_lat != null && d.driver_lng != null);
     const hasCust = (d.cust_lat != null && d.cust_lng != null);
-    if (!hasDriver && !hasCust) { geocodeMeet(d.del_place); return; }
+    if (!hasDriver && !hasCust) { geocodeMeet(d.del_place, d.meet_lat, d.meet_lng); return; }
 
     if (!map) {
       const center = hasDriver ? { lat: +d.driver_lat, lng: +d.driver_lng } : { lat: +d.cust_lat, lng: +d.cust_lng };
@@ -367,7 +367,7 @@
       custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' ' + t('youCust') + '</div>');
     }
 
-    geocodeMeet(d.del_place);  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
+    geocodeMeet(d.del_place, d.meet_lat, d.meet_lng);  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
 
     const chip = document.getElementById('distChip');
     if (hasDriver && hasCust) {
@@ -434,11 +434,32 @@
     for (var i = 0; i < MEET_LANDMARKS.length; i++) if (MEET_LANDMARKS[i].re.test(clean)) return MEET_LANDMARKS[i];
     return null;
   }
+  // ★2026-08-04 地名にならない語（自宅/実家/ホテル単体/宿/未定 等）＝ジオコードすると誤爆する→ピンを立てない
+  function isVagueAddr(s) {
+    var x = String(s || '').replace(/\s+/g, '');
+    if (!x) return true;
+    if (hasBanchi(x)) return false;                                   // 番地/条丁目があれば有効
+    if (/(駅|空港|港|公園|ホール|アリーナ|ドーム|スタジアム|大学|高校|学校|病院|市役所|区役所|役場|タワー|会館|神社|寺|城|温泉|水族館|美術館|博物館|球場|競技場)/.test(x)) return false; // 施設トークン=ジオコード可
+    if (/^(自宅|自宅前|自宅付近|実家|お?宅|うち|マイホーム|自分の家)/.test(x)) return true;                    // 自宅系(番地なし)
+    if (/^(宿|民泊|ホテル|旅館|ペンション|ゲストハウス|コンドミニアム|ヴィラ|ロッジ|Airbnb|エアビー|宿泊先|宿泊施設)(前|付近|周辺|内|の前|です|になります)?$/i.test(x)) return true; // 宿泊 一般名詞のみ(固有名なし)
+    if (/^(未定|未確定|要?相談|相談|確認中|調整中|検討中|不明|未入力|後(で|ほど)?(連絡|確認|入力)?(します)?|追って(連絡|確認)?|わからない|わかりません|なし|無し|特になし|ー+|―+|－+|—+|-+|\.+|・+)$/.test(x)) return true; // 未定・保留・不明
+    return false;
+  }
   // 住所→座標：リファラ制限キーはGeocoding RESTで弾かれるため地図JSのGeocoderを使用
-  function geocodeMeet(addr) {
-    if (!gmapReady || !addr) return;
+  // plat/plng = 顧客がマイページ地図でピン留めした座標(del_lat/del_lng)。あれば最優先で使う。
+  function geocodeMeet(addr, plat, plng) {
+    if (!gmapReady) return;
     const clean = cleanMeetAddr(addr);
-    if (!clean) return;
+    // ★1) 顧客がピン留めした座標が最優先（テキストが便名混じり/地名でなくても正確）
+    if (plat != null && plng != null && !isNaN(+plat) && !isNaN(+plng)) {
+      const _ck = 'coord:' + (+plat) + ',' + (+plng);
+      if (!(meetLoc && meetAddrDone === _ck)) { meetLoc = new google.maps.LatLng(+plat, +plng); meetAddrDone = _ck; meetAddrTrying = ''; }
+      if (!map) { renderMap(); return; }
+      placeMeet(meetLoc, clean || t('destPin')); return;
+    }
+    if (!addr || !clean) return;
+    // ★2) 地名として無効(自宅/ホテル単体/宿/未定 等)→ 誤爆位置にピンを立てない（住所テキストのみ表示）
+    if (isVagueAddr(clean)) { meetAddrTrying = ''; return; }
     { const _lm = matchLandmark(clean); if (_lm) {
         if (!(meetLoc && meetAddrDone === clean)) { meetLoc = new google.maps.LatLng(_lm.lat, _lm.lng); meetAddrDone = clean; meetAddrTrying = ''; }
         if (!map) { renderMap(); return; }
