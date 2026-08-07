@@ -1,7 +1,7 @@
 // Supabase Edge Function: damage-check-cron (店舗対応: spk / nha)
-// 出発の一定時間前に、割当車両の傷チェックURLを対象顧客へ自動送信（line-push経由）
-//   SPK: type=DEL / lead=30分 / tasks / reservations.lend_date
-//   NHA: 内容 in (PUB,DEL,来店) / lead=60分 / nha_tasks / nha_reservations.start_date
+// 出発日の朝8:00に、割当車両の傷チェックURLを対象顧客へ自動送信（line-push経由）※2026-07-08 8時統一(那覇/札幌)
+//   SPK: type=DEL / tasks / reservations.lend_date
+//   NHA: 内容 in (PUB,DEL,来店) / nha_tasks / nha_reservations.start_date
 // pg_cron が x-cron-secret + body{store} で5分毎に起動。KEYDROPは別LINE=除外。
 // deploy: functions deploy damage-check-cron --no-verify-jwt  (secrets: FUNC_SECRET, CRON_SECRET)
 
@@ -16,11 +16,13 @@ function json(o: unknown) { return new Response(JSON.stringify(o), { headers: { 
 const enc = encodeURIComponent;
 
 const STORES: Record<string, any> = {
-  spk: { tasks: "tasks", typeCol: "type", typeVals: ["DEL"], timeCol: "time", resvCol: "reservation_id", otaCol: "ota", assigneeCol: "assignee", cfg: "spk_line_config", sends: "spk_line_sends", doneCol: "done", defLead: 30 },
-  nha: { tasks: "nha_tasks", typeCol: "内容", typeVals: ["PUB", "DEL", "来店"], timeCol: "時間", resvCol: "予約番号", otaCol: "OTA", assigneeCol: "担当", cfg: "nha_line_config", sends: "nha_line_sends", doneCol: null, defLead: 60 },
+  spk: { tasks: "tasks", typeCol: "type", typeVals: ["DEL"], timeCol: "time", resvCol: "reservation_id", otaCol: "ota", assigneeCol: "assignee", cfg: "spk_line_config", sends: "spk_line_sends", doneCol: "done", resvTbl: "reservations", resvTimeCol: "lend_time", defLead: 30 },
+  nha: { tasks: "nha_tasks", typeCol: "内容", typeVals: ["PUB", "DEL", "来店"], timeCol: "時間", resvCol: "予約番号", otaCol: "OTA", assigneeCol: "担当", cfg: "nha_line_config", sends: "nha_line_sends", doneCol: null, resvTbl: "nha_reservations", resvTimeCol: "start_time", defLead: 60 },
 };
 // 無人貸出・乗り捨ては傷チェック自動送信の対象外（担当欄でスタッフが手動運用）。将来 全体で自動ONになっても、この2種は除外を維持する。
 const UNATTENDED_RE = /無人|乗り?捨/;
+// "HH:MM" → 分。時刻不明は null。
+function parseMin(v: unknown): number | null { const m = String(v || "").trim().match(/^(\d{1,2}):(\d{2})/); return m ? (+m[1] * 60 + +m[2]) : null; }
 
 Deno.serve(async (req) => {
   if (req.headers.get("x-cron-secret") !== CRON_SECRET) return new Response("unauthorized", { status: 401 });
@@ -36,19 +38,32 @@ Deno.serve(async (req) => {
   const today = nowJST.toISOString().slice(0, 10);
   const nowMin = nowJST.getUTCHours() * 60 + nowJST.getUTCMinutes();
 
-  // タスク取得（列名は日本語含むのでencode）
-  let q = `${S.tasks}?date=eq.${today}&${enc(S.typeCol)}=in.(${S.typeVals.map(enc).join(",")})&${enc(S.resvCol)}=not.is.null&select=${enc(S.resvCol)},${enc(S.timeCol)},assigned_vehicle,${enc(S.otaCol)},${enc(S.assigneeCol)}`;
-  if (S.doneCol) q += `&${enc(S.doneCol)}=eq.false`;
+  // タスク取得（列名は日本語含むのでencode）※done は SQL で除外せず JS で「未出発判定」に使う（早めにdone化された未出発便を救済）
+  let sel = `${enc(S.resvCol)},${enc(S.timeCol)},assigned_vehicle,${enc(S.otaCol)},${enc(S.assigneeCol)}`;
+  if (S.doneCol) sel += `,${enc(S.doneCol)}`;
+  const q = `${S.tasks}?date=eq.${today}&${enc(S.typeCol)}=in.(${S.typeVals.map(enc).join(",")})&${enc(S.resvCol)}=not.is.null&select=${sel}`;
   const tasks = await sbGet(q);
-  const cands = (tasks as any[]).map((t) => ({ resv: t[S.resvCol], time: t[S.timeCol], veh: t.assigned_vehicle, ota: t[S.otaCol], asg: t[S.assigneeCol] }))
-    .filter((t) => {
-      if (!t.resv || !t.veh) return false;
-      if (t.asg && UNATTENDED_RE.test(String(t.asg))) return false; // 無人貸出・乗り捨ては自動送信しない
-      if (!t.time || !/^\d{1,2}:\d{2}/.test(t.time)) return false;
-      const [h, m] = t.time.split(":").map(Number);
-      const until = (h * 60 + m) - nowMin;
-      return until > 0 && until <= lead;
-    });
+  const rawCands = (tasks as any[]).map((t) => ({ resv: t[S.resvCol], time: t[S.timeCol], veh: t.assigned_vehicle, ota: t[S.otaCol], asg: t[S.assigneeCol], done: S.doneCol ? (t[S.doneCol] === true) : false }));
+
+  // 予約の出発時刻（タスク時刻が空の時の補完＝出発済み判定に使う）
+  const rc0 = rawCands.filter((t) => t.resv && t.veh);
+  const lendMap: Record<string, string> = {};
+  const rlist0 = [...new Set(rc0.map((t) => t.resv))];
+  if (rlist0.length) {
+    const rr = await sbGet(`${S.resvTbl}?id=in.(${rlist0.map(enc).join(",")})&select=id,${enc(S.resvTimeCol)}`);
+    (rr as any[]).forEach((r) => { lendMap[r.id] = r[S.resvTimeCol]; });
+  }
+
+  const cands = rc0.filter((t) => {
+    if (t.asg && UNATTENDED_RE.test(String(t.asg))) return false; // 無人貸出・乗り捨ては自動送信しない（スタッフ手動運用）
+    // ★ 2026-07-08 オーナー確定：傷チェックは「出発日の朝8:00」で統一（那覇・札幌共通）。
+    if (nowMin < 480) return false;                                // 8:00前は送らない
+    const depMin = parseMin(t.time) ?? parseMin(lendMap[t.resv]);  // 出発時刻（タスク→予約の順で補完）
+    // 出発済み(done)は、出発時刻が判明していて かつ まだ出発前 の時だけ救済送信（早めにdone化された未出発便）。それ以外の出発済みは送らない（傷チェックは出発前案内）。
+    if (t.done) return depMin != null && nowMin < depMin;
+    if (depMin == null) return true;                               // 時刻不明でも当日便なら8時以降に送る
+    return depMin >= 480;                                          // 8時より前の早朝便=既出発は除外
+  });
   if (!cands.length) return json({ ok: true, store, candidates: 0 });
 
   const resvList = cands.map((t) => t.resv);
