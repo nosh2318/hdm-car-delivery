@@ -133,7 +133,8 @@ Deno.serve(async (req) => {
     childSeat: parseInt(String(p.childSeat ?? 0), 10) || 0,
     juniorSeat: parseInt(String(p.juniorSeat ?? 0), 10) || 0,
     del_place: String(p.del_place || ""), col_place: String(p.col_place || ""),
-    visit_type: p.visit_type ? String(p.visit_type) : "DEL", return_type: p.return_type ? String(p.return_type) : "COL",
+    // ★2026-07-15 根治(正本側で防ぐ): KEYDROPは配達専門。来店/返却を正本に書かせない。create-bookingと同じ穴だった(江副様=何度DELに直しても数分で来店に戻る復元書込の出所)。
+    visit_type: "DEL", return_type: "COL",
     requireStock: p.requireStock === true,
   } });
   if (!rpc) return json({ error: "予約処理に失敗しました" }, 500);
@@ -142,6 +143,10 @@ Deno.serve(async (req) => {
   const resId = rpc.reservationId;
   const amount = Math.round(Number(rpc.total || 0));
   if (amount <= 0) { await cancelPending(resId); return json({ error: "金額計算エラー" }, 400); }
+  // ★ ¥0決済ガード（根本防止）: 基本料金(classTotal)が¥0＝その日程・クラスの価格未設定。
+  //   総額(amount)はオプション分で>0になり得るので、必ず基本料金で判定して弾く（堀部様=base¥0+option¥2,200の再発防止）。
+  const baseAmt = Math.round(Number(rpc.classTotal || 0));
+  if (baseAmt <= 0) { await cancelPending(resId); return json({ error: "この日程・クラスは現在オンライン価格が設定されていないため、Webでのご予約を承れません。お手数ですがお問い合わせください。" }, 400); }
 
   // ── クーポン（任意）：読み取り検証で割引後の課金額を確定。確定記録(used_count++)は決済成功後＝失敗時に消費しない ──
   const couponCode = String(p.coupon || "").trim();

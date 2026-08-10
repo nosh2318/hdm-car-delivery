@@ -3765,6 +3765,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const basePrice = classTotal(v.type);
         const totalPrice = basePrice;
         state._calcPrice = { basePrice, totalPrice, days };
+        // ★ ¥0決済ガード：基本料金が¥0（＝その日程・クラスの価格未設定）なら決済に進ませない
+        const priceUnavailable = !(basePrice > 0);
 
         const startLabel = formatDateLabel(state.datetime.startDate);
         const endLabel = formatDateLabel(state.datetime.endDate);
@@ -3812,13 +3814,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
                 <div class="confirm-total">
                     <div class="confirm-total-label">${t('baseFee')}（${days}${t('daysSuffix')}）</div>
-                    ${promoOn()
+                    ${priceUnavailable
+                      ? `<div class="confirm-total-price" style="color:#dc2626;font-size:18px;">価格準備中</div>`
+                      : promoOn()
                       ? `<div style="font-size:14px;color:#999;text-decoration:line-through;font-weight:700;">¥${totalPrice.toLocaleString()}</div>
                          <div class="confirm-total-price" style="color:#dc2626;">¥${(totalPrice-promoOff(totalPrice)).toLocaleString()}<span style="font-size:12px;font-weight:400;color:#666;">（${t('taxIncl')}）</span></div>
                          <div style="margin-top:5px;font-size:12px;font-weight:800;color:#dc2626;">🎟 10%OFFクーポン適用中（決済時に確定）</div>`
                       : `<div class="confirm-total-price">¥${totalPrice.toLocaleString()}<span style="font-size:12px;font-weight:400;color:#666;">（${t('taxIncl')}）</span></div>`}
                 </div>
-                <button class="btn-primary" onclick="state.screen='options'; render();">${t('confirmProceed')}</button>
+                ${priceUnavailable
+                  ? `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-top:6px;color:#991b1b;font-size:13px;font-weight:700;line-height:1.6;">🙇 この日程・クラスは現在オンライン価格が設定されていないため、Webでのご予約を承れません。<br>お手数ですが公式サイトのお問い合わせよりご連絡ください。</div>
+                     <button class="btn-primary" disabled style="opacity:.5;cursor:not-allowed;background:#cbd5e1;">${t('confirmProceed')}</button>`
+                  : `<button class="btn-primary" onclick="state.screen='options'; render();">${t('confirmProceed')}</button>`}
             </div>
         `;
     }
