@@ -256,7 +256,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 <div class="toast" id="toast"></div>
 
 <script>
-const VER = "kd2.0 新カルテUI（KV/アコーディオン/受取ボタン・那覇沖縄KV・メール）";
+const VER = "kd2.1 免許証: 登録済みでも別の運転者を続けて追加できる（追加不可バグ根治・枚数積上げ）";
 const FN = "https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
 const SB_BASE = "https://ckrxttbnawkclshczsia.supabase.co";
 // 免許証 事前登録（Drive保存GAS＋license_uploads完了印）
@@ -281,11 +281,17 @@ async function uploadLicense(){
     }catch(e){}
   }
   if(ok>0){
-    try{ await fetch(SB_BASE+"/rest/v1/license_uploads?on_conflict=reservation_id",{ method:"POST", headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON, "Content-Type":"application/json", Prefer:"resolution=merge-duplicates,return=minimal" }, body:JSON.stringify({ reservation_id:r.id, store:((DATA&&DATA.store)||"spk"), cnt:ok, drivers:ok, last_at:new Date().toISOString() }) }); }catch(e){}
-    const box=document.getElementById('licBox'), dn=document.getElementById('licDone');
-    if(box) box.style.display="none"; if(dn) dn.style.display="block";
+    // 既存の登録枚数を読み、追加分を積み上げ（別セッションで運転者を追加しても枚数が減らない）
+    let prev=0; try{ const pr=await fetch(SB_BASE+"/rest/v1/license_uploads?reservation_id=eq."+encodeURIComponent(r.id)+"&select=cnt",{headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}}); const pj=await pr.json().catch(()=>[]); prev=(pj&&pj[0]&&+pj[0].cnt)||0; }catch(e){}
+    const total=prev+ok;
+    try{ await fetch(SB_BASE+"/rest/v1/license_uploads?on_conflict=reservation_id",{ method:"POST", headers:{ apikey:SB_ANON, Authorization:"Bearer "+SB_ANON, "Content-Type":"application/json", Prefer:"resolution=merge-duplicates,return=minimal" }, body:JSON.stringify({ reservation_id:r.id, store:((DATA&&DATA.store)||"spk"), cnt:total, drivers:total, last_at:new Date().toISOString() }) }); }catch(e){}
+    // 登録済み表示を出しつつ、入力欄は残す＝別の運転者を続けて追加できる（追加不可バグの根治）
+    const dn=document.getElementById('licDone');
+    if(dn){ dn.style.display="block"; dn.innerHTML=t('lic_registered')+' <span style="font-weight:700">（'+total+'枚）</span><div style="font-weight:600;font-size:12px;margin-top:3px;color:#166534">'+t('lic_readd')+'</div>'; }
+    if(inp) inp.value="";
+    btn.disabled=false; btn.textContent=t('lic_upload'); msg.style.color="#0a7d34"; msg.textContent=ok+"件を登録しました。追加の運転者があれば続けて登録できます。";
   }else{
-    btn.disabled=false; btn.textContent="この内容で登録する"; msg.style.color="#c00"; msg.textContent="送信に失敗しました。通信環境をご確認のうえ再度お試しください。";
+    btn.disabled=false; btn.textContent=t('lic_upload'); msg.style.color="#c00"; msg.textContent="送信に失敗しました。通信環境をご確認のうえ再度お試しください。";
   }
 }
 const KD_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
@@ -985,8 +991,8 @@ async function refreshLicState(rid){
     const res=await fetch(SB_BASE+"/rest/v1/license_uploads?reservation_id=eq."+encodeURIComponent(rid)+"&select=cnt",{headers:{apikey:SB_ANON,Authorization:"Bearer "+SB_ANON}});
     const j=await res.json(); cnt=(j&&j[0]&&j[0].cnt)||0;
   }catch(e){ return; } // 通信失敗時はアラート状態を変えない（誤表示防止）
-  const al=document.getElementById('licAlert'), box=document.getElementById('licBox'), dn=document.getElementById('licDone');
-  if(cnt>0){ if(al)al.style.display='none'; if(box)box.style.display='none'; if(dn)dn.style.display='block'; }
+  const al=document.getElementById('licAlert'), dn=document.getElementById('licDone');
+  if(cnt>0){ if(al)al.style.display='none'; if(dn){dn.style.display='block'; dn.innerHTML=t('lic_registered')+' <span style="font-weight:700">（'+cnt+'枚）</span><div style="font-weight:600;font-size:12px;margin-top:3px;color:#166534">'+t('lic_readd')+'</div>';} } // 登録済みでも入力欄(licBox)は残す＝別の運転者を追加できる
   else { if(al)al.style.display='flex'; }
 }
 
