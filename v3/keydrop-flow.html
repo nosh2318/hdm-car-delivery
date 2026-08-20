@@ -361,8 +361,8 @@ select.fld:focus{box-shadow:0 0 0 3px rgba(250,190,0,.35)}
   <div id="stepOptions" style="display:none">
     <div class="sec"><h2 data-i18n="chosen_head">🚙 選択中の車両</h2><div class="card" id="chosenCar"></div></div>
     <div class="sec"><h2 data-i18n="opt_head">🧷 オプション</h2><div class="card optset" id="optset">
-      <div class="opt" id="optChild"><span class="ic">🪑</span><div><div class="nm" data-i18n="opt_child">チャイルドシート</div><div class="ds" data-i18n="opt_child_d">乳児・幼児用・最大5個</div></div><span class="pr" data-i18n="opt_per">¥550 / 個・日</span><div class="qty"><button onclick="optQty('child',-1)">−</button><span class="qn" id="qChild">0</span><button onclick="optQty('child',1)">＋</button></div></div>
-      <div class="opt" id="optJunior"><span class="ic">🧒</span><div><div class="nm" data-i18n="opt_junior">ジュニアシート</div><div class="ds" data-i18n="opt_junior_d">学童用・最大5個</div></div><span class="pr" data-i18n="opt_per">¥550 / 個・日</span><div class="qty"><button onclick="optQty('junior',-1)">−</button><span class="qn" id="qJunior">0</span><button onclick="optQty('junior',1)">＋</button></div></div>
+      <div class="opt" id="optChild"><span class="ic">🪑</span><div><div class="nm" data-i18n="opt_child">チャイルドシート</div><div class="ds" data-i18n="opt_child_d">乳児・幼児用・最大5個</div></div><span class="pr">¥1,000 / 個</span><div class="qty"><button onclick="optQty('child',-1)">−</button><span class="qn" id="qChild">0</span><button onclick="optQty('child',1)">＋</button></div></div>
+      <div class="opt" id="optJunior"><span class="ic">🧒</span><div><div class="nm" data-i18n="opt_junior">ジュニアシート</div><div class="ds" data-i18n="opt_junior_d">学童用・最大5個</div></div><span class="pr">¥500 / 個</span><div class="qty"><button onclick="optQty('junior',-1)">−</button><span class="qn" id="qJunior">0</span><button onclick="optQty('junior',1)">＋</button></div></div>
     </div></div>
     <div class="sec"><h2 data-i18n="ins_head">🛡 補償プラン</h2><div class="ins">
       <div class="insopt" data-ins="basic"><div class="t"><span data-i18n="ins_basic">基本補償</span><span data-i18n="ins_free">無料</span></div><div class="d" data-i18n="ins_basic_d">対人・対物無制限／車両保証（免責15万円）／人身傷害3,000万円</div></div>
@@ -487,6 +487,14 @@ var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 function sbView(t){return (area==='naha'&&/^public_.*_v$/.test(t))?t.replace(/_v$/,'_nha_v'):t;}
 function sbGet(t,q){return fetch(SB_URL+'/rest/v1/'+sbView(t)+'?'+(q||'')+'&select=*',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});}
 function ymList(a,b){var out=[];if(!a||!b)return out;var s=new Date(a.slice(0,7)+'-01'),e=new Date(b.slice(0,7)+'-01');var g=0;while(s<=e&&g<24){out.push(s.getFullYear()+'-'+('0'+(s.getMonth()+1)).slice(-2));s.setMonth(s.getMonth()+1);g++;}return out;}
+var PRICE_DATA=null;
+function localYMD(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function tierIndexOf(dateStr){var def=(PRICE_DATA&&PRICE_DATA.default!=null)?PRICE_DATA.default:1;if(!PRICE_DATA||!PRICE_DATA.presets)return def;var md=(dateStr||'').slice(5);for(var i=0;i<PRICE_DATA.presets.length;i++){var pp=PRICE_DATA.presets[i];if(!pp.start||!pp.end)continue;var inR=(pp.start<=pp.end)?(md>=pp.start&&md<=pp.end):(md>=pp.start||md<=pp.end);if(inR)return pp.tier;}return def;}
+function priceOf(type){if(PRICE_DATA&&PRICE_DATA.prices&&PRICE_DATA.prices[type]){var di=(PRICE_DATA.default!=null?PRICE_DATA.default:1);return PRICE_DATA.prices[type][di]||0;}return (CLS[type]&&CLS[type].p)||0;}
+function classTotal(type){var days=daysCount();if(PRICE_DATA&&PRICE_DATA.prices&&PRICE_DATA.prices[type]){if(!pD)return priceOf(type)*days;var total=0;var base=new Date(pD+'T00:00:00');for(var i=0;i<days&&i<120;i++){var dd=new Date(base);dd.setDate(dd.getDate()+i);total+=(PRICE_DATA.prices[type][tierIndexOf(localYMD(dd))]||0);}return total;}return ((CLS[type]&&CLS[type].p)||0)*days;}
+function insTotal(){return (insPrice[state.ins]||0)*daysCount();}
+function subtotalBeforeCoupon(){if(!state.cls)return 0;return classTotal(state.cls)+insTotal()+optTotal();}
+function loadPrices(){sbGet('public_class_price_v','limit=1').then(function(rows){try{var raw=rows&&rows[0]&&rows[0].value;if(!raw)return;var v=(typeof raw==='string')?JSON.parse(raw):raw;if(v&&v.prices){PRICE_DATA=v;try{renderV();}catch(e){}try{calc();}catch(e){}try{if(step==='confirm')renderConfirm();}catch(e){}}}catch(e){}});}
 function fetchClasses(){
   sbGet('public_keydrop_classes_v','limit=1').then(function(rows){
     try{
@@ -658,7 +666,7 @@ function renderV(){
   var visible=ORDER.filter(function(k){return classAvail(k);});
   document.getElementById('vgrid').innerHTML=ORDER.map(function(k){var c=CLS[k];var av=classAvail(k);return (
     '<div class="vc'+(state.cls===k?' on':'')+(av?'':' soldout')+'" data-k="'+k+'"><div class="pic">'+carImg(k)+'<span class="clschip">'+kdCls(c.l)+'</span>'+''+(av?'<span class="check">✓</span>':'<span class="soldbadge">'+T('fl_full')+'</span>')+'</div>'+
-    '<div class="bd"><div class="nm">'+kdVeh(c.v)+'</div><div class="pr"><b>¥'+c.p.toLocaleString()+'</b><small>'+T('perday')+'</small></div><div class="sp">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</div>'+
+    '<div class="bd"><div class="nm">'+kdVeh(c.v)+'</div><div class="pr"><b>¥'+priceOf(k).toLocaleString()+'</b><small>'+T('perday')+'</small></div><div class="sp">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</div>'+
     '<div class="vbtns">'+(av?'<button class="vpick" onclick="decideV(\''+k+'\')">'+(state.cls===k?T('fl_decided'):T('fl_decide'))+'</button>':'<div class="soldmsg">'+T('fl_nostock')+'</div>')+
     '<button class="vdetail" onclick="openDetail(\''+k+'\')">'+T('fl_detail')+'</button></div></div></div>');
   }).join('');
@@ -699,7 +707,7 @@ function busTable(){
 }
 document.querySelectorAll('.insopt').forEach(function(o){o.classList.toggle('on',o.getAttribute('data-ins')===state.ins);o.addEventListener('click',function(){document.querySelectorAll('.insopt').forEach(function(x){x.classList.remove('on')});o.classList.add('on');state.ins=o.getAttribute('data-ins');calc();});});
 // オプション：シートは各最大5個の数量選択／USBはトグル ＋メリハリ
-var SEAT_P=550,SEAT_MAX=5;
+var SEAT_MAX=5;var SEAT_CHILD=1000,SEAT_JUNIOR=500;
 var optQ={child:0,junior:0,usb:false};
 function optQty(key,d){
   optQ[key]=Math.max(0,Math.min(SEAT_MAX,(optQ[key]||0)+d));
@@ -709,14 +717,14 @@ function optQty(key,d){
 }
 function toggleOpt(el){el.classList.toggle('on');optQ.usb=el.classList.contains('on');refreshOpt();}
 function refreshOpt(){var os=document.getElementById('optset');var has=(optQ.child>0||optQ.junior>0||optQ.usb);os.classList.toggle('hassel',has);calc();}
-function optTotal(){return (optQ.child+optQ.junior)*SEAT_P;}
+function optTotal(){return (optQ.child||0)*SEAT_CHILD+(optQ.junior||0)*SEAT_JUNIOR;}
 var GRANDLBL={ja:'合計',en:'Total',zh:'總計',ko:'합계'};
 function updCtaTotal(){
-  var base=state.cls&&CLS[state.cls]?CLS[state.cls].p:0;
-  var perDay=base+(insPrice[state.ins]||0)+optTotal();
+  var base=state.cls?priceOf(state.cls):0;
+  var perDay=base+(insPrice[state.ins]||0);
   var lbl=document.getElementById('ctaTotLbl');var pr=document.getElementById('totPr');if(!pr)return;
   if(step==='confirm'||step==='payment'){
-    var dys=daysCount();var subtotal=perDay*dys;var disc=(typeof couponPct!=='undefined'&&couponPct>0)?Math.round(subtotal*couponPct/100):0;var total=subtotal-disc;
+    var subtotal=subtotalBeforeCoupon();var disc=(typeof couponDiscount!=='undefined'&&couponDiscount>0)?Math.min(couponDiscount,subtotal):0;var total=subtotal-disc;
     if(lbl)lbl.textContent=(GRANDLBL[(window.hdmLang?window.hdmLang():'ja')]||GRANDLBL.ja);
     pr.textContent=base?('¥'+total.toLocaleString()):'¥—';
   }else{
@@ -800,20 +808,22 @@ async function payWithCard(){
   }catch(e){if(errEl){errEl.style.display='block';errEl.textContent=T('pc_card_fail');}reEnable();return;}
   try{
     var c=CLS[state.cls]||{v:''};
-    var payload={token:token,store:(area==='sapporo'?'spk':'nha'),
+    var INSMAP={basic:'none',cdw:'cdw',noc:'pack'};
+    var _dl=(loc&&loc.del)||{},_cl=(colSame?_dl:((loc&&loc.col)||{}));
+    var payload={token:token,store:(area==='sapporo'?'spk':'nha'),coupon:couponCode||'',
       vehicleClass:state.cls,vehicleModel:c.v||'',
       lend_date:pD,return_date:rD,lend_time:pT,return_time:rT,
       name:(document.getElementById('fName')||{}).value||'',
       mail:(document.getElementById('fEmail')||{}).value||'',
       tel:(document.getElementById('fPhone')||{}).value||'',
-      people:1,insuranceType:state.ins,
+      people:1,insuranceType:(INSMAP[state.ins]||'none'),
       childSeat:(typeof optQ!=='undefined'?optQ.child:0)||0,
       juniorSeat:(typeof optQ!=='undefined'?optQ.junior:0)||0,
-      receiveMethod:method,
-      del_place:(loc&&loc.del&&loc.del.label)||'',col_place:(loc&&loc.col&&loc.col.label)||(loc&&loc.del&&loc.del.label)||'',
-      del_lat:(loc&&loc.del)?loc.del.lat:null,del_lng:(loc&&loc.del)?loc.del.lng:null,
-      col_lat:(loc&&loc.col)?loc.col.lat:((loc&&loc.del)?loc.del.lat:null),col_lng:(loc&&loc.col)?loc.col.lng:((loc&&loc.del)?loc.del.lng:null)};
-    var res=await fetch(SUPABASE_URL+'/functions/v1/official-pay',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      del_place:(_dl.label||_dl.addr||''),col_place:(_cl.label||_cl.addr||_dl.label||_dl.addr||''),
+      del_place_full:(_dl.addr||_dl.label||''),col_place_full:(_cl.addr||_cl.label||_dl.addr||_dl.label||''),
+      del_lat:(_dl.lat!=null?_dl.lat:null),del_lng:(_dl.lng!=null?_dl.lng:null),
+      col_lat:(_cl.lat!=null?_cl.lat:(_dl.lat!=null?_dl.lat:null)),col_lng:(_cl.lng!=null?_cl.lng:(_dl.lng!=null?_dl.lng:null))};
+    var res=await fetch(SUPABASE_URL+'/functions/v1/keydrop-pay',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});
     var data=await res.json().catch(function(){return {};});
     if(!res.ok||!data.ok){if(errEl){errEl.style.display='block';errEl.textContent=(data&&data.error)||T('pc_pay_fail');}reEnable();return;}
     state._resId=data.reservationId;step='done';applyStep();
@@ -847,26 +857,31 @@ function loadClause(){var box=document.getElementById('clauseBox');if(!box)retur
 }
 // 確認画面から受取/お届け先の選択に戻る（選択済みは保持）
 function editRecv(){step='select';applyStep();setTimeout(function(){var ms=document.getElementById('methodSec');if(ms)ms.scrollIntoView({behavior:'smooth',block:'start'});},90);}
-var couponPct=0,couponCode='';
+var couponDiscount=0,couponCode='';
 var CP_I18N={
- ja:{coupon_head:'クーポン',cp_ph:'クーポンコードを入力',cp_apply:'適用',cp_hint:'\u203b お持ちのクーポンコードを入力してください（例：KEYDROP10）。',cf_coupon:'クーポン割引',cp_ok:'\u2705 クーポンを適用しました（{pct}% OFF）',cp_ng:'\u26a0\ufe0f 有効なクーポンコードではありません。'},
- en:{coupon_head:'Coupon',cp_ph:'Enter coupon code',cp_apply:'Apply',cp_hint:'* Enter your coupon code (e.g. KEYDROP10).',cf_coupon:'Coupon discount',cp_ok:'\u2705 Coupon applied ({pct}% OFF)',cp_ng:'\u26a0\ufe0f That is not a valid coupon code.'},
- zh:{coupon_head:'優惠券',cp_ph:'輸入優惠券代碼',cp_apply:'套用',cp_hint:'\u203b 請輸入您的優惠券代碼（例：KEYDROP10）。',cf_coupon:'優惠券折扣',cp_ok:'\u2705 已套用優惠券（{pct}% OFF）',cp_ng:'\u26a0\ufe0f 並非有效的優惠券代碼。'},
- ko:{coupon_head:'쿠폰',cp_ph:'쿠폰 코드 입력',cp_apply:'적용',cp_hint:'\u203b 보유하신 쿠폰 코드를 입력하세요(예: KEYDROP10).',cf_coupon:'쿠폰 할인',cp_ok:'\u2705 쿠폰이 적용되었습니다({pct}% OFF)',cp_ng:'\u26a0\ufe0f 유효한 쿠폰 코드가 아닙니다.'}
+ ja:{coupon_head:'クーポン',cp_ph:'クーポンコードを入力',cp_apply:'適用',cp_hint:'\u203b お持ちのクーポンコードを入力してください（例：KEYDROP10）。',cf_coupon:'クーポン割引',cp_ok:'\u2705 クーポンを適用しました',cp_ok2:'\u2705 クーポンを適用しました（-{amt}）',cp_ng:'\u26a0\ufe0f 有効なクーポンコードではありません。',cp_hint2:'\u203b お持ちのクーポンコードを入力してください。'},
+ en:{coupon_head:'Coupon',cp_ph:'Enter coupon code',cp_apply:'Apply',cp_hint:'* Enter your coupon code (e.g. KEYDROP10).',cf_coupon:'Coupon discount',cp_ok:'\u2705 Coupon applied',cp_ok2:'\u2705 Coupon applied (-{amt})',cp_ng:'\u26a0\ufe0f That is not a valid coupon code.',cp_hint2:'* Enter your coupon code.'},
+ zh:{coupon_head:'優惠券',cp_ph:'輸入優惠券代碼',cp_apply:'套用',cp_hint:'\u203b 請輸入您的優惠券代碼（例：KEYDROP10）。',cf_coupon:'優惠券折扣',cp_ok:'\u2705 已套用優惠券',cp_ok2:'\u2705 已套用優惠券（-{amt}）',cp_ng:'\u26a0\ufe0f 並非有效的優惠券代碼。',cp_hint2:'\u203b 請輸入您的優惠券代碼。'},
+ ko:{coupon_head:'쿠폰',cp_ph:'쿠폰 코드 입력',cp_apply:'적용',cp_hint:'\u203b 보유하신 쿠폰 코드를 입력하세요(예: KEYDROP10).',cf_coupon:'쿠폰 할인',cp_ok:'\u2705 쿠폰이 적용되었습니다',cp_ok2:'\u2705 쿠폰이 적용되었습니다(-{amt})',cp_ng:'\u26a0\ufe0f 유효한 쿠폰 코드가 아닙니다.',cp_hint2:'\u203b 보유하신 쿠폰 코드를 입력하세요.'}
 };
 function cpT(k){var d=CP_I18N[(window.hdmLang?window.hdmLang():'ja')]||CP_I18N.ja;return (d[k]!=null?d[k]:(CP_I18N.ja[k]||k));}
-function cpApply(){document.querySelectorAll('[data-cp]').forEach(function(el){el.textContent=cpT(el.getAttribute('data-cp'));});var ci=document.getElementById('couponInput');if(ci)ci.setAttribute('placeholder',cpT('cp_ph'));var m=document.getElementById('couponMsg');if(m&&couponPct>0)m.textContent=cpT('cp_ok').replace('{pct}',couponPct);}
-var COUPONS={'KEYDROP10':10,'NSMESN-02318':10,'WELCOME10':10,'OKINAWA10':10,'SAPPORO10':10};
-function applyCoupon(){var code=((document.getElementById('couponInput')||{}).value||'').trim().toUpperCase();var pct=COUPONS[code]||0;var m=document.getElementById('couponMsg');
-  if(pct>0){couponPct=pct;couponCode=code;if(m){m.style.color='#0e9f50';m.textContent=cpT('cp_ok').replace('{pct}',pct);}}
-  else{couponPct=0;couponCode='';if(m){m.style.color='#c0392b';m.textContent=cpT('cp_ng');}}
-  try{renderConfirm();}catch(e){}try{updCtaTotal();}catch(e){}
+function cpApply(){document.querySelectorAll('[data-cp]').forEach(function(el){el.textContent=cpT(el.getAttribute('data-cp'));});var ci=document.getElementById('couponInput');if(ci)ci.setAttribute('placeholder',cpT('cp_ph'));var m=document.getElementById('couponMsg');if(m&&couponDiscount>0)m.textContent=cpT('cp_ok2').replace('{amt}','¥'+couponDiscount.toLocaleString());}
+function applyCoupon(){var code=((document.getElementById('couponInput')||{}).value||'').trim().toUpperCase();var m=document.getElementById('couponMsg');
+  if(!code){couponDiscount=0;couponCode='';if(m)m.textContent='';try{renderConfirm();}catch(e){}try{updCtaTotal();}catch(e){}return;}
+  var subtotal=subtotalBeforeCoupon();
+  var email=(document.getElementById('fEmail')||{}).value||'';var store=(area==='sapporo'?'spk':'nha');
+  if(m){m.style.color='#5a6b85';m.textContent='...';}
+  fetch(SB_URL+'/rest/v1/rpc/keydrop_check_coupon',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_code:code,p_store:store,p_amount:subtotal,p_email:email})}).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok){couponDiscount=Math.max(0,Math.round(Number(d.discount||0)));couponCode=code;if(m){m.style.color='#0e9f50';m.textContent=cpT('cp_ok2').replace('{amt}','¥'+couponDiscount.toLocaleString());}}
+    else{couponDiscount=0;couponCode='';if(m){m.style.color='#c0392b';m.textContent=cpT('cp_ng');}}
+    try{renderConfirm();}catch(e){}try{updCtaTotal();}catch(e){}
+  }).catch(function(){couponDiscount=0;couponCode='';if(m){m.style.color='#c0392b';m.textContent=cpT('cp_ng');}try{renderConfirm();}catch(e){}try{updCtaTotal();}catch(e){}});
 }
 function renderConfirm(){
   var c=CLS[state.cls]||{l:'',v:'',p:0};var dys=daysCount();
   var optLines=[];if(optQ.child>0)optLines.push(T('opt_child')+T('cf_x')+optQ.child);if(optQ.junior>0)optLines.push(T('opt_junior')+T('cf_x')+optQ.junior);if(optQ.usb)optLines.push(T('opt_usb'));
   var insName={basic:T('ins_basic'),cdw:T('ins_cdw'),noc:T('ins_noc')}[state.ins];
-  var perDay=c.p+(insPrice[state.ins]||0)+optTotal();var subtotal=perDay*dys;var disc=couponPct>0?Math.round(subtotal*couponPct/100):0;var total=subtotal-disc;
+  var baseTot=classTotal(state.cls);var insTot=(insPrice[state.ins]||0)*dys;var seatTot=optTotal();var subtotal=baseTot+insTot+seatTot;var disc=(couponDiscount>0)?Math.min(couponDiscount,subtotal):0;var total=subtotal-disc;
   var nm=(document.getElementById('fName')||{}).value||'';var kn=(document.getElementById('fKana')||{}).value||'';
   var ph=(document.getElementById('fPhone')||{}).value||'';var em=(document.getElementById('fEmail')||{}).value||'';
   var drv=document.getElementById('fDriverDiff').checked?((document.getElementById('dName')||{}).value||''):'';
@@ -880,7 +895,7 @@ function renderConfirm(){
     row(T('cf_booker'),(nm||'-')+'　'+(kn?'（'+kn+'）':''))+
     row(T('cf_contact'),(ph||'-')+'　'+(em||'-'))+
     (drv?row(T('cf_driver'),drv):'')+
-    (disc>0?row(cpT('cf_coupon'),'<span style="color:#0e9f50;font-weight:800">\u2212¥'+disc.toLocaleString()+'</span>　'+couponCode+'（'+couponPct+'% OFF）'):'')+row(T('cf_price'),'<b>¥'+total.toLocaleString()+'</b>（¥'+perDay.toLocaleString()+' × '+dys+T('cf_days')+(disc>0?' \u2212 '+couponPct+'%':'')+'）');
+    (disc>0?row(cpT('cf_coupon'),'<span style="color:#0e9f50;font-weight:800">\u2212¥'+disc.toLocaleString()+'</span>　'+couponCode):'')+row(T('cf_price'),'<b>¥'+total.toLocaleString()+'</b><div style="font-size:11px;color:#5a6b85;font-weight:600;margin-top:3px">'+T('cf_car')+' ¥'+baseTot.toLocaleString()+' ／ '+T('cf_ins')+' ¥'+insTot.toLocaleString()+(seatTot>0?' ／ '+T('cf_opt')+' ¥'+seatTot.toLocaleString():'')+'（'+dys+T('cf_days_unit')+'）</div>');
 }
 function renderDone(){
   var rno='HDM-'+(area==='sapporo'?'S':'N')+String(Math.floor(100000+Math.random()*899999));
@@ -896,7 +911,7 @@ function renderDone(){
   var one=ADS.map(function(a){return '<span>'+a+'</span>';}).join('');
   el.innerHTML=one+one; // 2連結でシームレスループ
 })();
-renderV();calc();applyStep();fetchAvail();fetchClasses();try{cpApply();}catch(e){}
+renderV();calc();applyStep();fetchAvail();fetchClasses();loadPrices();try{cpApply();}catch(e){}
 // 言語切替時：動的生成部を再描画
 window.hdmOnLang=function(){try{kdLangActive();}catch(e){}try{cpApply();}catch(e){}try{if(typeof step!=='undefined'&&step==='confirm')loadClause();}catch(e){}try{var _df=document.getElementById('delivFrame');if(_df&&_df.contentWindow)_df.contentWindow.postMessage({type:'kdlang',lang:(window.hdmLang?window.hdmLang():'ja')},'*');}catch(e){}try{renderMethod();}catch(e){}try{renderV();}catch(e){}try{applyStep();}catch(e){}try{if(step==='confirm')renderConfirm();}catch(e){}try{if(step==='done')renderDone();}catch(e){}};
 </script>
