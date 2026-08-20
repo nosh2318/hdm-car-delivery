@@ -124,6 +124,17 @@ Deno.serve(async (req) => {
 
   let people = parseInt(String(p.people ?? 1), 10); if (isNaN(people) || people < 1) people = 1; if (people > 8) people = 8;
 
+  // ★2026-08-20 根治(正本側で防ぐ): KEYDROPは空港エリアへの配達/回収 不可。
+  //   クライアントのエリア判定をすり抜けても、決済前にサーバで弾く（pending予約も作らない）。
+  //   今日の実害=KDN-2608-0006-NMS 回収=那覇空港P1駐車場を選択→¥24,255決済→手動返金。座標nullで距離判定が効かずテキストで通過した。
+  {
+    const AIRPORT_RE = /空港|airport|エアポート|鏡水|新千歳|千歳空港/i;
+    const places = [p.del_place, p.col_place, p.del_place_full, p.col_place_full].map((x: any) => String(x || ""));
+    if (places.some((s) => AIRPORT_RE.test(s))) {
+      return json({ error: "空港エリアへのお届け・回収は承っておりません。市内の場所をご指定ください。", airportArea: true }, 400);
+    }
+  }
+
   // 予約作成＋総額確定（サーバ計算・店舗別RPC）
   const rpc = await sbRpc(M.rpc, { p: {
     vehicleClass: cls, vehicleModel: String(p.vehicleModel || ""),
