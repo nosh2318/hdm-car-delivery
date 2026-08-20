@@ -828,7 +828,7 @@ function vForm(showErr){
   var er=document.getElementById('formError');if(er){er.classList.toggle('on',!ok&&!!showErr);if(!ok&&showErr)er.textContent='必須項目をご入力ください（メールは形式もご確認ください）。';}
   return ok;
 }
-function daysCount(){if(!pD||!rD)return 1;var _t=function(s){return (s&&/^\d{1,2}:\d{2}$/.test(s))?(s.length===4?'0'+s:s):'00:00';};var a=new Date(pD+'T'+_t(pT)+':00'),b=new Date(rD+'T'+_t(rT)+':00');var ms=b-a;if(isNaN(ms)||ms<=0){var d0=Math.round((new Date(rD)-new Date(pD))/86400000);return d0>0?d0:1;}var d=Math.ceil(ms/86400000);return d>0?d:1;}
+function daysCount(){if(!pD||!rD)return 1;var s=new Date(pD+'T00:00:00'),e=new Date(rD+'T00:00:00');var diff=Math.round((e-s)/86400000);if(isNaN(diff))return 1;return Math.max(1,diff+1);}
 function methodDetail(){
   if(method==='delivery'){var _fmt=function(o){if(!o)return T('md_unset');var lb=o.label||o.addr||'';var ad=(o.addr&&o.addr!==o.label)?('（'+o.addr+'）'):'';return lb+ad;};var d=_fmt(loc.del);var c=colSame?T('md_same'):_fmt(loc.col);return T('md_del')+d+T('md_col')+c;}
   if(method==='airport'){var s=document.querySelectorAll('#methodCard select');var go=s[0]?s[0].value:'',rt=s[1]?s[1].value:'';return T('md_air')+(go||'-')+T('md_air2')+(rt||'-');}
