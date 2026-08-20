@@ -271,7 +271,7 @@ footer a{color:var(--mut);text-decoration:none;margin:0 8px;white-space:nowrap;d
   </div>
   <div class="canote" id="canote" style="display:none"></div>
   <div class="cagrid" id="cagrid" style="display:none"></div>
-  <div class="camore" id="camore" style="display:none"><a href="official-vehicles.html" data-i18n="car_more">全車種・料金を見る →</a></div>
+  <div class="camore" id="camore" style="display:none"></div>
 </section>
 
 <!-- NEWS 運営からのお知らせ -->
@@ -357,7 +357,7 @@ var STORE={
 function setCar(a){
   // 店舗未選択(空)なら案内のみ表示。選択時はその店舗の実車種を表示
   var sel=(a==='naha'||a==='sapporo');
-  ['canote','cagrid','camore'].forEach(function(id){document.getElementById(id).style.display=sel?'':'none';});
+  ['canote','cagrid'].forEach(function(id){document.getElementById(id).style.display=sel?'':'none';});
   if(!sel)return;var st=STORE[a];
   var T=(window.hdmT||function(k){return k;});
   document.getElementById('canote').textContent=kdT('note_'+a);
