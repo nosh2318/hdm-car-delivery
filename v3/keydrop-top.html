@@ -220,8 +220,8 @@ footer a{color:var(--mut);text-decoration:none;margin:0 8px;white-space:nowrap;d
   <div class="menu-section"><div class="menu-section-title">サービス</div>
     <a class="menu-item" href="https://keydrop.jp/keydrop-about.html" target="_blank" rel="noopener"><span class="menu-item-icon">🔑</span>KEYDROPとは？<span class="menu-item-arrow">→</span></a>
     <a class="menu-item" href="https://keydrop.jp/guide.html" target="_blank" rel="noopener"><span class="menu-item-icon">📖</span>ご利用方法<span class="menu-item-arrow">→</span></a>
-    <a class="menu-item" href="https://keydrop.jp/vehicles.html?area=naha" target="_blank" rel="noopener"><span class="menu-item-icon">🚗</span>車両と料金（那覇）<span class="menu-item-arrow">→</span></a>
-    <a class="menu-item" href="https://keydrop.jp/vehicles.html?area=sapporo" target="_blank" rel="noopener"><span class="menu-item-icon">🚗</span>車両と料金（札幌）<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/vehicles.html?area=naha" target="_blank" rel="noopener"><span class="menu-item-icon">🚗</span>ラインナップ（那覇）<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/vehicles.html?area=sapporo" target="_blank" rel="noopener"><span class="menu-item-icon">🚗</span>ラインナップ（札幌）<span class="menu-item-arrow">→</span></a>
     <a class="menu-item" href="keydrop-insurance.html" target="_blank" rel="noopener"><span class="menu-item-icon">🛡️</span>保険プラン一覧<span class="menu-item-arrow">→</span></a>
   </div>
   <div class="menu-section"><div class="menu-section-title">サポート</div>
@@ -266,7 +266,7 @@ footer a{color:var(--mut);text-decoration:none;margin:0 8px;white-space:nowrap;d
 </div>
 
 <!-- CAR TYPE -->
-<section class="cars" id="cars"><div class="wrap"><div class="shead"><div class="en cap">CAR TYPE</div><div class="jp" data-i18n="cars_jp">取扱車種・料金</div></div>
+<section class="cars" id="cars"><div class="wrap"><div class="shead"><div class="en cap">LINE UP</div><div class="jp" data-i18n="cars_jp">ラインナップ</div></div>
   <div class="cttabs" id="cttabs"><button type="button" class="cttab on" data-a="naha" onclick="ctTab('naha')" data-kd="tab_naha">沖縄・那覇エリア</button><button type="button" class="cttab" data-a="sapporo" onclick="ctTab('sapporo')" data-kd="tab_sapporo">北海道・札幌エリア</button></div>
   </div>
   <div class="canote" id="canote" style="display:none"></div>
@@ -281,7 +281,7 @@ footer a{color:var(--mut);text-decoration:none;margin:0 8px;white-space:nowrap;d
 
 <div class="pc-footer">
   <div style="margin-bottom:12px">
-    <a href="https://keydrop.jp/vehicles.html" target="_blank" rel="noopener">車両と料金</a>
+    <a href="https://keydrop.jp/vehicles.html" target="_blank" rel="noopener">ラインナップ</a>
     <a href="keydrop-insurance.html" target="_blank" rel="noopener">保険プラン</a>
     <a href="https://keydrop.jp/faq.html" target="_blank" rel="noopener">FAQ</a>
     <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">お問い合わせ</a>
@@ -364,7 +364,7 @@ function setCar(a){
   document.getElementById('cagrid').innerHTML=st.order.map(function(k){var c=st.cls[k];return (
     '<div class="cacar"><div class="pic">'+carImg(k,a)+'</div>'+
     '<div class="bd"><div class="nm2"><span class="clsbadge">'+kdCls(c.l)+'</span><span class="nmtx">'+kdVeh(c.v)+'</span></div><div class="spec">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</div>'+
-    '<div class="pr2"><b>¥'+c.p.toLocaleString()+'</b><small>'+T('perday')+'</small></div></div></div>');
+    '</div></div>');
   }).join('');
 }
 // CAR TYPE 店舗タブ切替（検索フォームと独立して直接ブラウズ可）

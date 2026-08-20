@@ -16,7 +16,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1a1a1a">
-<title>車両と料金｜KEYDROP カーデリバリー</title>
+<title>ラインナップ｜KEYDROP カーデリバリー</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Helvetica Neue',sans-serif;background:#f5f6f8;color:#1a1a1a;line-height:1.7;padding-bottom:60px}
@@ -87,12 +87,12 @@ const IMG={A:'class_A',A2:'class_A',B:'class_B',B2:'class_B2',C:'class_C',D:'cla
 // ── i18n（静的ラベル＋クラス名。装備・車種名・noteはDB値=日本語のまま） ──
 const LS=['ja','en','zh','ko'];
 const I18N={
-  ja:{h1a:'車両と',h1b:'料金',hero:'｜クラス別の車種・料金一覧（1日あたり・税込）',loading:'読み込み中...',noVeh:'車両情報がありません',baseFee:'基本料金',perDay:'/ 1日（税込）',equip:'標準装備：',cta:'🚗 レンタカーを予約する',area:{sapporo:'札幌',naha:'沖縄（那覇）'},cls:{}},
-  en:{h1a:'Vehicles & ',h1b:'Pricing',hero:'｜Vehicles & prices by class (per day, tax incl.)',loading:'Loading...',noVeh:'No vehicle information',baseFee:'Base fee',perDay:'/ day (tax incl.)',equip:'Standard equipment: ',cta:'🚗 Book a Rental Car',area:{sapporo:'Sapporo',naha:'Okinawa (Naha)'},cls:{A:'Premium Minivan',A2:'Premium A2',B:'Minivan',B2:'Minivan B2',C:'Compact SUV',D:'Minivan',F:'Compact',H:'Sedan / Hybrid',S:'SUV'}},
-  zh:{h1a:'車輛與',h1b:'價格',hero:'｜各車型車種・價格一覽（每日・含稅）',loading:'載入中...',noVeh:'無車輛資訊',baseFee:'基本費用',perDay:'/ 1天（含稅）',equip:'標準配備：',cta:'🚗 預約租車',area:{sapporo:'札幌',naha:'沖繩（那霸）'},cls:{A:'豪華廂型車',A2:'豪華 A2',B:'廂型車',B2:'廂型車 B2',C:'小型SUV',D:'廂型車',F:'小型車',H:'轎車/油電',S:'SUV'}},
-  ko:{h1a:'차량 및 ',h1b:'요금',hero:'｜클래스별 차종·요금 목록 (1일당·세금 포함)',loading:'로딩 중...',noVeh:'차량 정보가 없습니다',baseFee:'기본 요금',perDay:'/ 1일 (세금 포함)',equip:'기본 장비: ',cta:'🚗 렌터카 예약하기',area:{sapporo:'삿포로',naha:'오키나와(나하)'},cls:{A:'프리미엄 미니밴',A2:'프리미엄 A2',B:'미니밴',B2:'미니밴 B2',C:'컴팩트 SUV',D:'미니밴',F:'컴팩트',H:'세단/하이브리드',S:'SUV'}}
+  ja:{h1a:'ライン',h1b:'ナップ',hero:'｜クラス別の車種ラインナップ',loading:'読み込み中...',noVeh:'車両情報がありません',baseFee:'基本料金',perDay:'/ 1日（税込）',equip:'標準装備：',cta:'🚗 レンタカーを予約する',area:{sapporo:'札幌',naha:'沖縄（那覇）'},cls:{}},
+  en:{h1a:'Line',h1b:'up',hero:'｜Vehicle lineup by class',loading:'Loading...',noVeh:'No vehicle information',baseFee:'Base fee',perDay:'/ day (tax incl.)',equip:'Standard equipment: ',cta:'🚗 Book a Rental Car',area:{sapporo:'Sapporo',naha:'Okinawa (Naha)'},cls:{A:'Premium Minivan',A2:'Premium A2',B:'Minivan',B2:'Minivan B2',C:'Compact SUV',D:'Minivan',F:'Compact',H:'Sedan / Hybrid',S:'SUV'}},
+  zh:{h1a:'車型',h1b:'一覽',hero:'｜各車型車種一覽',loading:'載入中...',noVeh:'無車輛資訊',baseFee:'基本費用',perDay:'/ 1天（含稅）',equip:'標準配備：',cta:'🚗 預約租車',area:{sapporo:'札幌',naha:'沖繩（那霸）'},cls:{A:'豪華廂型車',A2:'豪華 A2',B:'廂型車',B2:'廂型車 B2',C:'小型SUV',D:'廂型車',F:'小型車',H:'轎車/油電',S:'SUV'}},
+  ko:{h1a:'라인',h1b:'업',hero:'｜클래스별 차종 라인업',loading:'로딩 중...',noVeh:'차량 정보가 없습니다',baseFee:'기본 요금',perDay:'/ 1일 (세금 포함)',equip:'기본 장비: ',cta:'🚗 렌터카 예약하기',area:{sapporo:'삿포로',naha:'오키나와(나하)'},cls:{A:'프리미엄 미니밴',A2:'프리미엄 A2',B:'미니밴',B2:'미니밴 B2',C:'컴팩트 SUV',D:'미니밴',F:'컴팩트',H:'세단/하이브리드',S:'SUV'}}
 };
-const TITLES={ja:'車両と料金｜KEYDROP',en:'Vehicles & Pricing｜KEYDROP',zh:'車輛與價格｜KEYDROP',ko:'차량 및 요금｜KEYDROP'};
+const TITLES={ja:'ラインナップ｜KEYDROP',en:'Lineup｜KEYDROP',zh:'車型一覽｜KEYDROP',ko:'라인업｜KEYDROP'};
 // 車名（DB値=日本語）→国際表記。en/zh/koは共通のラテン表記、末尾「等」のみ言語別。
 const _LATIN={'アルファード':'Alphard','ヴェルファイア':'Vellfire','ベルファイア':'Vellfire','ノア':'Noah','ヴォクシー':'Voxy','セレナ':'Serena','エスクァイア':'Esquire','デリカD5':'Delica D5','デリカ':'Delica','ライズ':'Raize','ヤリスクロス':'Yaris Cross','ロッキー':'Rocky','ハリアー':'Harrier','アクア':'Aqua','ヴィッツ':'Vitz','ノート':'Note','プリウスα':'Prius α','プリウス':'Prius','ソリオ':'Solio','ルーミー':'Roomy','カローラフィールダー':'Corolla Fielder','アクセラ':'Axela','カローラ':'Corolla'};
 function _mk(etc){var m={};for(var k in _LATIN)m[k]=_LATIN[k];m['等']=etc;return m;}
@@ -136,7 +136,7 @@ function render(){
       +'<h2>'+clsLabel(k,it.label)+'</h2>'
       +'<div class="veh">'+locVeh(it.vehicles||'')+'</div>'
       +'<div class="meta"><span>👥 '+(it.seats||'')+'</span>'+equipTags+'</div>'
-      +(it.price?('<div class="price"><div class="main"><span class="unit" style="margin-right:4px">'+T.baseFee+'</span><span class="num">'+yen(it.price)+'</span><span class="unit">'+T.perDay+'</span></div></div>'):'')
+      +''
       +'</div></div>';
   });
   document.getElementById('grid').innerHTML=html||'<div class="loading">'+T.noVeh+'</div>';

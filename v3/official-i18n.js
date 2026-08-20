@@ -6,7 +6,7 @@
 (function(){
   var DICT={
     ja:{
-      nav_cars:'車種一覧', nav_price:'車両と料金', nav_news:'お知らせ', nav_book:'予約する',
+      nav_cars:'車種一覧', nav_price:'ラインナップ', nav_news:'お知らせ', nav_book:'予約する',
       hero_copy:'旅は、目的地に着く前から<br>始まっている。',
       s_store:'📍 店舗を選択', s_store_ph:'店舗を選択', s_naha:'那覇空港店（沖縄）', s_sapporo:'札幌店（北海道）',
       s_method:'🚗 受取方法を選択', m_delivery:'デリバリー', m_airport:'無料送迎（空港/駅）', m_store:'来店',
@@ -14,7 +14,7 @@
       s_pick:'📅 出発 日時', s_ret:'📅 返却 日時', s_time:'時間',
       avail_msg:'🚙 ご利用日程に提供できる空車を次の画面にすべて表示します。',
       s_btn:'空車を検索する',
-      cars_en:'CAR TYPE', cars_jp:'取扱車種・料金',
+      cars_en:'CAR TYPE', cars_jp:'ラインナップ',
       tab_naha:'那覇空港店', tab_sapporo:'札幌店',
       car_more:'全車種・料金を見る →',
       news_en:'NEWS', news_jp:'運営からのお知らせ',
@@ -32,7 +32,7 @@
       s_pick:'📅 Pick-up', s_ret:'📅 Return', s_time:'Time',
       avail_msg:'🚙 All cars available for your dates will be shown on the next screen.',
       s_btn:'Search available cars',
-      cars_en:'CAR TYPE', cars_jp:'Cars & Rates',
+      cars_en:'CAR TYPE', cars_jp:'Lineup',
       tab_naha:'Naha Airport', tab_sapporo:'Sapporo',
       car_more:'See all cars & rates →',
       news_en:'NEWS', news_jp:'Announcements',
@@ -50,7 +50,7 @@
       s_pick:'📅 取車 日期時間', s_ret:'📅 還車 日期時間', s_time:'時間',
       avail_msg:'🚙 符合您日期的所有可預約車輛將顯示於下一頁。',
       s_btn:'搜尋可預約車輛',
-      cars_en:'CAR TYPE', cars_jp:'車型與費用',
+      cars_en:'CAR TYPE', cars_jp:'車型一覽',
       tab_naha:'那覇機場店', tab_sapporo:'札幌店',
       car_more:'查看所有車型與費用 →',
       news_en:'NEWS', news_jp:'營運公告',
@@ -68,7 +68,7 @@
       s_pick:'📅 대여 일시', s_ret:'📅 반납 일시', s_time:'시간',
       avail_msg:'🚙 선택하신 일정에 예약 가능한 모든 차량을 다음 화면에 표시합니다.',
       s_btn:'빈 차량 검색',
-      cars_en:'CAR TYPE', cars_jp:'차량 및 요금',
+      cars_en:'CAR TYPE', cars_jp:'라인업',
       tab_naha:'나하공항점', tab_sapporo:'삿포로점',
       car_more:'전체 차종·요금 보기 →',
       news_en:'NEWS', news_jp:'운영 공지',
@@ -194,7 +194,7 @@
   };
   // ===== ハンバーガーメニュー項目（全ページ共通） =====
   var MENU={
-   ja:{mn_guide_nha:'ご利用方法（沖縄那覇店）',mn_guide_spk:'ご利用方法（札幌店）',mn_cars:'車両と料金',mn_ins:'保険プラン一覧',mn_faq_nha:'よくある質問（沖縄那覇店）',mn_faq_spk:'よくある質問（札幌店）',mn_contact:'お問い合わせ',mn_bus:'空港送迎バス',
+   ja:{mn_guide_nha:'ご利用方法（沖縄那覇店）',mn_guide_spk:'ご利用方法（札幌店）',mn_cars:'ラインナップ',mn_ins:'保険プラン一覧',mn_faq_nha:'よくある質問（沖縄那覇店）',mn_faq_spk:'よくある質問（札幌店）',mn_contact:'お問い合わせ',mn_bus:'空港送迎バス',
      bp_title:'空港送迎バス',bp_sub:'沖縄・那覇空港店｜無料・定時運行',bp_tt_head:'🚌 運行時刻表',bp_tt_sub:'コースター／定員20名・空港⇔ヤード往復',bp_noreserve:'✅ 無料・定時運行のためご予約は必要ありません。お時間に合わせて、そのままバス乗り場へお越しください。',bp_air:'✈ 空港出発便',bp_air_rt:'那覇空港 レンタカー送迎バス乗り場11番 → HANDYMAN',bp_yard:'🏢 ヤード出発便',bp_yard_rt:'HANDYMAN → 那覇空港 出発口',bp_tt_hint:'※ 運行時刻は目安です。当日の交通状況により多少前後する場合があります。営業時間 9:00〜19:00。',
      bp_guide_head:'🚌 無料送迎バスのご案内',bp_arr_head:'✈ お迎え（ご到着時）',bp_arr_1:'到着ロビーを出て「レンタカー送迎バス 11-B のりば」までお進みください（看板が目印です）。',bp_arr_2:'HANDYMAN（ハンディーマン）の停車場〔11-B・14番〕に無料送迎バスが到着します。ご乗車ください。',bp_ret_head:'🏢 お送り（ご返却時）',bp_ret_1:'ご返却後、第2ヤードの乗り場から無料送迎バスで那覇空港へお送りします。',bp_ret_2:'返却場所の目印：「HANDYMAN Parking area」の看板が第2ヤードです。',bp_map:'🗺 送迎バス乗り場を地図で見る',bp_back:'← トップへ戻る'},
    en:{mn_guide_nha:'How to use (Naha, Okinawa)',mn_guide_spk:'How to use (Sapporo)',mn_cars:'Cars & Rates',mn_ins:'Insurance plans',mn_faq_nha:'FAQ (Naha, Okinawa)',mn_faq_spk:'FAQ (Sapporo)',mn_contact:'Contact',mn_bus:'Airport shuttle bus',
