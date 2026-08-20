@@ -386,6 +386,7 @@ function onAreaSel(){
   document.getElementById('delivMsg').style.display=show?'block':'none';
   document.getElementById('availMsg').style.display=show?'block':'none';
   if(show)ctTab(a); // 下のCAR TYPE(情報)＋エリアタブを連動
+  if(window.applyKDDateWindow)window.applyKDDateWindow(a); // 店舗別 最短予約日＋90日上限を再適用
 }
 // 検索ボタン：日程で出せる空車を全て次画面に表示
 function doSearch(){
@@ -406,22 +407,36 @@ function doSearch(){
 (function(){var opts='';for(var h=9;h<=19;h++){for(var m=0;m<60;m+=30){if(h===19&&m>0)break;var t=('0'+h).slice(-2)+':'+('0'+m).slice(-2);opts+='<option value="'+t+'">'+t+'</option>';}}document.querySelectorAll('.timeSel').forEach(function(s){s.insertAdjacentHTML('beforeend',opts);});})();
 // 出発/返却の日付を「最短予約日＝2日後」で初期表示（空欄時）＋それ以前は選択不可。店舗選択後も維持
 (function(){function ymd(dt){return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);}
-  var base=new Date();base.setHours(0,0,0,0);
-  var pick=new Date(base);pick.setDate(pick.getDate()+2);   // 最短予約＝2日後
-  var ret=new Date(base);ret.setDate(ret.getDate()+3);      // 返却は翌日を既定
-  window.__MINPICK=ymd(pick);
   var pdEl=document.getElementById('pickDate'),rdEl=document.getElementById('retDate');
-  if(pdEl){pdEl.min=window.__MINPICK;if(!pdEl.value)pdEl.value=window.__MINPICK;}
-  if(rdEl){rdEl.min=(pdEl&&pdEl.value)?pdEl.value:window.__MINPICK;if(!rdEl.value)rdEl.value=ymd(ret);}
-  // カレンダー制御：最短日より前は不可／返却は出発日以降に連動
+  // 予約可能範囲＝店舗別 最短予約日（札幌+3日/沖縄+2日）〜 常に90日先まで
+  window.applyKDDateWindow=function(area){
+    var base=new Date();base.setHours(0,0,0,0);
+    var lead=(area==='sapporo')?3:2;                          // 店舗別 最短予約日
+    var pick=new Date(base);pick.setDate(pick.getDate()+lead);
+    var maxd=new Date(base);maxd.setDate(maxd.getDate()+90);  // 最長＝90日
+    window.__MINPICK=ymd(pick);window.__MAXPICK=ymd(maxd);
+    if(pdEl){pdEl.min=window.__MINPICK;pdEl.max=window.__MAXPICK;
+      if(!pdEl.value||pdEl.value<window.__MINPICK)pdEl.value=window.__MINPICK;
+      if(pdEl.value>window.__MAXPICK)pdEl.value=window.__MAXPICK;}
+    if(rdEl){rdEl.min=(pdEl&&pdEl.value)?pdEl.value:window.__MINPICK;rdEl.max=window.__MAXPICK;
+      if(!rdEl.value||rdEl.value<rdEl.min){var r=new Date(((pdEl&&pdEl.value)?pdEl.value:window.__MINPICK)+'T00:00:00');r.setDate(r.getDate()+1);rdEl.value=ymd(r);}
+      if(rdEl.value>window.__MAXPICK)rdEl.value=window.__MAXPICK;}
+  };
+  // カレンダー制御：最短日より前・90日超は不可／返却は出発日以降に連動
   if(pdEl&&rdEl){
     pdEl.addEventListener('change',function(){
-      if(pdEl.value&&pdEl.value<window.__MINPICK)pdEl.value=window.__MINPICK; // 最短日より前を補正
+      if(pdEl.value&&pdEl.value<window.__MINPICK)pdEl.value=window.__MINPICK;
+      if(pdEl.value&&window.__MAXPICK&&pdEl.value>window.__MAXPICK)pdEl.value=window.__MAXPICK;
       rdEl.min=pdEl.value||window.__MINPICK;
-      if(rdEl.value&&rdEl.value<rdEl.min)rdEl.value=rdEl.min;                  // 返却<出発 を補正
+      if(rdEl.value&&rdEl.value<rdEl.min)rdEl.value=rdEl.min;
+      if(rdEl.value&&window.__MAXPICK&&rdEl.value>window.__MAXPICK)rdEl.value=window.__MAXPICK;
     });
-    rdEl.addEventListener('change',function(){if(rdEl.value&&rdEl.value<rdEl.min)rdEl.value=rdEl.min;});
+    rdEl.addEventListener('change',function(){
+      if(rdEl.value&&rdEl.value<rdEl.min)rdEl.value=rdEl.min;
+      if(rdEl.value&&window.__MAXPICK&&rdEl.value>window.__MAXPICK)rdEl.value=window.__MAXPICK;
+    });
   }
+  window.applyKDDateWindow((document.getElementById('areaSel')||{}).value||'');
 })();
 // 運営からのお知らせ（将来：Supabase news テーブルに差し替え可）
 var NEWS=[
