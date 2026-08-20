@@ -302,7 +302,7 @@ select.fld:focus{box-shadow:0 0 0 3px rgba(250,190,0,.35)}
     <button class="menu-lang-btn" data-l="zh" onclick="kdSetLang('zh')">繁體中文</button>
     <button class="menu-lang-btn" data-l="ko" onclick="kdSetLang('ko')">한국어</button>
   </div>
-  <div class="menu-user"><button class="menu-user-btn" onclick="location.href='keydrop-mypage.html'">予約を確認する（マイページ）</button></div>
+  <div class="menu-user"><button class="menu-user-btn" onclick="location.href='https://keydrop.jp/mypage.html'">予約を確認する（マイページ）</button></div>
   <div class="menu-section"><a class="menu-item" href="keydrop-top.html#search" style="color:#FABE00;font-weight:800"><span class="menu-item-icon">📍</span>エリアを選び直す<span class="menu-item-arrow">→</span></a></div>
   <div class="menu-section"><div class="menu-section-title">サービス</div>
     <a class="menu-item" href="https://keydrop.jp/keydrop-about.html" target="_blank" rel="noopener"><span class="menu-item-icon">🔑</span>KEYDROPとは？<span class="menu-item-arrow">→</span></a>
@@ -902,7 +902,7 @@ function renderDone(){
   var em=(document.getElementById('fEmail')||{}).value||'ご登録のメール';
   document.getElementById('doneBox').innerHTML='<div class="donecard"><div class="rn">'+T('dn_resno')+'<b>'+rno+'</b></div>'+
     '<div style="font-size:13px;color:#1a1a1a;margin-top:14px;line-height:1.8">'+T('dn_sent1')+' <b style="color:#1a1a1a">'+em+'</b>'+T('dn_sent2')+'</div>'+
-    '<a href="keydrop-mypage.html" style="display:block;text-align:center;margin-top:16px;background:var(--y);color:#1a1a1a;border-radius:10px;padding:12px;font-weight:900;text-decoration:none">'+T('dn_mypage')+'</a>'+'<a href="keydrop-top.html" style="display:block;text-align:center;margin-top:10px;color:#5a6b85;font-weight:800;font-size:13px;text-decoration:none">'+T('dn_top')+'</a></div>';
+    '<a href="https://keydrop.jp/mypage.html" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:16px;background:var(--y);color:#1a1a1a;border-radius:10px;padding:12px;font-weight:900;text-decoration:none">'+T('dn_mypage')+'</a>'+'<a href="keydrop-top.html" style="display:block;text-align:center;margin-top:10px;color:#5a6b85;font-weight:800;font-size:13px;text-decoration:none">'+T('dn_top')+'</a></div>';
 }
 // スライド広告バー（内容は差し替え可・将来DB化）
 (function(){var el=document.getElementById('adtrack');if(!el)return;
