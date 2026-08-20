@@ -487,6 +487,23 @@ var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 function sbView(t){return (area==='naha'&&/^public_.*_v$/.test(t))?t.replace(/_v$/,'_nha_v'):t;}
 function sbGet(t,q){return fetch(SB_URL+'/rest/v1/'+sbView(t)+'?'+(q||'')+'&select=*',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});}
 function ymList(a,b){var out=[];if(!a||!b)return out;var s=new Date(a.slice(0,7)+'-01'),e=new Date(b.slice(0,7)+'-01');var g=0;while(s<=e&&g<24){out.push(s.getFullYear()+'-'+('0'+(s.getMonth()+1)).slice(-2));s.setMonth(s.getMonth()+1);g++;}return out;}
+function fetchClasses(){
+  sbGet('public_keydrop_classes_v','limit=1').then(function(rows){
+    try{
+      var raw=rows&&rows[0]&&rows[0].value;if(!raw)return;
+      var d=(typeof raw==='string')?JSON.parse(raw):raw;if(!d||!d.items)return;
+      var order=[],cls={};
+      (d.order||Object.keys(d.items)).forEach(function(k){var it=d.items[k];if(!it||it.show===false)return;
+        order.push(k);cls[k]={l:it.label||k,s:(''+(it.seats||'')).replace(/[名人]/g,''),v:it.vehicles||'',p:+it.price||0,az:(k==='A2'||k==='B2')?1:0};});
+      if(!order.length)return;
+      ORDER=order;STA.order=order;
+      Object.keys(CLS).forEach(function(k){delete CLS[k];});
+      Object.keys(cls).forEach(function(k){CLS[k]=cls[k];});
+      if(state.cls&&!CLS[state.cls])state.cls='';
+      renderV();calc();try{renderChosen();}catch(e){}
+    }catch(e){}
+  });
+}
 function fetchAvail(){
   if(!pD||!rD){state.availLoaded=false;return;} // 日程未指定=全表示
   var yms=ymList(pD,rD);var inEnc=yms.map(function(y){return '"'+y+'"';}).join(',');
@@ -621,7 +638,7 @@ function reverseGeo(lat,lng){
    .catch(function(){setPending(lat.toFixed(4)+', '+lng.toFixed(4));});
 }
 // KEYDROPと同じ車両画像（那覇=_nha優先→無ければ共通にフォールバック / 札幌=共通）
-function carImg(k){var base=(k==='A2')?'A':k;var common='official-assets/cars/class_'+base+'.png';var src=(area==='naha')?'official-assets/cars/class_'+base+'_nha.png':common;return '<img src="'+src+'" onerror="this.onerror=null;this.src=\''+common+'\'" alt="" style="width:100%;height:100%;object-fit:contain;background:#fff;padding:5px">';}
+function carImg(k){var IMGMAP={A2:'A',G:'F'};var base=IMGMAP[k]||k;var KNOWN={A:1,B:1,B2:1,C:1,D:1,F:1,H:1,S:1};if(!KNOWN[base])base='F';var common='official-assets/cars/class_'+base+'.png';var src=(area==='naha')?'official-assets/cars/class_'+base+'_nha.png':common;return '<img src="'+src+'" onerror="this.onerror=null;this.src=\''+common+'\'" alt="" style="width:100%;height:100%;object-fit:contain;background:#fff;padding:5px">';}
 // 車両グリッド
 /* ===== KEYDROP 車種名・クラス名 多言語（TOPと共通） ===== */
 function _kdL(){return (window.hdmLang?window.hdmLang():'ja');}
@@ -631,9 +648,9 @@ var KDCLS={
  ko:{'Aクラス':'A클래스','A2クラス':'A2클래스','Bクラス':'B클래스','B2クラス':'B2클래스','Cクラス':'C클래스','Sクラス':'S클래스','Fクラス':'F클래스','Hクラス':'H클래스','プレミアムミニバン':'프리미엄 미니밴','ミニバン':'미니밴','コンパクトSUV':'컴팩트 SUV','コンパクト':'컴팩트','セダン / ハイブリッド':'세단 / 하이브리드','SUV':'SUV'}
 };
 var KDVEH={
- en:{'アルファード':'Alphard','ヴォクシー':'Voxy','ノア':'Noah','セレナ':'Serena','ライズ':'Raize','ヤリスクロス':'Yaris Cross','デリカD5':'Delica D:5','ロッキー':'Rocky','ハリアー':'Harrier','ソリオ':'Solio','アクア':'Aqua','ヴィッツ':'Vitz','ノート':'Note','プリウスα':'Prius \u03b1','プリウス':'Prius','アクセラ':'Axela','等':'etc.','（高年式モデル）':' (late model)'},
- zh:{'アルファード':'Alphard','ヴォクシー':'Voxy','ノア':'Noah','セレナ':'Serena','ライズ':'Raize','ヤリスクロス':'Yaris Cross','デリカD5':'Delica D5','ロッキー':'Rocky','ハリアー':'Harrier','ソリオ':'Solio','アクア':'Aqua','ヴィッツ':'Vitz','ノート':'Note','プリウスα':'Prius \u03b1','プリウス':'Prius','アクセラ':'Axela','等':'等','（高年式モデル）':'（新年式）'},
- ko:{'アルファード':'알파드','ヴォクシー':'복시','ノア':'노아','セレナ':'세레나','ライズ':'라이즈','ヤリスクロス':'야리스 크로스','デリカD5':'델리카 D5','ロッキー':'로키','ハリアー':'해리어','ソリオ':'솔리오','アクア':'아쿠아','ヴィッツ':'비츠','ノート':'노트','プリウスα':'프리우스 \u03b1','プリウス':'프리우스','アクセラ':'악셀라','等':'등','（高年式モデル）':' (고연식 모델)'}
+ en:{'アルファード':'Alphard','ヴォクシー':'Voxy','ノア':'Noah','セレナ':'Serena','ライズ':'Raize','ヤリスクロス':'Yaris Cross','デリカD5':'Delica D:5','ロッキー':'Rocky','ハリアー':'Harrier','ソリオ':'Solio','アクア':'Aqua','ヴィッツ':'Vitz','ノート':'Note','プリウスα':'Prius \u03b1','プリウス':'Prius','アクセラ':'Axela','ヴェルファイア':'Vellfire','ベルファイア':'Vellfire','デミオ':'Demio','マツダ':'Mazda','等':'etc.','（高年式モデル）':' (late model)'},
+ zh:{'アルファード':'Alphard','ヴォクシー':'Voxy','ノア':'Noah','セレナ':'Serena','ライズ':'Raize','ヤリスクロス':'Yaris Cross','デリカD5':'Delica D5','ロッキー':'Rocky','ハリアー':'Harrier','ソリオ':'Solio','アクア':'Aqua','ヴィッツ':'Vitz','ノート':'Note','プリウスα':'Prius \u03b1','プリウス':'Prius','アクセラ':'Axela','ヴェルファイア':'Vellfire','ベルファイア':'Vellfire','デミオ':'Demio','マツダ':'Mazda','等':'等','（高年式モデル）':'（新年式）'},
+ ko:{'アルファード':'알파드','ヴォクシー':'복시','ノア':'노아','セレナ':'세레나','ライズ':'라이즈','ヤリスクロス':'야리스 크로스','デリカD5':'델리카 D5','ロッキー':'로키','ハリアー':'해리어','ソリオ':'솔리오','アクア':'아쿠아','ヴィッツ':'비츠','ノート':'노트','プリウスα':'프리우스 \u03b1','プリウス':'프리우스','アクセラ':'악셀라','ヴェルファイア':'벨파이어','ベルファイア':'벨파이어','デミオ':'데미오','マツダ':'마쓰다','等':'등','（高年式モデル）':' (고연식 모델)'}
 };
 function kdCls(jp){var L=_kdL();if(L==='ja')return jp;var m=KDCLS[L];return (m&&m[jp]!=null)?m[jp]:jp;}
 function kdVeh(v){var L=_kdL();if(L==='ja')return v;var m=KDVEH[L];if(!m)return v;var out=v;Object.keys(m).sort(function(a,b){return b.length-a.length;}).forEach(function(k){out=out.split(k).join(m[k]);});return out;}
@@ -641,7 +658,7 @@ function renderV(){
   var visible=ORDER.filter(function(k){return classAvail(k);});
   document.getElementById('vgrid').innerHTML=ORDER.map(function(k){var c=CLS[k];var av=classAvail(k);return (
     '<div class="vc'+(state.cls===k?' on':'')+(av?'':' soldout')+'" data-k="'+k+'"><div class="pic">'+carImg(k)+'<span class="clschip">'+kdCls(c.l)+'</span>'+''+(av?'<span class="check">✓</span>':'<span class="soldbadge">'+T('fl_full')+'</span>')+'</div>'+
-    '<div class="bd"><div class="nm">'+kdVeh(c.v)+'</div><div class="pr"><b>¥'+c.p.toLocaleString()+'</b><small>'+T('perday')+'</small></div><div class="sp">👥 '+String(c.s).replace(/名/,T('seats'))+'</div>'+
+    '<div class="bd"><div class="nm">'+kdVeh(c.v)+'</div><div class="pr"><b>¥'+c.p.toLocaleString()+'</b><small>'+T('perday')+'</small></div><div class="sp">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</div>'+
     '<div class="vbtns">'+(av?'<button class="vpick" onclick="decideV(\''+k+'\')">'+(state.cls===k?T('fl_decided'):T('fl_decide'))+'</button>':'<div class="soldmsg">'+T('fl_nostock')+'</div>')+
     '<button class="vdetail" onclick="openDetail(\''+k+'\')">'+T('fl_detail')+'</button></div></div></div>');
   }).join('');
@@ -656,7 +673,7 @@ function unlockMethod(){var lk=document.getElementById('methodLock');if(lk)lk.st
 function openDetail(k){var c=CLS[k];if(!c)return;
   document.getElementById('dPic').innerHTML=carImg(k)+'<span class="dclschip">'+c.l+'</span>'+''+'<button class="dclose" onclick="closeDetail()">×</button>';
   document.getElementById('dBody').innerHTML='<h3>'+kdCls(c.l)+'</h3><div class="dv">'+kdVeh(c.v)+'</div>'+
-    '<div class="drow"><span class="lb">'+T('dt_seats')+'</span><span class="vl">👥 '+String(c.s).replace(/名/,T('seats'))+'</span></div>'+
+    '<div class="drow"><span class="lb">'+T('dt_seats')+'</span><span class="vl">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</span></div>'+
     '<div class="drow dprice"><span class="lb">'+T('dt_price')+'</span><span class="vl"><b>¥'+c.p.toLocaleString()+'</b> '+T('perday')+'</span></div>'+
     '<div class="drow"><span class="lb">'+T('dt_equip')+'</span><span class="vl" style="flex:1"><div class="dtags">'+STA.equip.map(function(e){return '<span class="dtag">'+e+'</span>';}).join('')+'</div></span></div>'+
     '<div class="dnote">'+STA.note+'</div>'+
@@ -879,7 +896,7 @@ function renderDone(){
   var one=ADS.map(function(a){return '<span>'+a+'</span>';}).join('');
   el.innerHTML=one+one; // 2連結でシームレスループ
 })();
-renderV();calc();applyStep();fetchAvail();try{cpApply();}catch(e){}
+renderV();calc();applyStep();fetchAvail();fetchClasses();try{cpApply();}catch(e){}
 // 言語切替時：動的生成部を再描画
 window.hdmOnLang=function(){try{kdLangActive();}catch(e){}try{cpApply();}catch(e){}try{if(typeof step!=='undefined'&&step==='confirm')loadClause();}catch(e){}try{var _df=document.getElementById('delivFrame');if(_df&&_df.contentWindow)_df.contentWindow.postMessage({type:'kdlang',lang:(window.hdmLang?window.hdmLang():'ja')},'*');}catch(e){}try{renderMethod();}catch(e){}try{renderV();}catch(e){}try{applyStep();}catch(e){}try{if(step==='confirm')renderConfirm();}catch(e){}try{if(step==='done')renderDone();}catch(e){}};
 </script>
