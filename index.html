@@ -1422,6 +1422,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         for (let k = 0; k < KD_NAHA_NOGO_POLYS.length; k++) if (kdPointInPoly(lat, lng, KD_NAHA_NOGO_POLYS[k])) return true;
         return false;
     }
+    // ★2026-08-20 座標が無い/ポリゴン外(空港P1駐車場等ランドサイド)のテキスト住所でも空港・基地の禁止エリアを弾く。
+    //   地理ポリゴン判定は座標必須＋aerodrome境界のみ→「那覇空港P1駐車場」等が素通りする穴を塞ぐ二重ガード。
+    function kdNahaNoGoText(addr) {
+        if (KD_STORE !== 'naha' || !addr) return false;
+        var s = String(addr);
+        // 空港（ターミナル/駐車場/国内線国際線含む）・自衛隊/米軍基地・駐屯地・港湾施設
+        return /那覇空港|空港ターミナル|空港国内線|空港国際線|空港P\d|空港第?\d?駐車場|航空自衛隊|陸上自衛隊|那覇駐屯地|駐屯地|那覇基地|那覇港湾施設|米軍|naha\s*airport/i.test(s);
+    }
     const KD_NAHA_AIRPORT_MSG = '🛫 那覇空港内（空港管内）ではお引き渡しできません。空港外の場所を指定してください。';
 
     // ═══════════════════════════════════════════════════════════
@@ -2442,7 +2450,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     // 回収場所を決めたら→お客様情報フォームへ
     // 回収場所が禁止エリア（那覇空港/基地敷地）内か。お届けと同じ判定を回収にも適用。
-    function kdCollectionInNoGo() { return KD_STORE === 'naha' && state.collectionLat != null && kdInNahaAirport(state.collectionLat, state.collectionLng); }
+    function kdCollectionInNoGo() { return KD_STORE === 'naha' && ((state.collectionLat != null && kdInNahaAirport(state.collectionLat, state.collectionLng)) || kdNahaNoGoText(state.collectionAddr || state.collectionAddrFull || '')); }
     function collectionDoneGo() { if (!ensureDateOrder()) return; state.screen = 'form'; render(); }
     // 回収：「決定」を押したら“確認だけの地図画面”を挟まず直接お客様情報へ（お届けの決定と同じ挙動＝重複画面を廃止）
     function collectionDecideGo() { if (kdCollectionInNoGo()) { alert(t('nogoCollect')); return; } state.collectionConfirmed = true; collectionDoneGo(); }
@@ -3273,6 +3281,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // 配達可能エリア判定（中心からの距離＋市内フィルタ）。{ok, reason}
     function checkDeliverable(lat, lng, addr) {
         const cfg = state.deliveryConfig || {};
+        // ★空港・基地の禁止エリアは座標が無くても住所テキストで先に弾く（ポリゴン外のランドサイド住所対策）
+        if (KD_STORE === 'naha' && addr && kdNahaNoGoText(addr)) return { ok: false, reason: t('nogoAirport') };
         if (lat == null || lng == null) return { ok: true, reason: '' };
         if (KD_STORE === 'naha' && kdInNahaAirport(lat, lng)) return { ok: false, reason: t('nogoAirport') };
         if (!cfg.cityFilter) return { ok: true, reason: '' };
@@ -4639,6 +4649,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         try {
             const v = state.selectedVehicle;
             const cls = state.selectedClassType || (v && v.type);
+            // ★2026-08-20 決済直前の最終ガード：お届け・回収が禁止エリア(空港/基地)なら予約させない（座標無し/ポリゴン外のテキスト住所も弾く）
+            if (KD_STORE === 'naha') {
+                const _dCk = checkDeliverable(state.deliveryLat, state.deliveryLng, (state.deliveryAddr || '') + ' ' + (state.deliveryAddrFull || ''));
+                if (!_dCk.ok) { alert('【お届け】' + _dCk.reason); return; }
+                if (kdCollectionInNoGo() || kdNahaNoGoText((state.collectionAddr || '') + ' ' + (state.collectionAddrFull || ''))) { alert(t('nogoCollect')); return; }
+            }
             const payload = {
                 token: token,
                 store: KD_API_STORE(), // 店舗振り分け（'spk'|'nha'）
