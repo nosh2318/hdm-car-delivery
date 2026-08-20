@@ -1,0 +1,87 @@
+<!doctype html><html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>保険プラン一覧｜HANDYMAN RENTCAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#111111;--navy2:#2b2b2b;--ink:#0a0a0a;--y:#FABE00;--line:#333333;--mut:#6b7c9e;--bg:#eef2f8}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overflow-x:hidden}
+body{font-family:"Noto Sans JP",-apple-system,sans-serif;background:var(--bg);color:#1a1a1a;overflow-x:hidden;padding-bottom:40px}
+header{background:rgba(10,20,40,.96);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:30}
+header a.logo{display:inline-flex;align-items:center}header a.logo img{height:28px;width:auto;display:block}
+header .back{margin-left:auto;color:#cccccc;text-decoration:none;font-size:13px;font-weight:800;border:1.5px solid #33456e;border-radius:9px;padding:7px 13px}
+header .back:hover{background:rgba(255,255,255,.06)}
+#hdmlang-slot{margin-left:auto}
+.hero{background:linear-gradient(180deg,var(--navy),var(--navy2));color:#fff;padding:26px 16px 22px;text-align:center}
+.hero .en{font-family:"Arial Black",sans-serif;font-style:italic;font-size:13px;letter-spacing:2px;color:var(--y);opacity:.9}
+.hero h1{font-size:22px;font-weight:900;margin-top:4px}
+.hero p{font-size:12.5px;color:#c8d3ea;margin-top:8px;line-height:1.7}
+.wrap{max-width:720px;margin:0 auto;padding:18px 16px}
+.plan{background:#fff;border:1px solid #e2e8f2;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 3px 14px rgba(10,30,80,.06);position:relative}
+.plan.reco{border:2px solid var(--y);box-shadow:0 6px 20px rgba(250,190,0,.22)}
+.recobadge{position:absolute;top:-12px;left:18px;background:var(--y);color:#1a1a1a;font-size:12px;font-weight:900;padding:4px 13px;border-radius:999px;box-shadow:0 2px 8px rgba(250,190,0,.4)}
+.plan .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.plan .nm{font-size:16px;font-weight:900;color:#151515;line-height:1.4}
+.plan .pr{font-weight:900;color:var(--y);white-space:nowrap;font-size:15px}
+.plan .pr b{font-size:24px}.plan .pr small{color:var(--mut);font-weight:700;font-size:11.5px;margin-left:3px}
+.plan .ds{font-size:12.5px;color:#5a6b85;line-height:1.75;margin-top:10px}
+.plan .cov{list-style:none;margin-top:12px;border-top:1px solid #eef2f8;padding-top:12px}
+.plan .cov li{display:flex;gap:9px;font-size:13px;color:#1a1a1a;padding:6px 0;line-height:1.55}
+.plan .cov li .ic{color:#0e9f50;flex:0 0 auto;font-weight:900}
+.plan .cov li b{color:#151515}
+.note{font-size:11.5px;color:var(--mut);line-height:1.8;margin-top:6px;background:#fff;border:1px solid #e2e8f2;border-radius:12px;padding:13px 15px}
+.cta{display:block;text-align:center;margin:20px auto 0;max-width:420px;background:var(--y);color:#1a1a1a;border-radius:12px;padding:15px;font-size:15px;font-weight:900;text-decoration:none}
+</style></head>
+<body>
+<header>
+  <a class="logo" href="keydrop-top.html"><img src="images/keydrop-logo-white.png" alt="KEYDROP"></a>
+  <a class="back" href="keydrop-top.html">← トップへ戻る</a>
+</header>
+
+<div class="hero">
+  <div class="en">INSURANCE</div>
+  <h1 data-i18n="ins_title">保険プラン一覧</h1>
+  <p data-i18n="ins_lead">万が一に備えて、3つの補償プランをご用意しています。ご予約時にお選びいただけます。</p>
+</div>
+
+<div class="wrap">
+  <!-- 基本プラン -->
+  <div class="plan">
+    <div class="top"><div class="nm" data-i18n="ins_p1_nm">基本プラン（保険付き）</div><div class="pr"><b>¥0</b></div></div>
+    <div class="ds" data-i18n="ins_p1_ds">基本補償のみが適用されるプランです。すべてのご予約に標準で付帯します。</div>
+    <ul class="cov">
+      <li><span class="ic">✓</span><span data-i18n="ins_c_pd"><b>対人・対物</b>：無制限（免責補償なし）</span></li>
+      <li><span class="ic">✓</span><span data-i18n="ins_c_car"><b>車両補償</b>：車両時価総額まで（自己負担額 15万円）</span></li>
+      <li><span class="ic">✓</span><span data-i18n="ins_c_ph"><b>人身損害補償</b>：3,000万円まで</span></li>
+    </ul>
+  </div>
+
+  <!-- 免責補償 -->
+  <div class="plan">
+    <div class="top"><div class="nm" data-i18n="ins_p2_nm">基本プラン＋免責補償</div><div class="pr"><b>¥1,100</b><small data-i18n="ins_per">/ 24時間</small></div></div>
+    <div class="ds" data-i18n="ins_p2_ds">基本補償に加え、事故時にお客様が負担する自己負担額（免責額）を免除する制度です。</div>
+    <ul class="cov">
+      <li><span class="ic">✓</span><span data-i18n="ins_p2_c1">基本補償の内容をすべて含む</span></li>
+      <li><span class="ic">✓</span><span data-i18n="ins_p2_c2"><b>車両補償の自己負担額 15万円を免除</b></span></li>
+    </ul>
+  </div>
+
+  <!-- 安心ワイドパック（おすすめ） -->
+  <div class="plan reco">
+    <span class="recobadge" data-i18n="ins_reco">★ おすすめ</span>
+    <div class="top"><div class="nm" data-i18n="ins_p3_nm">基本プラン＋免責補償＋NOC補償（安心ワイドパック）</div><div class="pr"><b>¥1,650</b><small data-i18n="ins_per">/ 24時間</small></div></div>
+    <div class="ds" data-i18n="ins_p3_ds">免責補償に＋550円（税込）で、休業補償（ノンオペレーションチャージ）も不要に。すべての補償をひとまとめにした一番安心なプランです。</div>
+    <ul class="cov">
+      <li><span class="ic">✓</span><span data-i18n="ins_p3_c1">免責補償の内容をすべて含む</span></li>
+      <li><span class="ic">✓</span><span data-i18n="ins_p3_c2"><b>NOC（ノンオペレーションチャージ／休業補償）を免除</b></span></li>
+      <li><span class="ic">✓</span><span data-i18n="ins_p3_c3">損傷タイヤの修理代・ホイールキャップ紛失も補償</span></li>
+    </ul>
+  </div>
+
+  <div class="note" data-i18n="ins_note">※ 金額はすべて税込・24時間あたりです。NOC（ノンオペレーションチャージ）＝事故・故障で車両が使用できない期間の休業補償です。補償内容の詳細は店舗までお問い合わせください。</div>
+
+  <a class="cta" href="keydrop-top.html#search">🚗 車を予約する</a>
+</div>
+</body></html>

@@ -1,0 +1,258 @@
+<!doctype html><html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>マイページ｜ KEYDROP カーデリバリー（モック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#111111;--navy2:#2b2b2b;--ink:#0a0a0a;--y:#FABE00;--gr:#0e9f50;--line:#333333;--mut:#8a8a8a;--bg:#eef2f8}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:"Noto Sans JP",-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans",sans-serif;background:var(--bg);color:#1a2533}
+input,select,button,textarea{font-family:inherit}
+img{max-width:100%;display:block}
+/* header */
+header{position:sticky;top:0;z-index:20;background:rgba(17,17,17,.96);border-bottom:1px solid var(--line)}
+.hin{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px}
+.hamburger-btn{background:none;border:none;cursor:pointer;padding:4px;display:flex;flex-direction:column;gap:4px;justify-content:center;width:28px;height:28px}
+.hamburger-btn span{display:block;width:22px;height:2.5px;background:#fff;border-radius:2px;transition:all .3s}
+.phead{background:var(--ink);text-align:center;padding:22px 16px 24px;color:#fff}
+.phead .en{font-family:"Arial Black",Impact,sans-serif;font-style:italic;color:var(--y);font-size:24px;letter-spacing:.04em}
+.phead .jp{font-size:12px;color:#dcdcdc;font-weight:700;margin-top:3px;letter-spacing:.08em}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 60px}
+.card{background:#fff;border:1px solid #e3e8f1;border-radius:14px;padding:16px;box-shadow:0 4px 14px rgba(10,20,50,.05);margin-bottom:16px}
+.card h2{font-size:14px;font-weight:900;color:#1a1a1a;border-left:4px solid var(--y);padding-left:9px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.rrow{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #f0f3f8;font-size:13.5px}
+.rrow:last-child{border-bottom:0}
+.rrow .k{flex:0 0 88px;color:#5a6b85;font-weight:700;font-size:12px}
+.rrow .v{flex:1;color:#1a2533;font-weight:700}
+.rrow .v b{color:var(--y)}
+.badge{display:inline-block;background:var(--y);color:#1a1a1a;font-size:11px;font-weight:900;padding:2px 9px;border-radius:6px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+@media(max-width:520px){.acts{grid-template-columns:1fr}}
+.abtn{border:0;border-radius:11px;padding:15px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit;text-align:center}
+.abtn.chg{background:var(--y);color:#1a1a1a}
+.abtn.cxl{background:#fff;color:#c0392b;border:2px solid #f2b8b8}
+.note{font-size:11.5px;color:#5a6b85;line-height:1.7;margin-top:14px;background:#f6f8fc;border:1px solid #e3e8f1;border-radius:10px;padding:11px 13px}
+.note b{color:var(--gr)}
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(0,8,24,.72);z-index:60;display:none}
+.scrim.on{display:block}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-width:760px;margin:0 auto;background:#fff;border-radius:16px 16px 0 0;max-height:94vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 24px}
+@media(min-width:560px){.sheet{top:50%;bottom:auto;transform:translateY(-50%);border-radius:16px;max-height:90vh}}
+.sheet h3{font-size:16px;font-weight:900;color:#1a1a1a;margin-bottom:4px}
+.sheet .sub{font-size:12px;color:#5a6b85;margin-bottom:14px;line-height:1.6}
+.fgrp{margin-bottom:14px}
+.fgrp .fl{font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.fld{width:100%;height:46px;border:2px solid #d8e0ee;border-radius:10px;padding:0 12px;font-size:14px;background:#fff;-webkit-appearance:none;appearance:none}
+.frow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.mapbtn{background:var(--navy2,#2b2b2b);color:#fff;border:1.5px solid var(--y);border-radius:10px;padding:0 14px;height:46px;font-size:12.5px;font-weight:900;cursor:pointer;white-space:nowrap}
+.curplace{font-size:12px;color:#42557a;margin-top:6px;line-height:1.5;background:#f4f7fc;border:1px solid #dde5f2;border-radius:8px;padding:8px 10px}
+.curplace .pfx{color:var(--gr);font-weight:800}
+.sacts{display:flex;gap:10px;margin-top:8px}
+.sacts button{flex:1;border:0;border-radius:10px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit}
+.sacts .cancel{background:#eef2f8;color:#5a6b85}
+.sacts .submit{background:var(--y);color:#1a1a1a}
+.sacts .submit.danger{background:#c0392b;color:#fff}
+.feetbl{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 12px}
+.feetbl th,.feetbl td{border:1px solid #e3e8f1;padding:7px 9px;text-align:left}
+.feetbl th{background:#f6f8fc;color:#1a1a1a;font-weight:800}
+.agchk{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:800;color:#1a1a1a;margin:8px 0 4px;cursor:pointer}
+.agchk input{width:18px;height:18px}
+.mapmodal{position:fixed;inset:0;background:rgba(0,8,24,.8);z-index:80;display:none}
+.mapmodal.on{display:block}
+.mapwrap{position:absolute;inset:10px;max-width:640px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+@media(min-width:560px){.mapwrap{inset:24px 12px}}
+.mapbar{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--navy);color:#fff;font-weight:900;font-size:14px;flex:0 0 auto}
+.mapbar button{background:rgba(255,255,255,.16);color:#fff;border:0;width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer}
+.mapmodal iframe{flex:1 1 auto;width:100%;border:0;background:#fff}
+.mapdone{flex:0 0 auto;background:var(--y);color:#1a1a1a;border:0;padding:15px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit}
+.mapdone:disabled{opacity:.45}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#111;color:#fff;font-size:13px;font-weight:800;padding:13px 20px;border-radius:12px;z-index:120;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center;line-height:1.6}
+.toast.on{opacity:1}
+/* slide menu (KEYDROP準拠) */
+.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;opacity:0;pointer-events:none;transition:opacity .3s}
+.menu-overlay.open{opacity:1;pointer-events:auto}
+.slide-menu{position:fixed;top:0;right:0;width:min(300px,86vw);height:100%;background:#fff;z-index:9999;transform:translateX(100%);transition:transform .28s ease;overflow-y:auto;display:flex;flex-direction:column}
+@media(min-width:768px){.slide-menu{width:360px}}
+.slide-menu.open{transform:translateX(0)}
+.menu-header{background:#fff;padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #FABE00}
+.menu-header img{height:26px}
+.menu-close{background:none;border:none;font-size:22px;cursor:pointer}
+.menu-lang{display:flex;padding:10px 16px}
+.menu-lang-btn{flex:1;padding:8px 0;border:1px solid #ddd;background:#fff;font-size:12px;font-weight:600;color:#666;cursor:pointer}
+.menu-lang-btn:first-child{border-radius:6px 0 0 6px}.menu-lang-btn:last-child{border-radius:0 6px 6px 0}.menu-lang-btn:not(:first-child){border-left:none}
+.menu-lang-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.menu-section{padding:8px 0;border-bottom:1px solid #f0f0f0}
+.menu-item{display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:13px;color:#333;text-decoration:none}
+.menu-item-icon{font-size:16px;width:20px;text-align:center}.menu-item-arrow{margin-left:auto;font-size:11px;color:#ccc}
+.menu-footer{padding:12px 16px;font-size:10px;color:#999;text-align:center;margin-top:auto}
+.pc-footer{display:none}
+@media(min-width:768px){.pc-footer{display:block;background:#1a1a1a;color:#fff;padding:28px;text-align:center;font-size:12px}.pc-footer a{color:#FABE00;text-decoration:none;margin:0 10px}}
+</style></head>
+<body>
+<header><div class="hin">
+  <a href="keydrop-top.html" style="display:inline-flex;align-items:center"><img src="images/keydrop-logo-white.png" alt="KEYDROP" style="height:28px"></a>
+  <span id="hdmlang-slot" style="margin-left:auto"></span>
+  <button class="hamburger-btn" onclick="openMenu()" aria-label="menu"><span></span><span></span><span></span></button>
+</div></header>
+
+<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+<div class="slide-menu" id="slideMenu">
+  <div class="menu-header"><img src="images/keydrop-logo-header.png" alt="KEYDROP"><button class="menu-close" onclick="closeMenu()">✕</button></div>
+  <div class="menu-lang">
+    <button class="menu-lang-btn" data-l="ja" onclick="kdSetLang('ja')">日本語</button>
+    <button class="menu-lang-btn" data-l="en" onclick="kdSetLang('en')">English</button>
+    <button class="menu-lang-btn" data-l="zh" onclick="kdSetLang('zh')">繁體中文</button>
+    <button class="menu-lang-btn" data-l="ko" onclick="kdSetLang('ko')">한국어</button>
+  </div>
+  <div class="menu-section">
+    <a class="menu-item" href="keydrop-top.html"><span class="menu-item-icon">🏠</span><span data-mp="mn_top">トップへ戻る</span><span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/mypage-guide.html" target="_blank" rel="noopener"><span class="menu-item-icon">📱</span><span data-mp="mn_guide">マイページの使い方</span><span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener"><span class="menu-item-icon">✉️</span><span data-mp="mn_contact">お問い合わせ</span><span class="menu-item-arrow">→</span></a>
+  </div>
+  <div class="menu-footer">© 2026 KEYDROP</div>
+</div>
+
+<div class="phead"><div class="en cap">MY PAGE</div><div class="jp" data-mp="p_sub">ご予約の確認・変更・キャンセル</div></div>
+
+<div class="wrap">
+  <div class="card" id="loginView">
+    <h2>🔑 <span data-mp="lg_title">予約を確認する</span></h2>
+    <div style="font-size:12.5px;color:#5a6b85;line-height:1.6;margin-bottom:14px" data-mp="lg_sub">ご予約番号と、ご予約時のメールアドレスを入力してください。</div>
+    <div class="fgrp"><div class="fl" data-mp="lg_no">予約番号</div><input class="fld" id="lgNo" autocomplete="off" placeholder="KDN-2608-0007-SPK"></div>
+    <div class="fgrp"><div class="fl" data-mp="lg_email">メールアドレス</div><input class="fld" id="lgEmail" type="email" autocomplete="off" placeholder="you@example.com"></div>
+    <button class="abtn chg" style="width:100%" onclick="doLogin()" data-mp="lg_btn">予約を確認する</button>
+    <div id="lgMsg" style="font-size:12.5px;font-weight:800;color:#c0392b;margin-top:10px"></div>
+    <div class="note" data-mp="lg_note">🔒 予約番号＋メールアドレスで確認できます。ご予約完了メール／LINEのリンクからもアクセス可能です（デモ）。</div>
+  </div>
+  <div id="resvView" style="display:none">
+  <div class="card">
+    <h2>📋 <span data-mp="c_resv">ご予約内容</span></h2>
+    <div class="rrow"><div class="k" data-mp="c_no">予約番号</div><div class="v" id="vNo">KDN-2608-0007-SPK</div></div>
+    <div class="rrow"><div class="k" data-mp="c_store">店舗</div><div class="v" id="vStore">札幌エリア</div></div>
+    <div class="rrow"><div class="k" data-mp="c_car">車両</div><div class="v" id="vCar">Bクラス（ノア 等）</div></div>
+    <div class="rrow"><div class="k" data-mp="c_out">出発</div><div class="v" id="vOut">08/22 09:00</div></div>
+    <div class="rrow"><div class="k" data-mp="c_ret">返却</div><div class="v" id="vRet">08/24 18:00</div></div>
+    <div class="rrow"><div class="k" data-mp="c_del">お届け先</div><div class="v" id="vDel">北海道札幌市中央区南２条西４丁目１２−１</div></div>
+    <div class="rrow"><div class="k" data-mp="c_col">回収先</div><div class="v" id="vCol"><span data-mp="c_same">お届け先と同じ</span></div></div>
+    <div class="rrow"><div class="k" data-mp="c_total">料金</div><div class="v"><b>¥22,000</b> <span style="color:#5a6b85;font-weight:700" data-mp="c_days">（¥11,000 × 2日）</span></div></div>
+  </div>
+
+  <div class="card">
+    <h2>🛠 <span data-mp="a_title">変更・キャンセルをリクエスト</span></h2>
+    <div class="acts">
+      <button class="abtn chg" onclick="openChg()">✏️ <span data-mp="a_change">変更をリクエスト</span></button>
+      <button class="abtn cxl" onclick="openCxl()">✕ <span data-mp="a_cancel">キャンセルをリクエスト</span></button>
+    </div>
+    <div class="note" data-mp="a_note">📩 送信後、運営が内容を確認して<b>確定</b>します（即時確定ではありません）。確定後にメールでお知らせします。</div>
+  </div>
+  </div>
+</div>
+
+<div class="pc-footer">
+  <a href="https://keydrop.jp/faq.html" target="_blank" rel="noopener">FAQ</a>
+  <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener" data-mp="mn_contact">お問い合わせ</a>
+  <a href="https://keydrop.jp/clause.html" target="_blank" rel="noopener">貸渡約款</a>
+  <div style="color:rgba(255,255,255,.5);margin-top:10px">© 2026 KEYDROP / Global Lines Inc.</div>
+</div>
+
+<!-- 変更モーダル -->
+<div class="scrim" id="chgScrim"><div class="sheet">
+  <h3 data-mp="ch_h">変更をリクエスト</h3>
+  <div class="sub" data-mp="ch_sub">お届け・回収の時間／場所を変更できます。送信後、運営が確認して確定します。</div>
+  <div class="fgrp"><div class="fl">🚗 <span data-mp="ch_del_t">お届けの時間</span></div><select class="fld" id="chDelTime"></select></div>
+  <div class="fgrp"><div class="fl">📍 <span data-mp="ch_del_p">お届けの場所</span></div>
+    <div class="frow"><div class="curplace" id="chDelPlace">北海道札幌市中央区南２条西４丁目１２−１</div><button class="mapbtn" onclick="openMap('del')" data-mp="ch_map">地図で変更</button></div></div>
+  <div class="fgrp"><div class="fl">🏁 <span data-mp="ch_col_t">回収の時間</span></div><select class="fld" id="chColTime"></select></div>
+  <div class="fgrp"><div class="fl">📍 <span data-mp="ch_col_p">回収の場所</span></div>
+    <div class="frow"><div class="curplace" id="chColPlace"><span class="pfx" data-mp="c_same">お届け先と同じ</span></div><button class="mapbtn" onclick="openMap('col')" data-mp="ch_map">地図で変更</button></div></div>
+  <div class="sacts"><button class="cancel" onclick="closeChg()" data-mp="btn_close">閉じる</button><button class="submit" onclick="submitChg()" data-mp="btn_reqchg">変更をリクエスト</button></div>
+</div></div>
+
+<!-- キャンセルモーダル -->
+<div class="scrim" id="cxlScrim"><div class="sheet">
+  <h3 data-mp="cx_h">キャンセルをリクエスト</h3>
+  <div class="sub" data-mp="cx_sub">下記のキャンセル料規定をご確認のうえ、送信してください。</div>
+  <table class="feetbl"><thead><tr><th data-mp="cx_when">時期</th><th data-mp="cx_fee">キャンセル料</th></tr></thead>
+    <tbody id="cxTbody"></tbody></table>
+  <label class="agchk"><input type="checkbox" id="cxAgree" onchange="document.getElementById('cxSubmit').disabled=!this.checked"><span data-mp="cx_agree">キャンセル料規定に同意します</span></label>
+  <div class="sacts"><button class="cancel" onclick="closeCxl()" data-mp="btn_close">閉じる</button><button class="submit danger" id="cxSubmit" disabled onclick="submitCxl()" data-mp="btn_reqcxl">キャンセルをリクエスト</button></div>
+</div></div>
+
+<!-- 地図モーダル（デリバリーUX再利用） -->
+<div class="mapmodal" id="mapModal"><div class="mapwrap">
+  <div class="mapbar"><span id="mapTitle">📍 地図で場所を選ぶ</span><button onclick="closeMap()" aria-label="close">×</button></div>
+  <iframe id="mapFrame" title="地図で場所を選ぶ"></iframe>
+  <button class="mapdone" id="mapDone" disabled onclick="applyMapPick()" data-mp="map_done">この場所で決定</button>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var AREA='sapporo'; // モックのサンプル予約
+var MP={
+ ja:{p_sub:'ご予約の確認・変更・キャンセル',c_resv:'ご予約内容',c_no:'予約番号',c_store:'店舗',c_car:'車両',c_out:'出発',c_ret:'返却',c_del:'お届け先',c_col:'回収先',c_same:'お届け先と同じ',c_total:'料金',c_days:'（¥11,000 × 2日）',a_title:'変更・キャンセルをリクエスト',a_change:'変更をリクエスト',a_cancel:'キャンセルをリクエスト',a_note:'📩 送信後、運営が内容を確認して<b>確定</b>します（即時確定ではありません）。確定後にメールでお知らせします。',ch_h:'変更をリクエスト',ch_sub:'お届け・回収の時間／場所を変更できます。送信後、運営が確認して確定します。',ch_del_t:'お届けの時間',ch_del_p:'お届けの場所',ch_col_t:'回収の時間',ch_col_p:'回収の場所',ch_map:'地図で変更',btn_close:'閉じる',btn_reqchg:'変更をリクエスト',cx_h:'キャンセルをリクエスト',cx_sub:'下記のキャンセル料規定をご確認のうえ、送信してください。',cx_when:'時期',cx_fee:'キャンセル料',cx_agree:'キャンセル料規定に同意します',btn_reqcxl:'キャンセルをリクエスト',store_spk:'札幌エリア',car_b:'Bクラス（ノア 等）',map_done:'この場所で決定',map_title:'📍 地図で場所を選ぶ',t_sent:'リクエストを送信しました。運営が確認して確定します。',t_cxl:'キャンセルのリクエストを送信しました。運営が確認して確定します。',mn_top:'トップへ戻る',mn_guide:'マイページの使い方',mn_contact:'お問い合わせ',lg_title:'予約を確認する',lg_sub:'ご予約番号と、ご予約時のメールアドレスを入力してください。',lg_no:'予約番号',lg_email:'メールアドレス',lg_btn:'予約を確認する',lg_note:'🔒 予約番号＋メールアドレスで確認できます。ご予約完了メール／LINEのリンクからもアクセス可能です（デモ）。',lg_err:'⚠️ 予約番号とメールアドレスを入力してください。'},
+ en:{p_sub:'View / change / cancel your booking',c_resv:'Booking details',c_no:'Booking No.',c_store:'Store',c_car:'Vehicle',c_out:'Pick-up',c_ret:'Return',c_del:'Delivery to',c_col:'Collection',c_same:'Same as delivery',c_total:'Total',c_days:'(¥11,000 × 2 days)',a_title:'Request a change or cancellation',a_change:'Request a change',a_cancel:'Request cancellation',a_note:'📩 After you send, our team reviews and <b>confirms</b> it (not instant). We will email you once confirmed.',ch_h:'Request a change',ch_sub:'Change the delivery/collection time or place. After sending, our team confirms it.',ch_del_t:'Delivery time',ch_del_p:'Delivery place',ch_col_t:'Collection time',ch_col_p:'Collection place',ch_map:'Change on map',btn_close:'Close',btn_reqchg:'Request change',cx_h:'Request cancellation',cx_sub:'Please review the cancellation policy below before sending.',cx_when:'Timing',cx_fee:'Cancellation fee',cx_agree:'I agree to the cancellation policy',btn_reqcxl:'Request cancellation',store_spk:'Sapporo area',car_b:'Class B (Noah etc.)',map_done:'Set this location',map_title:'📍 Choose a place on the map',t_sent:'Your request has been sent. Our team will review and confirm it.',t_cxl:'Your cancellation request has been sent. Our team will review and confirm it.',mn_top:'Back to top',mn_guide:'Using My Page',mn_contact:'Contact Us',lg_title:'View your booking',lg_sub:'Enter your booking number and the email used at booking.',lg_no:'Booking No.',lg_email:'Email',lg_btn:'View booking',lg_note:'🔒 Sign in with your booking number and email. You can also open it from the link in your confirmation email/LINE (demo).',lg_err:'⚠️ Please enter your booking number and email.'},
+ zh:{p_sub:'查詢／變更／取消預約',c_resv:'預約內容',c_no:'預約編號',c_store:'店舗',c_car:'車輛',c_out:'出發',c_ret:'歸還',c_del:'送達地點',c_col:'回收地點',c_same:'與送達地點相同',c_total:'費用',c_days:'（¥11,000 × 2天）',a_title:'申請變更或取消',a_change:'申請變更',a_cancel:'申請取消',a_note:'📩 送出後由營運方確認並<b>確定</b>（非即時確定）。確定後將以電子郵件通知。',ch_h:'申請變更',ch_sub:'可變更送車／回收的時間或地點。送出後由營運方確認。',ch_del_t:'送車時間',ch_del_p:'送車地點',ch_col_t:'回收時間',ch_col_p:'回收地點',ch_map:'在地圖上變更',btn_close:'關閉',btn_reqchg:'申請變更',cx_h:'申請取消',cx_sub:'請確認以下取消費規定後送出。',cx_when:'時期',cx_fee:'取消費',cx_agree:'我同意取消費規定',btn_reqcxl:'申請取消',store_spk:'札幌區域',car_b:'B級（Noah 等）',map_done:'選擇此地點',map_title:'📍 於地圖選擇地點',t_sent:'已送出申請。營運方將確認並確定。',t_cxl:'已送出取消申請。營運方將確認並確定。',mn_top:'返回首頁',mn_guide:'使用說明',mn_contact:'聯絡我們',lg_title:'查詢預約',lg_sub:'請輸入預約編號與預約時的電子郵件。',lg_no:'預約編號',lg_email:'電子郵件',lg_btn:'查詢預約',lg_note:'🔒 以預約編號與電子郵件登入。亦可透過預約完成信／LINE 連結進入（示範）。',lg_err:'⚠️ 請輸入預約編號與電子郵件。'},
+ ko:{p_sub:'예약 조회 / 변경 / 취소',c_resv:'예약 내용',c_no:'예약 번호',c_store:'매장',c_car:'차량',c_out:'출발',c_ret:'반납',c_del:'배달 장소',c_col:'회수 장소',c_same:'배달 장소와 동일',c_total:'요금',c_days:'(¥11,000 × 2일)',a_title:'변경·취소 요청',a_change:'변경 요청',a_cancel:'취소 요청',a_note:'📩 전송 후 운영팀이 확인하여 <b>확정</b>합니다(즉시 확정 아님). 확정되면 이메일로 안내드립니다.',ch_h:'변경 요청',ch_sub:'배달·회수 시간/장소를 변경할 수 있습니다. 전송 후 운영팀이 확인합니다.',ch_del_t:'배달 시간',ch_del_p:'배달 장소',ch_col_t:'회수 시간',ch_col_p:'회수 장소',ch_map:'지도에서 변경',btn_close:'닫기',btn_reqchg:'변경 요청',cx_h:'취소 요청',cx_sub:'아래 취소 수수료 규정을 확인 후 전송해 주세요.',cx_when:'시기',cx_fee:'취소 수수료',cx_agree:'취소 수수료 규정에 동의합니다',btn_reqcxl:'취소 요청',store_spk:'삿포로 지역',car_b:'B클래스 (노아 등)',map_done:'이 위치로 결정',map_title:'📍 지도에서 장소 선택',t_sent:'요청을 전송했습니다. 운영팀이 확인 후 확정합니다.',t_cxl:'취소 요청을 전송했습니다. 운영팀이 확인 후 확정합니다.',mn_top:'홈으로',mn_guide:'마이페이지 사용법',mn_contact:'문의하기',lg_title:'예약 조회',lg_sub:'예약 번호와 예약 시 이메일을 입력하세요.',lg_no:'예약 번호',lg_email:'이메일',lg_btn:'예약 조회',lg_note:'🔒 예약 번호와 이메일로 로그인합니다. 예약 완료 메일/LINE 링크로도 접속 가능합니다(데모).',lg_err:'⚠️ 예약 번호와 이메일을 입력하세요.'}
+};
+var CXFEE={
+ ja:[['7日前まで','無料'],['6〜3日前','20%'],['2日前・前日','30%'],['当日以降','50%'],['台風等の不可抗力（航空便欠航証明）','無料']],
+ en:[['Up to 7 days before','Free'],['6–3 days before','20%'],['2 days–day before','30%'],['On the day or later','50%'],['Force majeure (certified flight cancellation)','Free']],
+ zh:[['7天前為止','免費'],['6〜3天前','20%'],['2天前・前一日','30%'],['當日以後','50%'],['颱風等不可抗力（航班取消證明）','免費']],
+ ko:[['7일 전까지','무료'],['6〜3일 전','20%'],['2일 전·전일','30%'],['당일 이후','50%'],['태풍 등 불가항력(항공편 결항 증명)','무료']]
+};
+function L(){return (window.hdmLang?window.hdmLang():'ja');}
+function mpT(k){var d=MP[L()]||MP.ja;return (d[k]!=null?d[k]:(MP.ja[k]!=null?MP.ja[k]:k));}
+function applyMP(){
+ document.querySelectorAll('[data-mp]').forEach(function(el){el.innerHTML=mpT(el.getAttribute('data-mp'));});
+ document.getElementById('vStore').textContent=mpT('store_spk');
+ document.getElementById('vCar').textContent=mpT('car_b');
+ document.getElementById('mapTitle').textContent=mpT('map_title');
+ // キャンセル料表
+ var tb=document.getElementById('cxTbody');if(tb){tb.innerHTML=(CXFEE[L()]||CXFEE.ja).map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>';}).join('');}
+ kdLangActive();
+}
+// 時間プルダウン 9:00〜19:00
+(function(){var o='';for(var h=9;h<=19;h++){for(var m=0;m<60;m+=30){if(h===19&&m>0)break;var s=('0'+h).slice(-2)+':'+('0'+m).slice(-2);o+='<option value="'+s+'">'+s+'</option>';}}
+ var a=document.getElementById('chDelTime'),b=document.getElementById('chColTime');a.innerHTML=o;b.innerHTML=o;a.value='09:00';b.value='18:00';})();
+
+// メニュー / 言語
+function openMenu(){document.getElementById('menuOverlay').classList.add('open');document.getElementById('slideMenu').classList.add('open');document.body.style.overflow='hidden';kdLangActive();}
+function closeMenu(){document.getElementById('menuOverlay').classList.remove('open');document.getElementById('slideMenu').classList.remove('open');document.body.style.overflow='';}
+function kdSetLang(l){if(window.hdmSetLang)window.hdmSetLang(l);kdLangActive();}
+function kdLangActive(){var l=L();document.querySelectorAll('.menu-lang-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===l);});}
+window.hdmOnLang=function(){try{applyMP();}catch(e){}};
+
+// 変更モーダル
+function openChg(){document.getElementById('chgScrim').classList.add('on');document.body.style.overflow='hidden';}
+function closeChg(){document.getElementById('chgScrim').classList.remove('on');document.body.style.overflow='';}
+function openCxl(){document.getElementById('cxlScrim').classList.add('on');document.body.style.overflow='hidden';}
+function closeCxl(){document.getElementById('cxlScrim').classList.remove('on');document.body.style.overflow='';}
+function submitChg(){closeChg();showToast(mpT('t_sent'));}
+function submitCxl(){closeCxl();showToast(mpT('t_cxl'));}
+function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},3800);}
+
+// 地図で場所変更（デリバリーUX再利用）
+var _mapWhich='del',_mapPick=null;
+function openMap(which){_mapWhich=which;_mapPick=null;var f=document.getElementById('mapFrame');
+ f.setAttribute('src','keydrop-deliv-mock.html?embed=1&area='+AREA+'&lang='+L());
+ document.getElementById('mapDone').disabled=true;
+ document.getElementById('mapModal').classList.add('on');document.body.style.overflow='hidden';}
+function closeMap(){document.getElementById('mapModal').classList.remove('on');document.getElementById('mapFrame').removeAttribute('src');document.body.style.overflow='';}
+window.addEventListener('message',function(e){var d=e&&e.data;if(!d||d.type!=='hdmdeliv')return;
+ // お届け側のピンを採用（回収変更時も同UIのdelピンを使う）
+ var o=d.del;if(o&&o.addr){_mapPick={label:o.label||o.addr,addr:o.addr};document.getElementById('mapDone').disabled=false;}
+});
+function applyMapPick(){if(!_mapPick)return;var box=document.getElementById(_mapWhich==='del'?'chDelPlace':'chColPlace');
+ box.innerHTML=esc(_mapPick.label)+(_mapPick.addr&&_mapPick.addr!==_mapPick.label?'<br><span class="pfx">📮</span> '+esc(_mapPick.addr):'');
+ if(_mapWhich==='del'){document.getElementById('vDel').textContent=_mapPick.label;}
+ closeMap();}
+function esc(s){return (s||'').replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];});}
+
+function doLogin(){var no=((document.getElementById('lgNo')||{}).value||'').trim();var em=((document.getElementById('lgEmail')||{}).value||'').trim();var m=document.getElementById('lgMsg');if(!no||!em){if(m)m.textContent=mpT('lg_err');return;}document.getElementById('vNo').textContent=no.toUpperCase();document.getElementById('loginView').style.display='none';document.getElementById('resvView').style.display='block';window.scrollTo(0,0);}
+(function(){var q=new URLSearchParams(location.search);if(q.get('t')||q.get('demo')==='1'){var lv=document.getElementById('loginView'),rv=document.getElementById('resvView');if(lv)lv.style.display='none';if(rv)rv.style.display='block';}})();
+applyMP();
+</script>
+<script src="official-i18n.js"></script>
+</body></html>
