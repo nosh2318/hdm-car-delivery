@@ -1,4 +1,6 @@
 <!doctype html><html lang="ja"><head>
+<!-- Google Tag Manager --><script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KVF3F48X');</script><!-- End GTM -->
+
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>ご予約｜ KEYDROP カーデリバリー（モック）</title>
@@ -288,6 +290,8 @@ select.fld:focus{box-shadow:0 0 0 3px rgba(250,190,0,.35)}
 .pc-footer a:hover{text-decoration:underline}
 </style></head>
 <body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KVF3F48X" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
 <header><div class="hin">
   <a href="keydrop-top.html"><img class="logoFull" src="images/keydrop-logo-white.png" alt="KEYDROP" style="height:28px"><img class="logoShort" src="images/keydrop-logo-white.png" alt="KEYDROP" style="height:28px"></a>
   <span id="hdmlang-slot" style="margin-left:auto"></span>
@@ -800,6 +804,7 @@ async function payWithCard(){
   if(errEl){errEl.style.display='none';errEl.textContent='';}
   if(!sqCard){if(errEl){errEl.style.display='block';errEl.textContent=T('pc_prep');}initSquareCard();return;}
   if(btn){btn.disabled=true;btn.textContent=T('pc_proc');}
+  try{window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'checkout_click',store:(area==='sapporo'?'spk':'nha'),vehicle_class:state.cls,currency:'JPY',value:subtotalBeforeCoupon()});}catch(e){}
   var token;
   try{
     var result=await sqCard.tokenize();
@@ -826,7 +831,9 @@ async function payWithCard(){
     var res=await fetch(SUPABASE_URL+'/functions/v1/keydrop-pay',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});
     var data=await res.json().catch(function(){return {};});
     if(!res.ok||!data.ok){if(errEl){errEl.style.display='block';errEl.textContent=(data&&data.error)||T('pc_pay_fail');}reEnable();return;}
-    state._resId=data.reservationId;step='done';applyStep();
+    state._resId=data.reservationId;
+    try{var _em=(document.getElementById('fEmail')||{}).value||'';var _ph=(document.getElementById('fPhone')||{}).value||'';var _nm=(document.getElementById('fName')||{}).value||'';var _val=Number(data.amount)||subtotalBeforeCoupon();var _st=(area==='sapporo'?'spk':'nha');window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'booking_complete',transaction_id:data.reservationId,currency:'JPY',value:_val,store:_st,vehicle_class:state.cls,user_data:{email:_em,phone_number:_ph,name:_nm},ecommerce:{transaction_id:data.reservationId,currency:'JPY',value:_val,items:[{item_name:state.cls||'car_rental',quantity:1,price:_val}]}});if(typeof gtag==='function'){gtag('event','purchase',{transaction_id:data.reservationId,currency:'JPY',value:_val});}}catch(e){}
+    step='done';applyStep();
   }catch(e){if(errEl){errEl.style.display='block';errEl.textContent=T('pc_net_fail');}reEnable();}
 }
 function goBack(){var i=ORD.indexOf(step);if(i>0){step=ORD[i-1];applyStep();}}
