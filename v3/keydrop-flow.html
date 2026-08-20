@@ -494,7 +494,7 @@ function ymList(a,b){var out=[];if(!a||!b)return out;var s=new Date(a.slice(0,7)
 var PRICE_DATA=null;
 function localYMD(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function tierIndexOf(dateStr){var def=(PRICE_DATA&&PRICE_DATA.default!=null)?PRICE_DATA.default:1;if(!PRICE_DATA||!PRICE_DATA.presets)return def;var md=(dateStr||'').slice(5);for(var i=0;i<PRICE_DATA.presets.length;i++){var pp=PRICE_DATA.presets[i];if(!pp.start||!pp.end)continue;var inR=(pp.start<=pp.end)?(md>=pp.start&&md<=pp.end):(md>=pp.start||md<=pp.end);if(inR)return pp.tier;}return def;}
-function priceOf(type){if(PRICE_DATA&&PRICE_DATA.prices&&PRICE_DATA.prices[type]){var di=(PRICE_DATA.default!=null?PRICE_DATA.default:1);return PRICE_DATA.prices[type][di]||0;}return (CLS[type]&&CLS[type].p)||0;}
+function priceOf(type){if(PRICE_DATA&&PRICE_DATA.prices&&PRICE_DATA.prices[type]){var a=PRICE_DATA.prices[type].filter(function(x){return x&&x>0;});return a.length?Math.min.apply(null,a):0;}return (CLS[type]&&CLS[type].p)||0;}
 function classTotal(type){var days=daysCount();if(PRICE_DATA&&PRICE_DATA.prices&&PRICE_DATA.prices[type]){if(!pD)return priceOf(type)*days;var total=0;var base=new Date(pD+'T00:00:00');for(var i=0;i<days&&i<120;i++){var dd=new Date(base);dd.setDate(dd.getDate()+i);total+=(PRICE_DATA.prices[type][tierIndexOf(localYMD(dd))]||0);}return total;}return ((CLS[type]&&CLS[type].p)||0)*days;}
 function insTotal(){return (insPrice[state.ins]||0)*daysCount();}
 function subtotalBeforeCoupon(){if(!state.cls)return 0;return classTotal(state.cls)+insTotal()+optTotal();}
