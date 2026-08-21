@@ -670,7 +670,7 @@ function renderV(){
   var visible=ORDER.filter(function(k){return classAvail(k);});
   document.getElementById('vgrid').innerHTML=ORDER.map(function(k){var c=CLS[k];var av=classAvail(k);return (
     '<div class="vc'+(state.cls===k?' on':'')+(av?'':' soldout')+'" data-k="'+k+'"><div class="pic">'+carImg(k)+'<span class="clschip">'+kdCls(c.l)+'</span>'+''+(av?'<span class="check">✓</span>':'<span class="soldbadge">'+T('fl_full')+'</span>')+'</div>'+
-    '<div class="bd"><div class="nm">'+kdVeh(c.v)+'</div><div class="pr"><b>¥'+priceOf(k).toLocaleString()+'</b><small>'+T('perday')+'</small></div><div class="sp">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</div>'+
+    '<div class="bd"><div class="nm">'+kdVeh(c.v)+'</div><div class="pr">'+(priceOf(k)?('<b>¥'+priceOf(k).toLocaleString()+'</b><small>'+T('perday')+'</small>'):'<b>¥—</b>')+'</div><div class="sp">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</div>'+
     '<div class="vbtns">'+(av?'<button class="vpick" onclick="decideV(\''+k+'\')">'+(state.cls===k?T('fl_decided'):T('fl_decide'))+'</button>':'<div class="soldmsg">'+T('fl_nostock')+'</div>')+
     '<button class="vdetail" onclick="openDetail(\''+k+'\')">'+T('fl_detail')+'</button></div></div></div>');
   }).join('');
