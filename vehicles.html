@@ -128,7 +128,7 @@ function render(){
   let html='';
   order.forEach(function(k){
     const it=(cls.items||{})[k]; if(!it||it.show===false)return;
-    const base='images/'+(IMG[k]||'class_C');
+    const base='v3/official-assets/cars/'+(IMG[k]||'class_C');
     const img=base+(NHA?'_nha':'')+'.png', imgFb=base+'.png';
     html+='<div class="card">'
       +'<div class="img"><span class="tag" style="background:'+(COLORS[k]||'#1a1a1a')+'">'+k+'</span><img src="'+img+'" onerror="this.onerror=null;this.src=\''+imgFb+'\'" alt="'+(it.label||'')+'" loading="lazy"></div>'
