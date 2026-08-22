@@ -85,6 +85,52 @@ async function nhaPatchTasks(resId: string, del: any, col: any, marker?: string)
 async function nhaDeleteTasks(resId: string): Promise<void> {
   await sbDelete("nha_tasks", encodeURIComponent("予約番号") + "=eq." + encodeURIComponent(resId));
 }
+// 場所/時間の変更を正本(reservations)＋OPタスクへ反映（承認後に呼ぶ共用ヘルパー）。
+// 2026-08-22 全て承認制化に伴い、update(即時)から分離して decide(承認) から呼ぶ。
+async function applyPlaceTime(M: any, resId: string, r: any, vals: { delPlace: string | null; colPlace: string | null; lendTime: string | null; returnTime: string | null }): Promise<boolean> {
+  const { delPlace, colPlace, lendTime, returnTime } = vals;
+  const rPatch: Record<string, unknown> = {};
+  if (delPlace !== null) rPatch.del_place = delPlace;
+  if (colPlace !== null) rPatch.col_place = colPlace;
+  if (lendTime !== null) { rPatch[M.lendTimeCol] = lendTime; rPatch.del_time = lendTime; }
+  if (returnTime !== null) { rPatch[M.returnTimeCol] = returnTime; rPatch.col_time = returnTime; }
+  if (Object.keys(rPatch).length) { const ok = await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}`, rPatch); if (!ok) return false; }
+  const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
+  const lbls: string[] = [];
+  if (delPlace !== null) lbls.push("お届け場所");
+  if (lendTime !== null) lbls.push("お届け時間");
+  if (colPlace !== null) lbls.push("回収場所");
+  if (returnTime !== null) lbls.push("回収時間");
+  const marker = `✅変更済(${stamp}):${lbls.join("・")}`;
+  if (M.store === "nha") {
+    await nhaPatchTasks(resId, { place: delPlace, time: lendTime }, { place: colPlace, time: returnTime }, marker);
+  } else {
+    const patchTask = async (taskId: string, patch: Record<string, unknown>) => {
+      const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(taskId)}&select=_id,memo,changed_json`);
+      if (!cur[0]) return; // タスク未生成なら本体が次回reservationsから生成（正本は更新済）
+      const memo = String(cur[0].memo || "");
+      const newMemo = memo.includes(marker) ? memo : (memo ? memo + " " + marker : marker);
+      let cj: any = {};
+      try { cj = cur[0].changed_json && typeof cur[0].changed_json === "object" ? cur[0].changed_json : (cur[0].changed_json ? JSON.parse(cur[0].changed_json) : {}); } catch { cj = {}; }
+      cj.kd_customer_changed_at = new Date().toISOString();
+      // OP戻り防止：場所は _placeSource=customer＋_ssPlace／時間は _timeChange(最優先)＋_ssTime
+      if (patch.place !== undefined) { cj._ssPlace = String(patch.place); cj._placeSource = "customer"; }
+      if (patch.time !== undefined) { cj._ssTime = String(patch.time); cj._timeChange = String(patch.time); }
+      await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(taskId)}`, { ...patch, memo: newMemo, changed_json: cj });
+    };
+    const delTaskPatch: Record<string, unknown> = {};
+    if (delPlace !== null) delTaskPatch.place = delPlace;
+    if (lendTime !== null) delTaskPatch.time = lendTime;
+    if (colPlace !== null) delTaskPatch.col_place = colPlace;
+    if (returnTime !== null) delTaskPatch.return_time = returnTime;
+    if (Object.keys(delTaskPatch).length) await patchTask(`d-${resId}`, delTaskPatch);
+    const colTaskPatch: Record<string, unknown> = {};
+    if (colPlace !== null) colTaskPatch.place = colPlace;
+    if (returnTime !== null) colTaskPatch.time = returnTime;
+    if (Object.keys(colTaskPatch).length) await patchTask(`c-${resId}`, colTaskPatch);
+  }
+  return true;
+}
 async function sbPost(table: string, body: unknown): Promise<void> {
   const r = await fetch(`${SB_URL}/rest/v1/${table}`, {
     method: "POST",
@@ -221,6 +267,54 @@ Deno.serve(async (req) => {
   // 🔑 マイページURL用トークン（?t=<mypage_token>）。メールで本人にだけURLを送る＝URL所持＝本人（ログイン不要）
   const token = String(p.token || "").trim();
 
+  // 🔑 スタッフ管理アクション（staff_token認証）は、顧客用の mail/token 認証ゲートより前に処理する。
+  //    decide は change_id から予約を特定するため、顧客の mail/token を必要としない。
+  if (action === "decide") {
+    const staffToken = String(p.staff_token || "").trim();
+    const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
+    if (!who.ok) return json({ error: "unauthorized" }, 401, origin);
+    const actor = "staff:" + (((await who.json().catch(() => ({}))) as any)?.email || "kd-admin");
+    const changeId = p.change_id;
+    const decision = String(p.decision || "").trim(); // approved | rejected
+    if (!changeId || !["approved", "rejected"].includes(decision)) return json({ error: "パラメータ不正" }, 400, origin);
+    const cRows = await sbGet("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}&select=id,reservation_id,store,field,new_value,note,payload,status&limit=1`);
+    const c = cRows[0];
+    if (!c) return json({ error: "対象が見つかりません" }, 404, origin);
+    if (c.status !== "requested") return json({ error: "既に処理済みです" }, 409, origin);
+    const M2 = mkStore(c.store === "nha" ? "nha" : "spk");
+    const rid2 = String(c.reservation_id);
+    const pl = (c.payload && typeof c.payload === "object") ? c.payload : {};
+    if (decision === "approved") {
+      if (c.field === "insurance" && pl.insurance) {
+        await sbPatch(M2.resv, `id=eq.${encodeURIComponent(rid2)}`, { insurance: String(pl.insurance) });
+        const its = await sbGet(M2.tasks, `reservation_id=eq.${encodeURIComponent(rid2)}&deleted=not.is.true&select=_id`).catch(() => []);
+        for (const t of its) await sbPatch(M2.tasks, `_id=eq.${encodeURIComponent(String(t._id))}`, { insurance: String(pl.insurance) });
+      } else if (c.field === "option") {
+        const rp: Record<string, unknown> = {};
+        if (pl.opt_b != null) rp.opt_b = Number(pl.opt_b) || 0;
+        if (pl.opt_c != null) rp.opt_c = Number(pl.opt_c) || 0;
+        if (pl.opt_j != null) rp.opt_j = Number(pl.opt_j) || 0;
+        if (Object.keys(rp).length) await sbPatch(M2.resv, `id=eq.${encodeURIComponent(rid2)}`, rp);
+      } else if (["del_place", "col_place", "lend_time", "return_time"].includes(c.field)) {
+        // ★2026-08-22 場所/時間の承認＝正本(reservations)＋OPタスクへ反映（HANDYMAN札幌と同一・applyPlaceTime）
+        const rr0 = (await sbGet(M2.resv, `id=eq.${encodeURIComponent(rid2)}&select=*`).catch(() => []))[0] || {};
+        await applyPlaceTime(M2, rid2, rr0, {
+          delPlace: pl.del_place != null ? String(pl.del_place) : null,
+          colPlace: pl.col_place != null ? String(pl.col_place) : null,
+          lendTime: pl.lend_time != null ? String(pl.lend_time) : null,
+          returnTime: pl.return_time != null ? String(pl.return_time) : null,
+        });
+      }
+    }
+    await sbPatch("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: decision, actor });
+    const rr = (await sbGet(M2.resv, `id=eq.${encodeURIComponent(rid2)}&select=name,mail`).catch(() => []))[0] || {};
+    if (rr.mail && String(rr.mail).includes("@")) {
+      await sbPost("keydrop_notifications", { reservation_id: rid2, store: M2.store, to_email: rr.mail, type: "mypage_decision", sent: false, payload: { name: rr.name || "", decision, label: c.note || c.field, detail: c.new_value || "" } }).catch(() => {});
+    }
+    await notifySlack(`${decision === "approved" ? "✅ *承認*" : "🚫 *却下*"} [KEYDROP] ${rr.name || ""}様 ${rid2}\n依頼: ${c.note || c.field}（${c.new_value || ""}）\n担当: ${actor}\n→ 顧客へメール通知`, M2.slack);
+    return json({ ok: true, decided: decision }, 200, origin);
+  }
+
   let M: any, r: any, resId = resId0;
 
   if (token && /^[0-9a-fA-F-]{36}$/.test(token)) {
@@ -289,6 +383,7 @@ Deno.serve(async (req) => {
     const insR = String(r.insurance || "").trim() || String(dTask?.insurance || cTask?.insurance || "").trim();
     const pendingCancel = !!pay[0]?.cancel_requested_at || chg.some((c: any) => c.field === "cancel" && c.status === "requested");
     const readyPending = chg.some((c: any) => c.field === "ready" && c.status === "requested");
+    const receivedDone = chg.some((c: any) => c.field === "received" && c.status === "applied");
     const history = chg.map((c: any) => ({ field: c.field, value: c.new_value, old: c.old_value, at: c.created_at, source: c.source === "staff" ? "staff" : "customer_mypage", status: c.status, actor: c.actor })).slice(0, 10);
     const cr = pay[0]?.change_req || null;
     return json({
@@ -307,8 +402,25 @@ Deno.serve(async (req) => {
       },
       damage: { ready: damageReady, url: damageUrl },
       tracking: { active: r.kd_status === "delivering" || r.kd_status === "collecting", kd_status: r.kd_status || null, token: r.kd_track_token || null },
-      pendingCancel, readyPending, recentChanges: chg, history,
+      pendingCancel, readyPending, received: receivedDone, recentChanges: chg, history,
     }, 200, origin);
+  }
+
+  // ---- receive_done: お客様が「受け取り完了」を報告 → (札幌)お届け(DEL)タスクを済化 ＋ 記録 ＋ Slack ----
+  if (action === "receive_done") {
+    const stR = String(r.status || "");
+    if (stR === "cancelled" || stR === "キャンセル" || stR === "cancel") return json({ error: "キャンセル済みの予約です" }, 409, origin);
+    const prevR = await sbGet("keydrop_mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&field=eq.received&status=eq.applied&select=id&limit=1`).catch(() => []);
+    if (prevR[0]) return json({ ok: true, received: true, already: true }, 200, origin);
+    // 札幌のみ お届け(d-)タスクを済(完了)に（那覇nha_tasksはdone列が無い構造のため触らない）
+    if (M.store === "spk") {
+      const tks = await sbGet(M.tasks, `reservation_id=eq.${encodeURIComponent(resId)}&deleted=not.is.true&select=_id,done`).catch(() => []);
+      const delT = tks.find((t: any) => String(t._id || "").startsWith("d-")) || tks[0];
+      if (delT && delT.done !== true) await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(String(delT._id))}`, { done: true });
+    }
+    await sbPost("keydrop_mypage_changes", { reservation_id: resId, store: M.store, field: "received", old_value: "", new_value: "受取完了", source: "customer", status: "applied", note: "お客様がマイページで受け取り完了を報告" });
+    await notifySlackCard({ emoji: "✅", title: `お客様 受け取り完了（${M.store === "nha" ? "那覇" : "札幌"}）`, name: r.name || "-", resId, ota: r.ota || "KEYDROP", period: `${r.lend_date || "-"} 〜 ${r.return_date || "-"}`, vehicle: r.vehicle || "-", action: "お客様が車両の受け取り完了を報告しました。" }, M.slack);
+    return json({ ok: true, received: true }, 200, origin);
   }
 
   if (action === "cancel") {
@@ -333,7 +445,8 @@ Deno.serve(async (req) => {
     return json({ ok: true, cancelled: true }, 200, origin);
   }
 
-  // ── 予約内容（場所/時間）の変更：お届け(出発)24時間前まで・場所と時間のみ ──
+  // ── 予約内容（場所/時間）の変更：★2026-08-22 HANDYMAN札幌と同一＝時間制限なし・全て承認制 ──
+  //   即時反映しない。keydrop_mypage_changes に field別 requested を記録→管理画面(my-admin)で承認→applyPlaceTimeで反映＋顧客メール。
   if (action === "update") {
     const st = String(r.status || "");
     if (st === "cancelled" || st === "キャンセル" || st === "cancel") {
@@ -345,115 +458,48 @@ Deno.serve(async (req) => {
     const colPlace = has("col_place") ? String(p.col_place || "").trim() : null;
     const lendTime = has("lend_time") ? String(p.lend_time || "").trim() : null;
     const returnTime = has("return_time") ? String(p.return_time || "").trim() : null;
-
-    // 時間軸（SPKと統一）：お届け(場所/時間)＝出発24時間前まで即時 ／ 回収(場所/時間)＝返却2時間前まで即時。以降は公式LINE。
-    const _delChg = (delPlace !== null || lendTime !== null);
-    const _colChg = (colPlace !== null || returnTime !== null);
-    if (_delChg && within24h(r.lend_date, r.lend_time || r.del_time || "")) {
-      return json({ error: "お届けの変更は出発24時間前まで。以降は公式LINEにて承ります", lineOnly: true }, 409, origin);
-    }
-    if (_colChg && hoursUntil(r.return_date, r.return_time || r.col_time || "") < 2) {
-      return json({ error: "回収の変更は返却2時間前まで。以降は公式LINEにて承ります", lineOnly: true }, 409, origin);
-    }
+    const dLat = has("del_lat") && p.del_lat != null ? Number(p.del_lat) : null;
+    const dLng = has("del_lng") && p.del_lng != null ? Number(p.del_lng) : null;
+    const cLat = has("col_lat") && p.col_lat != null ? Number(p.col_lat) : null;
+    const cLng = has("col_lng") && p.col_lng != null ? Number(p.col_lng) : null;
 
     if (delPlace !== null && delPlace.length < 2) return json({ error: "お届け場所が不正です" }, 400, origin);
     if (colPlace !== null && colPlace.length < 2) return json({ error: "回収場所が不正です" }, 400, origin);
     if (lendTime !== null && !validTime(lendTime)) return json({ error: "お届け時間は9:00〜19:00（30分刻み）で指定してください" }, 400, origin);
     if (returnTime !== null && !validTime(returnTime)) return json({ error: "回収時間は9:00〜19:00（30分刻み）で指定してください" }, 400, origin);
-
     if (delPlace === null && colPlace === null && lendTime === null && returnTime === null) {
       return json({ error: "変更内容がありません" }, 400, origin);
     }
 
-    // 1) reservations（正本）を更新。時間は lend_time/del_time・return_time/col_time を両系統そろえる
-    const rPatch: Record<string, unknown> = {};
-    if (delPlace !== null) rPatch.del_place = delPlace;
-    if (colPlace !== null) rPatch.col_place = colPlace;
-    if (lendTime !== null) { rPatch[M.lendTimeCol] = lendTime; rPatch.del_time = lendTime; }
-    if (returnTime !== null) { rPatch[M.returnTimeCol] = returnTime; rPatch.col_time = returnTime; }
-    const okRes = await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}`, rPatch);
-    if (!okRes) return json({ error: "変更の保存に失敗しました" }, 500, origin);
+    const oldOf = (f: string) => String((f === "del_place" ? r.del_place : f === "col_place" ? r.col_place : f === "lend_time" ? (r.lend_time || r.del_time) : (r.return_time || r.col_time)) ?? "");
+    const noteOf = (f: string) => f === "del_place" ? "お届け場所変更（承認制）" : f === "col_place" ? "回収場所変更（承認制）" : f === "lend_time" ? "お届け時間変更（承認制）" : "回収時間変更（承認制）";
+    const reqLabels: string[] = [];
+    // field別に requested を記録（同一fieldの未処理申請は最新に一本化＝古いrequestedを消す）
+    const mkReq = async (field: string, newV: string, payload: Record<string, unknown>) => {
+      await sbDelete("keydrop_mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&field=eq.${field}&status=eq.requested`).catch(() => {});
+      await sbPost("keydrop_mypage_changes", { reservation_id: resId, store: M.store, field, old_value: oldOf(field), new_value: newV, source: "customer", status: "requested", note: noteOf(field), payload }).catch(() => {});
+    };
+    if (delPlace !== null) { await mkReq("del_place", delPlace, { del_place: delPlace, ...(dLat != null && dLng != null ? { del_lat: dLat, del_lng: dLng } : {}) }); reqLabels.push("お届け場所"); }
+    if (colPlace !== null) { await mkReq("col_place", colPlace, { col_place: colPlace, ...(cLat != null && cLng != null ? { col_lat: cLat, col_lng: cLng } : {}) }); reqLabels.push("回収場所"); }
+    if (lendTime !== null) { await mkReq("lend_time", lendTime, { lend_time: lendTime }); reqLabels.push("お届け時間"); }
+    if (returnTime !== null) { await mkReq("return_time", returnTime, { return_time: returnTime }); reqLabels.push("回収時間"); }
 
-    if (M.store === "nha") {
-      // 那覇：OPシート=nha_tasks（予約番号紐付け・日本語列・内容DEL/COL）を更新＋差別化マーカー
-      const _st = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
-      const _lbls: string[] = [];
-      if (delPlace !== null) _lbls.push("お届け場所");
-      if (lendTime !== null) _lbls.push("お届け時間");
-      if (colPlace !== null) _lbls.push("回収場所");
-      if (returnTime !== null) _lbls.push("回収時間");
-      await nhaPatchTasks(resId, { place: delPlace, time: lendTime }, { place: colPlace, time: returnTime }, `✅変更済(${_st}):${_lbls.join("・")}`);
-    } else {
-    // 2) 既存タスク（OPシート・配車表のソース）も即時同期＋🔔変更マーカーをmemoに追記
-    const stamp = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(5, 16).replace("T", " ");
-    const changedLabels: string[] = [];
-    if (delPlace !== null) changedLabels.push("お届け場所");
-    if (lendTime !== null) changedLabels.push("お届け時間");
-    if (colPlace !== null) changedLabels.push("回収場所");
-    if (returnTime !== null) changedLabels.push("回収時間");
-    const marker = `🔔顧客変更(${stamp}):${changedLabels.join("・")}`;
-
-    async function patchTask(taskId: string, patch: Record<string, unknown>) {
-      const cur = await sbGet(M.tasks, `_id=eq.${encodeURIComponent(taskId)}&select=_id,memo,changed_json`);
-      if (!cur[0]) return; // タスク未生成なら本体が次回reservationsから生成（正本は更新済）
-      const memo = String(cur[0].memo || "");
-      const newMemo = memo.includes(marker) ? memo : (memo ? memo + " " + marker : marker);
-      let cj: any = {};
-      try { cj = cur[0].changed_json && typeof cur[0].changed_json === "object" ? cur[0].changed_json : (cur[0].changed_json ? JSON.parse(cur[0].changed_json) : {}); } catch { cj = {}; }
-      cj.kd_customer_changed_at = new Date().toISOString();
-      // 🔴 OP戻り防止（HANDYMAN同様）：SSパトロールが _ssPlace/_ssTime をフォーム値へ戻すのを防ぐ。
-      // 場所は _placeSource=customer で保護＋_ssPlaceに新値／時間は _timeChange(最優先表示)＋_ssTime に新値。
-      if (patch.place !== undefined) { cj._ssPlace = String(patch.place); cj._placeSource = "customer"; }
-      if (patch.time !== undefined) { cj._ssTime = String(patch.time); cj._timeChange = String(patch.time); }
-      await sbPatch(M.tasks, `_id=eq.${encodeURIComponent(taskId)}`, { ...patch, memo: newMemo, changed_json: cj });
-    }
-    // DELタスク：place=お届け場所 / time=お届け時間 ＋ 参照(col_place/return_time)
-    const delTaskPatch: Record<string, unknown> = {};
-    if (delPlace !== null) delTaskPatch.place = delPlace;
-    if (lendTime !== null) delTaskPatch.time = lendTime;
-    if (colPlace !== null) delTaskPatch.col_place = colPlace;
-    if (returnTime !== null) delTaskPatch.return_time = returnTime;
-    if (Object.keys(delTaskPatch).length) await patchTask(`d-${resId}`, delTaskPatch);
-    // COLタスク：place=回収場所 / time=回収時間
-    const colTaskPatch: Record<string, unknown> = {};
-    if (colPlace !== null) colTaskPatch.place = colPlace;
-    if (returnTime !== null) colTaskPatch.time = returnTime;
-    if (Object.keys(colTaskPatch).length) await patchTask(`c-${resId}`, colTaskPatch);
-    }
-
-    // 3) 運営へSlack通知（SPKと同じ Block Kit カード・見やすく）
-    const chLines: string[] = [];
-    if (delPlace !== null) chLines.push(`• お届け場所：${r.del_place || "（未設定）"} → *${delPlace}*`);
-    if (lendTime !== null) chLines.push(`• お届け時間：${r.lend_time || r.del_time || "-"} → *${lendTime}*`);
-    if (colPlace !== null) chLines.push(`• 回収場所：${r.col_place || "（未設定）"} → *${colPlace}*`);
-    if (returnTime !== null) chLines.push(`• 回収時間：${r.return_time || r.col_time || "-"} → *${returnTime}*`);
+    // 運営へSlack通知（承認待ち）
+    const aLines: string[] = [];
+    if (delPlace !== null) aLines.push(`📍 *お届け先*（希望）　${r.del_place || "（未設定）"} → *${delPlace}*`);
+    if (lendTime !== null) aLines.push(`🕐 *お届け時間*（希望）　${r.lend_time || r.del_time || "-"} → *${lendTime}*`);
+    if (colPlace !== null) aLines.push(`📍 *回収先*（希望）　${r.col_place || "（未設定）"} → *${colPlace}*`);
+    if (returnTime !== null) aLines.push(`🕐 *回収時間*（希望）　${r.return_time || r.col_time || "-"} → *${returnTime}*`);
     await notifySlackCard({
-      emoji: "✏️", title: "マイページで変更（即時反映済）",
+      emoji: "🟡", title: "マイページ変更申請（承認待ち）",
       name: r.name, resId, ota: "KEYDROP" + (M.store === "nha" ? "（那覇）" : "（札幌）"),
       period: `${r.lend_date || ""} ${r.lend_time || r.del_time || ""} 〜 ${r.return_date || ""} ${r.return_time || r.col_time || ""}`,
       vehicle: r.vehicle || "",
-      lines: chLines.length ? ["*変更内容*", ...chLines] : undefined,
-      action: "✅ OPシートに反映済み・*対応不要*（内容をご確認ください）",
+      lines: aLines.length ? ["*お客様の希望*", ...aLines] : undefined,
+      action: "🟡 *承認待ち*：管理画面で承認するとOP/タスクへ反映＋お客様へ通知します",
     }, M.slack);
 
-    // 4) KEYDROP独自の変更ログに記録（マイページ履歴＋将来のKEYDROP my-admin用）＝HANDYMANのmypage_changesと切り分け
-    const chgLog = async (field: string, oldV: any, newV: any) => {
-      await sbPost("keydrop_mypage_changes", { reservation_id: resId, store: M.store, field, old_value: String(oldV ?? ""), new_value: String(newV ?? ""), source: "customer", status: "applied", note: "マイページ変更(即時反映)" }).catch(() => {});
-    };
-    if (delPlace !== null) await chgLog("del_place", r.del_place, delPlace);
-    if (lendTime !== null) await chgLog("lend_time", r.lend_time || r.del_time, lendTime);
-    if (colPlace !== null) await chgLog("col_place", r.col_place, colPlace);
-    if (returnTime !== null) await chgLog("return_time", r.return_time || r.col_time, returnTime);
-
-    return json({
-      ok: true,
-      updated: {
-        del_place: delPlace !== null ? delPlace : r.del_place,
-        col_place: colPlace !== null ? colPlace : r.col_place,
-        lend_time: lendTime !== null ? lendTime : r.lend_time,
-        return_time: returnTime !== null ? returnTime : r.return_time,
-      },
-    }, 200, origin);
+    return json({ ok: true, pendingApproval: true, requested: reqLabels }, 200, origin);
   }
 
   // ── 早め返却（返却準備完了・希望回収時間の目安）＝申請（承認制）──
@@ -488,46 +534,6 @@ Deno.serve(async (req) => {
     }
     await notifySlack(`🟡 *${map[reqType]}の依頼* ${resId} ${r.name || ""}様\n利用:${r.lend_date}〜${r.return_date}\n依頼内容: ${detail}\n→ 管理で対応してください`, M.slack);
     return json({ ok: true, requested: true, kind: map[reqType] }, 200, origin);
-  }
-
-  // ── decide: KEYDROP管理画面からの承認/却下（keydrop_mypage_changes の requested を処理）──
-  if (action === "decide") {
-    const staffToken = String(p.staff_token || "").trim();
-    const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
-    if (!who.ok) return json({ error: "unauthorized" }, 401, origin);
-    const actor = "staff:" + (((await who.json().catch(() => ({}))) as any)?.email || "kd-admin");
-    const changeId = p.change_id;
-    const decision = String(p.decision || "").trim(); // approved | rejected
-    if (!changeId || !["approved", "rejected"].includes(decision)) return json({ error: "パラメータ不正" }, 400, origin);
-    const cRows = await sbGet("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}&select=id,reservation_id,store,field,new_value,note,payload,status&limit=1`);
-    const c = cRows[0];
-    if (!c) return json({ error: "対象が見つかりません" }, 404, origin);
-    if (c.status !== "requested") return json({ error: "既に処理済みです" }, 409, origin);
-    const M2 = mkStore(c.store === "nha" ? "nha" : "spk");
-    const rid2 = String(c.reservation_id);
-    const pl = (c.payload && typeof c.payload === "object") ? c.payload : {};
-    if (decision === "approved") {
-      // 実反映：補償／オプション（場所時間は即時反映済・readyは印のみ・cancelは既存keydrop返金フロー）
-      if (c.field === "insurance" && pl.insurance) {
-        await sbPatch(M2.resv, `id=eq.${encodeURIComponent(rid2)}`, { insurance: String(pl.insurance) });
-        const its = await sbGet(M2.tasks, `reservation_id=eq.${encodeURIComponent(rid2)}&deleted=not.is.true&select=_id`).catch(() => []);
-        for (const t of its) await sbPatch(M2.tasks, `_id=eq.${encodeURIComponent(String(t._id))}`, { insurance: String(pl.insurance) });
-      } else if (c.field === "option") {
-        const rp: Record<string, unknown> = {};
-        if (pl.opt_b != null) rp.opt_b = Number(pl.opt_b) || 0;
-        if (pl.opt_c != null) rp.opt_c = Number(pl.opt_c) || 0;
-        if (pl.opt_j != null) rp.opt_j = Number(pl.opt_j) || 0;
-        if (Object.keys(rp).length) await sbPatch(M2.resv, `id=eq.${encodeURIComponent(rid2)}`, rp);
-      }
-    }
-    await sbPatch("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: decision, actor });
-    const rr = (await sbGet(M2.resv, `id=eq.${encodeURIComponent(rid2)}&select=name,mail`).catch(() => []))[0] || {};
-    // 顧客へメール通知（keydrop_notifications→keydrop-send-mailがResendで送信・マイページURL入り）
-    if (rr.mail && String(rr.mail).includes("@")) {
-      await sbPost("keydrop_notifications", { reservation_id: rid2, store: M2.store, to_email: rr.mail, type: "mypage_decision", sent: false, payload: { name: rr.name || "", decision, label: c.note || c.field, detail: c.new_value || "" } }).catch(() => {});
-    }
-    await notifySlack(`${decision === "approved" ? "✅ *承認*" : "🚫 *却下*"} [KEYDROP] ${rr.name || ""}様 ${rid2}\n依頼: ${c.note || c.field}（${c.new_value || ""}）\n担当: ${actor}\n→ 顧客へメール通知`, M2.slack);
-    return json({ ok: true, decided: decision }, 200, origin);
   }
 
   // ── 変更リクエストの承認（SPK現場が押す）→ reservations/tasks に反映＋change_reqクリア＋顧客へ反映メール ──

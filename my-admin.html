@@ -238,7 +238,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1";
-const ADMIN_VER="kd2.3 クラス名を店舗別カタログから(那覇F=アクア等)";
+const ADMIN_VER="kd2.4 変更依頼を札幌+那覇まとめて1画面で承認／時間・場所は全承認制";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=s=>document.querySelector(s);
 function showErr(m){const e=document.getElementById("errbar");if(e){e.style.display="block";e.textContent="⚠️ "+m}}
@@ -268,6 +268,7 @@ function setStore(s){
 }
 let CFG={},RES=[],CHG={},FILTER="userchg",Q="",SEL=null,SELTASKS=null,VIEW="changes",CFILTER="req",STAFF=[],OPERATOR=localStorage.getItem("admin_op")||"",TODAY_ONLY=false,LAST_LOAD=0,DAYF="all";
 let SENDS={},VIEWS={},UFILTER="all"; // SENDS=mypage URL送信ログ, VIEWS=マイページ開封(mypage_views)
+let GALL=[],GNAMES={}; // ★2026-08-22 変更依頼を「両店まとめて」1画面で承認するための全店データ（GALL=両店のkeydrop_mypage_changes / GNAMES=予約→氏名）
 function fmtClock(ms){if(!ms)return"—";const d=new Date(ms);return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+":"+String(d.getSeconds()).padStart(2,"0")}
 const TIMES=(()=>{let a=[];for(let h=9;h<=19;h++){a.push(("0"+h).slice(-2)+":00");if(h<19)a.push(("0"+h).slice(-2)+":30")}return a})();
 function setOp(v){OPERATOR=v;localStorage.setItem("admin_op",v);render()}
@@ -344,6 +345,16 @@ async function loadAll(keepSel){
     if(cr.del){ push("del_place",r.del_place,cr.del.place); push("lend_time",r.lend_time||r.del_time,cr.del.time); }
     if(cr.col){ push("col_place",r.col_place,cr.col.place); push("return_time",r.return_time||r.col_time,cr.col.time); }
   });
+  // ★2026-08-22 変更依頼は「札幌＋那覇まとめて1画面」で承認（KEYの管理を1本化）。GALL=両店の全変更、GNAMES=両店の氏名。
+  GALL=(chg||[]).slice();
+  try{
+    const cids=[...new Set(GALL.map(c=>c.reservation_id).filter(Boolean))];
+    const spkIds=cids.filter(i=>!/^KDN-/i.test(i)), nhaIds=cids.filter(i=>/^KDN-/i.test(i));
+    const nq=(tbl,arr)=>arr.length?api(tbl+"?id=in.("+arr.map(encodeURIComponent).join(",")+")&select=id,name").catch(()=>[]):Promise.resolve([]);
+    const [sn,nn]=await Promise.all([nq("reservations",spkIds),nq("nha_reservations",nhaIds)]);
+    GNAMES={}; [...(sn||[]),...(nn||[])].forEach(r=>{if(r&&r.id)GNAMES[r.id]=r.name||"—"});
+  }catch(e){GNAMES=GNAMES||{};}
+  if(S!==STORE)return;
   render();
   // OPタスクから ①場所マップ(実際の場所は tasks._ssPlace) ②フォーム再回答(_ssAlert) を集める
   try{
@@ -598,7 +609,7 @@ function renderInner(){
   });
   // 時系列順（お届け日→時間）。ステータスは色・点滅で分かるので並びは日付優先。
   list.sort((a,b)=>((a.lend_date||"")+ (a.lend_time||"")).localeCompare((b.lend_date||"")+(b.lend_time||"")));
-  const rc=RES.filter(stReq).length;  // 変更依頼バッジ＝承認待ちの依頼(変更リクエスト)のみ。情報変更(即時反映済)は含めない
+  const rc=(GALL&&GALL.length?GALL.filter(c=>c.status==="requested").length:RES.filter(stReq).length);  // 変更依頼バッジ＝両店の承認待ち件数（GALL）。フォールバックで現店舗
   const TH=STORE==="nha"?{bg:"#c2410c",name:"那覇",emoji:"🌺"}:{bg:"#0e7490",name:"札幌",emoji:"❄️"};
   const swBtn=(s,emo,nm)=>`<button onclick="setStore('${s}')" style="font-size:14px;font-weight:900;padding:7px 16px;border-radius:999px;cursor:pointer;border:2px solid #fff;white-space:nowrap;flex:0 0 auto;${STORE===s?`background:#fff;color:${TH.bg}`:"background:transparent;color:#fff;opacity:.7"}">${STORE===s?"● ":""}${emo} ${nm}</button>`;
   $("#app").innerHTML=`
@@ -733,7 +744,8 @@ function mismatch(r){
   if(r.col_place&&c&&opDisp(c)!==r.col_place)out.push({kind:"回収先",resv:r.col_place,op:opDisp(c)});
   return out;
 }
-function resName(id){const r=RES.find(x=>x.id===id);return r?(r.name||"—"):"—"}
+function resName(id){const r=RES.find(x=>x.id===id);if(r)return r.name||"—";return GNAMES[id]||"—";} // 現店舗RES→無ければ全店GNAMES
+function chgStoreBadge(c){const isNha=(c.store==="nha")||/^KDN-/i.test(String(c.reservation_id||""));return isNha?'<span style="font-size:10px;font-weight:800;color:#c2410c;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:1px 6px;margin-right:4px">🌺那覇</span>':'<span style="font-size:10px;font-weight:800;color:#0e7490;background:#ecfeff;border:1px solid #a5f3fc;border-radius:6px;padding:1px 6px;margin-right:4px">❄️札幌</span>';}
 // 変更表示：場所/時間は必ず 変更前→変更後（前が空なら「未設定」）。依頼系は new_value をそのまま。
 function cbHtml(c){
   const pt=["del_place","col_place","lend_time","return_time"].includes(c.field);
@@ -742,14 +754,16 @@ function cbHtml(c){
   return `<div class="cb">${c.old_value?`<span style="color:var(--sub)">${esc(c.old_value)}</span> <span class="arrow">→</span> `:""}<b>${esc(c.new_value)}</b></div>`;
 }
 function globalChangesHtml(){
-  const all=Object.values(CHG).flat();
+  // ★両店まとめて（GALL=両店のkeydrop_mypage_changes）＋現店舗のレガシー変更リクエスト(keydrop_payments.change_req=_kdchange)も合流
+  const legacy=Object.values(CHG).flat().filter(c=>c&&c._kdchange);
+  const all=(GALL&&GALL.length?GALL.concat(legacy):Object.values(CHG).flat());
   let list=all.filter(c=>CFILTER==="req"?c.status==="requested":CFILTER==="applied"?c.status==="applied":true);
   list.sort((a,b)=>{const w=x=>x==="requested"?0:x==="applied"?1:2;
     if(w(a.status)!==w(b.status))return w(a.status)-w(b.status);return (b.created_at||"").localeCompare(a.created_at||"")});
   const rc=all.filter(c=>c.status==="requested").length;
   return `<div class="dhd" style="background:linear-gradient(135deg,#0e7490,#0b5560)">
-    <div class="dnm">📋 変更・依頼一覧</div>
-    <div class="drid">顧客がマイページで行った変更・依頼を一覧で確認・承認できます</div>
+    <div class="dnm">📋 変更・依頼一覧（札幌＋那覇まとめて）</div>
+    <div class="drid">両店の変更・依頼をこの1画面で承認できます。時間・場所の変更はすべて承認制です。</div>
   </div>
   <div class="dbody">
     <div class="chips" style="border:0;padding:0 0 10px">
@@ -758,7 +772,7 @@ function globalChangesHtml(){
       <div class="chip ${CFILTER==="all"?"on":""}" onclick="CFILTER='all';render()">すべて <span class="n">${all.length}</span></div>
     </div>
     ${list.length?list.map(c=>`<div class="chg-item ${c.field==="cancel"?"cancel":(c.status==="requested"?"req":(c.status==="applied"?"applied":""))}">
-      <div class="ci">${esc(FLD[c.field]||c.field)}
+      <div class="ci">${chgStoreBadge(c)}${esc(FLD[c.field]||c.field)}
         <span style="font-weight:600;color:var(--sub);font-size:11.5px">${esc(resName(c.reservation_id))}様</span>
         <span class="rid" style="cursor:pointer;text-decoration:underline" onclick="selectRes('${c.reservation_id}')">${esc(c.reservation_id)}</span>
         <span class="st ${c.status}">${{requested:"要対応",applied:"反映済",approved:"承認済",rejected:"却下"}[c.status]||c.status}</span></div>
@@ -985,7 +999,7 @@ async function decide(id,status){
       body:JSON.stringify({action:"decide",staff_token:st,change_id:id,decision:status,store:STORE})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok||!j.ok){toast("処理失敗："+(j.error||r.status));return}
-    const c=Object.values(CHG).flat().find(x=>x.id===id);if(c){c.status=status;c.actor=OPERATOR;}
+    const c=(GALL||[]).find(x=>x.id===id)||Object.values(CHG).flat().find(x=>x.id===id);if(c){c.status=status;c.actor=OPERATOR;}
     toast(status==="approved"?"承認・反映＋通知しました":"却下＋通知しました");render();
   }catch(e){toast("処理失敗（通信）")}
 }

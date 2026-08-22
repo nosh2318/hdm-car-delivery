@@ -256,7 +256,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 <div class="toast" id="toast"></div>
 
 <script>
-const VER = "kd2.1 免許証: 登録済みでも別の運転者を続けて追加できる（追加不可バグ根治・枚数積上げ）";
+const VER = "kd2.2 時間・場所の変更を全て承認制（いつでも申請可・担当承認後に反映）";
 const FN = "https://ckrxttbnawkclshczsia.supabase.co/functions/v1/keydrop-mypage";
 const SB_BASE = "https://ckrxttbnawkclshczsia.supabase.co";
 // 免許証 事前登録（Drive保存GAS＋license_uploads完了印）
@@ -349,7 +349,7 @@ const TX={
  booked_via:{ja:"ご予約元",en:"Booked via",zh:"預約來源",ko:"예약 경로"},
  changed_from:{ja:"変更前",en:"was",zh:"原",ko:"이전"},
  notice_title:{ja:"運営からのお知らせ",en:"Notice",zh:"營運通知",ko:"운영 안내"},
- notice_body:{ja:"「時間・場所」など各種変更は、こちらのマイページから操作をお願い申し上げます。<br>マイページで変更された内容が最優先で反映されます。",en:"Please make all changes (time, location, etc.) here on My Page.<br>Changes made on My Page take top priority.",zh:"「時間・地點」等各項變更請於本頁操作。<br>於本頁所做的變更將最優先反映。",ko:"'시간·장소' 등 각종 변경은 이 마이페이지에서 진행해 주세요.<br>마이페이지에서 변경한 내용이 최우선으로 반영됩니다."},
+ notice_body:{ja:"「時間・場所」など各種変更は、こちらのマイページからお申し込みください。<br>ご変更は<b>担当者の承認後に反映</b>されます（申請後、順次対応いたします）。",en:"Please request any changes (time, location, etc.) here on My Page.<br>Changes apply <b>after staff approval</b> (handled in order after your request).",zh:"「時間・地點」等各項變更請於本頁申請。<br>變更將<b>經專員核准後反映</b>（申請後依序處理）。",ko:"'시간·장소' 등 각종 변경은 이 마이페이지에서 신청해 주세요.<br>변경은 <b>담당자 승인 후 반영</b>됩니다(신청 후 순차 처리)."},
  vehicle_class:{ja:"車両クラス",en:"Vehicle class",zh:"車型",ko:"차량 클래스"},
  use_period:{ja:"ご利用",en:"Period",zh:"使用期間",ko:"이용"},
  people:{ja:"乗車定員",en:"Capacity",zh:"乘車人數",ko:"승차정원"},
@@ -369,7 +369,7 @@ const TX={
  edit:{ja:"変更",en:"Edit",zh:"變更",ko:"변경"},
  set_it:{ja:"📍設定する",en:"📍 Set",zh:"📍 設定",ko:"📍 설정"},
  time_edit:{ja:"時間変更",en:"Change time",zh:"變更時間",ko:"시간 변경"},
- dp_hint:{ja:"⏰ <b>お届け</b>は出発24時間前まで即時変更（以降は担当が確認後に反映）。<br><b>回収</b>は2時間前まで変更いただけます。それ以降は<b>メール</b>にて承ります。",en:"⏰ <b>Delivery</b>: editable instantly up to 24h before (after that, staff confirm). <b>Pickup</b>: editable up to 2h before. Later changes via <b>email</b>.",zh:"⏰ <b>送車</b>：出發前24小時可即時變更（之後由專員確認）。<b>取車</b>：2小時前可變更，之後請透過<b>電子郵件</b>。",ko:"⏰ <b>배달</b>: 출발 24시간 전까지 즉시 변경(이후 담당자 확인). <b>회수</b>: 2시간 전까지 변경 가능. 이후는 <b>이메일</b>."},
+ dp_hint:{ja:"⏰ お届け・回収の<b>場所／時間の変更はすべて承認制</b>です。いつでも申請でき、<b>担当者の承認後に反映</b>されます。",en:"⏰ All <b>location / time changes require approval</b>. Request anytime; they apply <b>after staff approval</b>.",zh:"⏰ <b>地點／時間變更皆採審核制</b>。可隨時申請，<b>經專員核准後反映</b>。",ko:"⏰ <b>장소／시간 변경은 모두 승인제</b>입니다. 언제든 신청 가능하며 <b>담당자 승인 후 반영</b>됩니다."},
  damage_check:{ja:"車両状態チェック",en:"Vehicle Condition Check",zh:"車輛狀態確認",ko:"차량 상태 체크"},
  damage_view:{ja:"車両の状態を確認する",en:"Check vehicle condition",zh:"確認車輛狀態",ko:"차량 상태 확인"},
  damage_note:{ja:"ご出発前に、傷・へこみの状態をご確認ください。気になる点は引き渡し時にお申し付けください。",en:"Please check scratches/dents before departure. Let us know any concerns at handover.",zh:"出發前請確認刮痕／凹痕。如有疑問請於交車時告知。",ko:"출발 전 흠집·찌그러짐을 확인하세요. 인수 시 문의해 주세요."},
@@ -418,8 +418,8 @@ const TX={
  ph_del:{ja:"例：ベッセルイン札幌中島公園",en:"e.g. Vessel Inn Sapporo",zh:"例：札幌某飯店",ko:"예: 삿포로 호텔"},
  ph_col:{ja:"例：札幌駅",en:"e.g. Sapporo Station",zh:"例：札幌車站",ko:"예: 삿포로역"},
  sapporo_st_note:{ja:"⚠️ 札幌駅の南口は停車不可のため、<b>北口</b>をおすすめします。北口でのお受け渡しをご指定ください。",en:"⚠️ Stopping is not allowed at the South exit of Sapporo Station. Please use the <b>North exit</b>.",zh:"⚠️ 札幌車站南口禁止停車，建議使用<b>北口</b>交車。",ko:"⚠️ 삿포로역 남쪽 출구는 정차 불가입니다. <b>북쪽 출구</b>를 이용해 주세요."},
- sub_del:{ja:"お届けの24時間前まで即時反映。以降は担当が確認後に反映します。",en:"Instant up to 24h before delivery. After that, staff confirm.",zh:"送車前24小時內即時反映，之後由專員確認。",ko:"배달 24시간 전까지 즉시 반영. 이후 담당자 확인."},
- sub_col:{ja:"回収の2時間前まで変更できます。以降はメールで承ります。",en:"Editable up to 2h before pickup. Later via email.",zh:"取車前2小時可變更，之後請透過電子郵件。",ko:"회수 2시간 전까지 변경 가능. 이후 이메일."},
+ sub_del:{ja:"変更は申請制です。担当者の承認後に反映されます。",en:"Changes are by request; applied after staff approval.",zh:"變更採申請制，經專員核准後反映。",ko:"변경은 신청제이며 담당자 승인 후 반영됩니다."},
+ sub_col:{ja:"変更は申請制です。担当者の承認後に反映されます。",en:"Changes are by request; applied after staff approval.",zh:"變更採申請制，經專員核准後反映。",ko:"변경은 신청제이며 담당자 승인 후 반영됩니다."},
  map_del_title:{ja:"お届け先の変更",en:"Change delivery location",zh:"變更送車地點",ko:"배달 장소 변경"},
  map_col_title:{ja:"回収先の変更",en:"Change pickup location",zh:"變更取車地點",ko:"회수 장소 변경"},
  map_new_del:{ja:"お届け先の登録",en:"Register delivery location",zh:"登記送車地點",ko:"배달 장소 등록"},
@@ -429,7 +429,7 @@ const TX={
  map_search_ph:{ja:"🔍 住所・ホテル名・施設名で検索",en:"🔍 Search address / hotel / place",zh:"🔍 搜尋地址／飯店／地點",ko:"🔍 주소·호텔·시설 검색"},
  map_loading:{ja:"地図を読み込み中…",en:"Loading map…",zh:"載入地圖中…",ko:"지도 불러오는 중…"},
  map_unselected:{ja:"未選択",en:"Not selected",zh:"未選擇",ko:"미선택"},
- map_hint:{ja:"⏰ 出発24時間前まで変更できます。変更後すぐ反映されます。",en:"⏰ Editable up to 24h before departure. Applied immediately.",zh:"⏰ 出發前24小時可變更，變更後立即反映。",ko:"⏰ 출발 24시간 전까지 변경 가능. 변경 즉시 반영."},
+ map_hint:{ja:"⏰ 変更はいつでも申請できます。担当者の承認後に反映されます。",en:"⏰ Request changes anytime; applied after staff approval.",zh:"⏰ 可隨時申請變更，經專員核准後反映。",ko:"⏰ 언제든 변경 신청 가능. 담당자 승인 후 반영됩니다."},
  map_apply:{ja:"この場所で変更",en:"Change to this location",zh:"變更為此地點",ko:"이 장소로 변경"},
  map_load_fail:{ja:"地図を読み込めませんでした。検索欄に入力して変更できます。",en:"Could not load map. You can type in the search box.",zh:"無法載入地圖。可於搜尋欄輸入。",ko:"지도를 불러올 수 없습니다. 검색란에 입력하세요."},
  map_getting:{ja:"住所を取得中…",en:"Getting address…",zh:"取得地址中…",ko:"주소 가져오는 중…"},
