@@ -32,6 +32,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .hero{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:#fff;padding:28px 20px 24px;text-align:center}
   .hero h1{font-size:22px;font-weight:900}.hero h1 .y{color:#FABE00}
   .hero p{font-size:12.5px;opacity:.85;margin-top:6px}
+  .areatabs{display:flex;gap:8px;justify-content:center;margin-top:14px}
+  .areatabs .atab{padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;font-size:12.5px;font-weight:800;cursor:pointer}
+  .areatabs .atab.on{background:#FABE00;color:#1a1a1a;border-color:#FABE00}
   .wrap{max-width:840px;margin:0 auto;padding:18px 16px}
   .grid{display:grid;grid-template-columns:1fr;gap:14px}
   @media(min-width:680px){.grid{grid-template-columns:1fr 1fr}}
@@ -67,7 +70,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
   <a class="back" href="./">← TOP</a>
 </div>
-<div class="hero"><h1 id="h1"></h1><p id="heroP"></p></div>
+<div class="hero"><h1 id="h1"></h1><p id="heroP"></p><div class="areatabs" id="areaTabs"></div></div>
 
 <div class="wrap">
   <div id="grid" class="grid"><div class="loading">…</div></div>
@@ -113,12 +116,14 @@ function pv(v){if(v==null)return null;if(typeof v==='string'){try{return JSON.pa
 function yen(n){return '¥'+Number(n||0).toLocaleString();}
 function clsLabel(k,fallback){const m=I18N[LANG].cls||{};return m[k]||fallback||k;}
 
+function switchArea(a){if(a===AREA)return;try{localStorage.setItem('kd_selectedArea',JSON.stringify({area:a}));}catch(e){}var u=new URL(location.href);u.searchParams.set('area',a);location.href=u.toString();}
 function render(){
   const T=I18N[LANG];
   document.documentElement.lang=LANG;
   document.title=(TITLES[LANG]||TITLES.ja)+' '+(T.area[AREA]||'');
   document.getElementById('h1').innerHTML=T.h1a+'<span class="y">'+T.h1b+'</span>';
   document.getElementById('heroP').innerHTML='📍 '+(T.area[AREA]||'')+T.hero;
+  (function(){var tb=document.getElementById('areaTabs');if(tb)tb.innerHTML=['naha','sapporo'].map(function(a){return '<button type="button" class="atab'+(a===AREA?' on':'')+'" onclick="switchArea(\''+a+'\')">'+(T.area[a]||a)+'</button>';}).join('');})();
   document.getElementById('cta').textContent=T.cta;
   document.querySelectorAll('#langsw button').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===LANG);});
   try{localStorage.setItem('kd_lang',LANG);}catch(e){}
