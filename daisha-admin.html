@@ -170,8 +170,10 @@ async function boot(){
   if(!tok()){showLogin();return;}
   const me=(()=>{try{const t=tok().split(".")[1];const p=JSON.parse(atob(t.replace(/-/g,'+').replace(/_/g,'/')));return (p.email||"").split("@")[0];}catch(e){return"";}})();
   $("#who").textContent=me?("👤 "+me):"";
+  const qp=new URLSearchParams(location.search);const qStore=(qp.get("store")||"").toLowerCase();if(qStore==="spk"||qStore==="nha")STORE_FILTER=qStore;
   layout();loadDisc();
   if(await loadList()===false)return;
+  const qid=qp.get("id");if(qid){try{await open_(qid);}catch(e){}} // Slackリンクから直接そのチャットへ
   setInterval(()=>{if(document.visibilityState==="visible"&&!SEL)loadList();},15000);
 }
 boot();

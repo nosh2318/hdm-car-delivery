@@ -100,7 +100,8 @@ Deno.serve(async (req) => {
         { type: "mrkdwn", text: `*回収先*\n${row.same_col ? "お届けと同じ" : (row.col_place || "-")}` },
       ] },
       { type: "section", text: { type: "mrkdwn", text: `*車両ご希望*\n${choices || "-"}${row.memo ? `\n*メモ*\n${row.memo}` : ""}` } },
-      { type: "context", elements: [{ type: "mrkdwn", text: `📞 ${row.tel || "-"} ／ ✉️ ${row.email || "-"} ｜ 在庫を確認し「代車リクエスト管理」からチャットでご提案してください` }] },
+      { type: "context", elements: [{ type: "mrkdwn", text: `📞 ${row.tel || "-"} ／ ✉️ ${row.email || "-"}` }] },
+      { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "🔧 このリクエストに回答する", emoji: true }, url: `https://keydrop.jp/daisha-admin.html?id=${row.id}&store=${store}`, style: "primary" }] },
       { type: "divider" },
     ]);
     return json({ ok: true, token: row.id }, 200, origin);
@@ -130,7 +131,7 @@ Deno.serve(async (req) => {
     if (!rows.length) return json({ error: "not_found" }, 404, origin);
     await sbInsert("daisha_messages", { request_id: token, sender: "customer", body });
     const areaJp = rows[0].store === "nha" ? "那覇" : "札幌";
-    await slack(chOf(rows[0].store), `💬 代車チャット新着［${areaJp}・${rows[0].name}様］\n${body}\n→「代車リクエスト管理」で返信してください`);
+    await slack(chOf(rows[0].store), `💬 代車チャット新着［${areaJp}・${rows[0].name}様］\n${body}\n→ <https://keydrop.jp/daisha-admin.html?id=${token}&store=${rows[0].store}|このチャットを開いて返信する>`);
     return json({ ok: true }, 200, origin);
   }
 
