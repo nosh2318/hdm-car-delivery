@@ -779,14 +779,15 @@ function applyStep(){
       var _s2=document.querySelector('#st2 .t');if(_s2){_s2.removeAttribute('data-i18n');_s2.textContent='車両・お届け';}
       var _s3=document.querySelector('#st3 .t');if(_s3){_s3.removeAttribute('data-i18n');_s3.textContent='お客様情報';}
       var _s4=document.querySelector('#st4 .t');if(_s4){_s4.removeAttribute('data-i18n');_s4.textContent='確認';}
-      var _s5=document.getElementById('st5');if(_s5)_s5.style.display='none';}
+      var _s5=document.getElementById('st5');if(_s5)_s5.style.display='none';
+      var _tot=document.querySelector('.tot');if(_tot)_tot.style.display='none';} // 代車＝CTAの合計金額は表示しない
     [['st1',0],['st2',1],['st3',2],['st4',3]].forEach(function(p){var el=document.getElementById(p[0]);el.className='step '+(cur>p[1]?'done':(cur===p[1]?'on':''));});
   } else {
     [['st2',0],['st3',1],['st4',2]].forEach(function(p){var el=document.getElementById(p[0]);el.className='step '+(cur>p[1]?'done':(cur===p[1]?'on':''));});
     var _st5=document.getElementById('st5');_st5.className='step '+(cur>4?'done':(cur>=3?'on':''));
   }
   var lbl=DAISHA
-    ?{cond:'車両・お届けへ →',select:'お客様情報へ →',customer:'確認へ →',confirm:'🚗 この内容でリクエスト'}
+    ?{cond:'希望車両を選択する',select:'お客様情報へ →',customer:'確認へ →',confirm:'🚗 この内容でリクエスト'}
     :{select:T('cta_options'),options:T('cta_customer'),customer:T('cta_confirm'),confirm:T('cta_pay'),payment:T('cta_done')};
   var btn=document.getElementById('ctaBtn');btn.textContent=lbl[step]||'';
   try{updCtaTotal();}catch(e){}
