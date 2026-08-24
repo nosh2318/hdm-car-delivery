@@ -572,6 +572,7 @@ window.addEventListener('message',function(e){var d=e&&e.data;if(!d||d.type!=='h
   loc.del=d.del||null;loc.col=d.col||null;colSame=(d.same!==false);
   var f=document.getElementById('delivFrame');if(f&&d.height){f.style.height=Math.max(560,Math.min(1400,d.height))+'px';}
   try{if(typeof step!=='undefined'&&step==='confirm')renderConfirm();}catch(e){}
+  try{if(typeof step!=='undefined'&&step==='select')updCtaTotal();}catch(e){} // 代車＝場所選択でボタン活性を更新
 });
 var locType='station';
 var NHA_STATIONS=['赤嶺駅','小禄駅','奥武山公園駅','壺川駅','旭橋駅','県庁前駅','美栄橋駅','牧志駅','安里駅','おもろまち駅','古島駅','市立病院前駅','儀保駅','首里駅'];
@@ -756,6 +757,7 @@ function refreshOpt(){var os=document.getElementById('optset');var has=(optQ.chi
 function optTotal(){return (optQ.child||0)*SEAT_CHILD+(optQ.junior||0)*SEAT_JUNIOR;}
 var GRANDLBL={ja:'合計',en:'Total',zh:'總計',ko:'합계'};
 function updCtaTotal(){
+  if(DAISHA&&step==='select'){var _b=document.getElementById('ctaBtn');if(_b){var _ready=!!(state.cls&&loc.del&&(colSame||loc.col));_b.disabled=!_ready;_b.style.opacity=_ready?'':'.5';_b.style.cursor=_ready?'pointer':'not-allowed';_b.textContent=_ready?'お客様情報へ →':'車両とお届け場所を選んでください';}}
   var base=state.cls?priceOf(state.cls):0;
   var perDay=base+(insPrice[state.ins]||0);
   var lbl=document.getElementById('ctaTotLbl');var pr=document.getElementById('totPr');if(!pr)return;
