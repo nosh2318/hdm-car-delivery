@@ -56,13 +56,34 @@
 </head>
 <body>
 <div class="hd"><b>KEY<span class="y">DROP</span></b> <span class="sub">代車リクエスト管理</span><span class="who" id="who"></span></div>
-<div id="discBar" style="display:none;background:#fffbeb;border-bottom:1px solid #fde68a;padding:8px 14px;font-size:12.5px;color:#92400e;display:none;align-items:center;gap:10px;flex-wrap:wrap;flex:none">
+<div id="discBar" style="display:none;background:#fffbeb;border-bottom:1px solid #fde68a;padding:8px 14px;font-size:12.5px;color:#92400e;align-items:center;gap:10px;flex-wrap:wrap;flex:none">
   <b style="font-weight:900">🏷 代車割引率</b>
-  <span>札幌 <input id="dSpk" type="number" min="0" max="90" style="width:56px;padding:5px 6px;border:1.5px solid #fde68a;border-radius:8px;font-size:14px;text-align:right">%</span>
-  <span>那覇 <input id="dNha" type="number" min="0" max="90" style="width:56px;padding:5px 6px;border:1.5px solid #fde68a;border-radius:8px;font-size:14px;text-align:right">%</span>
-  <button onclick="saveDisc()" style="background:#0e1116;color:#FABE00;border:none;border-radius:8px;padding:7px 14px;font-weight:900;font-size:12.5px;cursor:pointer">保存</button>
-  <span id="discMsg" style="font-weight:800"></span>
-  <span style="color:#a16207;font-size:11px">※ 通常価格から◯%引いた「代車価格」を表示（0で割引なし）</span>
+  <button onclick="openDisc('spk')" style="background:#fff;border:1.5px solid #fde68a;border-radius:8px;padding:6px 12px;font-weight:800;font-size:12.5px;cursor:pointer;color:#92400e">🏔 札幌を設定 <span id="dSumSpk" style="color:#a16207;font-weight:900"></span></button>
+  <button onclick="openDisc('nha')" style="background:#fff;border:1.5px solid #fde68a;border-radius:8px;padding:6px 12px;font-weight:800;font-size:12.5px;cursor:pointer;color:#92400e">🌴 那覇を設定 <span id="dSumNha" style="color:#a16207;font-weight:900"></span></button>
+  <span style="color:#a16207;font-size:11px">※ 通常価格から◯%引いた「代車価格」を表示。クラス別に設定可（空欄＝既定を使用）</span>
+</div>
+<!-- 割引設定モーダル（エリア別×クラス別） -->
+<div id="discModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:#0e1116;color:#fff;padding:14px 18px;border-radius:16px 16px 0 0;display:flex;align-items:center;gap:8px">
+      <b style="font-size:15px;font-weight:900">🏷 代車割引率の設定 <span id="discStoreLbl" style="color:#FABE00"></span></b>
+      <button onclick="closeDisc()" style="margin-left:auto;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="padding:16px 18px">
+      <div style="display:flex;align-items:center;gap:10px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+        <b style="font-size:13px;color:#92400e;font-weight:900">既定（全クラス共通）</b>
+        <input id="dDef" type="number" min="0" max="90" style="width:64px;padding:6px 8px;border:1.5px solid #fde68a;border-radius:8px;font-size:15px;text-align:right;margin-left:auto">
+        <span style="font-weight:800;color:#92400e">%</span>
+      </div>
+      <div style="font-size:11.5px;color:#64748b;margin-bottom:8px">クラス別に上書きする場合のみ入力（空欄＝既定を使用）</div>
+      <div id="dClsRows"></div>
+      <div id="discMsg" style="font-weight:800;font-size:12.5px;margin-top:10px;min-height:16px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button onclick="closeDisc()" style="flex:1;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:10px;padding:11px;font-weight:800;cursor:pointer">閉じる</button>
+        <button onclick="saveDisc()" style="flex:2;background:#0e1116;color:#FABE00;border:none;border-radius:10px;padding:11px;font-weight:900;cursor:pointer">保存する</button>
+      </div>
+    </div>
+  </div>
 </div>
 <div id="app" style="flex:1;display:flex;overflow:hidden"></div>
 <script>
@@ -160,13 +181,23 @@ function renderMsgs(msgs){const b=$("#msgs");if(!b)return;b.innerHTML=msgs.map(m
 window.ins=t=>{const ta=$("#ta");ta.value=ta.value?(ta.value+"\n"+t):t;ta.focus();ta.style.height="auto";ta.style.height=Math.min(130,ta.scrollHeight)+"px";};
 window.reply=async()=>{const v=$("#ta").value.trim();if(!v||!SEL)return;const st=SEL.status==="new"?"proposed":undefined;const j=await api("staff_send",{id:SEL.id,body:v,status:st});if(j.ok){$("#ta").value="";$("#ta").style.height="auto";if(st)SEL.status="proposed";const k=await api("staff_thread",{id:SEL.id});if(k.ok)renderMsgs(k.messages);loadList();}else alert("送信失敗（ログイン要）");};
 window.setStatus=async(s)=>{if(!SEL)return;const j=await api("staff_status",{id:SEL.id,status:s});if(j.ok){SEL.status=s;open_(SEL.id);}else alert("更新失敗");};
-async function loadDisc(){try{const j=await api("get_discount");if(j&&j.ok){$("#dSpk").value=j.spk;$("#dNha").value=j.nha;$("#discBar").style.display="flex";}}catch(e){}}
+// エリア別×クラス別 割引設定
+const DAISHA_CLS={
+  spk:[['A','Aクラス（アルファード）'],['A2','A2クラス'],['B','Bクラス（ノア/デリカ）'],['B2','B2クラス'],['C','Cクラス（ロッキー/CX-3）'],['S','Sクラス（ハリアー/CX-5）'],['F','Fクラス（ソリオ）'],['H','Hクラス（アクセラ）']],
+  nha:[['A','プレミアムミニバン'],['B','ミニバン'],['C','コンパクトSUV'],['D','ミニバン(D)'],['F','コンパクト'],['H','セダン/ハイブリッド'],['S','SUV']]
+};
+let DISC_CFG={spk:{default:0,byClass:{}},nha:{default:0,byClass:{}}},DISC_STORE="spk";
+function discSummary(c){const bc=c.byClass||{};const n=Object.keys(bc).length;return "（既定"+(+c.default||0)+"%"+(n?" ＋クラス別"+n+"件":"")+"）";}
+async function loadDisc(){try{const j=await api("get_discount");if(j&&j.ok){DISC_CFG={spk:j.spk||{default:0,byClass:{}},nha:j.nha||{default:0,byClass:{}}};$("#dSumSpk").textContent=discSummary(DISC_CFG.spk);$("#dSumNha").textContent=discSummary(DISC_CFG.nha);$("#discBar").style.display="flex";}}catch(e){}}
+window.openDisc=function(store){DISC_STORE=store;const c=DISC_CFG[store]||{default:0,byClass:{}};$("#discStoreLbl").textContent=store==="nha"?"（那覇）":"（札幌）";$("#dDef").value=(+c.default||0);const bc=c.byClass||{};$("#dClsRows").innerHTML=(DAISHA_CLS[store]||[]).map(([k,l])=>{const v=(bc[k]!=null&&bc[k]!=="")?bc[k]:"";return '<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid #f1f5f9"><span style="font-size:12.5px;color:#334155;flex:1">'+l+'</span><input data-cls="'+k+'" type="number" min="0" max="90" value="'+v+'" placeholder="既定" style="width:64px;padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;text-align:right"><span style="color:#94a3b8;font-weight:700">%</span></div>';}).join("");$("#discMsg").textContent="";$("#discModal").style.display="flex";};
+window.closeDisc=function(){$("#discModal").style.display="none";};
 window.saveDisc=async function(){
-  const spk=Math.max(0,Math.min(90,+$("#dSpk").value||0)),nha=Math.max(0,Math.min(90,+$("#dNha").value||0));
+  const def=Math.max(0,Math.min(90,+$("#dDef").value||0));
+  const byClass={};document.querySelectorAll("#dClsRows input[data-cls]").forEach(inp=>{const raw=inp.value.trim();if(raw!=="")byClass[inp.getAttribute("data-cls")]=Math.max(0,Math.min(90,+raw||0));});
   $("#discMsg").textContent="保存中…";$("#discMsg").style.color="#92400e";
-  const a=await api("set_discount",{store:"spk",pct:spk}),b=await api("set_discount",{store:"nha",pct:nha});
-  const ok=a.ok&&b.ok;$("#discMsg").textContent=ok?"✅ 保存しました（お客様の代車価格に即反映）":"保存失敗（ログイン要）";$("#discMsg").style.color=ok?"#15803d":"#b91c1c";
-  setTimeout(()=>{$("#discMsg").textContent="";},3500);
+  const r=await api("set_discount",{store:DISC_STORE,default:def,byClass});
+  if(r&&r.ok){DISC_CFG[DISC_STORE]={default:def,byClass};$("#dSumSpk").textContent=discSummary(DISC_CFG.spk);$("#dSumNha").textContent=discSummary(DISC_CFG.nha);$("#discMsg").textContent="✅ 保存しました（お客様の代車価格に即反映）";$("#discMsg").style.color="#15803d";setTimeout(closeDisc,1200);}
+  else{$("#discMsg").textContent="保存失敗（ログイン要）";$("#discMsg").style.color="#b91c1c";}
 };
 async function boot(){
   if(!tok()){showLogin();return;}

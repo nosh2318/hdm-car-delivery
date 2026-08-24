@@ -505,7 +505,8 @@ var step=P.get('step')||'select';
 var state={cls:selCls&&CLS[selCls]?selCls:'',ins:P.get('ins')||'',avail:{},availLoaded:false};
 // ===== 代車モード（?mode=daisha）＝本番フロー流用・地図/在庫/日時は本番同一、最後だけ「リクエスト＋チャット」 =====
 var DAISHA=(P.get('mode')==='daisha');
-var DAISHA_USE='', DAISHA_C2='', DAISHA_C3='', DAISHA_UNDECIDED=false, DAISHA_DISC=0;
+var DAISHA_USE='', DAISHA_C2='', DAISHA_C3='', DAISHA_UNDECIDED=false, DAISHA_DISC={default:0,byClass:{}};
+function discOf(k){if(!DAISHA_DISC)return 0;var bc=DAISHA_DISC.byClass||{};var v=(bc[k]!=null&&bc[k]!=='')?+bc[k]:(+DAISHA_DISC.default||0);return isNaN(v)?0:v;}
 var DAISHA_FN='https://ckrxttbnawkclshczsia.supabase.co/functions/v1/daisha-request';
 if(DAISHA && !P.get('step')) step='cond'; // 代車＝最初に条件入力ステップ
 // ===== 在庫（選択日程で空車があるクラスのみ表示・KEYDROP公開ビュー準拠／anon）=====
@@ -558,14 +559,14 @@ function fetchAvail(){
 }
 function classAvail(k){if(DAISHA)return true;return state.availLoaded?((state.avail[k]||0)>0):true;} // 代車＝配車表在庫と連動せず全クラス選択可
 // 代車価格（割引後・100円丸め）。割引率はDB(hdm_keydrop_daisha)で別登録
-function daishaPrice(k){var p=priceOf(k);if(!p||!DAISHA_DISC)return p;return Math.round(p*(100-DAISHA_DISC)/100/100)*100;}
+function daishaPrice(k){var p=priceOf(k);var d=discOf(k);if(!p||!d)return p;return Math.round(p*(100-d)/100/100)*100;}
 function priceHtml(k){var p=priceOf(k);
   if(DAISHA){ if(!p)return '<b>¥—</b>';
-    if(DAISHA_DISC>0){var d=daishaPrice(k);return '<span style="text-decoration:line-through;color:#9aa0a8;font-size:11px">¥'+p.toLocaleString()+'</span> <b style="color:#e11d48">¥'+d.toLocaleString()+'</b><small>'+T('perday')+' <span style="color:#e11d48;font-weight:800">代車価格</span></small>';}
+    if(discOf(k)>0){var d=daishaPrice(k);return '<span style="text-decoration:line-through;color:#9aa0a8;font-size:11px">¥'+p.toLocaleString()+'</span> <b style="color:#e11d48">¥'+d.toLocaleString()+'</b><small>'+T('perday')+' <span style="color:#e11d48;font-weight:800">代車価格</span></small>';}
     return '<b>¥'+p.toLocaleString()+'</b><small>'+T('perday')+'</small>'; }
   return p?('<b>¥'+p.toLocaleString()+'</b><small>'+T('perday')+'</small>'):'<b>¥—</b>';
 }
-function fetchDaishaDisc(){ if(!DAISHA)return; sbGet('public_keydrop_daisha_v','limit=1').then(function(rows){try{var raw=rows&&rows[0]&&rows[0].value;if(!raw)return;var v=(typeof raw==='string')?JSON.parse(raw):raw;DAISHA_DISC=+((v&&v.discount_pct)||0)||0;try{renderV();}catch(e){}}catch(e){}}); }
+function fetchDaishaDisc(){ if(!DAISHA)return; sbGet('public_keydrop_daisha_v','limit=1').then(function(rows){try{var raw=rows&&rows[0]&&rows[0].value;if(!raw)return;var v=(typeof raw==='string')?JSON.parse(raw):raw;if(v&&typeof v==='object'){if(v.byClass||v.default!=null){DAISHA_DISC={default:+(v.default||0)||0,byClass:v.byClass||{}};}else if(v.discount_pct!=null){DAISHA_DISC={default:+v.discount_pct||0,byClass:{}};}}try{renderV();}catch(e){}}catch(e){}}); }
 var loc={del:null,col:null},colSame=true; // お届け先/回収先(={label,addr,lat,lng}) ・回収同じは既定ON。値はデリバリー埋め込み(official-deliv-v2)からpostMessageで受信
 // デリバリー埋め込みからの選択結果を受信
 window.addEventListener('message',function(e){var d=e&&e.data;if(!d||d.type!=='hdmdeliv')return;
@@ -1030,7 +1031,7 @@ function renderConfirm(){
   if(DAISHA){
     var _ch=document.querySelector('#stepConfirm h2');if(_ch){_ch.removeAttribute('data-i18n');_ch.textContent='📋 リクエスト内容の確認';}
     var _op=priceOf(state.cls),_dp=daishaPrice(state.cls);
-    var _priceRow=(DAISHA_DISC>0)?('<span style="text-decoration:line-through;color:#9aa0a8;font-size:12px">¥'+_op.toLocaleString()+'</span> <b style="color:#e11d48">¥'+_dp.toLocaleString()+'</b><small style="color:#5a6b85"> / 1日（代車価格）</small>'):('<b>¥'+_op.toLocaleString()+'</b><small style="color:#5a6b85"> / 1日</small>');
+    var _priceRow=(discOf(state.cls)>0)?('<span style="text-decoration:line-through;color:#9aa0a8;font-size:12px">¥'+_op.toLocaleString()+'</span> <b style="color:#e11d48">¥'+_dp.toLocaleString()+'</b><small style="color:#5a6b85"> / 1日（代車価格）</small>'):('<b>¥'+_op.toLocaleString()+'</b><small style="color:#5a6b85"> / 1日</small>');
     var _useMap={accident:'事故の代車',repair:'車検・修理の代車',long:'長期のご利用',other:'その他'};
     var _c2c3=[DAISHA_C2,DAISHA_C3].filter(Boolean).map(function(k){return clsLabel(k);}).join('／');
     document.getElementById('confirmBox').innerHTML=
