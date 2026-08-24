@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<meta name="robots" content="noindex,nofollow">
+<title>代車リクエスト管理｜KEYDROP</title>
+<style>
+  :root{--line:#e2e6ea;--sub:#6b7280}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto',sans-serif;background:#eef1f4;color:#1a1a1a;display:flex;flex-direction:column;height:100dvh}
+  .hd{background:#0e1116;color:#fff;padding:11px 15px;display:flex;align-items:center;gap:9px;flex:none}
+  .hd b{font-size:16px;font-weight:900}.hd .y{color:#FABE00}.hd .sub{font-size:11px;color:#FABE00;font-weight:700}
+  .hd .who{margin-left:auto;font-size:11px;color:#cbd5e1}
+  .wrap{flex:1;display:flex;overflow:hidden}
+  .list{width:300px;max-width:42%;border-right:1px solid var(--line);background:#fff;overflow-y:auto;flex:none}
+  .item{padding:12px 14px;border-bottom:1px solid #f1f3f5;cursor:pointer}
+  .item.on{background:#fffbf0}
+  .item .t{font-size:14px;font-weight:800;display:flex;align-items:center;gap:6px}
+  .item .st{font-size:10px;font-weight:900;border-radius:999px;padding:2px 8px;background:#eef2f7;color:#475569}
+  .item .st.new{background:#fef3c7;color:#a16207}.item .st.proposed{background:#dbeafe;color:#1d4ed8}.item .st.confirmed{background:#dcfce7;color:#15803d}
+  .item .m{font-size:11.5px;color:var(--sub);margin-top:4px;line-height:1.6}
+  .pane{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#eef1f4}
+  .det{background:#fff;border-bottom:1px solid var(--line);padding:11px 15px;flex:none;font-size:12px;color:#374151;line-height:1.75}
+  .det b{color:#111}
+  .det .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+  .det .nm{font-size:15px;font-weight:900}
+  .det .tel a{color:#0369a1;font-weight:700;text-decoration:none}
+  .msgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:9px}
+  .msg{max-width:82%;padding:9px 12px;border-radius:13px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+  .msg.customer{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+  .msg.system{align-self:center;background:#e9edf2;color:#5a6068;font-size:12px;border-style:dashed;border:1px dashed #cbd5e1}
+  .msg.staff{align-self:flex-end;background:#FABE00;color:#0e1116;border-bottom-right-radius:4px;font-weight:600}
+  .who2{font-size:10px;font-weight:800;color:#94a3b8;margin:0 5px 2px}
+  .wr{display:flex;flex-direction:column}.wr.me{align-items:flex-end}.who2.me{text-align:right;color:#a07c00}
+  .time{font-size:9px;color:#b6bcc4;margin:1px 5px 0}
+  .tools{flex:none;background:#fff;border-top:1px solid var(--line);padding:8px 12px}
+  .tmpl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px}
+  .tmpl button{font-size:11px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:6px 9px;cursor:pointer;color:#334155;font-weight:700}
+  .inbar{display:flex;gap:8px;align-items:flex-end}
+  .inbar textarea{flex:1;border:1.5px solid #dfe3e8;border-radius:12px;padding:10px 13px;font-size:15px;font-family:inherit;resize:none;max-height:130px;line-height:1.5}
+  .inbar button.send{flex:none;background:#0e1116;color:#FABE00;border:none;border-radius:12px;padding:0 18px;font-size:14px;font-weight:900;cursor:pointer}
+  .stbtns{display:flex;gap:6px;margin-top:7px}
+  .stbtns button{flex:1;font-size:11.5px;font-weight:800;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px;cursor:pointer;color:#334155}
+  .stbtns button.on{background:#0e1116;color:#fff;border-color:#0e1116}
+  .empty{margin:auto;color:#94a3b8;text-align:center;padding:30px;font-size:14px}
+  .login{max-width:320px;margin:52px auto;text-align:center;background:#fff;padding:24px;border-radius:14px}
+  .login input{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:10px;margin-bottom:10px;font-size:16px}
+  .login button{width:100%;padding:13px;background:#0e1116;color:#FABE00;border:none;border-radius:10px;font-weight:900;font-size:15px;cursor:pointer}
+  .spin{width:26px;height:26px;border:3px solid #ddd;border-top-color:#FABE00;border-radius:50%;animation:sp .7s linear infinite;margin:24px auto}@keyframes sp{to{transform:rotate(360deg)}}
+  @media(max-width:640px){.list{width:100%;max-width:100%;display:var(--ld,block)}.pane{display:var(--pd,none)}}
+</style>
+</head>
+<body>
+<div class="hd"><b>KEY<span class="y">DROP</span></b> <span class="sub">代車リクエスト管理</span><span class="who" id="who"></span></div>
+<div id="app" style="flex:1;display:flex;overflow:hidden"></div>
+<script>
+const SB="https://ckrxttbnawkclshczsia.supabase.co";
+const FN=SB+"/functions/v1/daisha-request";
+const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function tok(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf("sb-")===0&&k.indexOf("auth-token")>=0){let v=null;try{v=JSON.parse(localStorage.getItem(k))}catch(e){continue}const t=(v&&v.access_token)||(v&&v.currentSession&&v.currentSession.access_token)||(Array.isArray(v)&&typeof v[0]==="string"?v[0]:null);if(t)return t}}}catch(e){}return null}
+async function api(action,extra){const r=await fetch(FN,{method:"POST",headers:{apikey:ANON,Authorization:"Bearer "+ANON,"Content-Type":"application/json"},body:JSON.stringify(Object.assign({action,staff_token:tok()},extra||{}))});return await r.json();}
+const UC={accident:"事故の代車",repair:"車検・修理の代車",long:"長期のご利用",other:"その他"};
+const ST={new:"新規",proposed:"提案中",confirmed:"確定",closed:"クローズ"};
+let LIST=[],SEL=null,pollT=null;
+
+function showLogin(msg){
+  $("#app").innerHTML=`<div class="login"><div style="font-size:20px;font-weight:900;margin-bottom:6px">KEY<span style="color:#FABE00">DROP</span> 代車管理</div>
+  <div style="font-size:12px;color:#6b7280;margin-bottom:12px">本体APPと同じ「名前＋番号」でログイン</div>
+  <input id="le" placeholder="ID（名前・例 oshita）" autocapitalize="off" autocorrect="off">
+  <input id="lp" type="password" inputmode="numeric" placeholder="番号" onkeydown="if(event.key==='Enter')doLogin()">
+  <button onclick="doLogin()">ログイン</button>
+  <div id="lerr" style="color:#b91c1c;font-size:12px;margin-top:8px">${msg?esc(msg):""}</div></div>`;
+}
+async function doLogin(){
+  const id=($("#le").value||"").trim().toLowerCase(),password=($("#lp").value||"").trim();
+  if(!id||!password){$("#lerr").textContent="名前と番号を入力してください";return;}
+  $("#lerr").textContent="ログイン中…";
+  const cand=id.includes("@")?[id]:[id+"@spk.hdm",id+"@nha.hdm"];
+  try{let d=null;for(const em of cand){const r=await fetch(SB+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:ANON,"Content-Type":"application/json"},body:JSON.stringify({email:em,password})});const j=await r.json();if(r.ok&&j.access_token){d=j;break;}}
+    if(!d){$("#lerr").textContent="ログイン失敗：名前または番号をご確認ください";return;}
+    localStorage.setItem("sb-ckrxttbnawkclshczsia-auth-token",JSON.stringify(d));
+    boot();
+  }catch(e){$("#lerr").textContent="通信エラー："+String(e.message||e);}
+}
+function layout(){
+  $("#app").innerHTML='<div class="list" id="list"></div><div class="pane" id="pane"><div class="empty">左のリクエストを選ぶとチャットが開きます</div></div>';
+}
+function renderList(){
+  $("#list").innerHTML=LIST.length?LIST.map(q=>{
+    const per=q.start_date?(q.start_date+"〜"+(q.end_date||"未定")):(q.period_note||"期間未定");
+    return `<div class="item${SEL&&SEL.id===q.id?' on':''}" onclick="open_('${q.id}')"><div class="t"><span class="st ${q.status}">${ST[q.status]||q.status}</span>${esc(q.name)}様${q.company?"（"+esc(q.company)+"）":""}</div><div class="m">${UC[q.use_case]||q.use_case||"用途-"} ／ ${esc(per)}<br>希望：${esc(q.choice1||"-")}</div></div>`;
+  }).join(""):'<div class="empty" style="padding:24px;font-size:13px">リクエストはまだありません</div>';
+}
+async function loadList(){const j=await api("staff_list");if(j.error){if(String(j.error).indexOf("unauth")>=0){showLogin("ログインの有効期限切れ。再ログインしてください。");return false;}}LIST=j.list||[];renderList();return true;}
+window.open_=async function(id){
+  document.documentElement.style.setProperty('--ld','none');document.documentElement.style.setProperty('--pd','flex');
+  const j=await api("staff_thread",{id});if(!j.ok){alert("取得失敗");return;}
+  SEL=j.request;renderList();renderPane(j.request,j.messages);
+  clearInterval(pollT);pollT=setInterval(async()=>{if(document.visibilityState!=="visible"||!SEL)return;const k=await api("staff_thread",{id:SEL.id});if(k.ok)renderMsgs(k.messages);},8000);
+};
+function backList(){document.documentElement.style.setProperty('--ld','block');document.documentElement.style.setProperty('--pd','none');SEL=null;clearInterval(pollT);loadList();}
+function renderPane(q,msgs){
+  const per=q.start_date?(q.start_date+"〜"+(q.end_date||"未定")+(q.period_note?("（"+q.period_note+"）"):"")):(q.period_note||"未定");
+  const choices=[q.choice1,q.choice2,q.choice3].filter(Boolean).map((c,i)=>"第"+(i+1)+"希望："+esc(c)).join(" ／ ");
+  $("#pane").innerHTML=
+    `<div class="det">
+      <div class="row"><button onclick="backList()" style="background:none;border:none;color:#0369a1;font-weight:800;font-size:13px;cursor:pointer;display:none" class="bk">← 一覧</button><span class="nm">${esc(q.name)}様</span>${q.company?'<span style="font-size:12px;color:#6b7280">'+esc(q.company)+'</span>':''}<span style="font-size:10px;font-weight:900;border-radius:999px;padding:2px 8px;background:#eef2f7;color:#475569">${q.cust_type==="business"?"事業者":"個人"}</span></div>
+      <div>用途：<b>${UC[q.use_case]||q.use_case||"-"}</b> ／ 期間：<b>${esc(per)}</b></div>
+      <div>お届け：<b>${esc(q.del_place||"-")}</b> ／ 回収：<b>${esc(q.same_col?"お届けと同じ":(q.col_place||"-"))}</b></div>
+      <div>車両ご希望：<b>${choices||"-"}</b></div>
+      ${q.memo?'<div>メモ：'+esc(q.memo)+'</div>':''}
+      <div class="tel">📞 ${q.tel?'<a href="tel:'+esc(q.tel)+'">'+esc(q.tel)+'</a>':"-"} ／ ✉️ ${esc(q.email||"-")}</div>
+      <div class="stbtns">
+        ${["new","proposed","confirmed","closed"].map(s=>`<button class="${q.status===s?'on':''}" onclick="setStatus('${s}')">${ST[s]}</button>`).join("")}
+      </div>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="tools">
+      <div class="tmpl">
+        <button onclick="ins('ご連絡ありがとうございます。ご希望の車両で在庫を確認いたします。少々お待ちください。')">確認します</button>
+        <button onclick="ins('ご希望の【車種】、【M/D〜M/D】でご用意できます。料金は総額【¥】（お届け・回収込み）です。この内容でよろしいでしょうか？')">提案テンプレ</button>
+        <button onclick="ins('あいにくご希望の車種は満車のため、代わりに【車種】はいかがでしょうか？')">代替提案</button>
+        <button onclick="ins('ありがとうございます。この内容で確定いたします。当日はご本人確認（免許証）のみお願いします。')">確定</button>
+      </div>
+      <div class="inbar"><textarea id="ta" rows="1" placeholder="お客様へのご提案・返信…"></textarea><button class="send" onclick="reply()">送信</button></div>
+    </div>`;
+  if(window.innerWidth<=640)document.querySelector(".bk").style.display="inline";
+  renderMsgs(msgs);
+  $("#ta").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.height=Math.min(130,e.target.scrollHeight)+"px";});
+}
+function renderMsgs(msgs){const b=$("#msgs");if(!b)return;b.innerHTML=msgs.map(m=>{
+  if(m.sender==="system")return '<div class="msg system">'+esc(m.body)+'</div>';
+  const me=m.sender==="staff";const who=me?"あなた(担当)":"お客様";
+  return '<div class="wr'+(me?' me':'')+'"><div class="who2'+(me?' me':'')+'">'+who+'</div><div class="msg '+m.sender+'">'+esc(m.body)+'</div></div>';
+}).join("");b.scrollTop=b.scrollHeight;}
+window.ins=t=>{const ta=$("#ta");ta.value=ta.value?(ta.value+"\n"+t):t;ta.focus();ta.style.height="auto";ta.style.height=Math.min(130,ta.scrollHeight)+"px";};
+window.reply=async()=>{const v=$("#ta").value.trim();if(!v||!SEL)return;const st=SEL.status==="new"?"proposed":undefined;const j=await api("staff_send",{id:SEL.id,body:v,status:st});if(j.ok){$("#ta").value="";$("#ta").style.height="auto";if(st)SEL.status="proposed";const k=await api("staff_thread",{id:SEL.id});if(k.ok)renderMsgs(k.messages);loadList();}else alert("送信失敗（ログイン要）");};
+window.setStatus=async(s)=>{if(!SEL)return;const j=await api("staff_status",{id:SEL.id,status:s});if(j.ok){SEL.status=s;open_(SEL.id);}else alert("更新失敗");};
+async function boot(){
+  if(!tok()){showLogin();return;}
+  const me=(()=>{try{const t=tok().split(".")[1];const p=JSON.parse(atob(t.replace(/-/g,'+').replace(/_/g,'/')));return (p.email||"").split("@")[0];}catch(e){return"";}})();
+  $("#who").textContent=me?("👤 "+me):"";
+  layout();
+  if(await loadList()===false)return;
+  setInterval(()=>{if(document.visibilityState==="visible"&&!SEL)loadList();},15000);
+}
+boot();
+</script>
+</body>
+</html>

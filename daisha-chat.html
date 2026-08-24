@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<meta name="robots" content="noindex,nofollow">
+<title>代車チャット｜KEYDROP</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto',sans-serif;background:#eef1f4;color:#1a1a1a;display:flex;flex-direction:column;height:100dvh}
+  .hd{background:#0e1116;color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;flex:none}
+  .hd .mark{width:18px;height:14px;display:flex;flex-direction:column;justify-content:space-between}
+  .hd .mark i{height:2.5px;background:#FABE00;border-radius:2px;display:block}
+  .hd b{font-size:16px;font-weight:900}.hd .y{color:#FABE00}
+  .hd .sub{font-size:11px;color:#FABE00;margin-left:auto;font-weight:700}
+  .summary{background:#fff;border-bottom:1px solid #e2e6ea;padding:11px 16px;flex:none}
+  .summary .r1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .summary .st{font-size:11px;font-weight:900;border-radius:999px;padding:3px 10px;background:#fffbf0;color:#a07c00;border:1px solid #FABE00}
+  .summary .nm{font-size:14px;font-weight:900}
+  .summary .meta{font-size:11.5px;color:#6b7280;margin-top:5px;line-height:1.7}
+  .summary .meta b{color:#374151}
+  details.sm summary{cursor:pointer;font-size:11.5px;color:#0369a1;font-weight:700;margin-top:6px;list-style:none}
+  details.sm summary::-webkit-details-marker{display:none}
+  .body{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:10px}
+  .msg{max-width:80%;padding:10px 13px;border-radius:14px;font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  .msg.staff,.msg.system{align-self:flex-start;background:#fff;border:1px solid #e2e6ea;border-bottom-left-radius:4px}
+  .msg.system{background:#f4f6f9;color:#5a6068;font-size:13px;border-style:dashed}
+  .msg.customer{align-self:flex-end;background:#FABE00;color:#0e1116;border-bottom-right-radius:4px;font-weight:600}
+  .who{font-size:10.5px;font-weight:800;color:#94a3b8;margin:0 6px 3px}
+  .who.me{text-align:right;color:#a07c00}
+  .wrap{display:flex;flex-direction:column}
+  .wrap.me{align-items:flex-end}
+  .time{font-size:9.5px;color:#b6bcc4;margin:2px 6px 0}
+  .inbar{flex:none;background:#fff;border-top:1px solid #e2e6ea;padding:10px 12px;display:flex;gap:8px;align-items:flex-end;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  .inbar textarea{flex:1;border:1.5px solid #dfe3e8;border-radius:20px;padding:11px 15px;font-size:16px;font-family:inherit;resize:none;max-height:120px;line-height:1.5}
+  .inbar button{flex:none;width:46px;height:46px;border-radius:50%;border:none;background:#FABE00;color:#0e1116;font-size:20px;font-weight:900;cursor:pointer}
+  .inbar button:disabled{opacity:.5}
+  .center{margin:auto;text-align:center;color:#94a3b8;font-size:14px;padding:30px}
+  .spin{width:28px;height:28px;border:3px solid #ddd;border-top-color:#FABE00;border-radius:50%;animation:sp .7s linear infinite;margin:0 auto 12px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .lineadd{background:#06c755;color:#fff;text-decoration:none;font-weight:800;font-size:12px;border-radius:10px;padding:8px 12px;display:inline-block;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="hd">
+  <span class="mark"><i></i><i></i><i></i></span><b>KEY<span class="y">DROP</span></b>
+  <span class="sub">代車チャット</span>
+</div>
+<div class="summary" id="summary" style="display:none"></div>
+<div class="body" id="body"><div class="center"><div class="spin"></div>読み込み中…</div></div>
+<div class="inbar" id="inbar" style="display:none">
+  <textarea id="ta" rows="1" placeholder="メッセージを入力…"></textarea>
+  <button id="send">➤</button>
+</div>
+
+<script>
+const FN="https://ckrxttbnawkclshczsia.supabase.co/functions/v1/daisha-request";
+const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+const $=id=>document.getElementById(id);
+const token=new URLSearchParams(location.search).get("t")||"";
+let lastCount=-1,busy=false;
+async function call(action,extra){
+  const r=await fetch(FN,{method:"POST",headers:{apikey:ANON,Authorization:"Bearer "+ANON,"Content-Type":"application/json"},body:JSON.stringify(Object.assign({action,token},extra||{}))});
+  return await r.json();
+}
+const ST={new:"受付：ご提案の準備中",proposed:"ご提案あり・ご確認ください",confirmed:"確定",closed:"クローズ"};
+function esc(s){return String(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function fmtTime(t){try{const d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}catch(e){return"";}}
+function renderSummary(q){
+  const st=ST[q.status]||"受付";
+  const ch=(q.choices||[]).map((c,i)=>"第"+(i+1)+"希望："+esc(c)).join(" ／ ");
+  $("summary").style.display="block";
+  $("summary").innerHTML=
+    '<div class="r1"><span class="st">'+st+'</span><span class="nm">'+esc(q.name)+' 様</span></div>'+
+    '<details class="sm"><summary>リクエスト内容を表示 ▾</summary><div class="meta">'+
+      (q.use_case?'<div>用途：<b>'+esc(q.use_case)+'</b></div>':'')+
+      (q.period?'<div>希望期間：<b>'+esc(q.period)+'</b></div>':'')+
+      (q.del_place?'<div>お届け：<b>'+esc(q.del_place)+'</b></div>':'')+
+      (q.col_place?'<div>回収：<b>'+esc(q.col_place)+'</b></div>':'')+
+      (ch?'<div>車両：<b>'+ch+'</b></div>':'')+
+    '</div></details>';
+}
+function renderMsgs(msgs){
+  const b=$("body");
+  b.innerHTML=msgs.map(m=>{
+    const me=m.sender==="customer";
+    const who=m.sender==="customer"?"あなた":(m.sender==="staff"?"KEYDROP 担当":"KEYDROP");
+    if(m.sender==="system") return '<div class="msg system">'+esc(m.body)+'</div>';
+    return '<div class="wrap'+(me?' me':'')+'"><div class="who'+(me?' me':'')+'">'+who+'</div><div class="msg '+m.sender+'">'+esc(m.body)+'</div><div class="time">'+fmtTime(m.at)+'</div></div>';
+  }).join("");
+  b.scrollTop=b.scrollHeight;
+}
+async function load(first){
+  const j=await call("thread");
+  if(!j.ok){ $("body").innerHTML='<div class="center">リンクが無効か、リクエストが見つかりません。<br>お手数ですが最初からやり直してください。<br><a class="lineadd" href="https://lin.ee/ZxBknUv" target="_blank">💬 LINEで相談</a></div>'; return; }
+  renderSummary(j.request);
+  if(j.messages.length!==lastCount){ renderMsgs(j.messages); lastCount=j.messages.length; }
+  $("inbar").style.display="flex";
+}
+$("send").onclick=async()=>{
+  const v=$("ta").value.trim(); if(!v||busy)return;
+  busy=true;$("send").disabled=true;
+  const j=await call("send",{body:v});
+  busy=false;$("send").disabled=false;
+  if(j.ok){ $("ta").value=""; $("ta").style.height="auto"; lastCount=-1; load(); }
+  else alert("送信に失敗しました。もう一度お試しください。");
+};
+$("ta").addEventListener("input",e=>{e.target.style.height="auto";e.target.style.height=Math.min(120,e.target.scrollHeight)+"px";});
+if(!token){ $("body").innerHTML='<div class="center">チャットのリンクが正しくありません。</div>'; }
+else { load(true); setInterval(()=>{if(document.visibilityState==="visible")load();},8000); document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")load();}); }
+</script>
+</body>
+</html>
