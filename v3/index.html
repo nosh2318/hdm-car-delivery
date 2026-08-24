@@ -222,8 +222,8 @@ footer a{color:var(--mut);text-decoration:none;margin:0 8px;white-space:nowrap;d
     <a class="menu-item" href="https://keydrop.jp/guide.html" target="_blank" rel="noopener"><span class="menu-item-icon">📖</span>ご利用方法<span class="menu-item-arrow">→</span></a>
     <a class="menu-item" href="https://keydrop.jp/vehicles.html?area=naha" target="_blank" rel="noopener"><span class="menu-item-icon">🚗</span>ラインナップ（那覇）<span class="menu-item-arrow">→</span></a>
     <a class="menu-item" href="https://keydrop.jp/vehicles.html?area=sapporo" target="_blank" rel="noopener"><span class="menu-item-icon">🚗</span>ラインナップ（札幌）<span class="menu-item-arrow">→</span></a>
-    <a class="menu-item" href="keydrop-flow-daisha.html?area=sapporo&mode=daisha&method=delivery" style="color:#FABE00;font-weight:800"><span class="menu-item-icon">🔧</span>代車のお届け（札幌）<span class="menu-item-arrow">→</span></a>
-    <a class="menu-item" href="keydrop-flow-daisha.html?area=naha&mode=daisha&method=delivery" style="color:#FABE00;font-weight:800"><span class="menu-item-icon">🔧</span>代車のお届け（那覇）<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="javascript:void(0)" onclick="dq('sapporo')" style="color:#FABE00;font-weight:800"><span class="menu-item-icon">🔧</span>代車のお届け（札幌）<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="javascript:void(0)" onclick="dq('naha')" style="color:#FABE00;font-weight:800"><span class="menu-item-icon">🔧</span>代車のお届け（那覇）<span class="menu-item-arrow">→</span></a>
     <a class="menu-item" href="keydrop-insurance.html" target="_blank" rel="noopener"><span class="menu-item-icon">🛡️</span>保険プラン一覧<span class="menu-item-arrow">→</span></a>
   </div>
   <div class="menu-section"><div class="menu-section-title">サポート</div>
@@ -280,8 +280,8 @@ footer a{color:var(--mut);text-decoration:none;margin:0 8px;white-space:nowrap;d
       ご希望を送ると、担当が在庫を確認して<b style="color:#FABE00">チャットで車両をご提案</b>します（個人・整備工場/ディーラー/法人 対応）。
     </div>
     <div style="display:flex;gap:10px;margin-top:13px">
-      <a href="keydrop-flow-daisha.html?area=sapporo&mode=daisha&method=delivery" style="flex:1;text-align:center;background:#FABE00;color:#0e1116;font-weight:900;font-size:14px;padding:13px;border-radius:12px;text-decoration:none">🏔 札幌の代車</a>
-      <a href="keydrop-flow-daisha.html?area=naha&mode=daisha&method=delivery" style="flex:1;text-align:center;background:#0e1116;color:#FABE00;border:1.5px solid #FABE00;font-weight:900;font-size:14px;padding:13px;border-radius:12px;text-decoration:none">🌴 那覇の代車</a>
+      <a href="javascript:void(0)" onclick="dq('sapporo')" style="flex:1;text-align:center;background:#FABE00;color:#0e1116;font-weight:900;font-size:14px;padding:13px;border-radius:12px;text-decoration:none">🏔 札幌の代車</a>
+      <a href="javascript:void(0)" onclick="dq('naha')" style="flex:1;text-align:center;background:#0e1116;color:#FABE00;border:1.5px solid #FABE00;font-weight:900;font-size:14px;padding:13px;border-radius:12px;text-decoration:none">🌴 那覇の代車</a>
     </div>
   </div>
 </div>
@@ -430,8 +430,10 @@ function goDaisha(){
   if(!a){var el=document.getElementById('areaSel');el.classList.add('need');try{el.focus();el.scrollIntoView({block:'center'});}catch(e){}return;}
   var pd=document.getElementById('pickDate').value,pt=document.getElementById('pickTime').value,rd=document.getElementById('retDate').value,rt=document.getElementById('retTime').value;
   var dt='';if(pd&&rd)dt='&pd='+encodeURIComponent(pd)+'&pt='+encodeURIComponent(pt||'')+'&rd='+encodeURIComponent(rd)+'&rt='+encodeURIComponent(rt||'');
-  location.href='keydrop-flow-daisha.html?area='+a+'&method=delivery&mode=daisha'+dt;
+  location.href='keydrop-flow-daisha.html?area='+a+'&method=delivery&mode=daisha&_='+Date.now()+dt;
 }
+// 🔧 代車：エリア直行（キャッシュ回避のため毎回タイムスタンプ付与＝常に最新フローを読む）
+function dq(a){location.href='keydrop-flow-daisha.html?area='+a+'&mode=daisha&method=delivery&_='+Date.now();}
 // 時間ドロップダウンを生成（8:00〜20:00・30分刻み）
 (function(){var opts='';for(var h=9;h<=19;h++){for(var m=0;m<60;m+=30){if(h===19&&m>0)break;var t=('0'+h).slice(-2)+':'+('0'+m).slice(-2);opts+='<option value="'+t+'">'+t+'</option>';}}document.querySelectorAll('.timeSel').forEach(function(s){s.insertAdjacentHTML('beforeend',opts);});})();
 // 出発/返却の日付を「最短予約日＝2日後」で初期表示（空欄時）＋それ以前は選択不可。店舗選択後も維持
