@@ -99,10 +99,11 @@
 </div>
 
 <div class="hero">
-  <div class="eyebrow">札幌エリア限定 ・ 代車 × デリバリー</div>
+  <div class="eyebrow" id="eyebrow">代車 × デリバリー</div>
   <h1>その<span class="y">代車</span>、<br>店に行かず、届けます。</h1>
   <p class="lead">事故・車検・修理で「今、車がない」。ご希望を送っていただくと、担当が在庫を確認して<b>実際にお出しできる車両をチャットでご提案</b>します。お届けも回収も、あなたのいる場所へ。</p>
-  <div class="area">🅿️ 対応エリア：札幌市内・近郊</div>
+  <div class="area" id="areapill">🅿️ 対応エリア</div>
+  <div style="margin-top:12px"><a href="#" id="switcharea" style="font-size:12px;color:#FABE00;font-weight:700;text-decoration:underline">エリアを変更</a></div>
 </div>
 <div class="why">
   <span>🚚 店に行かず届く</span><span>❄️ 冬タイヤでご用意</span><span>🗓 1日〜長期OK</span><span>💬 チャットでご提案</span>
@@ -197,15 +198,47 @@
 const FN="https://ckrxttbnawkclshczsia.supabase.co/functions/v1/daisha-request";
 const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
 const $=id=>document.getElementById(id);
-// 札幌ラインナップ
-const CARS=[
- {k:"ミニバン大（アルファード/ヴェルファイア）",em:"🚐",cl:"ミニバン（大）",md:"アルファード / ヴェルファイア",tg:"7〜8名・ゆったり"},
- {k:"ミニバン（ノア/デリカD5）",em:"🚙",cl:"ミニバン",md:"ノア / デリカD5",tg:"7〜8名・家族/積載"},
- {k:"SUV（ハリアー/CX-5）",em:"🚗",cl:"SUV",md:"ハリアー / CX-5",tg:"5名・雪道も安心"},
- {k:"コンパクトSUV（ロッキー/CX-3）",em:"🚕",cl:"コンパクトSUV",md:"ロッキー / CX-3",tg:"5名・取り回し◎"},
- {k:"コンパクト（ルーミー/ソリオ）",em:"🚘",cl:"コンパクト",md:"ルーミー / ソリオ",tg:"5名・広くて低燃費"},
- {k:"ベーシック（カローラ/アクセラ）",em:"🚗",cl:"ベーシック",md:"カローラ / アクセラ",tg:"5名・お手頃"},
-];
+// ── エリア（store）判定：?area=sapporo|naha（?store=spk|nha でも可）──
+const qs=new URLSearchParams(location.search);
+function resolveStore(){const a=(qs.get("area")||qs.get("store")||"").toLowerCase();if(["nha","naha","okinawa","沖縄","那覇"].includes(a))return"nha";if(["spk","sapporo","hokkaido","北海道","札幌"].includes(a))return"spk";return"";}
+let STORE=resolveStore();
+const AREA={
+  spk:{eyebrow:"北海道・札幌エリア ・ 代車 × デリバリー",pill:"🅿️ 対応エリア：札幌市内・近郊"},
+  nha:{eyebrow:"沖縄・那覇エリア ・ 代車 × デリバリー",pill:"🅿️ 対応エリア：那覇・沖縄本島"},
+};
+const LINEUPS={
+  spk:[
+   {k:"ミニバン大（アルファード/ヴェルファイア）",em:"🚐",cl:"ミニバン（大）",md:"アルファード / ヴェルファイア",tg:"7〜8名・ゆったり"},
+   {k:"ミニバン（ノア/デリカD5）",em:"🚙",cl:"ミニバン",md:"ノア / デリカD5",tg:"7〜8名・家族/積載"},
+   {k:"SUV（ハリアー/CX-5）",em:"🚗",cl:"SUV",md:"ハリアー / CX-5",tg:"5名・雪道も安心"},
+   {k:"コンパクトSUV（ロッキー/CX-3）",em:"🚕",cl:"コンパクトSUV",md:"ロッキー / CX-3",tg:"5名・取り回し◎"},
+   {k:"コンパクト（ルーミー/ソリオ）",em:"🚘",cl:"コンパクト",md:"ルーミー / ソリオ",tg:"5名・広くて低燃費"},
+   {k:"ベーシック（カローラ/アクセラ）",em:"🚗",cl:"ベーシック",md:"カローラ / アクセラ",tg:"5名・お手頃"},
+  ],
+  nha:[
+   {k:"高級ミニバン（アルファード）",em:"🚐",cl:"高級ミニバン",md:"アルファード",tg:"7〜8名・ゆったり"},
+   {k:"ミニバン（セレナ/ノア/エスクァイア）",em:"🚙",cl:"ミニバン",md:"セレナ / ノア / エスクァイア",tg:"7〜8名・家族/荷物"},
+   {k:"SUV（ハリアー）",em:"🚗",cl:"SUV",md:"ハリアー",tg:"5名・存在感"},
+   {k:"コンパクトSUV（ライズ/ヤリスクロス）",em:"🚕",cl:"コンパクトSUV",md:"ライズ / ヤリスクロス",tg:"5名・取り回し◎"},
+   {k:"ハイブリッド（プリウス/プリウスα）",em:"🚘",cl:"ハイブリッド",md:"プリウス / プリウスα",tg:"5名・低燃費"},
+   {k:"コンパクト（アクア/ノート/ヴィッツ）",em:"🚗",cl:"コンパクト",md:"アクア / ノート / ヴィッツ",tg:"5名・お手頃"},
+  ],
+};
+// ── エリア未指定ならエリア選択ゲート ──
+function areaGate(){
+  const o=$("ov");o.style.display="flex";
+  $("ovbox").innerHTML='<div class="em">🚗</div><h3>ご利用エリアを選んでください</h3><p style="margin-bottom:6px">代車のお届け対応エリアです</p>'+
+    '<a href="?area=sapporo">🏔 北海道・札幌エリア</a>'+
+    '<a href="?area=naha" style="background:#0e1116;color:#FABE00;margin-top:10px">🌴 沖縄・那覇エリア</a>';
+}
+function applyArea(){
+  $("eyebrow").textContent=AREA[STORE].eyebrow;
+  $("areapill").textContent=AREA[STORE].pill;
+}
+$("switcharea").onclick=e=>{e.preventDefault();STORE="";areaGate();};
+if(!STORE){ areaGate(); }
+else { applyArea(); }
+let CARS=LINEUPS[STORE||"spk"];
 let picks=[]; // 車両key 希望順
 function renderCars(){
   $("cars").innerHTML=CARS.map((c,i)=>{
@@ -236,8 +269,9 @@ $("sb").onclick=async()=>{
   if(!$("sd").value)return showErr("貸出（お届け）希望日を選んでください");
   if(!$("dp").value.trim())return showErr("お届け場所を入力してください");
   if(!picks.length)return showErr("ご希望の車両を1つ以上選んでください（第1希望）");
-  sending=true;$("sb").disabled=true;$("ov").style.display="flex";
-  const body={action:"create",use_case:uc,start_date:$("sd").value,end_date:$("ed").value,period_note:$("pn").value.trim(),
+  if(!STORE){return areaGate();}
+  sending=true;$("sb").disabled=true;$("ovbox").innerHTML='<div class="spin"></div><h3 style="margin-top:14px">送信しています…</h3>';$("ov").style.display="flex";
+  const body={action:"create",store:STORE,use_case:uc,start_date:$("sd").value,end_date:$("ed").value,period_note:$("pn").value.trim(),
     del_place:$("dp").value.trim(),same_col:$("samecol").checked,col_place:$("cp").value.trim(),
     cust_type:ct,company:$("co").value.trim(),name,tel:$("tel").value.trim(),email:$("em").value.trim(),
     choice1:picks[0]||"",choice2:picks[1]||"",choice3:picks[2]||"",memo:$("mm").value.trim()};

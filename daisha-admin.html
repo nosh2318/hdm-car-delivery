@@ -67,7 +67,8 @@ function tok(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.k
 async function api(action,extra){const r=await fetch(FN,{method:"POST",headers:{apikey:ANON,Authorization:"Bearer "+ANON,"Content-Type":"application/json"},body:JSON.stringify(Object.assign({action,staff_token:tok()},extra||{}))});return await r.json();}
 const UC={accident:"事故の代車",repair:"車検・修理の代車",long:"長期のご利用",other:"その他"};
 const ST={new:"新規",proposed:"提案中",confirmed:"確定",closed:"クローズ"};
-let LIST=[],SEL=null,pollT=null;
+let LIST=[],SEL=null,pollT=null,STORE_FILTER=localStorage.getItem("daisha_store")||"all";
+const AREAJP={spk:"札幌",nha:"那覇"};
 
 function showLogin(msg){
   $("#app").innerHTML=`<div class="login"><div style="font-size:20px;font-weight:900;margin-bottom:6px">KEY<span style="color:#FABE00">DROP</span> 代車管理</div>
@@ -91,13 +92,20 @@ async function doLogin(){
 function layout(){
   $("#app").innerHTML='<div class="list" id="list"></div><div class="pane" id="pane"><div class="empty">左のリクエストを選ぶとチャットが開きます</div></div>';
 }
-function renderList(){
-  $("#list").innerHTML=LIST.length?LIST.map(q=>{
-    const per=q.start_date?(q.start_date+"〜"+(q.end_date||"未定")):(q.period_note||"期間未定");
-    return `<div class="item${SEL&&SEL.id===q.id?' on':''}" onclick="open_('${q.id}')"><div class="t"><span class="st ${q.status}">${ST[q.status]||q.status}</span>${esc(q.name)}様${q.company?"（"+esc(q.company)+"）":""}</div><div class="m">${UC[q.use_case]||q.use_case||"用途-"} ／ ${esc(per)}<br>希望：${esc(q.choice1||"-")}</div></div>`;
-  }).join(""):'<div class="empty" style="padding:24px;font-size:13px">リクエストはまだありません</div>';
+function fbar(){
+  return `<div style="display:flex;gap:6px;padding:9px 10px;border-bottom:1px solid var(--line);background:#fafbfc;position:sticky;top:0;z-index:2">`+
+    ["all","spk","nha"].map(s=>`<button onclick="setSF('${s}')" style="flex:1;font-size:11.5px;font-weight:800;border:1px solid ${STORE_FILTER===s?'#0e1116':'var(--line)'};background:${STORE_FILTER===s?'#0e1116':'#fff'};color:${STORE_FILTER===s?'#fff':'#334155'};border-radius:8px;padding:7px;cursor:pointer">${s==="all"?"すべて":AREAJP[s]}</button>`).join("")+`</div>`;
 }
-async function loadList(){const j=await api("staff_list");if(j.error){if(String(j.error).indexOf("unauth")>=0){showLogin("ログインの有効期限切れ。再ログインしてください。");return false;}}LIST=j.list||[];renderList();return true;}
+window.setSF=s=>{STORE_FILTER=s;localStorage.setItem("daisha_store",s);loadList();};
+function renderList(){
+  const items=LIST.length?LIST.map(q=>{
+    const per=q.start_date?(q.start_date+"〜"+(q.end_date||"未定")):(q.period_note||"期間未定");
+    const ab=q.store==="nha"?'#0e7490':'#7c3aed';
+    return `<div class="item${SEL&&SEL.id===q.id?' on':''}" onclick="open_('${q.id}')"><div class="t"><span class="st ${q.status}">${ST[q.status]||q.status}</span><span style="font-size:10px;font-weight:900;border-radius:6px;padding:2px 7px;background:${ab};color:#fff">${AREAJP[q.store]||q.store}</span>${esc(q.name)}様${q.company?"（"+esc(q.company)+"）":""}</div><div class="m">${UC[q.use_case]||q.use_case||"用途-"} ／ ${esc(per)}<br>希望：${esc(q.choice1||"-")}</div></div>`;
+  }).join(""):'<div class="empty" style="padding:24px;font-size:13px">リクエストはまだありません</div>';
+  $("#list").innerHTML=fbar()+items;
+}
+async function loadList(){const extra=STORE_FILTER!=="all"?{store:STORE_FILTER}:{};const j=await api("staff_list",extra);if(j.error){if(String(j.error).indexOf("unauth")>=0){showLogin("ログインの有効期限切れ。再ログインしてください。");return false;}}LIST=j.list||[];renderList();return true;}
 window.open_=async function(id){
   document.documentElement.style.setProperty('--ld','none');document.documentElement.style.setProperty('--pd','flex');
   const j=await api("staff_thread",{id});if(!j.ok){alert("取得失敗");return;}

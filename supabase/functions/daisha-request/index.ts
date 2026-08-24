@@ -5,7 +5,9 @@
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";
-const SLACK_CH = Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36"; // #sapporo_reservation
+const SLACK_CH_SPK = Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36"; // #sapporo_reservation
+const SLACK_CH_NHA = Deno.env.get("SLACK_KEYDROP_CHANNEL_NAHA") || "C06KZ56NTDF"; // #okinawa_reservation_notification
+const chOf = (store: string) => (store === "nha" ? SLACK_CH_NHA : SLACK_CH_SPK);
 
 function cors(o: string | null) {
   return {
@@ -39,13 +41,13 @@ async function sbPatch(table: string, query: string, body: unknown): Promise<voi
     body: JSON.stringify(body),
   });
 }
-async function slack(text: string, blocks?: unknown) {
+async function slack(channel: string, text: string, blocks?: unknown) {
   if (!SLACK_TOKEN) return;
   try {
     await fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
       headers: { Authorization: `Bearer ${SLACK_TOKEN}`, "content-type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ channel: SLACK_CH, text, blocks }),
+      body: JSON.stringify({ channel, text, blocks }),
     });
   } catch (e) { console.error("slack", String(e)); }
 }
@@ -71,8 +73,9 @@ Deno.serve(async (req) => {
     if (!name) return json({ error: "お名前を入力してください" }, 400, origin);
     if (!S(p.tel) && !S(p.email)) return json({ error: "電話番号かメールのいずれかを入力してください" }, 400, origin);
     if (!S(p.choice1)) return json({ error: "第1希望の車両を選択してください" }, 400, origin);
+    const store = S(p.store) === "nha" ? "nha" : "spk";
     const row = await sbInsert("daisha_requests", {
-      store: "spk",
+      store,
       use_case: S(p.use_case), start_date: S(p.start_date), end_date: S(p.end_date), period_note: S(p.period_note),
       del_place: S(p.del_place), col_place: S(p.col_place), same_col: p.same_col !== false,
       cust_type: S(p.cust_type) || "individual", company: S(p.company),
@@ -85,8 +88,9 @@ Deno.serve(async (req) => {
     // スタッフへSlack通知（カード）
     const period = row.start_date ? `${row.start_date}〜${row.end_date || "未定"}${row.period_note ? `（${row.period_note}）` : ""}` : (row.period_note || "未定");
     const choices = [row.choice1, row.choice2, row.choice3].filter(Boolean).map((c: string, i: number) => `第${i + 1}希望：${c}`).join(" / ");
-    await slack(`🚗 代車リクエスト［札幌］ ${name}様`, [
-      { type: "header", text: { type: "plain_text", text: "🚗 代車リクエスト（札幌・要提案）", emoji: true } },
+    const areaJp = store === "nha" ? "那覇" : "札幌";
+    await slack(chOf(store), `🚗 代車リクエスト［${areaJp}］ ${name}様`, [
+      { type: "header", text: { type: "plain_text", text: `🚗 代車リクエスト（${areaJp}・要提案）`, emoji: true } },
       { type: "section", fields: [
         { type: "mrkdwn", text: `*お客様*\n${name}様${row.company ? `（${row.company}）` : ""}` },
         { type: "mrkdwn", text: `*区分*\n${row.cust_type === "business" ? "事業者" : "個人"}` },
@@ -122,17 +126,20 @@ Deno.serve(async (req) => {
   if (action === "send") {
     const token = S(p.token), body = S(p.body);
     if (!token || !body) return json({ error: "empty" }, 400, origin);
-    const rows = await sbGet("daisha_requests", `id=eq.${token}&select=id,name&limit=1`);
+    const rows = await sbGet("daisha_requests", `id=eq.${token}&select=id,name,store&limit=1`);
     if (!rows.length) return json({ error: "not_found" }, 404, origin);
     await sbInsert("daisha_messages", { request_id: token, sender: "customer", body });
-    await slack(`💬 代車チャット新着［${rows[0].name}様］\n${body}\n→「代車リクエスト管理」で返信してください`);
+    const areaJp = rows[0].store === "nha" ? "那覇" : "札幌";
+    await slack(chOf(rows[0].store), `💬 代車チャット新着［${areaJp}・${rows[0].name}様］\n${body}\n→「代車リクエスト管理」で返信してください`);
     return json({ ok: true }, 200, origin);
   }
 
   // ─── スタッフ: 一覧 ───
   if (action === "staff_list") {
     if (!(await verifyStaff(S(p.staff_token)))) return json({ error: "unauthorized" }, 401, origin);
-    const rows = await sbGet("daisha_requests", `store=eq.spk&order=created_at.desc&limit=200`);
+    const st = S(p.store);
+    const filter = st === "spk" || st === "nha" ? `store=eq.${st}&` : "";
+    const rows = await sbGet("daisha_requests", `${filter}order=created_at.desc&limit=300`);
     return json({ ok: true, list: rows }, 200, origin);
   }
   // ─── スタッフ: スレッド取得 ───
