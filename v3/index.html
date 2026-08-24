@@ -222,6 +222,8 @@ footer a{color:var(--mut);text-decoration:none;margin:0 8px;white-space:nowrap;d
     <a class="menu-item" href="https://keydrop.jp/guide.html" target="_blank" rel="noopener"><span class="menu-item-icon">📖</span>ご利用方法<span class="menu-item-arrow">→</span></a>
     <a class="menu-item" href="https://keydrop.jp/vehicles.html?area=naha" target="_blank" rel="noopener"><span class="menu-item-icon">🚗</span>ラインナップ（那覇）<span class="menu-item-arrow">→</span></a>
     <a class="menu-item" href="https://keydrop.jp/vehicles.html?area=sapporo" target="_blank" rel="noopener"><span class="menu-item-icon">🚗</span>ラインナップ（札幌）<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="keydrop-flow-daisha.html?area=sapporo&mode=daisha&method=delivery" style="color:#FABE00;font-weight:800"><span class="menu-item-icon">🔧</span>代車のお届け（札幌）<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="keydrop-flow-daisha.html?area=naha&mode=daisha&method=delivery" style="color:#FABE00;font-weight:800"><span class="menu-item-icon">🔧</span>代車のお届け（那覇）<span class="menu-item-arrow">→</span></a>
     <a class="menu-item" href="keydrop-insurance.html" target="_blank" rel="noopener"><span class="menu-item-icon">🛡️</span>保険プラン一覧<span class="menu-item-arrow">→</span></a>
   </div>
   <div class="menu-section"><div class="menu-section-title">サポート</div>
@@ -262,6 +264,7 @@ footer a{color:var(--mut);text-decoration:none;margin:0 8px;white-space:nowrap;d
     <div class="sgrp full" id="delivMsg" style="display:none"><div style="background:#1a1a1a;border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:12px;color:#ededed"><b style="color:var(--y)">🔑 KEYDROP はデリバリー専門</b>　ご指定の場所へお車をお届け・回収します。お届け先は次の画面で地図から指定します。</div></div>
     <div class="sgrp full" id="availMsg" style="display:none"><div style="font-size:11.5px;color:var(--mut)">🚙 ご利用日程に提供できる空車を次の画面にすべて表示します。</div></div>
     <button class="sbtn" onclick="doSearch()" data-i18n="s_btn">空車を検索する</button>
+    <div class="sgrp full" style="margin-top:2px"><a onclick="goDaisha()" style="cursor:pointer;display:flex;align-items:center;gap:9px;justify-content:center;background:#14181f;border:1px solid #FABE00;border-radius:12px;padding:12px 14px;text-decoration:none"><span style="font-size:18px">🔧</span><span style="color:#fff;font-weight:800;font-size:13.5px">事故・車検・修理で<b style="color:#FABE00">代車</b>をお探しの方はこちら</span><span style="color:#FABE00;font-weight:900">→</span></a></div>
   </div></div></div>
 </div>
 
@@ -402,6 +405,14 @@ function doSearch(){
   var dt='&pd='+encodeURIComponent(pd)+'&pt='+encodeURIComponent(pt)+'&rd='+encodeURIComponent(rd)+'&rt='+encodeURIComponent(rt);
   // KEYDROP=両エリアともデリバリー専門で予約フローへ
   location.href='keydrop-flow.html?area='+a+'&method=delivery'+dt;
+}
+// 🔧 代車：エリア選択のみ必須（日程は任意・長期/未定OK）→ 代車モードの本番フローへ
+function goDaisha(){
+  var a=document.getElementById('areaSel').value;
+  if(!a){var el=document.getElementById('areaSel');el.classList.add('need');try{el.focus();el.scrollIntoView({block:'center'});}catch(e){}return;}
+  var pd=document.getElementById('pickDate').value,pt=document.getElementById('pickTime').value,rd=document.getElementById('retDate').value,rt=document.getElementById('retTime').value;
+  var dt='';if(pd&&rd)dt='&pd='+encodeURIComponent(pd)+'&pt='+encodeURIComponent(pt||'')+'&rd='+encodeURIComponent(rd)+'&rt='+encodeURIComponent(rt||'');
+  location.href='keydrop-flow-daisha.html?area='+a+'&method=delivery&mode=daisha'+dt;
 }
 // 時間ドロップダウンを生成（8:00〜20:00・30分刻み）
 (function(){var opts='';for(var h=9;h<=19;h++){for(var m=0;m<60;m+=30){if(h===19&&m>0)break;var t=('0'+h).slice(-2)+':'+('0'+m).slice(-2);opts+='<option value="'+t+'">'+t+'</option>';}}document.querySelectorAll('.timeSel').forEach(function(s){s.insertAdjacentHTML('beforeend',opts);});})();
