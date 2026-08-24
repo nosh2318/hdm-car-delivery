@@ -798,7 +798,7 @@ function applyStep(){
     var _st5=document.getElementById('st5');_st5.className='step '+(cur>4?'done':(cur>=3?'on':''));
   }
   var lbl=DAISHA
-    ?{cond:'希望車両を選択する',select:'お客様情報へ →',customer:'確認へ →',confirm:'🚗 この内容でリクエスト'}
+    ?{cond:'希望車両を選択する',select:'お客様情報へ →',customer:'確認へ →',confirm:'💬 この内容で相談する'}
     :{select:T('cta_options'),options:T('cta_customer'),customer:T('cta_confirm'),confirm:T('cta_pay'),payment:T('cta_done')};
   var btn=document.getElementById('ctaBtn');btn.textContent=lbl[step]||'';
   try{updCtaTotal();}catch(e){}
@@ -966,7 +966,7 @@ function submitDaisha(){
       if(!j.ok){throw new Error(j.error||'送信に失敗しました');}
       try{if(typeof gtag==='function')gtag('event','daisha_request',{event_label:DAISHA_USE});}catch(e){}
       location.href='https://keydrop.jp/daisha-chat.html?t='+encodeURIComponent(j.token);
-    }).catch(function(e){alert((e&&e.message)||'送信に失敗しました。通信環境をご確認ください');btn.disabled=false;btn.textContent='🚗 この内容でリクエスト';});
+    }).catch(function(e){alert((e&&e.message)||'送信に失敗しました。通信環境をご確認ください');btn.disabled=false;btn.textContent='💬 この内容で相談する';});
 }
 // お客様情報 検証（KEYDROP仕様）
 function toggleDrv(){var on=document.getElementById('fDriverDiff').checked;document.getElementById('drvSec').style.display=on?'block':'none';}
