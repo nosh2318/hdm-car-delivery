@@ -804,7 +804,7 @@ function applyStep(){
   try{updCtaTotal();}catch(e){}
   if(DAISHA){
     // 代車＝約款/決済なし・確認画面はそのまま送信可。クーポン/約款カードは非表示、用途・第2/3希望UIを差し込む
-    btn.disabled=false;
+    if(step!=='select')btn.disabled=false; // select(車両・お届け)はupdCtaTotalが車両＋場所の有無で活性制御
     if(step==='confirm'){var _cp=document.querySelector('#stepConfirm [data-cp="coupon_head"]');if(_cp&&_cp.closest('.sec'))_cp.closest('.sec').style.display='none';var _tm=document.getElementById('termsAgreeCard');if(_tm&&_tm.closest('.sec'))_tm.closest('.sec').style.display='none';}
     if(step==='customer')renderDaishaCustomer();
   }
