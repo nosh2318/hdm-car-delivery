@@ -73,8 +73,10 @@ function renderSummary(q){
   const st=ST[q.status]||"受付";
   const ch=(q.choices||[]).map((c,i)=>"第"+(i+1)+"希望："+esc(c)).join(" ／ ");
   $("summary").style.display="block";
+  const recv=(function(s){try{const d=new Date(s);if(isNaN(d))return"";return d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}catch(e){return"";}})(q.created_at);
   $("summary").innerHTML=
     '<div class="r1"><span class="st">'+st+'</span><span class="nm">'+esc(q.name)+' 様</span></div>'+
+    (recv?'<div style="font-size:11px;color:#94a3b8;margin-top:3px">🕐 '+recv+' に受け付けました</div>':'')+
     '<details class="sm"><summary>リクエスト内容を表示 ▾</summary><div class="meta">'+
       (q.use_case?'<div>用途：<b>'+esc(q.use_case)+'</b></div>':'')+
       (q.period?'<div>希望期間：<b>'+esc(q.period)+'</b></div>':'')+

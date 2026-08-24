@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
     const r = rows[0];
     return json({ ok: true, request: {
       name: r.name, use_case: UC[r.use_case] || r.use_case, period: r.start_date ? `${r.start_date}〜${r.end_date || "未定"}` : (r.period_note || ""),
-      del_place: r.del_place, col_place: r.same_col ? r.del_place : r.col_place, status: r.status,
+      del_place: r.del_place, col_place: r.same_col ? r.del_place : r.col_place, status: r.status, created_at: r.created_at,
       choices: [r.choice1, r.choice2, r.choice3].filter(Boolean),
     }, messages: msgs.map((m: any) => ({ sender: m.sender, body: m.body, at: m.created_at })) }, 200, origin);
   }

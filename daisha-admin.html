@@ -77,6 +77,7 @@ const UC={accident:"事故の代車",repair:"車検・修理の代車",long:"長
 const ST={new:"新規",proposed:"提案中",confirmed:"確定",closed:"クローズ"};
 let LIST=[],SEL=null,pollT=null,STORE_FILTER=localStorage.getItem("daisha_store")||"all";
 const AREAJP={spk:"札幌",nha:"那覇"};
+function fmtRecv(s){try{const d=new Date(s);if(isNaN(d))return"";return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}catch(e){return"";}}
 
 function showLogin(msg){
   $("#app").innerHTML=`<div class="login"><div style="font-size:20px;font-weight:900;margin-bottom:6px">KEY<span style="color:#FABE00">DROP</span> 代車管理</div>
@@ -109,7 +110,7 @@ function renderList(){
   const items=LIST.length?LIST.map(q=>{
     const per=q.start_date?(q.start_date+"〜"+(q.end_date||"未定")):(q.period_note||"期間未定");
     const ab=q.store==="nha"?'#0e7490':'#7c3aed';
-    return `<div class="item${SEL&&SEL.id===q.id?' on':''}" onclick="open_('${q.id}')"><div class="t"><span class="st ${q.status}">${ST[q.status]||q.status}</span><span style="font-size:10px;font-weight:900;border-radius:6px;padding:2px 7px;background:${ab};color:#fff">${AREAJP[q.store]||q.store}</span>${esc(q.name)}様${q.company?"（"+esc(q.company)+"）":""}</div><div class="m">${UC[q.use_case]||q.use_case||"用途-"} ／ ${esc(per)}<br>希望：${esc(q.choice1||"-")}</div></div>`;
+    return `<div class="item${SEL&&SEL.id===q.id?' on':''}" onclick="open_('${q.id}')"><div class="t"><span class="st ${q.status}">${ST[q.status]||q.status}</span><span style="font-size:10px;font-weight:900;border-radius:6px;padding:2px 7px;background:${ab};color:#fff">${AREAJP[q.store]||q.store}</span>${esc(q.name)}様${q.company?"（"+esc(q.company)+"）":""}</div><div class="m"><span style="color:#94a3b8">🕐 受付 ${fmtRecv(q.created_at)}</span><br>${UC[q.use_case]||q.use_case||"用途-"} ／ ${esc(per)}<br>希望：${esc(q.choice1||"-")}</div></div>`;
   }).join(""):'<div class="empty" style="padding:24px;font-size:13px">リクエストはまだありません</div>';
   $("#list").innerHTML=fbar()+items;
 }
@@ -127,6 +128,7 @@ function renderPane(q,msgs){
   $("#pane").innerHTML=
     `<div class="det">
       <div class="row"><button onclick="backList()" style="background:none;border:none;color:#0369a1;font-weight:800;font-size:13px;cursor:pointer;display:none" class="bk">← 一覧</button><span class="nm">${esc(q.name)}様</span>${q.company?'<span style="font-size:12px;color:#6b7280">'+esc(q.company)+'</span>':''}<span style="font-size:10px;font-weight:900;border-radius:999px;padding:2px 8px;background:#eef2f7;color:#475569">${q.cust_type==="business"?"事業者":"個人"}</span></div>
+      <div>🕐 受付：<b>${fmtRecv(q.created_at)}</b></div>
       <div>用途：<b>${UC[q.use_case]||q.use_case||"-"}</b> ／ 期間：<b>${esc(per)}</b></div>
       <div>お届け：<b>${esc(q.del_place||"-")}</b> ／ 回収：<b>${esc(q.same_col?"お届けと同じ":(q.col_place||"-"))}</b></div>
       <div>車両ご希望：<b>${choices||"-"}</b></div>
