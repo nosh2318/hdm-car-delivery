@@ -337,7 +337,7 @@ select.fld:focus{box-shadow:0 0 0 3px rgba(250,190,0,.35)}
 <div class="wrap">
   <!-- ステップ（5段：条件→受取・車両→オプション・補償→お客様情報→確認・決済） -->
   <div class="steps">
-    <div class="step done"><div class="n">1</div><div class="t" data-i18n="st_cond">条件選択</div></div>
+    <div class="step done" id="st1"><div class="n">1</div><div class="t" data-i18n="st_cond">条件選択</div></div>
     <div class="step" id="st2"><div class="n">2</div><div class="t" id="st2t">お届け・車両</div></div>
     <div class="step" id="st3"><div class="n">3</div><div class="t" data-i18n="st_opt">オプション<br>・補償</div></div>
     <div class="step" id="st4"><div class="n">4</div><div class="t" data-i18n="st_cust">お客様情報</div></div>
@@ -349,6 +349,24 @@ select.fld:focus{box-shadow:0 0 0 3px rgba(250,190,0,.35)}
 
   <!-- スライド広告バー -->
   <div class="adslider"><div class="adtrack" id="adtrack"></div></div>
+
+  <!-- ===== 代車 STEP1：条件入力（用途・希望日時・期間）＝通常検索と独立した最初の入力 ===== -->
+  <div id="stepDaishaCond" style="display:none">
+    <div class="sec"><h2><span class="snum">STEP 1</span>🗓 ご希望の条件</h2>
+      <div class="card">
+        <label class="fl">ご利用の用途<span class="req">必須</span></label>
+        <select class="fld" id="dcUse"><option value="">選択してください</option><option value="accident">事故の代車</option><option value="repair">車検・修理の代車</option><option value="long">長期のご利用</option><option value="other">その他</option></select>
+        <label class="fl" style="margin-top:13px">貸出（お届け）希望日時<span class="req">必須</span></label>
+        <div style="display:flex;gap:8px"><input class="fld" type="date" id="dcPd" style="flex:2"><select class="fld dcTime" id="dcPt" style="flex:1"><option value="">時間</option></select></div>
+        <label class="fl" style="margin-top:13px">返却（回収）希望日時</label>
+        <div style="display:flex;gap:8px"><input class="fld" type="date" id="dcRd" style="flex:2"><select class="fld dcTime" id="dcRt" style="flex:1"><option value="">時間</option></select></div>
+        <label class="dchk" style="margin-top:11px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#42557a;cursor:pointer"><input type="checkbox" id="dcUndecided" onchange="dcToggleUndecided()" style="width:18px;height:18px"> 返却日は未定・長期（あとでチャットで相談）</label>
+        <label class="fl" style="margin-top:13px">期間の補足（任意）</label>
+        <input class="fld" id="dcNote" placeholder="例：修理完了まで／2〜3週間／未定 など">
+        <div style="font-size:12px;color:#5a6b85;margin-top:11px;line-height:1.7">※ 代車は在庫を確認してご提案します。おおよそのご希望で大丈夫です。<b>次の画面で車両とお届け場所</b>をお選びいただきます。</div>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== STEP2：受取（送迎場所）＋ 車両選択 ===== -->
   <div id="stepSelect">
@@ -487,8 +505,9 @@ var step=P.get('step')||'select';
 var state={cls:selCls&&CLS[selCls]?selCls:'',ins:P.get('ins')||'',avail:{},availLoaded:false};
 // ===== 代車モード（?mode=daisha）＝本番フロー流用・地図/在庫/日時は本番同一、最後だけ「リクエスト＋チャット」 =====
 var DAISHA=(P.get('mode')==='daisha');
-var DAISHA_USE='', DAISHA_C2='', DAISHA_C3='';
+var DAISHA_USE='', DAISHA_C2='', DAISHA_C3='', DAISHA_UNDECIDED=false;
 var DAISHA_FN='https://ckrxttbnawkclshczsia.supabase.co/functions/v1/daisha-request';
+if(DAISHA && !P.get('step')) step='cond'; // 代車＝最初に条件入力ステップ
 // ===== 在庫（選択日程で空車があるクラスのみ表示・KEYDROP公開ビュー準拠／anon）=====
 var SB_URL='https://ckrxttbnawkclshczsia.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
@@ -747,25 +766,27 @@ function renderChosen(){var el=document.getElementById('chosenCar');if(!el)retur
 // 引き継ぐ共通パラメータ
 function qs(extra){return 'area='+area+'&method='+method+'&pd='+encodeURIComponent(pD)+'&pt='+encodeURIComponent(pT)+'&rd='+encodeURIComponent(rD)+'&rt='+encodeURIComponent(rT)+(extra||'');}
 // ===== ステップ表示切替（画面内遷移・stateは保持）=====
-var ORD=['select','options','customer','confirm','payment','done'];
+var ORD=DAISHA?['cond','select','customer','confirm','done']:['select','options','customer','confirm','payment','done'];
+var SCREEN={cond:'stepDaishaCond',select:'stepSelect',options:'stepOptions',customer:'stepCustomer',confirm:'stepConfirm',payment:'stepPayment',done:'stepDone'};
 function applyStep(){
-  var cur=ORD.indexOf(step); if(cur<0){step='select';cur=0;}
-  ['stepSelect','stepOptions','stepCustomer','stepConfirm','stepPayment','stepDone'].forEach(function(id,i){document.getElementById(id).style.display=(i===cur)?'block':'none';});
+  var cur=ORD.indexOf(step); if(cur<0){step=ORD[0];cur=0;}
+  Object.keys(SCREEN).forEach(function(k){var el=document.getElementById(SCREEN[k]);if(el)el.style.display=(step===k)?'block':'none';});
   // ステップバーを実ページ内容に一致（2=受取・車両=select, 3=options, 4=customer, 5=確認・決済=confirm/payment）
   if(DAISHA){
-    // 代車＝4段（条件→車両・お届け→お客様情報→確認）。ラベル差替え＋st5非表示（初回のみ）
+    // 代車＝4段（1条件入力→2車両・お届け→3お客様情報→4確認）。ラベル差替え＋st5非表示（初回のみ）
     if(!window._daishaSteps){window._daishaSteps=1;
+      var _s1=document.querySelector('#st1 .t');if(_s1){_s1.removeAttribute('data-i18n');_s1.textContent='条件入力';}
       var _s2=document.querySelector('#st2 .t');if(_s2){_s2.removeAttribute('data-i18n');_s2.textContent='車両・お届け';}
       var _s3=document.querySelector('#st3 .t');if(_s3){_s3.removeAttribute('data-i18n');_s3.textContent='お客様情報';}
       var _s4=document.querySelector('#st4 .t');if(_s4){_s4.removeAttribute('data-i18n');_s4.textContent='確認';}
       var _s5=document.getElementById('st5');if(_s5)_s5.style.display='none';}
-    [['st2',0],['st3',2],['st4',3]].forEach(function(p){var el=document.getElementById(p[0]);el.className='step '+(cur>p[1]?'done':(cur===p[1]?'on':''));});
+    [['st1',0],['st2',1],['st3',2],['st4',3]].forEach(function(p){var el=document.getElementById(p[0]);el.className='step '+(cur>p[1]?'done':(cur===p[1]?'on':''));});
   } else {
     [['st2',0],['st3',1],['st4',2]].forEach(function(p){var el=document.getElementById(p[0]);el.className='step '+(cur>p[1]?'done':(cur===p[1]?'on':''));});
     var _st5=document.getElementById('st5');_st5.className='step '+(cur>4?'done':(cur>=3?'on':''));
   }
   var lbl=DAISHA
-    ?{select:'お客様情報へ →',customer:'確認へ →',confirm:'🚗 この内容でリクエスト'}
+    ?{cond:'車両・お届けへ →',select:'お客様情報へ →',customer:'確認へ →',confirm:'🚗 この内容でリクエスト'}
     :{select:T('cta_options'),options:T('cta_customer'),customer:T('cta_confirm'),confirm:T('cta_pay'),payment:T('cta_done')};
   var btn=document.getElementById('ctaBtn');btn.textContent=lbl[step]||'';
   try{updCtaTotal();}catch(e){}
@@ -779,14 +800,16 @@ function applyStep(){
   else if(step==='payment'){btn.disabled=false;requestAnimationFrame(function(){initSquareCard();});}
   else{btn.disabled=false;}
   document.querySelector('.cta').style.display=(step==='done')?'none':'flex';
-  document.getElementById('ctaBack').style.display=(step==='select'||step==='done')?'none':'inline-block';
+  document.getElementById('ctaBack').style.display=(step===ORD[0]||step==='done')?'none':'inline-block';
+  if(step==='cond')dcInit();
   if(step==='options')renderChosen();
   if(step==='confirm')renderConfirm();
   if(step==='done')renderDone();
   window.scrollTo(0,0);
 }
 function goNext(){
-  if(step==='select'){
+  if(DAISHA&&step==='cond'){ if(!daishaCondNext())return; step='select'; }   // 代車＝条件入力→車両
+  else if(step==='select'){
     if(!state.cls){alert(T('al_pickfirst'));return;}
     if(method==='delivery'){if(!loc.del){alert(T('al_deldest'));return;}if(!colSame&&!loc.col){alert(T('al_coldest'));return;}}
     step=DAISHA?'customer':'options';}      // 代車＝オプション・補償をスキップ
@@ -863,11 +886,42 @@ function goBack(){
   if(DAISHA){ // 代車＝options/paymentを飛ばした遷移に合わせて戻す
     if(step==='confirm'){step='customer';applyStep();return;}
     if(step==='customer'){step='select';applyStep();return;}
+    if(step==='select'){step='cond';applyStep();return;}
     return;
   }
   var i=ORD.indexOf(step);if(i>0){step=ORD[i-1];applyStep();}
 }
-// ===== 代車モード：用途・区分・第2/3希望の注入＋リクエスト送信 =====
+// ===== 代車モード：条件入力（用途・希望日時・期間）＝最初のページ =====
+function dcInit(){
+  if(window._dcInit)return;window._dcInit=1;
+  // 時間プルダウン（9:00〜19:00・30分）
+  var opts='<option value="">時間</option>';for(var h=9;h<=19;h++){for(var m=0;m<60;m+=30){if(h===19&&m>0)break;var t=('0'+h).slice(-2)+':'+('0'+m).slice(-2);opts+='<option value="'+t+'">'+t+'</option>';}}
+  document.querySelectorAll('.dcTime').forEach(function(s){s.innerHTML=opts;});
+  // 日付の最短＝店舗別（札幌+3/那覇+2）〜90日
+  var base=new Date();base.setHours(0,0,0,0);var lead=(area==='sapporo')?3:2;
+  var pick=new Date(base);pick.setDate(pick.getDate()+lead);var maxd=new Date(base);maxd.setDate(maxd.getDate()+90);
+  var ymd=function(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);};
+  var pdEl=document.getElementById('dcPd'),rdEl=document.getElementById('dcRd');
+  [pdEl,rdEl].forEach(function(el){if(el){el.min=ymd(pick);el.max=ymd(maxd);}});
+  // URLに日程があれば初期反映
+  if(pD&&pdEl)pdEl.value=pD;if(pT)document.getElementById('dcPt').value=pT;if(rD&&rdEl)rdEl.value=rD;if(rT)document.getElementById('dcRt').value=rT;
+  if(DAISHA_USE)document.getElementById('dcUse').value=DAISHA_USE;
+}
+function dcToggleUndecided(){DAISHA_UNDECIDED=document.getElementById('dcUndecided').checked;var r1=document.getElementById('dcRd'),r2=document.getElementById('dcRt');if(r1){r1.disabled=DAISHA_UNDECIDED;if(DAISHA_UNDECIDED){r1.value='';}}if(r2){r2.disabled=DAISHA_UNDECIDED;if(DAISHA_UNDECIDED)r2.value='';}}
+function daishaCondNext(){
+  var use=document.getElementById('dcUse').value;
+  if(!use){alert('ご利用の用途を選択してください');document.getElementById('dcUse').focus();return false;}
+  var pd=document.getElementById('dcPd').value,pt=document.getElementById('dcPt').value;
+  if(!pd){alert('貸出（お届け）希望日を選んでください');document.getElementById('dcPd').focus();return false;}
+  var rd=document.getElementById('dcRd').value,rt=document.getElementById('dcRt').value;
+  if(!DAISHA_UNDECIDED&&rd&&rd<pd){alert('返却日は貸出日以降をお選びください');return false;}
+  DAISHA_USE=use;
+  pD=pd;pT=pt||'';rD=(DAISHA_UNDECIDED?'':rd)||'';rT=(DAISHA_UNDECIDED?'':rt)||'';
+  // 在庫を日程で絞り込み（未定なら全表示）＋サマリー更新
+  try{fetchAvail();}catch(e){}try{renderV();}catch(e){}try{renderMethod();}catch(e){}
+  return true;
+}
+// ===== 代車モード：区分・第2/3希望の注入＋リクエスト送信 =====
 function clsLabel(k){var c=CLS[k]||{};return k+' '+(c.l||'')+(c.v?'（'+c.v+'）':'');}
 function renderDaishaCustomer(){
   if(document.getElementById('daishaExtra'))return; // 二重挿入防止
@@ -876,9 +930,7 @@ function renderDaishaCustomer(){
     .map(function(k){return '<option value="'+k+'">'+clsLabel(k)+'</option>';}).join('');
   var box=document.createElement('div');box.id='daishaExtra';box.style.marginTop='14px';box.style.borderTop='1px dashed #d8e0ee';box.style.paddingTop='14px';
   box.innerHTML=
-    '<label class="fl"><span>ご利用の用途</span><span class="req">必須</span></label>'+
-    '<select class="fld" id="dUse" onchange="DAISHA_USE=this.value"><option value="">選択してください</option><option value="accident">事故の代車</option><option value="repair">車検・修理の代車</option><option value="long">長期のご利用</option><option value="other">その他</option></select>'+
-    '<label class="fl" style="margin-top:12px"><span>お客様区分</span></label>'+
+    '<label class="fl"><span>お客様区分</span></label>'+
     '<select class="fld" id="dCust" onchange="var b=this.value===\'business\';document.getElementById(\'dCoWrap\').style.display=b?\'block\':\'none\'"><option value="individual">個人</option><option value="business">事業者（整備工場・ディーラー・法人）</option></select>'+
     '<div id="dCoWrap" style="display:none"><label class="fl" style="margin-top:12px">会社名・店名</label><input class="fld" id="dCompany" placeholder="〇〇自動車 / 〇〇モータース 等"></div>'+
     '<label class="fl" style="margin-top:12px">車両の第2希望（任意）</label><select class="fld" id="dC2" onchange="DAISHA_C2=this.value"><option value="">指定なし</option>'+opts+'</select>'+
@@ -891,7 +943,7 @@ function submitDaisha(){
   var btn=document.getElementById('ctaBtn');btn.disabled=true;btn.textContent='送信中…';
   var _dl=(loc&&loc.del)||{},_cl=(colSame?_dl:((loc&&loc.col)||{}));
   var body={action:'create',store:(area==='sapporo'?'spk':'nha'),use_case:DAISHA_USE,
-    start_date:pD||'',end_date:rD||'',period_note:(document.getElementById('fNotes')||{}).value||'',
+    start_date:pD||'',end_date:rD||'',period_note:((document.getElementById('dcNote')||{}).value||'')+(DAISHA_UNDECIDED?'（返却日未定・長期）':''),
     del_place:(_dl.label||_dl.addr||''),same_col:!!colSame,col_place:(colSame?'':(_cl.label||_cl.addr||'')),
     cust_type:(document.getElementById('dCust')||{}).value||'individual',company:(document.getElementById('dCompany')||{}).value||'',
     name:(document.getElementById('fName')||{}).value||'',tel:(document.getElementById('fPhone')||{}).value||'',email:(document.getElementById('fEmail')||{}).value||'',
