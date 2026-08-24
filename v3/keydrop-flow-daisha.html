@@ -1038,7 +1038,18 @@ function renderConfirm(){
       row(T('cf_car'),kdCls(c.l)+'（'+kdVeh(c.v)+'）'+(_c2c3?'<div style="font-size:11px;color:#5a6b85;margin-top:3px">第2/3希望：'+_c2c3+'</div>':''))+
       row(T('cf_booker'),(nm||'-')+'　'+(kn?'（'+kn+'）':''))+
       row(T('cf_contact'),(ph||'-')+'　'+(em||'-'))+
-      row('料金（目安）',_priceRow+'<div style="font-size:11px;color:#5a6b85;font-weight:600;margin-top:4px">※実際にお出しできる車両・最終料金は、在庫確認のうえチャットでご提案します。</div>');
+      row('料金（目安）',_priceRow+'<div style="font-size:11px;color:#5a6b85;font-weight:600;margin-top:4px">※実際にお出しできる車両・最終料金は、在庫確認のうえチャットでご提案します。</div>')+
+      '<div style="margin-top:16px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:14px;padding:15px 16px">'+
+        '<div style="font-weight:900;color:#0e1116;font-size:14px;margin-bottom:2px">💬 このあとの流れ</div>'+
+        '<div style="font-size:12px;color:#a07c00;font-weight:800;margin-bottom:10px">「相談する」を押すと、そのままチャットが開きます（メール登録は不要）</div>'+
+        '<div style="display:flex;flex-direction:column;gap:9px">'+
+          '<div style="display:flex;gap:10px;align-items:flex-start"><span style="flex:none;width:24px;height:24px;border-radius:50%;background:#FABE00;color:#0e1116;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center">1</span><div style="font-size:13px;color:#333;line-height:1.6">ご希望を送信（＝いまここ）</div></div>'+
+          '<div style="display:flex;gap:10px;align-items:flex-start"><span style="flex:none;width:24px;height:24px;border-radius:50%;background:#FABE00;color:#0e1116;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center">2</span><div style="font-size:13px;color:#333;line-height:1.6">担当が在庫を確認し、<b>お出しできる車両と代車価格をチャットでご提案</b></div></div>'+
+          '<div style="display:flex;gap:10px;align-items:flex-start"><span style="flex:none;width:24px;height:24px;border-radius:50%;background:#FABE00;color:#0e1116;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center">3</span><div style="font-size:13px;color:#333;line-height:1.6">内容を確認して、日時・場所を確定</div></div>'+
+          '<div style="display:flex;gap:10px;align-items:flex-start"><span style="flex:none;width:24px;height:24px;border-radius:50%;background:#0e1116;color:#FABE00;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center">4</span><div style="font-size:13px;color:#333;line-height:1.6">ご指定の場所へ<b>お届け</b>（返却も回収にうかがいます）</div></div>'+
+        '</div>'+
+        '<div style="font-size:11.5px;color:#7a5b00;margin-top:11px;line-height:1.7">📱 チャットのURLは残るので、あとから開いて確認・返信できます。お急ぎの方はお電話（<a href="tel:05017852711" style="color:#a07c00;font-weight:800">050-1785-2711</a>）でもOK。</div>'+
+      '</div>';
     return;
   }
   document.getElementById('confirmBox').innerHTML=
