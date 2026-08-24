@@ -1022,6 +1022,23 @@ function renderConfirm(){
   var ph=(document.getElementById('fPhone')||{}).value||'';var em=(document.getElementById('fEmail')||{}).value||'';
   var drv=document.getElementById('fDriverDiff').checked?((document.getElementById('dName')||{}).value||''):'';
   function row(l,v){return '<div class="cinfo-row"><span class="lb">'+l+'</span><span class="vl">'+v+'</span></div>';}
+  if(DAISHA){
+    var _ch=document.querySelector('#stepConfirm h2');if(_ch){_ch.removeAttribute('data-i18n');_ch.textContent='📋 リクエスト内容の確認';}
+    var _op=priceOf(state.cls),_dp=daishaPrice(state.cls);
+    var _priceRow=(DAISHA_DISC>0)?('<span style="text-decoration:line-through;color:#9aa0a8;font-size:12px">¥'+_op.toLocaleString()+'</span> <b style="color:#e11d48">¥'+_dp.toLocaleString()+'</b><small style="color:#5a6b85"> / 1日（代車価格）</small>'):('<b>¥'+_op.toLocaleString()+'</b><small style="color:#5a6b85"> / 1日</small>');
+    var _useMap={accident:'事故の代車',repair:'車検・修理の代車',long:'長期のご利用',other:'その他'};
+    var _c2c3=[DAISHA_C2,DAISHA_C3].filter(Boolean).map(function(k){return clsLabel(k);}).join('／');
+    document.getElementById('confirmBox').innerHTML=
+      row(T('cf_store'),shopName())+row(T('cf_recvm'),methodDetail()+' <button type="button" class="cfedit" onclick="editRecv()">✏️ 変更</button>')+
+      (DAISHA_USE?row('用途',_useMap[DAISHA_USE]||DAISHA_USE):'')+
+      row(T('sum_dep'),fmtDT(pD,pT))+row(T('sum_ret'),rD?fmtDT(rD,rT):'未定・長期')+
+      (rD?row(T('cf_use'),dys+T('cf_days_unit')):'')+
+      row(T('cf_car'),kdCls(c.l)+'（'+kdVeh(c.v)+'）'+(_c2c3?'<div style="font-size:11px;color:#5a6b85;margin-top:3px">第2/3希望：'+_c2c3+'</div>':''))+
+      row(T('cf_booker'),(nm||'-')+'　'+(kn?'（'+kn+'）':''))+
+      row(T('cf_contact'),(ph||'-')+'　'+(em||'-'))+
+      row('料金（目安）',_priceRow+'<div style="font-size:11px;color:#5a6b85;font-weight:600;margin-top:4px">※実際にお出しできる車両・最終料金は、在庫確認のうえチャットでご提案します。</div>');
+    return;
+  }
   document.getElementById('confirmBox').innerHTML=
     row(T('cf_store'),shopName())+row(T('cf_recvm'),methodDetail()+' <button type="button" class="cfedit" onclick="editRecv()"><span data-i18n="cf_edit">✏️ 変更</span></button>')+
     row(T('sum_dep'),fmtDT(pD,pT))+row(T('sum_ret'),fmtDT(rD,rT))+row(T('cf_use'),dys+T('cf_days_unit'))+
