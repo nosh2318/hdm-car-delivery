@@ -1,0 +1,994 @@
+<!doctype html><html lang="ja"><head>
+<!-- Google Tag Manager --><script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KVF3F48X');</script><!-- End GTM -->
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>ご予約｜ KEYDROP カーデリバリー（モック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Square Web Payments SDK（本番・KEYDROPと同一）＝PCI準拠のホスト型カード入力 -->
+<script src="https://web.squarecdn.com/v1/square.js" defer></script>
+<style>
+:root{--navy:#111111;--navy2:#2b2b2b;--ink:#0a0a0a;--y:#FABE00;--line:#e3e8f1;--mut:#5a6b85}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{overflow-x:hidden}
+body{font-family:"Noto Sans JP",-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;background:#eef2f8;color:#1a1a1a;line-height:1.6;overflow-x:hidden}
+#delivFrame{max-width:100%}
+img{max-width:100%;display:block}
+.cap{font-family:"Arial Black",Impact,sans-serif;font-style:italic;letter-spacing:.02em}
+header{position:sticky;top:0;z-index:20;background:rgba(0,16,51,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.hin{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:11px 18px}
+.hin .res{margin-left:auto;background:var(--y);color:#1a1a1a;padding:8px 16px;border-radius:8px;font-weight:900;font-size:12px;text-decoration:none}
+.ham{display:flex;flex-direction:column;gap:4px;background:none;border:0;cursor:pointer;padding:8px}.ham span{width:24px;height:2.5px;background:#fff;border-radius:2px}
+header .hin{position:relative}
+nav{position:absolute;top:100%;right:14px;min-width:min(340px,92vw);background:rgba(0,16,51,.99);display:none;flex-direction:column;align-items:stretch;gap:0;padding:6px 0 8px;border:1px solid var(--line);border-radius:0 0 14px 14px;box-shadow:0 16px 34px rgba(0,0,0,.5)}
+nav.open{display:flex}
+nav a{color:#ededed;text-decoration:none;font-size:14px;font-weight:800;padding:14px 22px;border-bottom:1px solid rgba(255,255,255,.07)}
+nav a:last-child{border-bottom:0}nav a:hover{background:rgba(255,255,255,.05)}
+@media(max-width:480px){.logoFull{display:none}.logoShort{display:inline!important}}
+.logoShort{display:none}
+.wrap{max-width:1080px;margin:0 auto;padding:18px 18px 60px}
+/* 紺のページ帯（TOPと同じ紺×白コントラスト） */
+.phead{background:linear-gradient(120deg,var(--ink),var(--navy));padding:20px 18px 16px;text-align:center;border-bottom:3px solid var(--y)}
+.phead .en{font-family:"Arial Black",Impact,sans-serif;font-style:italic;font-size:24px;color:var(--y);letter-spacing:.04em}
+.phead .jp{font-size:11px;color:#b9b9b9;font-weight:800;letter-spacing:.12em;margin-top:3px}
+/* steps */
+.steps{display:flex;gap:6px;padding:14px 0 18px}
+.step{flex:1 1 0;min-width:0;text-align:center;position:relative}
+.step .n{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);color:var(--mut);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;margin:0 auto 5px;background:#fff}
+.step .t{font-size:10.5px;color:var(--mut);font-weight:700;line-height:1.3;word-break:keep-all}
+@media(max-width:430px){.steps{gap:3px}.step .t{font-size:9.5px}.step .n{width:27px;height:27px;font-size:12px}}
+.step.on .n{background:var(--y);border-color:var(--y);color:#1a1a1a}
+.step.on .t{color:#1a1a1a}
+.step.done .n{background:var(--navy2);border-color:var(--navy2);color:#fff}
+/* summary */
+.sumbar{background:linear-gradient(120deg,var(--ink),var(--navy));border:0;border-radius:12px;padding:13px 15px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:22px;box-shadow:0 6px 18px rgba(0,32,99,.18)}
+.sumbar .it{font-size:12px;color:#eaf0fb}.sumbar .it b{color:var(--y);font-weight:900;margin-right:5px}
+.sumbar .edit{margin-left:auto;font-size:11.5px;color:var(--y);text-decoration:none;border:1px solid var(--y);border-radius:8px;padding:6px 12px;font-weight:800}
+/* スライド広告バー */
+.adslider{overflow:hidden;background:linear-gradient(120deg,var(--ink),var(--navy));border-radius:10px;margin-bottom:18px;border:1px solid var(--line);position:relative}
+.adslider::before,.adslider::after{content:"";position:absolute;top:0;bottom:0;width:26px;z-index:2;pointer-events:none}
+.adslider::before{left:0;background:linear-gradient(90deg,rgba(0,0,0,1),rgba(0,0,0,0))}
+.adslider::after{right:0;background:linear-gradient(270deg,rgba(0,0,0,1),rgba(0,0,0,0))}
+.adtrack{display:inline-flex;white-space:nowrap;animation:admove 26s linear infinite;padding:11px 0;will-change:transform}
+.adtrack:hover{animation-play-state:paused}
+.adtrack span{color:#fff;font-size:12.5px;font-weight:700;padding:0 22px;display:inline-flex;align-items:center;gap:6px}
+.adtrack span b{color:var(--y);font-weight:900}
+@keyframes admove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+/* section */
+.sec{margin-bottom:26px}
+.sec h2{font-size:15px;font-weight:900;color:#1a1a1a;margin-bottom:12px;padding-left:11px;border-left:5px solid var(--y);display:flex;align-items:center;gap:8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 16px}
+label.fl{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:0 0 6px}
+.fld{width:100%;height:46px;background:#fff;border:2px solid #cbd5e6;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;color:#1a2533;outline:none;-webkit-appearance:none;appearance:none}
+.fld:focus{border-color:var(--y);box-shadow:0 0 0 3px rgba(250,190,0,.25)}
+textarea.fld{height:auto;padding:10px 12px;min-height:70px}
+select.fld{cursor:pointer;padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%23002063'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;border-color:var(--y);box-shadow:inset 0 0 0 2px rgba(250,190,0,.0)}
+select.fld:focus{box-shadow:0 0 0 3px rgba(250,190,0,.35)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.row2{grid-template-columns:1fr}}
+.mapph{height:160px;border-radius:10px;border:1px dashed #2c4f93;background:linear-gradient(135deg,#1a1a1a,#13294f);display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:12px;margin-top:10px}
+.mapsearch{display:flex;gap:8px;margin-top:10px}
+.mapsearch input{flex:1;height:44px;background:#fff;border:2px solid #cbd5e6;border-radius:10px;padding:0 12px;font-size:14px;font-family:inherit;color:#1a2533;outline:none}
+.mapsearch button{flex:0 0 auto;background:var(--y);color:#1a1a1a;border:0;border-radius:10px;padding:0 16px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit}
+#delMap{height:260px;border-radius:12px;margin-top:10px;border:1px solid var(--line);z-index:0}
+.mappick{margin-top:10px;background:#f1f6ff;border:1px solid var(--y);border-radius:10px;padding:10px 12px;font-size:12.5px;color:#1a1a1a;display:none}
+.mappick.on{display:block}.mappick b{color:var(--navy)}
+.leaflet-container{font-family:inherit}
+/* お届け先/回収先 決定フロー */
+.loctarget{display:flex;gap:8px;margin-bottom:10px}
+.loctarget .tg{flex:1;background:#fff;border:2px solid var(--line);color:#1a1a1a;border-radius:10px;padding:10px;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit}
+.loctarget .tg.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.loctarget .tg:disabled{opacity:.4;cursor:default}
+.loctype{display:flex;gap:8px;margin-top:12px}
+.loctype .lt{flex:1;background:#fff;border:2px solid var(--line);color:#1a1a1a;border-radius:10px;padding:10px 4px;font-size:12.5px;font-weight:900;cursor:pointer;font-family:inherit}
+.loctype .lt.on{background:var(--y);color:#1a1a1a;border-color:var(--y)}
+.pendbar{margin-top:10px;font-size:12px;color:#5a6b85;background:#f1f6ff;border:1px solid #cbd5e6;border-radius:8px;padding:9px 12px}
+.pendbar b{color:var(--navy)}
+.decidebtn{margin-top:10px;width:100%;background:var(--y);color:#1a1a1a;border:0;border-radius:10px;padding:12px;font-size:14px;font-weight:900;cursor:pointer;font-family:inherit}
+.decidebtn:disabled{background:#e3e8f1;color:#9aa7bd;cursor:default}
+.locsum{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.locrow{display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:13px}
+.locrow.ok{background:#fffae8;border-color:var(--y);border-left:5px solid var(--y)}
+.locrow .lk{flex:0 0 64px;font-weight:900;color:var(--navy)}
+.locrow .lv{flex:1;color:#1a1a1a;font-weight:700}
+.locrow .lv .un{color:#9aa7bd;font-weight:600}
+.locrow .chg{margin-left:auto;font-size:11.5px;color:var(--navy);border:1px solid var(--navy);border-radius:7px;padding:5px 10px;font-weight:800;cursor:pointer;background:#fff}
+.req{background:var(--y);color:#1a1a1a;font-size:9px;font-weight:900;padding:1px 6px;border-radius:5px;margin-left:7px;vertical-align:middle}
+.fld.need{border-color:#ff5a5a;box-shadow:0 0 0 3px rgba(255,90,90,.25)}
+.formerr{display:none;background:#fff0f0;border:1px solid #ff6b6b;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#c0392b}
+.formerr.on{display:block}
+.emailnote{font-size:11px;color:#b8860b;font-weight:700;margin-top:6px;line-height:1.6}
+.dchk{display:flex;align-items:center;gap:9px;background:#f6f8fc;border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;font-weight:700;color:#1a1a1a;cursor:pointer;margin-top:14px}
+.dchk input{width:18px;height:18px;accent-color:var(--y)}
+.drvsec{background:#fff8e6;border:1.5px solid var(--y);border-radius:12px;padding:14px;margin-top:10px}
+.cinfo-row{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.cinfo-row:last-child{border-bottom:0}
+.cinfo-row .lb{flex:0 0 92px;color:var(--mut);font-weight:800}
+.cinfo-row .vl{flex:1;color:#1a1a1a;font-weight:700}
+.cinfo-row .vl b{color:var(--y)}
+.cfedit{display:inline-block;margin-left:6px;background:var(--navy2,#2b2b2b);color:#fff;border:1.5px solid var(--y);border-radius:8px;padding:3px 10px;font-size:11.5px;font-weight:900;cursor:pointer;font-family:inherit;white-space:nowrap;vertical-align:middle}
+.cfedit:hover{background:#333333}
+.donecard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;text-align:left;max-width:520px;margin:0 auto}
+.donecard .rn{font-size:12px;color:var(--mut)}.donecard .rn b{font-size:22px;color:var(--y);display:block;letter-spacing:.04em;margin-top:2px}
+.hint{font-size:11.5px;color:var(--mut);margin-top:10px;line-height:1.7}
+/* vehicle grid */
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:760px){.vgrid{grid-template-columns:1fr 1fr 1fr}}
+.vc{background:#fff;border:2px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:.12s}
+.vc.on{border-color:var(--y);box-shadow:0 0 0 3px rgba(250,190,0,.25)}
+/* メリハリ：未選択時は全カード点滅、選択後は他カードを薄く */
+@keyframes vcblink{0%,100%{box-shadow:0 0 0 0 rgba(250,190,0,0);border-color:var(--line)}50%{box-shadow:0 0 0 3px rgba(250,190,0,.6);border-color:var(--y)}}
+.vgrid.nosel .vc{animation:vcblink 1.3s ease-in-out infinite}
+.vgrid.hassel .vc{transition:opacity .25s,filter .25s}
+.vgrid.hassel .vc:not(.on){opacity:.4;filter:grayscale(.35)}
+.vgrid.hassel .vc:not(.on):hover{opacity:.75}
+.vc .pic{height:188px;background:#fff;display:flex;align-items:center;justify-content:center;position:relative}
+.vc .clschip{position:absolute;top:7px;left:7px;background:var(--y);color:#1a1a1a;font-size:10.5px;font-weight:900;padding:2px 8px;border-radius:6px}
+.vc .azukari{position:absolute;top:7px;right:7px;background:#7c3aed;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px}
+.vc .check{position:absolute;bottom:6px;right:8px;color:var(--y);font-size:18px;font-weight:900;opacity:0}
+.vc.on .check{opacity:1}
+.vc .bd{padding:10px 12px;flex:1;display:flex;flex-direction:column}
+.vc .nm{font-weight:900;font-size:13px;color:#1a1a1a;line-height:1.3;word-break:keep-all}
+.vc .sp{font-size:11px;color:var(--mut);margin-top:3px}
+.vc .pr{padding-top:8px}.vc .pr b{font-size:18px;font-weight:900;color:var(--y)}.vc .pr small{font-size:10px;color:var(--mut)}
+.vc .vdetail{margin-top:8px;background:transparent;border:1.5px solid var(--line);color:#5a6b85;border-radius:8px;padding:7px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;width:100%}
+.vc .vdetail:hover{border-color:var(--y);color:var(--y)}
+.vc .vbtns{margin-top:8px;display:flex;flex-direction:column;gap:7px}
+.vc .vbtns .vdetail{margin-top:0}
+.vc .vpick{width:100%;border:none;background:var(--y);color:#1a1a1a;font-weight:900;font-size:12.5px;padding:11px;border-radius:8px;cursor:pointer;font-family:inherit}
+.vc .vpick:hover{filter:brightness(.96)}
+.vc.on .vpick{background:#127a3e;color:#fff}
+.snum{display:inline-block;background:var(--y);color:#1a1a1a;font-size:11.5px;font-weight:900;padding:2px 11px;border-radius:999px;margin-right:8px;vertical-align:middle}
+.lockmsg{background:#0e1c38;border:1px dashed #2c3f63;color:#9fb0cf;border-radius:12px;padding:18px 16px;text-align:center;font-size:13px;font-weight:700;line-height:1.6}
+#methodSec.locked h2{opacity:.7}
+/* 在庫（満車）表示 */
+.vc.soldout{opacity:.5;filter:grayscale(.7);pointer-events:auto}
+.vc.soldout .pic{position:relative}
+.vc .soldbadge{position:absolute;bottom:6px;right:8px;background:#c62828;color:#fff;font-size:10px;font-weight:900;padding:2px 8px;border-radius:6px}
+.vc .soldmsg{background:#f1f3f7;color:#8a97ad;border-radius:8px;padding:10px;font-size:11.5px;font-weight:800;text-align:center}
+.vempty{background:#fff4f4;border:1px solid #f3c2c2;color:#b3261e;border-radius:12px;padding:16px;font-size:13px;font-weight:700;line-height:1.6;margin-bottom:14px}
+.vempty a{color:var(--navy2)}
+/* バス運行時刻表（顧客向け・見るだけ） */
+.bussched{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}
+.bushd{font-weight:900;color:#1a1a1a;font-size:14px}.bushd small{font-weight:700;color:var(--mut);font-size:11px;margin-left:6px}
+.busnote{margin:10px 0;background:#e8f5e9;border:1px solid #b6e0be;color:#1b6b34;border-radius:9px;padding:11px 12px;font-size:12.5px;font-weight:700;line-height:1.6}
+.buscol{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.buscol{grid-template-columns:1fr}}
+.bcol{border:1px solid var(--line);border-radius:10px;padding:10px}
+.bch{font-weight:900;font-size:13px;padding:2px 0 4px}.bch.pu{color:#2e7d32}.bch.bd{color:#bf360c}
+.brt{font-size:10.5px;color:var(--mut);line-height:1.5;margin-bottom:8px}
+.btimes{display:flex;flex-wrap:wrap;gap:6px}
+.btime{font-weight:800;font-size:12.5px;padding:5px 9px;border-radius:7px}
+.btime.pu{background:#e8f5e9;color:#2e7d32}.btime.bd{background:#fff3e0;color:#bf360c}
+.bushint{margin-top:10px;font-size:10.5px;color:var(--mut);line-height:1.6}
+@keyframes busPulse{0%,100%{box-shadow:0 0 0 0 rgba(250,190,0,0)}50%{box-shadow:0 0 0 4px rgba(250,190,0,.55)}}
+.busbtn{display:block;width:100%;margin:12px 0 4px;background:var(--navy2,#2b2b2b);color:#fff;border:1.5px solid var(--y);border-radius:11px;padding:13px;font-size:14px;font-weight:900;text-decoration:none;text-align:center;cursor:pointer;font-family:inherit;animation:busPulse 1.4s ease-in-out infinite}
+.busbtn:hover{background:#333333}
+/* 送迎バス案内 ページ内オーバーレイ(遷移せず入力を保持) */
+.busscrim{position:fixed;inset:0;background:rgba(0,8,24,.72);z-index:60;display:none}
+.busscrim.on{display:block}
+.buswrap{position:absolute;inset:16px 10px;max-width:680px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+@media(min-width:560px){.buswrap{inset:28px 12px}}
+.busbar{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--navy);color:#fff;font-weight:900;font-size:14px;flex:0 0 auto}
+.busbar button{background:rgba(255,255,255,.16);color:#fff;border:0;width:34px;height:34px;border-radius:50%;font-size:20px;cursor:pointer;font-family:inherit;line-height:1}
+.busscrim iframe{flex:1 1 auto;width:100%;border:0;background:#fff}
+/* 来店 第2駐車場の住所+地図 */
+.storeloc{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;background:#f4f7fc;border:1px solid #dde5f2;border-radius:11px;padding:12px 14px}
+.storeloc .slbody{flex:1 1 auto;min-width:180px}
+.storeloc .slname{font-weight:900;font-size:13.5px;color:#1a1a1a}
+.storeloc .sladdr{font-size:12.5px;color:#42557a;margin-top:3px}
+.storeloc .slmap{flex:0 0 auto;background:var(--navy2,#2b2b2b);color:#fff;border:1.5px solid var(--y);border-radius:9px;padding:9px 15px;font-size:13px;font-weight:900;text-decoration:none;white-space:nowrap}
+.storeloc .slmap:hover{background:#333333}
+/* 貸渡約款 同意 */
+.termsagree{display:flex;flex-direction:column;gap:12px}
+.termsagree .termsnote{font-size:12.5px;color:#42557a;line-height:1.6}
+.termsagree .termsbox{border:1px solid var(--line);border-radius:10px;background:#fff;height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;color:#333;font-size:12.5px;line-height:1.85}
+.termsagree .termsbox h1{font-size:15px;color:#1a1a1a;margin:2px 0 8px}
+.termsagree .termsbox h2,.termsagree .termsbox h3{font-size:13px;color:#1a1a1a;margin:12px 0 4px}
+.termsagree .termsbox p,.termsagree .termsbox li{margin:4px 0}
+.termsagree .termsbox .loading{color:#8090ac;text-align:center;padding:20px}
+.termsagree .termslink{align-self:flex-start;color:#fff;background:var(--navy2,#2b2b2b);border:1.5px solid var(--y);border-radius:9px;padding:9px 15px;font-size:13px;font-weight:900;text-decoration:none}
+.termsagree .termslink:hover{background:#333333}
+.termsagree .tagree{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;font-weight:800;color:#1a1a1a;cursor:pointer;line-height:1.5}
+.termsagree .tagree input{width:22px;height:22px;flex:0 0 auto;margin-top:1px;accent-color:var(--y);cursor:pointer}
+.termsagree.need{border:1.5px solid #ff6b6b;box-shadow:0 0 0 3px rgba(255,107,107,.18)}
+#ctaBtn:disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.2)}
+/* 決済方法 */
+.paymethods{display:flex;flex-direction:column;gap:10px}
+.paym{display:flex;align-items:flex-start;gap:11px;border:2px solid #cbd5e6;border-radius:11px;padding:13px 14px;cursor:pointer;transition:.12s}
+.paym.on{border-color:var(--y);background:rgba(250,190,0,.08)}
+.paym input{width:20px;height:20px;flex:0 0 auto;margin-top:2px;accent-color:var(--y);cursor:pointer}
+.paym .pmbody{display:flex;flex-direction:column;gap:3px}
+.paym .pmname{font-size:14px;font-weight:900;color:#1a1a1a}
+.paym .pmdesc{font-size:12px;color:#5a6b85;line-height:1.5}
+/* クレジットカード決済フォーム */
+.ccbrands{font-size:12px;color:#5a6b85;margin-bottom:14px}
+.ccbrands b{color:#1a1a1a;background:#eef3fb;border:1px solid #dde5f2;border-radius:5px;padding:2px 7px;margin:0 2px;font-size:11.5px}
+.cardform .sqcard{min-height:52px;border:2px solid #cbd5e6;border-radius:10px;padding:6px 10px;background:#fff;margin-top:2px}
+.cardform .securenote{font-size:11.5px;color:#5a8a5a;background:#f0faf0;border:1px solid #cfe8cf;border-radius:8px;padding:9px 11px;margin-top:14px;line-height:1.5}
+.cardform .ccerr{font-size:12.5px;font-weight:800;color:#c0392b;background:#fdecea;border:1px solid #f5c6c0;border-radius:8px;padding:9px 11px;margin-top:12px;line-height:1.5}
+.cardform .fld.bad{border-color:#e74c3c;background:#fdf1f0}
+/* detail modal */
+.dscrim{position:fixed;inset:0;background:rgba(0,8,24,.7);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.dscrim.on{display:flex}
+.dsheet{background:#fff;border:1px solid var(--line);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:0}
+@media(min-width:560px){.dscrim{align-items:center}.dsheet{border-radius:16px}}
+.dsheet .dpic{height:160px;background:#fff;display:flex;align-items:center;justify-content:center;position:relative;border-radius:16px 16px 0 0}
+@media(min-width:560px){.dsheet .dpic{border-radius:16px 16px 0 0}}
+.dsheet .dclschip{position:absolute;top:10px;left:12px;background:var(--y);color:#1a1a1a;font-size:12px;font-weight:900;padding:3px 11px;border-radius:7px}
+.dsheet .dclose{position:absolute;top:10px;right:12px;background:rgba(0,0,0,.5);color:#fff;border:0;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer}
+.dbd{padding:16px 18px 24px}
+.dbd h3{font-size:18px;font-weight:900;color:#1a1a1a}
+.dbd .dv{font-size:13px;color:#5a6b85;margin-top:6px}
+.dbd .drow{display:flex;gap:10px;margin-top:12px;font-size:13px}
+.dbd .drow .lb{color:var(--mut);font-weight:800;width:70px;flex:0 0 auto}
+.dbd .drow .vl{color:#1a1a1a;font-weight:700}
+.dbd .dprice b{font-size:22px;color:var(--y);font-weight:900}
+.dbd .dtags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.dbd .dtag{font-size:11px;color:#2b5bb5;background:#eef3fb;border:1px solid #cccccc;border-radius:999px;padding:4px 11px;font-weight:700}
+.dbd .dnote{font-size:11.5px;color:var(--mut);margin-top:14px;line-height:1.7;border-top:1px solid var(--line);padding-top:12px}
+.dbd .dpick{margin-top:16px;background:var(--y);color:#1a1a1a;border:0;border-radius:10px;padding:13px;font-size:15px;font-weight:900;cursor:pointer;width:100%;font-family:inherit}
+/* options/insurance */
+.opt{display:flex;align-items:center;gap:10px;padding:11px 10px;border:2px solid transparent;border-radius:10px;cursor:pointer;transition:opacity .2s,border-color .15s,background .15s;margin-bottom:4px}
+.opt .ic{font-size:20px;flex:0 0 auto}.opt .nm{font-weight:800;font-size:13px;color:#1a1a1a}.opt .ds{font-size:11px;color:var(--mut)}
+.opt>div:not(.qty){flex:1 1 auto;min-width:0}
+.opt .pr{margin-left:auto;color:var(--y);font-weight:900;font-size:13px;white-space:nowrap;flex:0 0 auto}
+@media(max-width:430px){.opt{gap:8px;padding:11px 8px}.opt .ic{font-size:18px}.opt .pr{font-size:12px}.qty{margin-left:8px;gap:6px}.qty button{width:28px;height:28px;font-size:16px}}
+.opt .tick{flex:0 0 auto;width:24px;height:24px;border:2px solid var(--line);border-radius:7px;display:flex;align-items:center;justify-content:center;color:transparent;font-weight:900}
+.opt.on{border-color:var(--y);background:rgba(250,190,0,.08)}
+.opt.on .tick{background:var(--y);border-color:var(--y);color:#1a1a1a}
+.optset.hassel .opt:not(.on){opacity:.4}
+.qty{display:flex;align-items:center;gap:8px;margin-left:12px;flex:0 0 auto}
+.qty button{width:30px;height:30px;border-radius:8px;border:2px solid var(--y);background:transparent;color:var(--y);font-size:18px;font-weight:900;cursor:pointer;line-height:1;font-family:inherit}
+.qty button:disabled{opacity:.3;cursor:default}
+.qty .qn{min-width:22px;text-align:center;font-weight:900;color:#1a1a1a;font-size:16px}
+.ins{display:flex;flex-direction:column;gap:10px}
+.insopt{border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;transition:opacity .2s,border-color .15s}
+.insopt.on{border-color:var(--y);box-shadow:0 0 0 3px rgba(250,190,0,.2)}
+.ins .insopt:not(.on){opacity:.5;filter:grayscale(.25)}
+.insopt.reco{position:relative;overflow:visible}
+.ins .insopt.reco{opacity:1!important;filter:none!important;border-color:var(--y);animation:recoBlink 1.25s ease-in-out infinite}
+.insopt.reco.on{animation:none}
+@keyframes recoBlink{0%,100%{box-shadow:0 0 0 0 rgba(250,190,0,0);border-color:#cfd8ea}50%{box-shadow:0 0 0 4px rgba(250,190,0,.55);border-color:var(--y)}}
+.recobadge{position:absolute;top:-10px;right:12px;background:var(--y);color:#1a1a1a;font-size:10.5px;font-weight:900;padding:3px 11px;border-radius:999px;box-shadow:0 2px 8px rgba(250,190,0,.4);white-space:nowrap}
+.insopt .t{font-weight:900;color:#1a1a1a;font-size:13px;display:flex;justify-content:space-between}
+.insopt .d{font-size:11px;color:var(--mut);margin-top:4px}
+/* footer cta */
+.cta{position:sticky;bottom:0;background:rgba(0,16,51,.96);backdrop-filter:blur(8px);border-top:2px solid var(--y);padding:12px 18px;margin:0 -18px -60px;display:flex;align-items:center;gap:14px}
+.cta .tot{font-size:12px;color:#b9b9b9}.cta .tot b{font-size:20px;color:var(--y);font-weight:900;margin-left:4px}
+.cta button{margin-left:auto;background:var(--y);color:#1a1a1a;border:0;border-radius:10px;padding:13px 26px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;white-space:nowrap}
+.cta .tot{flex:1 1 auto;min-width:0}
+@media(max-width:430px){.cta{gap:7px;padding:10px 12px;margin:0 -12px -60px}.cta button{padding:12px 15px;font-size:13.5px}.cta .tot{font-size:10.5px}.cta .tot b{font-size:16px;margin-left:2px}#ctaBack{padding:11px 11px!important;font-size:12px!important}}
+.hamburger-btn{background:none;border:none;cursor:pointer;padding:4px;display:flex;flex-direction:column;gap:4px;justify-content:center;width:28px;height:28px}
+.hamburger-btn span{display:block;width:22px;height:2.5px;background:#fff;border-radius:2px;transition:all .3s}
+.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;opacity:0;pointer-events:none;transition:opacity .3s}
+.menu-overlay.open{opacity:1;pointer-events:auto}
+.slide-menu{position:fixed;top:0;right:0;width:min(300px,86vw);max-width:100vw;height:100%;background:#fff;z-index:9999;transform:translateX(100%);transition:transform .28s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;will-change:transform}
+@media(max-width:360px){.slide-menu{width:min(260px,86vw)}}
+@media(min-width:768px){.slide-menu{width:360px}}
+.slide-menu.open{transform:translateX(0)}
+.menu-header{background:#fff;padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #FABE00}
+.menu-header img{height:26px}
+.menu-close{background:none;border:none;color:#1a1a1a;font-size:22px;cursor:pointer;padding:4px}
+.menu-lang{display:flex;gap:0;padding:10px 16px}
+.menu-lang-btn{flex:1;padding:8px 0;border:1px solid #ddd;background:#fff;font-size:12px;font-weight:600;color:#666;cursor:pointer;transition:all .2s;font-family:inherit}
+.menu-lang-btn:first-child{border-radius:6px 0 0 6px}.menu-lang-btn:last-child{border-radius:0 6px 6px 0}.menu-lang-btn:not(:first-child){border-left:none}
+.menu-lang-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.menu-user{padding:14px 16px;background:#f8fafc;border-bottom:1px solid #eee}
+.menu-user-btn{width:100%;padding:10px;background:#FABE00;color:#1a1a1a;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.menu-section{padding:8px 0;border-bottom:1px solid #f0f0f0}
+.menu-section-title{font-size:10px;font-weight:700;color:#999;padding:8px 16px 4px;text-transform:uppercase;letter-spacing:.5px}
+.menu-item{display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:13px;color:#333;cursor:pointer;transition:background .2s;text-decoration:none}
+.menu-item:hover{background:#f5f8ff}
+.menu-item-icon{font-size:16px;width:20px;text-align:center}.menu-item-arrow{margin-left:auto;font-size:11px;color:#ccc}
+.menu-footer{padding:12px 16px;font-size:10px;color:#999;text-align:center;margin-top:auto}
+.pc-footer{background:#1a1a1a;color:#fff;padding:28px 24px;text-align:center;font-size:12px;margin-top:32px}
+.pc-footer a{color:#FABE00;text-decoration:none;margin:0 10px;white-space:nowrap;display:inline-block}
+.pc-footer a:hover{text-decoration:underline}
+</style></head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KVF3F48X" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<header><div class="hin">
+  <a href="keydrop-top.html"><img class="logoFull" src="images/keydrop-logo-white.png" alt="KEYDROP" style="height:28px"><img class="logoShort" src="images/keydrop-logo-white.png" alt="KEYDROP" style="height:28px"></a>
+  <span id="hdmlang-slot" style="margin-left:auto"></span>
+  <button class="hamburger-btn" onclick="openMenu()" aria-label="menu"><span></span><span></span><span></span></button>
+</div></header>
+<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+<div class="slide-menu" id="slideMenu">
+  <div class="menu-header"><img src="images/keydrop-logo-header.png" alt="KEYDROP"><button class="menu-close" onclick="closeMenu()">✕</button></div>
+  <div class="menu-lang">
+    <button class="menu-lang-btn" data-l="ja" onclick="kdSetLang('ja')">日本語</button>
+    <button class="menu-lang-btn" data-l="en" onclick="kdSetLang('en')">English</button>
+    <button class="menu-lang-btn" data-l="zh" onclick="kdSetLang('zh')">繁體中文</button>
+    <button class="menu-lang-btn" data-l="ko" onclick="kdSetLang('ko')">한국어</button>
+  </div>
+  <div class="menu-user"><button class="menu-user-btn" onclick="location.href='https://keydrop.jp/mypage.html'">予約を確認する（マイページ）</button></div>
+  <div class="menu-section"><a class="menu-item" href="keydrop-top.html#search" style="color:#FABE00;font-weight:800"><span class="menu-item-icon">📍</span>エリアを選び直す<span class="menu-item-arrow">→</span></a></div>
+  <div class="menu-section"><div class="menu-section-title">サービス</div>
+    <a class="menu-item" href="https://keydrop.jp/keydrop-about.html" target="_blank" rel="noopener"><span class="menu-item-icon">🔑</span>KEYDROPとは？<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/guide.html" target="_blank" rel="noopener"><span class="menu-item-icon">📖</span>ご利用方法<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/vehicles.html?area=naha" target="_blank" rel="noopener"><span class="menu-item-icon">🚗</span>ラインナップ（那覇）<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/vehicles.html?area=sapporo" target="_blank" rel="noopener"><span class="menu-item-icon">🚗</span>ラインナップ（札幌）<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="keydrop-insurance.html" target="_blank" rel="noopener"><span class="menu-item-icon">🛡️</span>保険プラン一覧<span class="menu-item-arrow">→</span></a>
+  </div>
+  <div class="menu-section"><div class="menu-section-title">サポート</div>
+    <a class="menu-item" href="https://keydrop.jp/faq.html" target="_blank" rel="noopener"><span class="menu-item-icon">❓</span>よくある質問<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/mypage-guide.html" target="_blank" rel="noopener"><span class="menu-item-icon">📱</span>マイページの使い方<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/coupon-guide.html" target="_blank" rel="noopener"><span class="menu-item-icon">🎟</span>クーポンの使い方<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener"><span class="menu-item-icon">✉️</span>お問い合わせ<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://www.instagram.com/keydrop_car_deliveryservice/" target="_blank" rel="noopener"><span class="menu-item-icon">📷</span>Instagram<span class="menu-item-arrow">→</span></a>
+  </div>
+  <div class="menu-section"><div class="menu-section-title">法的情報</div>
+    <a class="menu-item" href="https://keydrop.jp/clause.html" target="_blank" rel="noopener"><span class="menu-item-icon">📄</span>貸渡約款<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/privacy.html" target="_blank" rel="noopener"><span class="menu-item-icon">🔒</span>プライバシーポリシー<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/transaction.html" target="_blank" rel="noopener"><span class="menu-item-icon">📋</span>特定商取引法<span class="menu-item-arrow">→</span></a>
+    <a class="menu-item" href="https://keydrop.jp/company.html" target="_blank" rel="noopener"><span class="menu-item-icon">🏢</span>運営会社<span class="menu-item-arrow">→</span></a>
+  </div>
+  <div class="menu-footer">© 2026 KEYDROP</div>
+</div>
+
+
+<div class="phead"><div class="en cap">RESERVATION</div><div class="jp" data-i18n="resv_jp">ご予約</div></div>
+
+<div class="wrap">
+  <!-- ステップ（5段：条件→受取・車両→オプション・補償→お客様情報→確認・決済） -->
+  <div class="steps">
+    <div class="step done"><div class="n">1</div><div class="t" data-i18n="st_cond">条件選択</div></div>
+    <div class="step" id="st2"><div class="n">2</div><div class="t" id="st2t">お届け・車両</div></div>
+    <div class="step" id="st3"><div class="n">3</div><div class="t" data-i18n="st_opt">オプション<br>・補償</div></div>
+    <div class="step" id="st4"><div class="n">4</div><div class="t" data-i18n="st_cust">お客様情報</div></div>
+    <div class="step" id="st5"><div class="n">5</div><div class="t" data-i18n="st_pay">確認・決済</div></div>
+  </div>
+
+  <!-- 条件サマリー -->
+  <div class="sumbar" id="sumbar"></div>
+
+  <!-- スライド広告バー -->
+  <div class="adslider"><div class="adtrack" id="adtrack"></div></div>
+
+  <!-- ===== STEP2：受取（送迎場所）＋ 車両選択 ===== -->
+  <div id="stepSelect">
+    <div class="sec"><h2><span class="snum">STEP 1</span><span data-i18n="fl_pick_head">🚙 ご利用日程の空車から選択</span></h2>
+      <div class="vempty" id="vEmpty" style="display:none"><span data-i18n="fl_allfull">🈵 選択された日程は、あいにく全クラス満車です。日程を変更してお試しください。</span> <a href="keydrop-top.html#search" style="color:var(--navy2);font-weight:800" data-i18n="fl_change">条件を変更</a></div>
+      <div class="vgrid" id="vgrid"></div>
+      <div class="hint" data-i18n="fl_car_hint">車種・色・仕様はお選びいただけません（同クラス内からランダム）。全車禁煙・ペット同乗不可。料金は1日（24時間）あたりの目安です。</div></div>
+    <div class="sec locked" id="methodSec"><h2><span class="snum">STEP 2</span><span id="methodTitle">🚗 受取の詳細</span></h2>
+      <div class="lockmsg" id="methodLock" data-i18n="fl_lockmsg">🔒 まず上で車両を選び「この車両に決める」を押すと、こちらをご指定いただけます。</div>
+      <div class="card" id="methodCard" style="display:none"></div></div>
+  </div>
+
+  <!-- ===== STEP3：オプション ＋ 補償 ===== -->
+  <div id="stepOptions" style="display:none">
+    <div class="sec"><h2 data-i18n="chosen_head">🚙 選択中の車両</h2><div class="card" id="chosenCar"></div></div>
+    <div class="sec"><h2 data-i18n="opt_head">🧷 オプション</h2><div class="card optset" id="optset">
+      <div class="opt" id="optChild"><span class="ic">🪑</span><div><div class="nm" data-i18n="opt_child">チャイルドシート</div><div class="ds" data-i18n="opt_child_d">乳児・幼児用・最大5個</div></div><span class="pr">¥1,000 / 個</span><div class="qty"><button onclick="optQty('child',-1)">−</button><span class="qn" id="qChild">0</span><button onclick="optQty('child',1)">＋</button></div></div>
+      <div class="opt" id="optJunior"><span class="ic">🧒</span><div><div class="nm" data-i18n="opt_junior">ジュニアシート</div><div class="ds" data-i18n="opt_junior_d">学童用・最大5個</div></div><span class="pr">¥500 / 個</span><div class="qty"><button onclick="optQty('junior',-1)">−</button><span class="qn" id="qJunior">0</span><button onclick="optQty('junior',1)">＋</button></div></div>
+    </div></div>
+    <div class="sec"><h2 data-i18n="ins_head">🛡 補償プラン</h2><div class="ins">
+      <div class="insopt" data-ins="basic"><div class="t"><span data-i18n="ins_basic">基本補償</span><span data-i18n="ins_free">無料</span></div><div class="d" data-i18n="ins_basic_d">対人・対物無制限／車両保証（免責15万円）／人身傷害3,000万円</div></div>
+      <div class="insopt" data-ins="cdw"><div class="t"><span data-i18n="ins_cdw">基本＋免責補償</span><span data-i18n="ins_cdw_p">¥1,100 / 日</span></div><div class="d" data-i18n="ins_cdw_d">免責額（自己負担15万円）を免除</div></div>
+      <div class="insopt reco" data-ins="noc"><span class="recobadge" data-i18n="ins_recommend">★ おすすめ</span><div class="t"><span data-i18n="ins_noc">基本＋免責＋NOC</span><span data-i18n="ins_noc_p">¥1,650 / 日</span></div><div class="d" data-i18n="ins_noc_d">タイヤ・ホイール等も補償。NOC（営業補償）も免除</div></div>
+    </div></div>
+  </div>
+
+  <!-- ===== STEP4：お客様情報（KEYDROP仕様・HANDYMANデザイン） ===== -->
+  <div id="stepCustomer" style="display:none">
+    <div class="sec"><h2 data-i18n="cust_head">👤 ご予約者さま情報</h2>
+      <div class="card">
+        <div id="formError" class="formerr"></div>
+        <label class="fl"><span data-i18n="l_name">お名前</span><span class="req" data-i18n="req">必須</span></label>
+        <input class="fld" id="fName" placeholder="山田 太郎" data-i18n-ph="ph_name" oninput="vForm()">
+        <label class="fl" style="margin-top:12px"><span data-i18n="l_kana">フリガナ</span><span class="req" data-i18n="req">必須</span></label>
+        <input class="fld" id="fKana" placeholder="ヤマダ タロウ" data-i18n-ph="ph_kana" oninput="vForm()">
+        <label class="fl" style="margin-top:12px"><span data-i18n="l_phone">電話番号</span><span class="req" data-i18n="req">必須</span></label>
+        <input class="fld" id="fPhone" type="tel" inputmode="tel" placeholder="090-1234-5678" data-i18n-ph="ph_phone" oninput="vForm()">
+        <label class="fl" style="margin-top:12px"><span data-i18n="l_email">メールアドレス</span><span class="req" data-i18n="req">必須</span></label>
+        <input class="fld" id="fEmail" type="email" inputmode="email" placeholder="example@mail.com" data-i18n-ph="ph_email" oninput="vForm()">
+        <div class="emailnote" data-i18n="email_note">※ メールアドレスはマイページ（予約確認・変更）のログインに使用します。</div>
+        <label class="fl" style="margin-top:12px" data-i18n="l_notes">備考・ご要望（任意）</label>
+        <textarea class="fld" id="fNotes" style="height:auto;min-height:74px;padding:10px 12px"></textarea>
+        <label class="dchk"><input type="checkbox" id="fDriverDiff" onchange="toggleDrv()"> <span data-i18n="drv_diff">運転される方がご予約者さまと異なる</span></label>
+        <div id="drvSec" class="drvsec" style="display:none">
+          <div style="font-size:12px;font-weight:900;color:var(--y);margin-bottom:8px" data-i18n="drv_head">運転される方</div>
+          <label class="fl"><span data-i18n="l_name">お名前</span><span class="req" data-i18n="req">必須</span></label>
+          <input class="fld" id="dName" placeholder="山田 花子" data-i18n-ph="ph_dname" oninput="vForm()">
+          <label class="fl" style="margin-top:10px"><span data-i18n="l_kana">フリガナ</span><span class="req" data-i18n="req">必須</span></label>
+          <input class="fld" id="dKana" placeholder="ヤマダ ハナコ" data-i18n-ph="ph_dkana" oninput="vForm()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STEP5：確認・決済 ===== -->
+  <div id="stepConfirm" style="display:none">
+    <div class="sec"><h2 data-i18n="confirm_head">📋 ご予約内容の確認</h2><div class="card" id="confirmBox"></div></div>
+    <div class="sec"><h2 data-cp="coupon_head">🎟 クーポン</h2><div class="card"><div style="display:flex;gap:8px;align-items:center"><input id="couponInput" autocomplete="off" style="flex:1;height:46px;border:2px solid #d8e0ee;border-radius:10px;padding:0 12px;font-size:14px;text-transform:uppercase;font-family:inherit"><button type="button" onclick="applyCoupon()" data-cp="cp_apply" style="background:var(--y);color:#1a1a1a;border:0;border-radius:10px;padding:0 20px;height:46px;font-weight:900;cursor:pointer;font-family:inherit">適用</button></div><div id="couponMsg" style="font-size:12.5px;font-weight:800;margin-top:9px"></div><div id="couponHint" data-cp="cp_hint" style="font-size:11px;color:#5a6b85;margin-top:6px">※ お持ちのクーポンコードを入力してください（例：KEYDROP10）。</div></div></div>
+    <div class="sec"><h2 data-i18n="terms_head">📄 貸渡約款</h2><div class="card termsagree" id="termsAgreeCard">
+      <div class="termsnote" data-i18n="terms_read">ご予約前に貸渡約款を必ずお読みください（下記をスクロールしてご確認いただけます）。</div>
+      <div class="termsbox" id="clauseBox"><div class="loading">貸渡約款を読み込み中…</div></div>
+      <label class="tagree"><input type="checkbox" id="agreeTerms" onchange="onAgree()"> <span data-i18n="terms_agree">貸渡約款に同意します（同意しないとご予約を確定できません）</span></label>
+    </div></div>
+  </div>
+
+  <!-- ===== 決済画面（約款同意後に遷移）＝クレジットカード決済フォーム ===== -->
+  <div id="stepPayment" style="display:none">
+    <div class="sec"><h2 data-i18n="pay_head">💳 お支払い</h2><div class="card">
+      <div style="font-size:13px;color:#42557a;line-height:1.7;margin-bottom:14px" data-i18n="pay_desc3">クレジットカードでのお支払いです。「予約を確定する」を押すと、ご予約とお支払いが確定します。</div>
+      <div class="ccbrands"><span data-i18n="pc_accept">ご利用可能：</span> <b>VISA</b> · <b>Mastercard</b> · <b>JCB</b> · <b>AMEX</b></div>
+      <div class="cardform">
+        <label class="fl" data-i18n="pc_num">カード情報</label>
+        <div id="card-container" class="sqcard"></div>
+        <div class="ccerr" id="cardError" style="display:none"></div>
+        <div class="securenote" data-i18n="pc_secure_sq">🔒 カード情報はSquareの安全な決済システムで暗号化して処理されます。当サイト・当社サーバーにカード番号は保存されません。</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ===== 完了 ===== -->
+  <div id="stepDone" style="display:none">
+    <div class="sec" style="text-align:center;padding-top:20px">
+      <div style="font-size:54px">✅</div>
+      <h2 style="display:block;border:0;justify-content:center;font-size:20px;margin-top:8px" data-i18n="done_head">ご予約が完了しました</h2>
+      <div id="doneBox" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta"><button id="ctaBack" onclick="goBack()" style="display:none;background:transparent;border:2px solid var(--line);color:#cccccc;border-radius:10px;padding:13px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit" data-i18n="cta_back">← 戻る</button><div class="tot"><span id="ctaTotLbl">合計（1日あたり）</span><b id="totPr">¥—</b></div><button id="ctaBtn" onclick="goNext()">オプション・補償へ →</button></div>
+</div>
+
+<!-- 車両クラス詳細モーダル -->
+<div class="dscrim" id="dscrim" onclick="if(event.target===this)closeDetail()"><div class="dsheet">
+  <div class="dpic" id="dPic"></div>
+  <div class="dbd" id="dBody"></div>
+</div></div>
+
+<!-- 送迎バス案内 オーバーレイ(遷移せず入力保持) -->
+<div class="busscrim" id="busScrim" onclick="if(event.target===this)closeBus()"><div class="buswrap">
+  <div class="busbar"><span>🚌 <span data-i18n="air_busbtn_short">空港送迎バス 時刻表・のりば</span></span><button onclick="closeBus()" aria-label="close">×</button></div>
+  <iframe id="busFrame" title="空港送迎バス" loading="lazy"></iframe>
+</div></div>
+
+<script>
+var P=new URLSearchParams(location.search);
+var area=P.get('area')||'naha';
+var method=P.get('method')||'delivery';
+function T(k){return (window.hdmT?window.hdmT(k):k);}
+var MKEY={delivery:'del',airport:'air',store:'store'};
+function openMenu(){var o=document.getElementById('menuOverlay'),m=document.getElementById('slideMenu');if(o)o.classList.add('open');if(m)m.classList.add('open');document.body.style.overflow='hidden';kdLangActive();}
+function closeMenu(){var o=document.getElementById('menuOverlay'),m=document.getElementById('slideMenu');if(o)o.classList.remove('open');if(m)m.classList.remove('open');document.body.style.overflow='';}
+function kdSetLang(l){if(window.hdmSetLang)window.hdmSetLang(l);kdLangActive();}
+function kdLangActive(){var L=(window.hdmLang?window.hdmLang():'ja');document.querySelectorAll('.menu-lang-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-l')===L);});}
+function openBus(){var f=document.getElementById('busFrame');if(!f.getAttribute('src'))f.setAttribute('src','official-bus.html?embed=1');document.getElementById('busScrim').classList.add('on');document.body.style.overflow='hidden';}
+function closeBus(){document.getElementById('busScrim').classList.remove('on');document.body.style.overflow='';}
+document.addEventListener('click',function(e){if(!e.target.closest('header'))closeMenu();});
+var selCls=P.get('class')||'';
+var pD=P.get('pd')||'',pT=P.get('pt')||'',rD=P.get('rd')||'',rT=P.get('rt')||'';
+function fmtDT(d,t){if(!d&&!t)return '未指定';var s='';if(d){var m=d.split('-');s=(m[1]||'')+'/'+(m[2]||'');}if(t)s+=(s?' ':'')+t;return s||'未指定';}
+// 店舗別 実データ（KEYDROP public_keydrop_classes_v=札幌 / _nha_v=那覇 準拠）
+var STORE={
+ sapporo:{equip:['ETC車載器','4WD','スタッドレスタイヤ','ナビ','Bluetooth'],note:'車種・色・仕様はお選びいただけません（同クラス内からランダム）。全車禁煙・ペット同乗不可。',order:['A','A2','B','B2','C','S','F','H'],cls:{A:{l:'Aクラス',s:'7〜8名',v:'アルファード 等',p:13000},A2:{l:'A2クラス',s:'7〜8名',v:'アルファード 等',p:12000,az:1},B:{l:'Bクラス',s:'7〜8名',v:'ノア / デリカD5 等',p:11000},B2:{l:'B2クラス',s:'7〜8名',v:'ノア（高年式モデル）',p:12000,az:1},C:{l:'Cクラス',s:'5名',v:'ロッキー / CX-3 等',p:7000},S:{l:'Sクラス',s:'5名',v:'ハリアー / CX-5 等',p:9000},F:{l:'Fクラス',s:'5名',v:'ソリオ 等',p:6000},H:{l:'Hクラス',s:'5名',v:'アクセラ 等',p:6000}}},
+ naha:{equip:['ETC車載器','ナビ','Bluetooth'],note:'沖縄エリア・デリバリー対応。車種・色・仕様はお選びいただけません（同クラス内からランダム）。',order:['A','B','C','D','F','H','S'],cls:{A:{l:'プレミアムミニバン',s:'8名',v:'アルファード',p:12000},B:{l:'ミニバン',s:'8名',v:'ノア / ヴォクシー / アルファード / セレナ',p:9000},C:{l:'コンパクトSUV',s:'5名',v:'ライズ / ヤリスクロス',p:7000},D:{l:'ミニバン',s:'8名',v:'ノア / セレナ',p:7000},F:{l:'コンパクト',s:'5名',v:'アクア / ヴィッツ / ノート',p:3500},H:{l:'セダン / ハイブリッド',s:'5名',v:'プリウス / プリウスα',p:4500},S:{l:'SUV',s:'5名',v:'ハリアー',p:5500}}}
+};
+var STA=STORE[area==='sapporo'?'sapporo':'naha'];
+var CLS=STA.cls;
+var ORDER=STA.order;
+var SHOP=(area==='sapporo')?'札幌店':'那覇空港店';
+var SHOPS={sapporo:{ja:'札幌店',en:'Sapporo Store',zh:'札幌店',ko:'삿포로점'},naha:{ja:'那覇空港店',en:'Naha Airport Store',zh:'那霸機場店',ko:'나하공항점'}};
+function shopName(){var m=SHOPS[area]||SHOPS.sapporo;var L=(window.hdmLang?window.hdmLang():'ja');return m[L]||m.ja;}
+method='delivery'; // KEYDROP=両エリアともデリバリー専門
+var METHOD={delivery:{t:'🚗 デリバリー（お届け）',label:'お届け先'},airport:{t:'✈️ 無料送迎（空港/駅）',label:'送迎場所'},store:{t:'🏠 来店',label:'来店店舗'}};
+var insPrice={basic:0,cdw:1100,noc:1650};
+var step=P.get('step')||'select';
+var state={cls:selCls&&CLS[selCls]?selCls:'',ins:P.get('ins')||'',avail:{},availLoaded:false};
+// ===== 代車モード（?mode=daisha）＝本番フロー流用・地図/在庫/日時は本番同一、最後だけ「リクエスト＋チャット」 =====
+var DAISHA=(P.get('mode')==='daisha');
+var DAISHA_USE='', DAISHA_C2='', DAISHA_C3='';
+var DAISHA_FN='https://ckrxttbnawkclshczsia.supabase.co/functions/v1/daisha-request';
+// ===== 在庫（選択日程で空車があるクラスのみ表示・KEYDROP公開ビュー準拠／anon）=====
+var SB_URL='https://ckrxttbnawkclshczsia.supabase.co';
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+function sbView(t){return (area==='naha'&&/^public_.*_v$/.test(t))?t.replace(/_v$/,'_nha_v'):t;}
+function sbGet(t,q){return fetch(SB_URL+'/rest/v1/'+sbView(t)+'?'+(q||'')+'&select=*',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});}
+function ymList(a,b){var out=[];if(!a||!b)return out;var s=new Date(a.slice(0,7)+'-01'),e=new Date(b.slice(0,7)+'-01');var g=0;while(s<=e&&g<24){out.push(s.getFullYear()+'-'+('0'+(s.getMonth()+1)).slice(-2));s.setMonth(s.getMonth()+1);g++;}return out;}
+var PRICE_DATA=null;
+function localYMD(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function tierIndexOf(dateStr){var def=(PRICE_DATA&&PRICE_DATA.default!=null)?PRICE_DATA.default:1;if(!PRICE_DATA||!PRICE_DATA.presets)return def;var md=(dateStr||'').slice(5);for(var i=0;i<PRICE_DATA.presets.length;i++){var pp=PRICE_DATA.presets[i];if(!pp.start||!pp.end)continue;var inR=(pp.start<=pp.end)?(md>=pp.start&&md<=pp.end):(md>=pp.start||md<=pp.end);if(inR)return pp.tier;}return def;}
+function priceOf(type){if(PRICE_DATA&&PRICE_DATA.prices&&PRICE_DATA.prices[type]){var ti=pD?tierIndexOf(pD):(PRICE_DATA.default!=null?PRICE_DATA.default:0);return PRICE_DATA.prices[type][ti]||0;}return (CLS[type]&&CLS[type].p)||0;}
+function classTotal(type){var days=daysCount();if(PRICE_DATA&&PRICE_DATA.prices&&PRICE_DATA.prices[type]){if(!pD)return priceOf(type)*days;var total=0;var base=new Date(pD+'T00:00:00');for(var i=0;i<days&&i<120;i++){var dd=new Date(base);dd.setDate(dd.getDate()+i);total+=(PRICE_DATA.prices[type][tierIndexOf(localYMD(dd))]||0);}return total;}return ((CLS[type]&&CLS[type].p)||0)*days;}
+function insTotal(){return (insPrice[state.ins]||0)*daysCount();}
+function subtotalBeforeCoupon(){if(!state.cls)return 0;return classTotal(state.cls)+insTotal()+optTotal();}
+function loadPrices(){sbGet('public_class_price_v','limit=1').then(function(rows){try{var raw=rows&&rows[0]&&rows[0].value;if(!raw)return;var v=(typeof raw==='string')?JSON.parse(raw):raw;if(v&&v.prices){PRICE_DATA=v;try{renderV();}catch(e){}try{calc();}catch(e){}try{if(step==='confirm')renderConfirm();}catch(e){}}}catch(e){}});}
+function fetchClasses(){
+  sbGet('public_keydrop_classes_v','limit=1').then(function(rows){
+    try{
+      var raw=rows&&rows[0]&&rows[0].value;if(!raw)return;
+      var d=(typeof raw==='string')?JSON.parse(raw):raw;if(!d||!d.items)return;
+      var order=[],cls={};
+      (d.order||Object.keys(d.items)).forEach(function(k){var it=d.items[k];if(!it||it.show===false)return;
+        order.push(k);cls[k]={l:it.label||k,s:(''+(it.seats||'')).replace(/[名人]/g,''),v:it.vehicles||'',p:+it.price||0,az:(k==='A2'||k==='B2')?1:0};});
+      if(!order.length)return;
+      ORDER=order;STA.order=order;
+      Object.keys(CLS).forEach(function(k){delete CLS[k];});
+      Object.keys(cls).forEach(function(k){CLS[k]=cls[k];});
+      if(state.cls&&!CLS[state.cls])state.cls='';
+      renderV();calc();try{renderChosen();}catch(e){}
+    }catch(e){}
+  });
+}
+function fetchAvail(){
+  if(!pD||!rD){state.availLoaded=false;return;} // 日程未指定=全表示
+  var yms=ymList(pD,rD);var inEnc=yms.map(function(y){return '"'+y+'"';}).join(',');
+  Promise.all([
+    sbGet('public_vehicles_v','limit=2000'),
+    sbGet('public_busy_v','lend_date=lte.'+rD+'&return_date=gte.'+pD),
+    yms.length?sbGet('public_inactive_v','year_month=in.('+inEnc+')'):Promise.resolve([])
+  ]).then(function(res){
+    var veh=res[0]||[],busy=res[1]||[],inact=res[2]||[];
+    if(!veh.length){state.availLoaded=false;renderV();return;} // 取得失敗時は全表示(顧客を止めない)
+    var busySet={};(busy||[]).forEach(function(b){busySet[b.vehicle_code]=1;});(inact||[]).forEach(function(b){busySet[b.vehicle_code]=1;});
+    var cnt={};veh.forEach(function(v){if(busySet[v.code])return;cnt[v.type]=(cnt[v.type]||0)+1;});
+    state.avail=cnt;state.availLoaded=true;
+    if(state.cls&&!(cnt[state.cls]>0)){state.cls='';calc();} // 満車の初期選択は解除
+    renderV();
+  });
+}
+function classAvail(k){return state.availLoaded?((state.avail[k]||0)>0):true;}
+var loc={del:null,col:null},colSame=true; // お届け先/回収先(={label,addr,lat,lng}) ・回収同じは既定ON。値はデリバリー埋め込み(official-deliv-v2)からpostMessageで受信
+// デリバリー埋め込みからの選択結果を受信
+window.addEventListener('message',function(e){var d=e&&e.data;if(!d||d.type!=='hdmdeliv')return;
+  loc.del=d.del||null;loc.col=d.col||null;colSame=(d.same!==false);
+  var f=document.getElementById('delivFrame');if(f&&d.height){f.style.height=Math.max(560,Math.min(1400,d.height))+'px';}
+  try{if(typeof step!=='undefined'&&step==='confirm')renderConfirm();}catch(e){}
+});
+var locType='station';
+var NHA_STATIONS=['赤嶺駅','小禄駅','奥武山公園駅','壺川駅','旭橋駅','県庁前駅','美栄橋駅','牧志駅','安里駅','おもろまち駅','古島駅','市立病院前駅','儀保駅','首里駅'];
+var NHA_HOTELS=['ホテルコレクティブ','ホテルリソルトリニティ那覇','THE NEST那覇','コンフォートホテル那覇県庁前','リーガロイヤルグラン沖縄','ロワジールホテル那覇','レンブラントスタイル那覇','パシフィックホテル沖縄','ホテルオーシャン那覇国際通り','ヒューイットリゾート那覇','ホテルJALシティ那覇','アパホテル那覇松山','那覇東急REIホテル','メルキュール沖縄那覇','ダブルツリーbyヒルトン那覇','ノボテル沖縄那覇','ハイアットリージェンシー那覇','沖縄ハーバービューホテル'];
+
+// サマリー
+function renderMethod(){
+document.getElementById('sumbar').innerHTML=
+  '<span class="it"><b>'+T('sum_area')+'</b>'+shopName()+'</span>'+
+  '<span class="it"><b>'+T('sum_recv')+'</b>'+T('mt_'+MKEY[method])+'</span>'+
+  '<span class="it"><b>'+T('sum_dep')+'</b>'+fmtDT(pD,pT)+'</span>'+
+  '<span class="it"><b>'+T('sum_ret')+'</b>'+fmtDT(rD,rT)+'</span>'+
+  '<a class="edit" href="keydrop-top.html#search">'+T('sum_change')+'</a>';
+
+// 受取方法別の入力
+document.getElementById('methodTitle').textContent=T('mt_'+MKEY[method]);
+// ステップ2ラベルを受取方法に合わせる（送迎/お届け/来店・車両）
+document.getElementById('st2t').textContent=T('st_recv_'+MKEY[method]);
+var mc=document.getElementById('methodCard');
+if(method==='delivery'){
+  // お届け/回収 場所の指定は検証済みの新UX(official-deliv-v2)を埋め込み。選択結果はpostMessageで受信。
+  if(!document.getElementById('delivFrame')){
+    mc.innerHTML='<iframe id="delivFrame" src="keydrop-deliv-mock.html?embed=1&area='+area+'&lang='+(window.hdmLang?window.hdmLang():'ja')+'" style="width:100%;border:0;height:660px;display:block" title="お届け先の指定" scrolling="no"></iframe>';
+  }
+}else if(method==='airport'){
+  mc.innerHTML='<div class="row2"><div><label class="fl">'+T('air_go_place')+'<span style="color:#b8860b;font-weight:700">'+T('air_selectable')+'</span></label><select class="fld"><option value="">'+T('air_sel')+'</option><option>那覇空港</option><option>赤嶺駅</option></select></div><div><label class="fl">'+T('air_time_go')+'</label><input class="fld" value="'+fmtDT(pD,pT)+'" readonly style="background:#eef2f8;color:#5a6b85"></div></div>'+
+    '<div class="row2" style="margin-top:12px"><div><label class="fl">'+T('air_ret_place')+'<span style="color:#b8860b;font-weight:700">'+T('air_selectable')+'</span></label><select class="fld"><option value="">'+T('air_sel')+'</option><option>那覇空港</option><option>赤嶺駅</option></select></div><div><label class="fl">'+T('air_time_ret')+'</label><input class="fld" value="'+fmtDT(rD,rT)+'" readonly style="background:#eef2f8;color:#5a6b85"></div></div>'+
+    '<div class="row2" style="margin-top:12px"><div><label class="fl">'+T('air_flight')+'</label><input class="fld" placeholder="'+T('ph_flight')+'"></div><div></div></div>'+
+    '<div class="hint">'+T('air_hint')+'</div>'+
+    '<button type="button" class="busbtn" onclick="openBus()">'+T('air_busbtn')+'</button>'+
+    busTable();
+}else{
+  mc.innerHTML='<label class="fl">'+T('store_l')+'</label><select class="fld"><option>那覇空港店</option></select>'+
+    '<div class="storeloc"><div class="slbody"><div class="slname">'+T('store_p2')+'</div><div class="sladdr">'+T('store_addr')+'</div></div>'+
+    '<a class="slmap" href="https://maps.app.goo.gl/rCQ3obibiHU18G5H8" target="_blank" rel="noopener">'+T('store_map')+'</a></div>'+
+    '<div class="hint">'+T('store_hint')+'</div>';
+}
+}
+renderMethod();
+
+// ===== 場所選択（地図）=====
+var MAPCFG={naha:{c:[26.2125,127.6790],z:11,vb:'127.0,26.0,128.5,26.9'},sapporo:{c:[43.0618,141.3545],z:11,vb:'141.0,42.7,141.8,43.3'}};
+var delMap=null,delMarker=null;
+function initDelMap(){
+  // 地図は遅延＋例外隔離（地図が失敗してもフロー全体は必ず動く）
+  var tries=0;
+  function fallback(el){if(el)el.innerHTML='<div style="padding:26px;color:#5a6b85;text-align:center;font-size:12px;line-height:1.7">地図を表示できません。<br>上の入力欄にお届け先（ホテル名・住所）をご記入ください。</div>';}
+  function go(){
+    var el=document.getElementById('delMap');if(!el)return;
+    var ar=(area==='sapporo')?'sapporo':'naha';var cf=MAPCFG[ar];
+    if(typeof L==='undefined'||!cf){if(tries++>30){fallback(el);return;}return setTimeout(go,100);}
+    try{
+      if(delMap){try{delMap.remove();}catch(e){}delMap=null;}
+      delMap=L.map('delMap',{scrollWheelZoom:false}).setView(cf.c,cf.z);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(delMap);
+      delMap.on('click',function(e){setPin(e.latlng.lat,e.latlng.lng);reverseGeo(e.latlng.lat,e.latlng.lng);});
+      setTimeout(function(){if(delMap){try{delMap.invalidateSize();}catch(e){}}},250);
+    }catch(e){fallback(el);}
+  }
+  setTimeout(go,0);
+}
+// お届け先(del)・回収先(col) 決定フロー（状態は上部で宣言済み）
+function setLocType(t){
+  locType=t;pending='';
+  document.querySelectorAll('.loctype .lt').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-lt')===t);});
+  var pull=document.getElementById('pullWrap'),map=document.getElementById('mapWrap');
+  if(t==='park'){ if(pull)pull.style.display='none'; if(map)map.style.display='block'; initDelMap(); }
+  else{
+    if(map)map.style.display='none'; if(pull)pull.style.display='block';
+    var list=(t==='hotel')?NHA_HOTELS:NHA_STATIONS;
+    var sel=document.getElementById('placeSel');
+    if(sel)sel.innerHTML='<option value="">'+(t==='hotel'?'ホテルを選択':'駅を選択')+'</option>'+list.map(function(x){return '<option>'+x+'</option>';}).join('')+'<option value="__other">一覧にない（地図で指定）</option>';
+  }
+  setPending('');
+}
+function onPlaceSel(){var v=(document.getElementById('placeSel')||{}).value||'';if(v==='__other'){setLocType('park');return;}setPending(v);}
+function setPin(lat,lng){if(!delMap)return;if(delMarker)delMarker.setLatLng([lat,lng]);else delMarker=L.marker([lat,lng],{draggable:true}).addTo(delMap).on('dragend',function(ev){var p=ev.target.getLatLng();reverseGeo(p.lat,p.lng);});delMap.panTo([lat,lng]);}
+function tgName(t){return t==='col'?T('lc_col'):T('lc_del');}
+function setTarget(t){if(t==='col'&&colSame)return;locTarget=t;pending='';
+  var d=document.getElementById('tgDel'),c=document.getElementById('tgCol');if(d)d.classList.toggle('on',t==='del');if(c)c.classList.toggle('on',t==='col');
+  if(document.getElementById('placeSel')){setLocType('station');}else{setPending('');}}
+function toggleColSame(){colSame=document.getElementById('colSame').checked;var c=document.getElementById('tgCol');if(c)c.disabled=colSame;if(colSame){loc.col='';if(locTarget==='col')setTarget('del');}renderLocSum();}
+function setPending(txt){pending=txt;var pb=document.getElementById('pendBar'),btn=document.getElementById('decideBtn');
+  if(pb)pb.innerHTML=txt?(T('dl_selecting')+'<b>'+txt+'</b>'):T('dl_pend_map');
+  if(btn){btn.disabled=!txt;btn.textContent=T('dl_decide_a')+tgName(locTarget)+T('dl_decide_b');}}
+function decideLoc(){if(!pending)return;loc[locTarget]=pending;setPending('');renderLocSum();
+  // お届け先を決定したら自動で回収先へ（同じ指定でなければ）
+  if(locTarget==='del'&&!colSame&&!loc.col){setTarget('col');var pb=document.getElementById('pendBar');if(pb)pb.innerHTML=T('dl_next_col');}
+}
+function renderLocSum(){var el=document.getElementById('locSum');if(!el)return;
+  function row(lb,tg,v,ok){return '<div class="locrow'+(ok?' ok':'')+'"><span class="lk">'+lb+'</span><span class="lv">'+(v?('✓ '+v):'<span class="un">'+T('lc_undecided')+'</span>')+'</span>'+(v?'<button class="chg" onclick="reEdit(\''+tg+'\')">'+T('lc_change')+'</button>':'')+'</div>';}
+  var colv=colSame?T('dl_same_as'):loc.col;
+  el.innerHTML=row(T('lc_del'),'del',loc.del,!!loc.del)+row(T('lc_col'),'col',colv,colSame||!!loc.col);
+}
+function reEdit(t){if(t==='col'&&colSame)return;loc[t]='';setTarget(t);renderLocSum();}
+function geocodeAddr(){
+  var q=(document.getElementById('addrInput')||{}).value||'';if(!q){return;}
+  var ar=(area==='sapporo')?'sapporo':'naha';var cf=MAPCFG[ar];
+  fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=jp&limit=1&bounded=1&viewbox='+cf.vb+'&q='+encodeURIComponent(q),{headers:{'Accept':'application/json'}})
+   .then(function(r){return r.json();}).then(function(d){
+     if(d&&d[0]){setPin(+d[0].lat,+d[0].lon);if(delMap)delMap.setView([+d[0].lat,+d[0].lon],15);setPending(d[0].display_name.split(',').slice(0,3).join('').trim()||q);}
+     else{setPending(q);}
+   }).catch(function(){setPending(q);});
+}
+function reverseGeo(lat,lng){
+  fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lng,{headers:{'Accept':'application/json'}})
+   .then(function(r){return r.json();}).then(function(d){setPending((d&&d.display_name)?d.display_name.split(',').slice(0,3).reverse().join(' ').trim():(lat.toFixed(4)+', '+lng.toFixed(4)));})
+   .catch(function(){setPending(lat.toFixed(4)+', '+lng.toFixed(4));});
+}
+// KEYDROPと同じ車両画像（那覇=_nha優先→無ければ共通にフォールバック / 札幌=共通）
+function carImg(k){var IMGMAP={A2:'A'};var base=IMGMAP[k]||k;var KNOWN={A:1,B:1,B2:1,C:1,D:1,F:1,G:1,H:1,S:1};if(!KNOWN[base])base='F';var common='official-assets/cars/class_'+base+'.png';var src=(area==='naha')?'official-assets/cars/class_'+base+'_nha.png':common;return '<img src="'+src+'" onerror="this.onerror=null;this.src=\''+common+'\'" alt="" style="width:100%;height:100%;object-fit:contain;background:#fff;padding:5px">';}
+// 車両グリッド
+/* ===== KEYDROP 車種名・クラス名 多言語（TOPと共通） ===== */
+function _kdL(){return (window.hdmLang?window.hdmLang():'ja');}
+var KDCLS={
+ en:{'Aクラス':'Class A','A2クラス':'Class A2','Bクラス':'Class B','B2クラス':'Class B2','Cクラス':'Class C','Sクラス':'Class S','Fクラス':'Class F','Hクラス':'Class H','プレミアムミニバン':'Premium Minivan','ミニバン':'Minivan','コンパクトSUV':'Compact SUV','コンパクト':'Compact','セダン / ハイブリッド':'Sedan / Hybrid','SUV':'SUV'},
+ zh:{'Aクラス':'A級','A2クラス':'A2級','Bクラス':'B級','B2クラス':'B2級','Cクラス':'C級','Sクラス':'S級','Fクラス':'F級','Hクラス':'H級','プレミアムミニバン':'高級休旅車','ミニバン':'休旅車','コンパクトSUV':'小型SUV','コンパクト':'小型車','セダン / ハイブリッド':'轎車／油電','SUV':'SUV'},
+ ko:{'Aクラス':'A클래스','A2クラス':'A2클래스','Bクラス':'B클래스','B2クラス':'B2클래스','Cクラス':'C클래스','Sクラス':'S클래스','Fクラス':'F클래스','Hクラス':'H클래스','プレミアムミニバン':'프리미엄 미니밴','ミニバン':'미니밴','コンパクトSUV':'컴팩트 SUV','コンパクト':'컴팩트','セダン / ハイブリッド':'세단 / 하이브리드','SUV':'SUV'}
+};
+var KDVEH={
+ en:{'アルファード':'Alphard','ヴォクシー':'Voxy','ノア':'Noah','セレナ':'Serena','ライズ':'Raize','ヤリスクロス':'Yaris Cross','デリカD5':'Delica D:5','ロッキー':'Rocky','ハリアー':'Harrier','ソリオ':'Solio','アクア':'Aqua','ヴィッツ':'Vitz','ノート':'Note','プリウスα':'Prius \u03b1','プリウス':'Prius','アクセラ':'Axela','ヴェルファイア':'Vellfire','ベルファイア':'Vellfire','デミオ':'Demio','マツダ':'Mazda','等':'etc.','（高年式モデル）':' (late model)'},
+ zh:{'アルファード':'Alphard','ヴォクシー':'Voxy','ノア':'Noah','セレナ':'Serena','ライズ':'Raize','ヤリスクロス':'Yaris Cross','デリカD5':'Delica D5','ロッキー':'Rocky','ハリアー':'Harrier','ソリオ':'Solio','アクア':'Aqua','ヴィッツ':'Vitz','ノート':'Note','プリウスα':'Prius \u03b1','プリウス':'Prius','アクセラ':'Axela','ヴェルファイア':'Vellfire','ベルファイア':'Vellfire','デミオ':'Demio','マツダ':'Mazda','等':'等','（高年式モデル）':'（新年式）'},
+ ko:{'アルファード':'알파드','ヴォクシー':'복시','ノア':'노아','セレナ':'세레나','ライズ':'라이즈','ヤリスクロス':'야리스 크로스','デリカD5':'델리카 D5','ロッキー':'로키','ハリアー':'해리어','ソリオ':'솔리오','アクア':'아쿠아','ヴィッツ':'비츠','ノート':'노트','プリウスα':'프리우스 \u03b1','プリウス':'프리우스','アクセラ':'악셀라','ヴェルファイア':'벨파이어','ベルファイア':'벨파이어','デミオ':'데미오','マツダ':'마쓰다','等':'등','（高年式モデル）':' (고연식 모델)'}
+};
+function kdCls(jp){var L=_kdL();if(L==='ja')return jp;var m=KDCLS[L];return (m&&m[jp]!=null)?m[jp]:jp;}
+function kdVeh(v){var L=_kdL();if(L==='ja')return v;var m=KDVEH[L];if(!m)return v;var out=v;Object.keys(m).sort(function(a,b){return b.length-a.length;}).forEach(function(k){out=out.split(k).join(m[k]);});return out;}
+function renderV(){
+  var visible=ORDER.filter(function(k){return classAvail(k);});
+  document.getElementById('vgrid').innerHTML=ORDER.map(function(k){var c=CLS[k];var av=classAvail(k);return (
+    '<div class="vc'+(state.cls===k?' on':'')+(av?'':' soldout')+'" data-k="'+k+'"><div class="pic">'+carImg(k)+'<span class="clschip">'+kdCls(c.l)+'</span>'+''+(av?'<span class="check">✓</span>':'<span class="soldbadge">'+T('fl_full')+'</span>')+'</div>'+
+    '<div class="bd"><div class="nm">'+kdVeh(c.v)+'</div><div class="pr">'+(priceOf(k)?('<b>¥'+priceOf(k).toLocaleString()+'</b><small>'+T('perday')+'</small>'):'<b>¥—</b>')+'</div><div class="sp">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</div>'+
+    '<div class="vbtns">'+(av?'<button class="vpick" onclick="decideV(\''+k+'\')">'+(state.cls===k?T('fl_decided'):T('fl_decide'))+'</button>':'<div class="soldmsg">'+T('fl_nostock')+'</div>')+
+    '<button class="vdetail" onclick="openDetail(\''+k+'\')">'+T('fl_detail')+'</button></div></div></div>');
+  }).join('');
+  document.getElementById('vgrid').className='vgrid '+(state.cls?'hassel':'nosel');
+  var em=document.getElementById('vEmpty');if(em)em.style.display=(state.availLoaded&&visible.length===0)?'block':'none';
+}
+// 車両を決定→受取(送迎/お届け/来店)をアンロックし、そこへスクロール
+function decideV(k){state.cls=k;renderV();calc();unlockMethod();var s=document.getElementById('methodSec');if(s)setTimeout(function(){s.scrollIntoView({behavior:'smooth',block:'start'});},70);}
+function pickV(k){decideV(k);} // 後方互換
+function unlockMethod(){var lk=document.getElementById('methodLock');if(lk)lk.style.display='none';var mc=document.getElementById('methodCard');if(mc)mc.style.display='';var s=document.getElementById('methodSec');if(s)s.classList.remove('locked');if(typeof delMap!=='undefined'&&delMap){setTimeout(function(){try{delMap.invalidateSize();}catch(e){}},130);}}
+// 車両クラス詳細モーダル（KEYDROPと同じ情報＝STA.equip / STA.note を使用）
+function openDetail(k){var c=CLS[k];if(!c)return;
+  document.getElementById('dPic').innerHTML=carImg(k)+'<span class="dclschip">'+c.l+'</span>'+''+'<button class="dclose" onclick="closeDetail()">×</button>';
+  document.getElementById('dBody').innerHTML='<h3>'+kdCls(c.l)+'</h3><div class="dv">'+kdVeh(c.v)+'</div>'+
+    '<div class="drow"><span class="lb">'+T('dt_seats')+'</span><span class="vl">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</span></div>'+
+    '<div class="drow dprice"><span class="lb">'+T('dt_price')+'</span><span class="vl"><b>¥'+c.p.toLocaleString()+'</b> '+T('perday')+'</span></div>'+
+    '<div class="drow"><span class="lb">'+T('dt_equip')+'</span><span class="vl" style="flex:1"><div class="dtags">'+STA.equip.map(function(e){return '<span class="dtag">'+e+'</span>';}).join('')+'</div></span></div>'+
+    '<div class="dnote">'+STA.note+'</div>'+
+    (classAvail(k)?'<button class="dpick" onclick="pickFromDetail(\''+k+'\')">'+T('dt_pick')+'</button>':'<div class="dpick" style="background:#e7ebf2;color:#8a97ad;text-align:center;cursor:default">'+T('fl_nostock2')+'</div>');
+  document.getElementById('dscrim').classList.add('on');
+}
+function closeDetail(){document.getElementById('dscrim').classList.remove('on');}
+function pickFromDetail(k){closeDetail();decideV(k);}
+// 那覇 無料シャトルバス 運行時刻表（顧客向け・見るだけ／予約不要）
+function busTable(){
+  var PU=[9,10,11,12,13,14,15,16,17,18,19],BD=[9,10,11,12,13,14,15,16,17,18];
+  function chip(h,mm,cl){return '<span class="btime '+cl+'">'+('0'+h).slice(-2)+':'+mm+'</span>';}
+  var pu=PU.map(function(h){return chip(h,'00','pu');}).join('');
+  var bd=BD.map(function(h){return chip(h,'30','bd');}).join('');
+  return '<div class="bussched">'+
+    '<div class="bushd">'+T('bus_head')+'<small>'+T('bus_sub')+'</small></div>'+
+    '<div class="busnote">'+T('bus_note1')+'<b>'+T('bus_note2')+'</b>'+T('bus_note3')+'</div>'+
+    '<div class="buscol">'+
+      '<div class="bcol"><div class="bch pu">'+T('bus_air')+'</div><div class="brt">'+T('bus_air_rt')+'</div><div class="btimes">'+pu+'</div></div>'+
+      '<div class="bcol"><div class="bch bd">'+T('bus_yard')+'</div><div class="brt">'+T('bus_yard_rt')+'</div><div class="btimes">'+bd+'</div></div>'+
+    '</div>'+
+    '<div class="bushint">'+T('bus_hint')+'</div></div>';
+}
+document.querySelectorAll('.insopt').forEach(function(o){o.classList.toggle('on',o.getAttribute('data-ins')===state.ins);o.addEventListener('click',function(){document.querySelectorAll('.insopt').forEach(function(x){x.classList.remove('on')});o.classList.add('on');state.ins=o.getAttribute('data-ins');calc();});});
+// オプション：シートは各最大5個の数量選択／USBはトグル ＋メリハリ
+var SEAT_MAX=5;var SEAT_CHILD=1000,SEAT_JUNIOR=500;
+var optQ={child:0,junior:0,usb:false};
+function optQty(key,d){
+  optQ[key]=Math.max(0,Math.min(SEAT_MAX,(optQ[key]||0)+d));
+  var n=document.getElementById(key==='child'?'qChild':'qJunior');if(n)n.textContent=optQ[key];
+  var row=document.getElementById(key==='child'?'optChild':'optJunior');if(row)row.classList.toggle('on',optQ[key]>0);
+  refreshOpt();
+}
+function toggleOpt(el){el.classList.toggle('on');optQ.usb=el.classList.contains('on');refreshOpt();}
+function refreshOpt(){var os=document.getElementById('optset');var has=(optQ.child>0||optQ.junior>0||optQ.usb);os.classList.toggle('hassel',has);calc();}
+function optTotal(){return (optQ.child||0)*SEAT_CHILD+(optQ.junior||0)*SEAT_JUNIOR;}
+var GRANDLBL={ja:'合計',en:'Total',zh:'總計',ko:'합계'};
+function updCtaTotal(){
+  var base=state.cls?priceOf(state.cls):0;
+  var perDay=base+(insPrice[state.ins]||0);
+  var lbl=document.getElementById('ctaTotLbl');var pr=document.getElementById('totPr');if(!pr)return;
+  if(step==='confirm'||step==='payment'){
+    var subtotal=subtotalBeforeCoupon();var disc=(typeof couponDiscount!=='undefined'&&couponDiscount>0)?Math.min(couponDiscount,subtotal):0;var total=subtotal-disc;
+    if(lbl)lbl.textContent=(GRANDLBL[(window.hdmLang?window.hdmLang():'ja')]||GRANDLBL.ja);
+    pr.textContent=base?('¥'+total.toLocaleString()):'¥—';
+  }else{
+    if(lbl)lbl.textContent=T('cta_total');
+    pr.textContent=base?('¥'+perDay.toLocaleString()):'¥—';
+  }
+}
+function calc(){updCtaTotal();}
+// 選択中の車両カード（STEP3で表示）
+function renderChosen(){var el=document.getElementById('chosenCar');if(!el)return;var c=CLS[state.cls];if(!c){el.innerHTML='車両が未選択です';return;}
+  el.innerHTML='<div style="display:flex;gap:12px;align-items:center"><div style="width:96px;height:62px;border-radius:8px;overflow:hidden;flex:0 0 auto;background:#fff">'+carImg(state.cls)+'</div><div><div style="font-weight:900;color:#1a1a1a;font-size:14px;word-break:keep-all">'+kdCls(c.l)+'　'+kdVeh(c.v)+'</div><div style="font-size:12px;color:var(--mut);margin-top:3px">👥 '+c.s+'　¥'+c.p.toLocaleString()+'〜 / 1日</div></div></div>';}
+// 引き継ぐ共通パラメータ
+function qs(extra){return 'area='+area+'&method='+method+'&pd='+encodeURIComponent(pD)+'&pt='+encodeURIComponent(pT)+'&rd='+encodeURIComponent(rD)+'&rt='+encodeURIComponent(rT)+(extra||'');}
+// ===== ステップ表示切替（画面内遷移・stateは保持）=====
+var ORD=['select','options','customer','confirm','payment','done'];
+function applyStep(){
+  var cur=ORD.indexOf(step); if(cur<0){step='select';cur=0;}
+  ['stepSelect','stepOptions','stepCustomer','stepConfirm','stepPayment','stepDone'].forEach(function(id,i){document.getElementById(id).style.display=(i===cur)?'block':'none';});
+  // ステップバーを実ページ内容に一致（2=受取・車両=select, 3=options, 4=customer, 5=確認・決済=confirm/payment）
+  [['st2',0],['st3',1],['st4',2]].forEach(function(p){var el=document.getElementById(p[0]);el.className='step '+(cur>p[1]?'done':(cur===p[1]?'on':''));});
+  var _st5=document.getElementById('st5');_st5.className='step '+(cur>4?'done':(cur>=3?'on':''));
+  var lbl=DAISHA
+    ?{select:'お客様情報へ →',customer:'確認へ →',confirm:'🚗 この内容でリクエスト'}
+    :{select:T('cta_options'),options:T('cta_customer'),customer:T('cta_confirm'),confirm:T('cta_pay'),payment:T('cta_done')};
+  var btn=document.getElementById('ctaBtn');btn.textContent=lbl[step]||'';
+  try{updCtaTotal();}catch(e){}
+  if(DAISHA){
+    // 代車＝約款/決済なし・確認画面はそのまま送信可。クーポン/約款カードは非表示、用途・第2/3希望UIを差し込む
+    btn.disabled=false;
+    if(step==='confirm'){var _cp=document.querySelector('#stepConfirm [data-cp="coupon_head"]');if(_cp&&_cp.closest('.sec'))_cp.closest('.sec').style.display='none';var _tm=document.getElementById('termsAgreeCard');if(_tm&&_tm.closest('.sec'))_tm.closest('.sec').style.display='none';}
+    if(step==='customer')renderDaishaCustomer();
+  }
+  else if(step==='confirm'){loadClause();var _ck=document.getElementById('agreeTerms');btn.disabled=!(_ck&&_ck.checked);}
+  else if(step==='payment'){btn.disabled=false;requestAnimationFrame(function(){initSquareCard();});}
+  else{btn.disabled=false;}
+  document.querySelector('.cta').style.display=(step==='done')?'none':'flex';
+  document.getElementById('ctaBack').style.display=(step==='select'||step==='done')?'none':'inline-block';
+  if(step==='options')renderChosen();
+  if(step==='confirm')renderConfirm();
+  if(step==='done')renderDone();
+  window.scrollTo(0,0);
+}
+function goNext(){
+  if(step==='select'){
+    if(!state.cls){alert(T('al_pickfirst'));return;}
+    if(method==='delivery'){if(!loc.del){alert(T('al_deldest'));return;}if(!colSame&&!loc.col){alert(T('al_coldest'));return;}}
+    step=DAISHA?'customer':'options';}      // 代車＝オプション・補償をスキップ
+  else if(DAISHA&&step==='customer'){if(!vForm(true))return;step='confirm';}
+  else if(DAISHA&&step==='confirm'){submitDaisha();return;}   // 代車＝決済せずリクエスト送信
+  else if(step==='options'){if(!state.ins){var _is=document.querySelector('.ins');if(_is)_is.scrollIntoView({behavior:'smooth',block:'center'});var _am={ja:'補償プランをお選びください。',en:'Please choose a coverage plan.',zh:'請選擇保障方案。',ko:'보장 플랜을 선택해 주세요.'};var _lg='ja';try{_lg=localStorage.getItem('hdm_lang')||'ja';}catch(e){}alert(_am[_lg]||_am.ja);return;}step='customer';}
+  else if(step==='customer'){if(!vForm(true))return;step='confirm';}
+  else if(step==='confirm'){var _ck=document.getElementById('agreeTerms');if(!_ck||!_ck.checked){var _c=document.getElementById('termsAgreeCard');if(_c){_c.classList.add('need');_c.scrollIntoView({block:'center'});}alert(T('terms_need'));return;}step='payment';}
+  else if(step==='payment'){payWithCard();return;}
+  applyStep();
+}
+function onAgree(){var _ck=document.getElementById('agreeTerms');var _ok=!!(_ck&&_ck.checked);if(_ok){var _c=document.getElementById('termsAgreeCard');if(_c)_c.classList.remove('need');}if(step==='confirm'){document.getElementById('ctaBtn').disabled=!_ok;}}
+// ===== クレジットカード決済（Square Web Payments SDK・KEYDROPと同一方式） =====
+var SUPABASE_URL='https://ckrxttbnawkclshczsia.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+var SQUARE_APP_ID='sq0idp-C0XgrzYXhgIEbE7G8GGgpA';
+var SQUARE_LOCATION_ID='L8N7J9RKPN3WH';
+var sqPayments=null,sqCard=null,_sqTries=0,_sqInitting=false,_sqQueued=false;
+async function initSquareCard(){
+  var container=document.getElementById('card-container');if(!container)return;
+  if(!window.Square){if(_sqTries++<25){setTimeout(initSquareCard,300);}else{container.innerHTML='<div style="font-size:12px;color:#c0392b;padding:8px">'+T('pc_sdk_err')+'</div>';}return;}
+  if(_sqInitting){_sqQueued=true;return;}
+  _sqInitting=true;_sqTries=0;
+  try{
+    if(sqCard){try{await sqCard.destroy();}catch(e){}sqCard=null;}
+    container.innerHTML='';
+    if(!sqPayments)sqPayments=window.Square.payments(SQUARE_APP_ID,SQUARE_LOCATION_ID);
+    var card=await sqPayments.card();
+    var c2=document.getElementById('card-container');
+    if(c2){c2.innerHTML='';await card.attach('#card-container');sqCard=card;}else{try{await card.destroy();}catch(e){}}
+  }catch(e){console.error('square init',e);}
+  _sqInitting=false;
+  if(_sqQueued){_sqQueued=false;setTimeout(initSquareCard,0);}
+}
+async function payWithCard(){
+  var btn=document.getElementById('ctaBtn');var errEl=document.getElementById('cardError');
+  var reEnable=function(){if(btn){btn.disabled=false;btn.textContent=T('cta_done');}};
+  if(errEl){errEl.style.display='none';errEl.textContent='';}
+  if(!sqCard){if(errEl){errEl.style.display='block';errEl.textContent=T('pc_prep');}initSquareCard();return;}
+  if(btn){btn.disabled=true;btn.textContent=T('pc_proc');}
+  try{window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'checkout_click',store:(area==='sapporo'?'spk':'nha'),vehicle_class:state.cls,currency:'JPY',value:subtotalBeforeCoupon()});}catch(e){}
+  var token;
+  try{
+    var result=await sqCard.tokenize();
+    if(result.status!=='OK'){var m=(result.errors&&result.errors[0]&&result.errors[0].message)||T('pc_card_check');if(errEl){errEl.style.display='block';errEl.textContent=m;}reEnable();return;}
+    token=result.token;
+  }catch(e){if(errEl){errEl.style.display='block';errEl.textContent=T('pc_card_fail');}reEnable();return;}
+  try{
+    var c=CLS[state.cls]||{v:''};
+    var INSMAP={basic:'none',cdw:'cdw',noc:'pack'};
+    var _dl=(loc&&loc.del)||{},_cl=(colSame?_dl:((loc&&loc.col)||{}));
+    var payload={token:token,store:(area==='sapporo'?'spk':'nha'),coupon:couponCode||'',
+      vehicleClass:state.cls,vehicleModel:c.v||'',
+      lend_date:pD,return_date:rD,lend_time:pT,return_time:rT,
+      name:(document.getElementById('fName')||{}).value||'',
+      mail:(document.getElementById('fEmail')||{}).value||'',
+      tel:(document.getElementById('fPhone')||{}).value||'',
+      people:1,insuranceType:(INSMAP[state.ins]||'none'),
+      childSeat:(typeof optQ!=='undefined'?optQ.child:0)||0,
+      juniorSeat:(typeof optQ!=='undefined'?optQ.junior:0)||0,
+      del_place:(_dl.label||_dl.addr||''),col_place:(_cl.label||_cl.addr||_dl.label||_dl.addr||''),
+      del_place_full:(_dl.addr||_dl.label||''),col_place_full:(_cl.addr||_cl.label||_dl.addr||_dl.label||''),
+      del_lat:(_dl.lat!=null?_dl.lat:null),del_lng:(_dl.lng!=null?_dl.lng:null),
+      col_lat:(_cl.lat!=null?_cl.lat:(_dl.lat!=null?_dl.lat:null)),col_lng:(_cl.lng!=null?_cl.lng:(_dl.lng!=null?_dl.lng:null))};
+    var res=await fetch(SUPABASE_URL+'/functions/v1/keydrop-pay',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var data=await res.json().catch(function(){return {};});
+    if(!res.ok||!data.ok){if(errEl){errEl.style.display='block';errEl.textContent=(data&&data.error)||T('pc_pay_fail');}reEnable();return;}
+    state._resId=data.reservationId;
+    try{var _em=(document.getElementById('fEmail')||{}).value||'';var _ph=(document.getElementById('fPhone')||{}).value||'';var _nm=(document.getElementById('fName')||{}).value||'';var _val=Number(data.amount)||subtotalBeforeCoupon();var _st=(area==='sapporo'?'spk':'nha');window.dataLayer=window.dataLayer||[];window.dataLayer.push({event:'booking_complete',transaction_id:data.reservationId,currency:'JPY',value:_val,store:_st,vehicle_class:state.cls,user_data:{email:_em,phone_number:_ph,name:_nm},ecommerce:{transaction_id:data.reservationId,currency:'JPY',value:_val,items:[{item_name:state.cls||'car_rental',quantity:1,price:_val}]}});if(typeof gtag==='function'){gtag('event','purchase',{transaction_id:data.reservationId,currency:'JPY',value:_val});}}catch(e){}
+    step='done';applyStep();
+  }catch(e){if(errEl){errEl.style.display='block';errEl.textContent=T('pc_net_fail');}reEnable();}
+}
+function goBack(){
+  if(DAISHA){ // 代車＝options/paymentを飛ばした遷移に合わせて戻す
+    if(step==='confirm'){step='customer';applyStep();return;}
+    if(step==='customer'){step='select';applyStep();return;}
+    return;
+  }
+  var i=ORD.indexOf(step);if(i>0){step=ORD[i-1];applyStep();}
+}
+// ===== 代車モード：用途・区分・第2/3希望の注入＋リクエスト送信 =====
+function clsLabel(k){var c=CLS[k]||{};return k+' '+(c.l||'')+(c.v?'（'+c.v+'）':'');}
+function renderDaishaCustomer(){
+  if(document.getElementById('daishaExtra'))return; // 二重挿入防止
+  var host=document.querySelector('#stepCustomer .card');if(!host)return;
+  var opts=(typeof ORDER!=='undefined'?ORDER:Object.keys(CLS)).filter(function(k){return k!==state.cls;})
+    .map(function(k){return '<option value="'+k+'">'+clsLabel(k)+'</option>';}).join('');
+  var box=document.createElement('div');box.id='daishaExtra';box.style.marginTop='14px';box.style.borderTop='1px dashed #d8e0ee';box.style.paddingTop='14px';
+  box.innerHTML=
+    '<label class="fl"><span>ご利用の用途</span><span class="req">必須</span></label>'+
+    '<select class="fld" id="dUse" onchange="DAISHA_USE=this.value"><option value="">選択してください</option><option value="accident">事故の代車</option><option value="repair">車検・修理の代車</option><option value="long">長期のご利用</option><option value="other">その他</option></select>'+
+    '<label class="fl" style="margin-top:12px"><span>お客様区分</span></label>'+
+    '<select class="fld" id="dCust" onchange="var b=this.value===\'business\';document.getElementById(\'dCoWrap\').style.display=b?\'block\':\'none\'"><option value="individual">個人</option><option value="business">事業者（整備工場・ディーラー・法人）</option></select>'+
+    '<div id="dCoWrap" style="display:none"><label class="fl" style="margin-top:12px">会社名・店名</label><input class="fld" id="dCompany" placeholder="〇〇自動車 / 〇〇モータース 等"></div>'+
+    '<label class="fl" style="margin-top:12px">車両の第2希望（任意）</label><select class="fld" id="dC2" onchange="DAISHA_C2=this.value"><option value="">指定なし</option>'+opts+'</select>'+
+    '<label class="fl" style="margin-top:12px">車両の第3希望（任意）</label><select class="fld" id="dC3" onchange="DAISHA_C3=this.value"><option value="">指定なし</option>'+opts+'</select>'+
+    '<div style="font-size:11.5px;color:#5a6b85;margin-top:8px">※ 第1希望＝上で選択中の車両（'+clsLabel(state.cls)+'）。在庫確認のうえ、実際にお出しできる車両をチャットでご提案します。</div>';
+  host.appendChild(box);
+}
+function submitDaisha(){
+  if(!DAISHA_USE){alert('ご利用の用途を選択してください');var u=document.getElementById('dUse');if(u)u.scrollIntoView({block:'center'});return;}
+  var btn=document.getElementById('ctaBtn');btn.disabled=true;btn.textContent='送信中…';
+  var _dl=(loc&&loc.del)||{},_cl=(colSame?_dl:((loc&&loc.col)||{}));
+  var body={action:'create',store:(area==='sapporo'?'spk':'nha'),use_case:DAISHA_USE,
+    start_date:pD||'',end_date:rD||'',period_note:(document.getElementById('fNotes')||{}).value||'',
+    del_place:(_dl.label||_dl.addr||''),same_col:!!colSame,col_place:(colSame?'':(_cl.label||_cl.addr||'')),
+    cust_type:(document.getElementById('dCust')||{}).value||'individual',company:(document.getElementById('dCompany')||{}).value||'',
+    name:(document.getElementById('fName')||{}).value||'',tel:(document.getElementById('fPhone')||{}).value||'',email:(document.getElementById('fEmail')||{}).value||'',
+    choice1:clsLabel(state.cls),choice2:DAISHA_C2?clsLabel(DAISHA_C2):'',choice3:DAISHA_C3?clsLabel(DAISHA_C3):'',
+    memo:(document.getElementById('fNotes')||{}).value||''};
+  fetch(DAISHA_FN,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){return r.json();}).then(function(j){
+      if(!j.ok){throw new Error(j.error||'送信に失敗しました');}
+      try{if(typeof gtag==='function')gtag('event','daisha_request',{event_label:DAISHA_USE});}catch(e){}
+      location.href='https://keydrop.jp/daisha-chat.html?t='+encodeURIComponent(j.token);
+    }).catch(function(e){alert((e&&e.message)||'送信に失敗しました。通信環境をご確認ください');btn.disabled=false;btn.textContent='🚗 この内容でリクエスト';});
+}
+// お客様情報 検証（KEYDROP仕様）
+function toggleDrv(){var on=document.getElementById('fDriverDiff').checked;document.getElementById('drvSec').style.display=on?'block':'none';}
+function vForm(showErr){
+  var ids=['fName','fKana','fPhone','fEmail'];if(document.getElementById('fDriverDiff').checked)ids.push('dName','dKana');
+  var ok=true;ids.forEach(function(id){var el=document.getElementById(id);if(!el)return;var bad=!el.value.trim();if(id==='fEmail'&&el.value.trim()&&el.value.indexOf('@')<0)bad=true;el.classList.toggle('need',bad);if(bad)ok=false;});
+  var er=document.getElementById('formError');if(er){er.classList.toggle('on',!ok&&!!showErr);if(!ok&&showErr)er.textContent='必須項目をご入力ください（メールは形式もご確認ください）。';}
+  return ok;
+}
+function daysCount(){if(!pD||!rD)return 1;var s=new Date(pD+'T00:00:00'),e=new Date(rD+'T00:00:00');var diff=Math.round((e-s)/86400000);if(isNaN(diff))return 1;return Math.max(1,diff+1);}
+function methodDetail(){
+  if(method==='delivery'){var _fmt=function(o){if(!o)return T('md_unset');var lb=o.label||o.addr||'';var ad=(o.addr&&o.addr!==o.label)?('（'+o.addr+'）'):'';return lb+ad;};var d=_fmt(loc.del);var c=colSame?T('md_same'):_fmt(loc.col);return T('md_del')+d+T('md_col')+c;}
+  if(method==='airport'){var s=document.querySelectorAll('#methodCard select');var go=s[0]?s[0].value:'',rt=s[1]?s[1].value:'';return T('md_air')+(go||'-')+T('md_air2')+(rt||'-');}
+  return T('md_store_a')+shopName()+T('md_store_b');
+}
+// 貸渡約款をインライン読み込み（iframeだとスマホでスクロールできないため、テキストを直接挿入＝ネイティブスクロール）
+var _clauseLoaded=false;
+var CLAUSE_I18N={en:'<h1>Rental Agreement</h1><h2>Handling of Personal Information</h2><p>The renter and the driver agree that KEYDROP (Global Lines Inc.) may use their personal information for the following purposes:</p><p>(1) To fulfil obligations as a rental car operator under applicable laws and guidelines.<br>(2) To verify identity and screen the renter/driver.<br>(3) To conduct surveys for product development and customer satisfaction.<br>(4) To compile statistical data processed so that individuals cannot be identified.</p><h2>1. Eligibility</h2><p>The driver must hold a valid driver\'s licence and meet our age and driving-history requirements. For overseas licences, an International Driving Permit or an official Japanese translation is required.</p><h2>2. Delivery &amp; Collection</h2><p>KEYDROP is a delivery-only service. The vehicle is delivered to and collected from the location you designate within the service area. Business hours are 9:00-19:00.</p><h2>3. Compensation</h2><p>Basic insurance is included. Optional CDW (deductible waiver) and NOC (non-operation charge) coverage are available. Without coverage, the renter bears the deductible and NOC as specified.</p><h2>4. Prohibited Acts</h2><p>Subletting, use for illegal purposes, driving under the influence, smoking, and travelling with pets are prohibited. Violations may incur cleaning fees or penalties.</p><h2>5. Cancellation</h2><p>Free up to 7 days before; 20% for 6-3 days before; 30% for 2 days to the day before; 50% on the day or later. Force majeure (e.g. a certified flight cancellation) is free of charge.</p><h2>6. Liability</h2><p>In the event of an accident or trouble, please contact us immediately and follow the prescribed procedures.</p><p style="color:#8090ac;font-size:11px;margin-top:10px">* This English text is a summary for your convenience. The Japanese Rental Agreement is the legally binding version.</p>',zh:'<h1>租車約款</h1><h2>個人資料之處理</h2><p>承租人及駕駛人同意 KEYDROP（Global Lines 股份有限公司）基於下列目的使用其個人資料：</p><p>(1) 依相關法令與指引履行租車業者之義務。<br>(2) 進行承租人／駕駛人之身分確認與審查。<br>(3) 為商品開發及提升顧客滿意度而進行問卷調查。<br>(4) 製作經處理後無法識別個人之統計資料。</p><h2>1. 租車資格</h2><p>駕駛人須持有效駕照並符合本公司之年齡與駕駛經歷要求。海外駕照須另備國際駕照或官方日文譯本。</p><h2>2. 送車與回收</h2><p>KEYDROP 為外送專門服務。於服務範圍內，將車輛送達並回收至您指定之地點。營業時間為 9:00-19:00。</p><h2>3. 補償</h2><p>已含基本保險。可另選 CDW（免責額免除）與 NOC（營業損失補償）。未加保時，承租人依規定負擔免責額及 NOC。</p><h2>4. 禁止行為</h2><p>禁止轉租、供非法用途、酒後駕駛、車內吸菸及攜帶寵物同乘。違反者可能收取清潔費或罰款。</p><h2>5. 取消規定</h2><p>7 日前免費；6-3 日前 20%；2 日前至前一日 30%；當日以後 50%。不可抗力（如經證明之航班取消）免費。</p><h2>6. 責任</h2><p>發生事故或問題時，請立即與本公司聯繫並依規定程序處理。</p><p style="color:#8090ac;font-size:11px;margin-top:10px">* 本繁體中文為便利閱讀之摘要，具法律效力者以日文租車約款為準。</p>',ko:'<h1>대여 약관</h1><h2>개인정보의 취급</h2><p>임차인 및 운전자는 KEYDROP(Global Lines 주식회사)가 다음 목적으로 개인정보를 이용하는 것에 동의합니다:</p><p>(1) 관련 법령·지침에 따른 렌터카 사업자의 의무 이행.<br>(2) 임차인·운전자의 본인 확인 및 심사.<br>(3) 상품 개발 및 고객 만족도 향상을 위한 설문 실시.<br>(4) 개인을 식별할 수 없도록 가공한 통계 데이터 작성.</p><h2>1. 대여 자격</h2><p>운전자는 유효한 운전면허를 소지하고 당사의 연령·운전경력 요건을 충족해야 합니다. 해외 면허의 경우 국제운전면허증 또는 공식 일본어 번역본이 필요합니다.</p><h2>2. 배달 &amp; 회수</h2><p>KEYDROP는 배달 전용 서비스입니다. 서비스 지역 내에서 지정하신 장소로 차량을 배달·회수합니다. 영업시간은 9:00-19:00입니다.</p><h2>3. 보상</h2><p>기본 보험이 포함됩니다. 선택 사항으로 CDW(면책금 면제) 및 NOC(영업손실보상)를 제공합니다. 미가입 시 임차인이 규정에 따라 면책금 및 NOC를 부담합니다.</p><h2>4. 금지 행위</h2><p>전대, 불법 목적 사용, 음주운전, 차내 흡연, 반려동물 동승을 금지합니다. 위반 시 청소비 또는 위약금이 부과될 수 있습니다.</p><h2>5. 취소 규정</h2><p>7일 전까지 무료; 6-3일 전 20%; 2일 전~전일 30%; 당일 이후 50%. 불가항력(예: 증명된 항공편 결항)은 무료입니다.</p><h2>6. 책임</h2><p>사고나 문제 발생 시 즉시 당사에 연락하고 정해진 절차에 따라 주십시오.</p><p style="color:#8090ac;font-size:11px;margin-top:10px">* 본 한국어는 편의를 위한 요약이며, 법적 효력은 일본어 대여 약관을 기준으로 합니다.</p>'};
+function loadClause(){var box=document.getElementById('clauseBox');if(!box)return;var L=(window.hdmLang?window.hdmLang():'ja');
+  if(box.getAttribute('data-l')===L)return;
+  if(L!=='ja'&&CLAUSE_I18N[L]){box.innerHTML=CLAUSE_I18N[L];box.setAttribute('data-l',L);box.scrollTop=0;return;}
+  fetch('official-clone/clause.html').then(function(r){return r.text();}).then(function(html){
+    var doc=new DOMParser().parseFromString(html,'text/html');var md=doc.getElementById('md');
+    box.innerHTML=md?md.innerHTML:'<div class="loading">貸渡約款を表示できません。別途お問い合わせください。</div>';box.setAttribute('data-l','ja');box.scrollTop=0;
+  }).catch(function(){box.innerHTML='<div class="loading">貸渡約款の読み込みに失敗しました。再度お試しください。</div>';});
+}
+// 確認画面から受取/お届け先の選択に戻る（選択済みは保持）
+function editRecv(){step='select';applyStep();setTimeout(function(){var ms=document.getElementById('methodSec');if(ms)ms.scrollIntoView({behavior:'smooth',block:'start'});},90);}
+var couponDiscount=0,couponCode='';
+var CP_I18N={
+ ja:{coupon_head:'クーポン',cp_ph:'クーポンコードを入力',cp_apply:'適用',cp_hint:'\u203b お持ちのクーポンコードを入力してください（例：KEYDROP10）。',cf_coupon:'クーポン割引',cp_ok:'\u2705 クーポンを適用しました',cp_ok2:'\u2705 クーポンを適用しました（-{amt}）',cp_ng:'\u26a0\ufe0f 有効なクーポンコードではありません。',cp_hint2:'\u203b お持ちのクーポンコードを入力してください。'},
+ en:{coupon_head:'Coupon',cp_ph:'Enter coupon code',cp_apply:'Apply',cp_hint:'* Enter your coupon code (e.g. KEYDROP10).',cf_coupon:'Coupon discount',cp_ok:'\u2705 Coupon applied',cp_ok2:'\u2705 Coupon applied (-{amt})',cp_ng:'\u26a0\ufe0f That is not a valid coupon code.',cp_hint2:'* Enter your coupon code.'},
+ zh:{coupon_head:'優惠券',cp_ph:'輸入優惠券代碼',cp_apply:'套用',cp_hint:'\u203b 請輸入您的優惠券代碼（例：KEYDROP10）。',cf_coupon:'優惠券折扣',cp_ok:'\u2705 已套用優惠券',cp_ok2:'\u2705 已套用優惠券（-{amt}）',cp_ng:'\u26a0\ufe0f 並非有效的優惠券代碼。',cp_hint2:'\u203b 請輸入您的優惠券代碼。'},
+ ko:{coupon_head:'쿠폰',cp_ph:'쿠폰 코드 입력',cp_apply:'적용',cp_hint:'\u203b 보유하신 쿠폰 코드를 입력하세요(예: KEYDROP10).',cf_coupon:'쿠폰 할인',cp_ok:'\u2705 쿠폰이 적용되었습니다',cp_ok2:'\u2705 쿠폰이 적용되었습니다(-{amt})',cp_ng:'\u26a0\ufe0f 유효한 쿠폰 코드가 아닙니다.',cp_hint2:'\u203b 보유하신 쿠폰 코드를 입력하세요.'}
+};
+function cpT(k){var d=CP_I18N[(window.hdmLang?window.hdmLang():'ja')]||CP_I18N.ja;return (d[k]!=null?d[k]:(CP_I18N.ja[k]||k));}
+function cpApply(){document.querySelectorAll('[data-cp]').forEach(function(el){el.textContent=cpT(el.getAttribute('data-cp'));});var ci=document.getElementById('couponInput');if(ci)ci.setAttribute('placeholder',cpT('cp_ph'));var m=document.getElementById('couponMsg');if(m&&couponDiscount>0)m.textContent=cpT('cp_ok2').replace('{amt}','¥'+couponDiscount.toLocaleString());}
+function applyCoupon(){var code=((document.getElementById('couponInput')||{}).value||'').trim().toUpperCase();var m=document.getElementById('couponMsg');
+  if(!code){couponDiscount=0;couponCode='';if(m)m.textContent='';try{renderConfirm();}catch(e){}try{updCtaTotal();}catch(e){}return;}
+  var subtotal=subtotalBeforeCoupon();
+  var email=(document.getElementById('fEmail')||{}).value||'';var store=(area==='sapporo'?'spk':'nha');
+  if(m){m.style.color='#5a6b85';m.textContent='...';}
+  fetch(SB_URL+'/rest/v1/rpc/keydrop_check_coupon',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_code:code,p_store:store,p_amount:subtotal,p_email:email})}).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok){couponDiscount=Math.max(0,Math.round(Number(d.discount||0)));couponCode=code;if(m){m.style.color='#0e9f50';m.textContent=cpT('cp_ok2').replace('{amt}','¥'+couponDiscount.toLocaleString());}}
+    else{couponDiscount=0;couponCode='';if(m){m.style.color='#c0392b';m.textContent=cpT('cp_ng');}}
+    try{renderConfirm();}catch(e){}try{updCtaTotal();}catch(e){}
+  }).catch(function(){couponDiscount=0;couponCode='';if(m){m.style.color='#c0392b';m.textContent=cpT('cp_ng');}try{renderConfirm();}catch(e){}try{updCtaTotal();}catch(e){}});
+}
+function renderConfirm(){
+  var c=CLS[state.cls]||{l:'',v:'',p:0};var dys=daysCount();
+  var optLines=[];if(optQ.child>0)optLines.push(T('opt_child')+T('cf_x')+optQ.child);if(optQ.junior>0)optLines.push(T('opt_junior')+T('cf_x')+optQ.junior);if(optQ.usb)optLines.push(T('opt_usb'));
+  var insName={basic:T('ins_basic'),cdw:T('ins_cdw'),noc:T('ins_noc')}[state.ins];
+  var baseTot=classTotal(state.cls);var insTot=(insPrice[state.ins]||0)*dys;var seatTot=optTotal();var subtotal=baseTot+insTot+seatTot;var disc=(couponDiscount>0)?Math.min(couponDiscount,subtotal):0;var total=subtotal-disc;
+  var nm=(document.getElementById('fName')||{}).value||'';var kn=(document.getElementById('fKana')||{}).value||'';
+  var ph=(document.getElementById('fPhone')||{}).value||'';var em=(document.getElementById('fEmail')||{}).value||'';
+  var drv=document.getElementById('fDriverDiff').checked?((document.getElementById('dName')||{}).value||''):'';
+  function row(l,v){return '<div class="cinfo-row"><span class="lb">'+l+'</span><span class="vl">'+v+'</span></div>';}
+  document.getElementById('confirmBox').innerHTML=
+    row(T('cf_store'),shopName())+row(T('cf_recvm'),methodDetail()+' <button type="button" class="cfedit" onclick="editRecv()"><span data-i18n="cf_edit">✏️ 変更</span></button>')+
+    row(T('sum_dep'),fmtDT(pD,pT))+row(T('sum_ret'),fmtDT(rD,rT))+row(T('cf_use'),dys+T('cf_days_unit'))+
+    row(T('cf_car'),kdCls(c.l)+'（'+kdVeh(c.v)+'）')+
+    row(T('cf_opt'),optLines.length?optLines.join('／'):T('cf_none'))+
+    row(T('cf_ins'),insName)+
+    row(T('cf_booker'),(nm||'-')+'　'+(kn?'（'+kn+'）':''))+
+    row(T('cf_contact'),(ph||'-')+'　'+(em||'-'))+
+    (drv?row(T('cf_driver'),drv):'')+
+    (disc>0?row(cpT('cf_coupon'),'<span style="color:#0e9f50;font-weight:800">\u2212¥'+disc.toLocaleString()+'</span>　'+couponCode):'')+row(T('cf_price'),'<b>¥'+total.toLocaleString()+'</b><div style="font-size:11px;color:#5a6b85;font-weight:600;margin-top:3px">'+T('cf_car')+' ¥'+baseTot.toLocaleString()+' ／ '+T('cf_ins')+' ¥'+insTot.toLocaleString()+(seatTot>0?' ／ '+T('cf_opt')+' ¥'+seatTot.toLocaleString():'')+'（'+dys+T('cf_days_unit')+'）</div>');
+}
+function renderDone(){
+  var rno=state._resId||('KDN-'+(area==='sapporo'?'S':'N')+String(Math.floor(100000+Math.random()*899999)));
+  var em=(document.getElementById('fEmail')||{}).value||'ご登録のメール';
+  document.getElementById('doneBox').innerHTML='<div class="donecard"><div class="rn">'+T('dn_resno')+'<b>'+rno+'</b></div>'+
+    '<div style="font-size:13px;color:#1a1a1a;margin-top:14px;line-height:1.8">'+T('dn_sent1')+' <b style="color:#1a1a1a">'+em+'</b>'+T('dn_sent2')+'</div>'+
+    '<a href="https://keydrop.jp/mypage.html" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:16px;background:var(--y);color:#1a1a1a;border-radius:10px;padding:12px;font-weight:900;text-decoration:none">'+T('dn_mypage')+'</a>'+'<a href="keydrop-top.html" style="display:block;text-align:center;margin-top:10px;color:#5a6b85;font-weight:800;font-size:13px;text-decoration:none">'+T('dn_top')+'</a></div>';
+}
+// スライド広告バー（内容は差し替え可・将来DB化）
+(function(){var el=document.getElementById('adtrack');if(!el)return;
+  var ADS=['🔑 <b>KEYDROP</b> カーデリバリー','🚗 <b>デリバリー無料</b>でお届け／回収','📍 ホテル・自宅・駅・コインパーキング どこでもOK','🅿️ コインパーキング受取もOK','🕘 営業時間 9:00〜19:00','🛡 免責補償・NOCも選べて安心'];
+  var one=ADS.map(function(a){return '<span>'+a+'</span>';}).join('');
+  el.innerHTML=one+one; // 2連結でシームレスループ
+})();
+renderV();calc();applyStep();fetchAvail();fetchClasses();loadPrices();try{cpApply();}catch(e){}
+// 言語切替時：動的生成部を再描画
+window.hdmOnLang=function(){try{kdLangActive();}catch(e){}try{cpApply();}catch(e){}try{if(typeof step!=='undefined'&&step==='confirm')loadClause();}catch(e){}try{var _df=document.getElementById('delivFrame');if(_df&&_df.contentWindow)_df.contentWindow.postMessage({type:'kdlang',lang:(window.hdmLang?window.hdmLang():'ja')},'*');}catch(e){}try{renderMethod();}catch(e){}try{renderV();}catch(e){}try{applyStep();}catch(e){}try{if(step==='confirm')renderConfirm();}catch(e){}try{if(step==='done')renderDone();}catch(e){}};
+</script>
+<div class="pc-footer">
+  <div style="margin-bottom:12px">
+    <a href="https://keydrop.jp/vehicles.html" target="_blank" rel="noopener">ラインナップ</a>
+    <a href="keydrop-insurance.html" target="_blank" rel="noopener">保険プラン</a>
+    <a href="https://keydrop.jp/faq.html" target="_blank" rel="noopener">FAQ</a>
+    <a href="https://lin.ee/ZxBknUv" target="_blank" rel="noopener">お問い合わせ</a>
+    <a href="https://keydrop.jp/clause.html" target="_blank" rel="noopener">貸渡約款</a>
+    <a href="https://keydrop.jp/privacy.html" target="_blank" rel="noopener">プライバシー</a>
+    <a href="https://keydrop.jp/transaction.html" target="_blank" rel="noopener">特定商取引法</a>
+  </div>
+  <div style="color:rgba(255,255,255,.5)">© 2026 KEYDROP / Global Lines Inc.</div>
+</div>
+<script src="official-i18n.js"></script>
+</body></html>
