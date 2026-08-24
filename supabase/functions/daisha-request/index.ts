@@ -8,6 +8,13 @@ const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";
 const SLACK_CH_SPK = Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36"; // #sapporo_reservation
 const SLACK_CH_NHA = Deno.env.get("SLACK_KEYDROP_CHANNEL_NAHA") || "C06KZ56NTDF"; // #okinawa_reservation_notification
 const chOf = (store: string) => (store === "nha" ? SLACK_CH_NHA : SLACK_CH_SPK);
+const RESEND_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const MAIL_FROM = Deno.env.get("KEYDROP_FROM") || "CARデリバリー KEY-DROP <reserve@keydrop.jp>";
+async function sendMail(to: string, subject: string, text: string) {
+  if (!RESEND_KEY || !to) return;
+  try { await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${RESEND_KEY}`, "content-type": "application/json" }, body: JSON.stringify({ from: MAIL_FROM, to: [to], subject, text }) }); }
+  catch (e) { console.error("sendMail", String(e)); }
+}
 
 function cors(o: string | null) {
   return {
@@ -104,6 +111,28 @@ Deno.serve(async (req) => {
       { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "🔧 このリクエストに回答する", emoji: true }, url: `https://keydrop.jp/daisha-admin.html?id=${row.id}&store=${store}`, style: "primary" }] },
       { type: "divider" },
     ]);
+    // お客様へ「相談チャットURL」を自動送信（メール登録＝この送信のため。電話は取得しない）
+    if (row.email) {
+      const chatUrl = `https://keydrop.jp/daisha-chat.html?t=${row.id}`;
+      await sendMail(row.email, "【KEYDROP】代車のご相談を受け付けました",
+`${name} 様
+
+この度は代車のご相談をありがとうございます。
+ご希望を受け付けました（${areaJp}エリア）。
+
+担当が在庫を確認し、実際にお出しできる車両と「代車価格」を、下記のチャットでご提案いたします。
+そのままチャットでやり取りできます（ログイン不要・このURLは大切に保管してください）。
+
+▼ ご相談チャットはこちら
+${chatUrl}
+
+お急ぎの場合はお電話でも承ります。
+TEL 050-1785-2711（受付 9:00〜19:00 年中無休）
+
+──────────────
+KEYDROP カーデリバリー
+株式会社グローバルラインズ`);
+    }
     return json({ ok: true, token: row.id }, 200, origin);
   }
 

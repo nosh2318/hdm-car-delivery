@@ -936,6 +936,9 @@ function daishaCondNext(){
 // ===== 代車モード：区分・第2/3希望の注入＋リクエスト送信 =====
 function clsLabel(k){var c=CLS[k]||{};return k+' '+(c.l||'')+(c.v?'（'+c.v+'）':'');}
 function renderDaishaCustomer(){
+  // 代車＝電話番号は不要（ハードル軽減）→ 非表示。ご相談用チャットURLはメールに送る
+  var _ph=document.getElementById('fPhone');if(_ph){_ph.style.display='none';_ph.value='';var _pl=_ph.previousElementSibling;if(_pl&&_pl.classList&&_pl.classList.contains('fl'))_pl.style.display='none';}
+  var _en=document.querySelector('#stepCustomer .emailnote');if(_en){_en.removeAttribute('data-i18n');_en.textContent='※ ご相談用チャットのURLをこのメールアドレスにお送りします（後から確認・返信できます）。';}
   if(document.getElementById('daishaExtra'))return; // 二重挿入防止
   var host=document.querySelector('#stepCustomer .card');if(!host)return;
   var opts=(typeof ORDER!=='undefined'?ORDER:Object.keys(CLS)).filter(function(k){return k!==state.cls;})
@@ -971,7 +974,7 @@ function submitDaisha(){
 // お客様情報 検証（KEYDROP仕様）
 function toggleDrv(){var on=document.getElementById('fDriverDiff').checked;document.getElementById('drvSec').style.display=on?'block':'none';}
 function vForm(showErr){
-  var ids=['fName','fKana','fPhone','fEmail'];if(document.getElementById('fDriverDiff').checked)ids.push('dName','dKana');
+  var ids=DAISHA?['fName','fKana','fEmail']:['fName','fKana','fPhone','fEmail'];if(document.getElementById('fDriverDiff').checked)ids.push('dName','dKana');
   var ok=true;ids.forEach(function(id){var el=document.getElementById(id);if(!el)return;var bad=!el.value.trim();if(id==='fEmail'&&el.value.trim()&&el.value.indexOf('@')<0)bad=true;el.classList.toggle('need',bad);if(bad)ok=false;});
   var er=document.getElementById('formError');if(er){er.classList.toggle('on',!ok&&!!showErr);if(!ok&&showErr)er.textContent='必須項目をご入力ください（メールは形式もご確認ください）。';}
   return ok;
@@ -1037,7 +1040,7 @@ function renderConfirm(){
       (rD?row(T('cf_use'),dys+T('cf_days_unit')):'')+
       row(T('cf_car'),kdCls(c.l)+'（'+kdVeh(c.v)+'）'+(_c2c3?'<div style="font-size:11px;color:#5a6b85;margin-top:3px">第2/3希望：'+_c2c3+'</div>':''))+
       row(T('cf_booker'),(nm||'-')+'　'+(kn?'（'+kn+'）':''))+
-      row(T('cf_contact'),(ph||'-')+'　'+(em||'-'))+
+      row('メール',em||'-')+
       row('料金（目安）',_priceRow+'<div style="font-size:11px;color:#5a6b85;font-weight:600;margin-top:4px">※実際にお出しできる車両・最終料金は、在庫確認のうえチャットでご提案します。</div>')+
       '<div style="margin-top:16px;background:#fffbf0;border:1.5px solid #FABE00;border-radius:14px;padding:15px 16px">'+
         '<div style="font-weight:900;color:#0e1116;font-size:14px;margin-bottom:2px">💬 このあとの流れ</div>'+
