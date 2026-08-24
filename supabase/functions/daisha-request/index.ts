@@ -168,5 +168,28 @@ Deno.serve(async (req) => {
     return json({ ok: true }, 200, origin);
   }
 
+  // ─── 代車割引率：取得（誰でも可）───
+  if (action === "get_discount") {
+    const spk = await sbGet("app_settings", "key=eq.hdm_keydrop_daisha&select=value&limit=1");
+    const nha = await sbGet("nha_app_settings", "key=eq.hdm_keydrop_daisha&select=value&limit=1");
+    const parse = (rows: any[]) => { try { const v = rows[0]?.value; const o = typeof v === "string" ? JSON.parse(v) : v; return +((o && o.discount_pct) || 0) || 0; } catch { return 0; } };
+    return json({ ok: true, spk: parse(spk), nha: parse(nha) }, 200, origin);
+  }
+  // ─── 代車割引率：保存（スタッフ認証）───
+  if (action === "set_discount") {
+    if (!(await verifyStaff(S(p.staff_token)))) return json({ error: "unauthorized" }, 401, origin);
+    const store = S(p.store) === "nha" ? "nha" : "spk";
+    const pct = Math.max(0, Math.min(90, Math.round(Number(p.pct) || 0)));
+    const tbl = store === "nha" ? "nha_app_settings" : "app_settings";
+    const val = JSON.stringify({ discount_pct: pct });
+    const r = await fetch(`${SB_URL}/rest/v1/${tbl}?on_conflict=key`, {
+      method: "POST",
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({ key: "hdm_keydrop_daisha", value: val }),
+    });
+    if (!r.ok) { console.error("set_discount", await r.text()); return json({ error: "保存に失敗しました" }, 500, origin); }
+    return json({ ok: true, store, pct }, 200, origin);
+  }
+
   return json({ error: "unknown action" }, 400, origin);
 });

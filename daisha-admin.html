@@ -56,6 +56,14 @@
 </head>
 <body>
 <div class="hd"><b>KEY<span class="y">DROP</span></b> <span class="sub">代車リクエスト管理</span><span class="who" id="who"></span></div>
+<div id="discBar" style="display:none;background:#fffbeb;border-bottom:1px solid #fde68a;padding:8px 14px;font-size:12.5px;color:#92400e;display:none;align-items:center;gap:10px;flex-wrap:wrap;flex:none">
+  <b style="font-weight:900">🏷 代車割引率</b>
+  <span>札幌 <input id="dSpk" type="number" min="0" max="90" style="width:56px;padding:5px 6px;border:1.5px solid #fde68a;border-radius:8px;font-size:14px;text-align:right">%</span>
+  <span>那覇 <input id="dNha" type="number" min="0" max="90" style="width:56px;padding:5px 6px;border:1.5px solid #fde68a;border-radius:8px;font-size:14px;text-align:right">%</span>
+  <button onclick="saveDisc()" style="background:#0e1116;color:#FABE00;border:none;border-radius:8px;padding:7px 14px;font-weight:900;font-size:12.5px;cursor:pointer">保存</button>
+  <span id="discMsg" style="font-weight:800"></span>
+  <span style="color:#a16207;font-size:11px">※ 通常価格から◯%引いた「代車価格」を表示（0で割引なし）</span>
+</div>
 <div id="app" style="flex:1;display:flex;overflow:hidden"></div>
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
@@ -150,11 +158,19 @@ function renderMsgs(msgs){const b=$("#msgs");if(!b)return;b.innerHTML=msgs.map(m
 window.ins=t=>{const ta=$("#ta");ta.value=ta.value?(ta.value+"\n"+t):t;ta.focus();ta.style.height="auto";ta.style.height=Math.min(130,ta.scrollHeight)+"px";};
 window.reply=async()=>{const v=$("#ta").value.trim();if(!v||!SEL)return;const st=SEL.status==="new"?"proposed":undefined;const j=await api("staff_send",{id:SEL.id,body:v,status:st});if(j.ok){$("#ta").value="";$("#ta").style.height="auto";if(st)SEL.status="proposed";const k=await api("staff_thread",{id:SEL.id});if(k.ok)renderMsgs(k.messages);loadList();}else alert("送信失敗（ログイン要）");};
 window.setStatus=async(s)=>{if(!SEL)return;const j=await api("staff_status",{id:SEL.id,status:s});if(j.ok){SEL.status=s;open_(SEL.id);}else alert("更新失敗");};
+async function loadDisc(){try{const j=await api("get_discount");if(j&&j.ok){$("#dSpk").value=j.spk;$("#dNha").value=j.nha;$("#discBar").style.display="flex";}}catch(e){}}
+window.saveDisc=async function(){
+  const spk=Math.max(0,Math.min(90,+$("#dSpk").value||0)),nha=Math.max(0,Math.min(90,+$("#dNha").value||0));
+  $("#discMsg").textContent="保存中…";$("#discMsg").style.color="#92400e";
+  const a=await api("set_discount",{store:"spk",pct:spk}),b=await api("set_discount",{store:"nha",pct:nha});
+  const ok=a.ok&&b.ok;$("#discMsg").textContent=ok?"✅ 保存しました（お客様の代車価格に即反映）":"保存失敗（ログイン要）";$("#discMsg").style.color=ok?"#15803d":"#b91c1c";
+  setTimeout(()=>{$("#discMsg").textContent="";},3500);
+};
 async function boot(){
   if(!tok()){showLogin();return;}
   const me=(()=>{try{const t=tok().split(".")[1];const p=JSON.parse(atob(t.replace(/-/g,'+').replace(/_/g,'/')));return (p.email||"").split("@")[0];}catch(e){return"";}})();
   $("#who").textContent=me?("👤 "+me):"";
-  layout();
+  layout();loadDisc();
   if(await loadList()===false)return;
   setInterval(()=>{if(document.visibilityState==="visible"&&!SEL)loadList();},15000);
 }
