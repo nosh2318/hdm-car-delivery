@@ -505,7 +505,7 @@ var step=P.get('step')||'select';
 var state={cls:selCls&&CLS[selCls]?selCls:'',ins:P.get('ins')||'',avail:{},availLoaded:false};
 // ===== 代車モード（?mode=daisha）＝本番フロー流用・地図/在庫/日時は本番同一、最後だけ「リクエスト＋チャット」 =====
 var DAISHA=(P.get('mode')==='daisha');
-var DAISHA_USE='', DAISHA_C2='', DAISHA_C3='', DAISHA_UNDECIDED=false;
+var DAISHA_USE='', DAISHA_C2='', DAISHA_C3='', DAISHA_UNDECIDED=false, DAISHA_DISC=0;
 var DAISHA_FN='https://ckrxttbnawkclshczsia.supabase.co/functions/v1/daisha-request';
 if(DAISHA && !P.get('step')) step='cond'; // 代車＝最初に条件入力ステップ
 // ===== 在庫（選択日程で空車があるクラスのみ表示・KEYDROP公開ビュー準拠／anon）=====
@@ -556,7 +556,16 @@ function fetchAvail(){
     renderV();
   });
 }
-function classAvail(k){return state.availLoaded?((state.avail[k]||0)>0):true;}
+function classAvail(k){if(DAISHA)return true;return state.availLoaded?((state.avail[k]||0)>0):true;} // 代車＝配車表在庫と連動せず全クラス選択可
+// 代車価格（割引後・100円丸め）。割引率はDB(hdm_keydrop_daisha)で別登録
+function daishaPrice(k){var p=priceOf(k);if(!p||!DAISHA_DISC)return p;return Math.round(p*(100-DAISHA_DISC)/100/100)*100;}
+function priceHtml(k){var p=priceOf(k);
+  if(DAISHA){ if(!p)return '<b>¥—</b>';
+    if(DAISHA_DISC>0){var d=daishaPrice(k);return '<span style="text-decoration:line-through;color:#9aa0a8;font-size:11px">¥'+p.toLocaleString()+'</span> <b style="color:#e11d48">¥'+d.toLocaleString()+'</b><small>'+T('perday')+' <span style="color:#e11d48;font-weight:800">代車価格</span></small>';}
+    return '<b>¥'+p.toLocaleString()+'</b><small>'+T('perday')+'</small>'; }
+  return p?('<b>¥'+p.toLocaleString()+'</b><small>'+T('perday')+'</small>'):'<b>¥—</b>';
+}
+function fetchDaishaDisc(){ if(!DAISHA)return; sbGet('public_keydrop_daisha_v','limit=1').then(function(rows){try{var raw=rows&&rows[0]&&rows[0].value;if(!raw)return;var v=(typeof raw==='string')?JSON.parse(raw):raw;DAISHA_DISC=+((v&&v.discount_pct)||0)||0;try{renderV();}catch(e){}}catch(e){}}); }
 var loc={del:null,col:null},colSame=true; // お届け先/回収先(={label,addr,lat,lng}) ・回収同じは既定ON。値はデリバリー埋め込み(official-deliv-v2)からpostMessageで受信
 // デリバリー埋め込みからの選択結果を受信
 window.addEventListener('message',function(e){var d=e&&e.data;if(!d||d.type!=='hdmdeliv')return;
@@ -693,7 +702,7 @@ function renderV(){
   var visible=ORDER.filter(function(k){return classAvail(k);});
   document.getElementById('vgrid').innerHTML=ORDER.map(function(k){var c=CLS[k];var av=classAvail(k);return (
     '<div class="vc'+(state.cls===k?' on':'')+(av?'':' soldout')+'" data-k="'+k+'"><div class="pic">'+carImg(k)+'<span class="clschip">'+kdCls(c.l)+'</span>'+''+(av?'<span class="check">✓</span>':'<span class="soldbadge">'+T('fl_full')+'</span>')+'</div>'+
-    '<div class="bd"><div class="nm">'+kdVeh(c.v)+'</div><div class="pr">'+(priceOf(k)?('<b>¥'+priceOf(k).toLocaleString()+'</b><small>'+T('perday')+'</small>'):'<b>¥—</b>')+'</div><div class="sp">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</div>'+
+    '<div class="bd"><div class="nm">'+kdVeh(c.v)+'</div><div class="pr">'+priceHtml(k)+'</div><div class="sp">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</div>'+
     '<div class="vbtns">'+(av?'<button class="vpick" onclick="decideV(\''+k+'\')">'+(state.cls===k?T('fl_decided'):T('fl_decide'))+'</button>':'<div class="soldmsg">'+T('fl_nostock')+'</div>')+
     '<button class="vdetail" onclick="openDetail(\''+k+'\')">'+T('fl_detail')+'</button></div></div></div>');
   }).join('');
@@ -918,8 +927,8 @@ function daishaCondNext(){
   if(!DAISHA_UNDECIDED&&rd&&rd<pd){alert('返却日は貸出日以降をお選びください');return false;}
   DAISHA_USE=use;
   pD=pd;pT=pt||'';rD=(DAISHA_UNDECIDED?'':rd)||'';rT=(DAISHA_UNDECIDED?'':rt)||'';
-  // 在庫を日程で絞り込み（未定なら全表示）＋サマリー更新
-  try{fetchAvail();}catch(e){}try{renderV();}catch(e){}try{renderMethod();}catch(e){}
+  // 代車＝在庫連動しない（希望クラスを選ぶだけ）。全クラス表示＋サマリー更新
+  state.availLoaded=false;try{renderV();}catch(e){}try{renderMethod();}catch(e){}
   return true;
 }
 // ===== 代車モード：区分・第2/3希望の注入＋リクエスト送信 =====
@@ -1037,7 +1046,7 @@ function renderDone(){
   var one=ADS.map(function(a){return '<span>'+a+'</span>';}).join('');
   el.innerHTML=one+one; // 2連結でシームレスループ
 })();
-renderV();calc();applyStep();fetchAvail();fetchClasses();loadPrices();try{cpApply();}catch(e){}
+renderV();calc();applyStep();if(!DAISHA)fetchAvail();fetchClasses();loadPrices();fetchDaishaDisc();try{cpApply();}catch(e){}
 // 言語切替時：動的生成部を再描画
 window.hdmOnLang=function(){try{kdLangActive();}catch(e){}try{cpApply();}catch(e){}try{if(typeof step!=='undefined'&&step==='confirm')loadClause();}catch(e){}try{var _df=document.getElementById('delivFrame');if(_df&&_df.contentWindow)_df.contentWindow.postMessage({type:'kdlang',lang:(window.hdmLang?window.hdmLang():'ja')},'*');}catch(e){}try{renderMethod();}catch(e){}try{renderV();}catch(e){}try{applyStep();}catch(e){}try{if(step==='confirm')renderConfirm();}catch(e){}try{if(step==='done')renderDone();}catch(e){}};
 </script>
