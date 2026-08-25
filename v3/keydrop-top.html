@@ -470,6 +470,9 @@ function dq(a){location.href='keydrop-flow-daisha.html?area='+a+'&mode=daisha&me
 })();
 // 運営からのお知らせ（将来：Supabase news テーブルに差し替え可）
 var NEWS=[
+ {d:'2026.08.25',k:'',u:'../daisha-about.html',
+   t:{ja:'新サービス',en:'New',zh:'新服務',ko:'신규'},
+   x:{ja:'【代車のお届け】事故・車検・修理で車がない時、代車をご指定の場所へお届け・回収。詳しくはこちら →',en:'[Substitute Car Delivery] When your car is in for accident/inspection/repair, we deliver & collect a substitute car to your location. Learn more →',zh:'【代步車送車】事故・車檢・維修期間，將代步車送至指定地點並回收。詳情 →',ko:'[대차 배달] 사고·차검·수리로 차가 없을 때, 대차를 지정 장소로 배달·회수합니다. 자세히 →'}},
  {d:'2026.06.30',k:'',
    t:{ja:'重要',en:'Important',zh:'重要',ko:'중요'},
    x:{ja:'ハイシーズン（2026/6〜2027/1）料金を適用しています。ご予約時に表示の料金をご確認ください。',en:'High-season rates (Jun 2026–Jan 2027) apply. Please check the price shown at booking.',zh:'現正適用旺季（2026/6〜2027/1）費用。預約時請確認顯示的費用。',ko:'성수기(2026/6〜2027/1) 요금이 적용됩니다. 예약 시 표시 요금을 확인해 주세요.'}},
@@ -484,7 +487,7 @@ var NEWS=[
    x:{ja:'営業時間は両店 9:00〜19:00です。時間外の受け渡しはお問い合わせください。',en:'Both stores open 9:00–19:00. For after-hours handover, please contact us.',zh:'兩店營業時間 9:00〜19:00。非營業時間交車請洽詢。',ko:'두 매장 모두 9:00〜19:00 영업. 영업시간 외 인수는 문의해 주세요.'}}
 ];
 function renderNews(){var el=document.getElementById('nlist');if(!el)return;var L=(window.hdmLang?window.hdmLang():'ja');
-  el.innerHTML=NEWS.map(function(n){var tg=n.t[L]||n.t.ja,tx=n.x[L]||n.x.ja;return '<div class="nrow"><span class="nd">'+n.d+'</span><span class="ntag '+(n.k||'')+'">'+tg+'</span><span class="ntx">'+tx+'</span></div>';}).join('');}
+  el.innerHTML=NEWS.map(function(n){var tg=n.t[L]||n.t.ja,tx=n.x[L]||n.x.ja;var body=n.u?('<a href="'+n.u+'" style="color:#a07c00;font-weight:800;text-decoration:none;border-bottom:1px solid rgba(160,124,0,.4)">'+tx+'</a>'):tx;return '<div class="nrow"><span class="nd">'+n.d+'</span><span class="ntag '+(n.k||'')+'">'+tg+'</span><span class="ntx">'+body+'</span></div>';}).join('');}
 renderNews();
 // 起動時：エリア未選択なので車のタイプは非表示のまま
 </script>
