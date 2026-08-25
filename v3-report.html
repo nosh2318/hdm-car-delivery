@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<meta name="robots" content="noindex,nofollow">
+<title>新サイト アクセス解析レポート｜KEYDROP</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto',sans-serif;background:#eef1f5;color:#131824;line-height:1.7;padding-bottom:60px}
+  .hd{background:#0e1116;color:#fff;padding:14px 18px;display:flex;align-items:center;gap:11px;position:sticky;top:0;z-index:30}
+  .hd .mark{width:20px;height:15px;display:flex;flex-direction:column;justify-content:space-between}
+  .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
+  .hd b{font-size:17px;font-weight:900}.hd .y{color:#FABE00}
+  .hd .sub{font-size:12px;color:#FABE00;font-weight:700;margin-left:2px}
+  .hd .rt{margin-left:auto;font-size:11px;color:#9aa6b2}
+  .wrap{max-width:940px;margin:0 auto;padding:18px 14px}
+  .lead{background:#fff;border-radius:14px;padding:15px 17px;box-shadow:0 6px 20px rgba(14,17,22,.06);margin-bottom:16px}
+  .lead h1{font-size:17px;font-weight:900}
+  .lead p{font-size:12.5px;color:#5b6472;margin-top:4px}
+  .lead .badges{margin-top:9px;display:flex;gap:7px;flex-wrap:wrap}
+  .lead .badges span{font-size:11px;font-weight:800;background:#f1f4f8;border:1px solid #e3e8ef;border-radius:999px;padding:3px 11px;color:#42506a}
+  /* KPI */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:8px}
+  @media(max-width:680px){.kpis{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border-radius:14px;padding:15px 16px;box-shadow:0 6px 20px rgba(14,17,22,.06)}
+  .kpi .n{font-size:27px;font-weight:900;letter-spacing:-.01em;line-height:1.1}
+  .kpi .l{font-size:12px;font-weight:800;color:#2b3444;margin-top:5px}
+  .kpi .h{font-size:10.5px;color:#8a93a3;margin-top:2px;line-height:1.5}
+  .kpi.g .n{color:#0e9f50}.kpi.y .n{color:#c48f00}.kpi.r .n{color:#e11d48}
+  /* section */
+  .sec{background:#fff;border-radius:16px;padding:18px;box-shadow:0 6px 20px rgba(14,17,22,.06);margin-top:16px}
+  .sec>h2{font-size:15px;font-weight:900;display:flex;align-items:center;gap:8px}
+  .sec>.what{font-size:12px;color:#8a93a3;margin:3px 0 14px;line-height:1.6}
+  .sec .whatb{background:#f6f8fb;border-left:3px solid #FABE00;border-radius:0 8px 8px 0;padding:7px 12px;font-size:12px;color:#556;margin:3px 0 14px}
+  /* bars (pages / clicks) */
+  .barrow{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+  .barrow .lab{flex:0 0 auto;width:150px;font-weight:700;color:#2b3444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .barrow .track{flex:1;background:#eef1f5;border-radius:7px;height:22px;overflow:hidden;position:relative}
+  .barrow .fill{height:100%;border-radius:7px;background:linear-gradient(90deg,#FABE00,#ffd451)}
+  .barrow .val{flex:0 0 auto;width:auto;min-width:96px;text-align:right;font-weight:800;color:#131824}
+  .barrow .val small{color:#8a93a3;font-weight:600}
+  @media(max-width:560px){.barrow .lab{width:104px;font-size:12px}}
+  /* page cards table */
+  .ptbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .ptbl th,.ptbl td{padding:9px 8px;text-align:right;border-bottom:1px solid #eef1f5}
+  .ptbl th{font-size:11px;color:#8a93a3;font-weight:800;background:#fafbfd}
+  .ptbl th:first-child,.ptbl td:first-child{text-align:left;font-weight:800}
+  .ptbl td small{color:#8a93a3}
+  .ptbl tr:last-child td{border-bottom:none}
+  .pill{display:inline-block;font-size:10px;font-weight:800;border-radius:6px;padding:1px 7px;background:#eef4ff;color:#2b5bb5}
+  /* funnel */
+  .fn{margin-top:6px}
+  .fn .area{font-weight:900;font-size:13px;margin:14px 0 6px;color:#131824;display:flex;align-items:center;gap:8px}
+  .fn .area .tag{font-size:10.5px;font-weight:800;background:#0e1116;color:#FABE00;border-radius:6px;padding:2px 9px}
+  .fstep{display:flex;align-items:center;gap:10px;margin:5px 0}
+  .fstep .name{flex:0 0 auto;width:150px;font-size:12.5px;font-weight:700;color:#2b3444}
+  .fstep .track{flex:1;background:#eef1f5;border-radius:8px;height:26px;overflow:hidden}
+  .fstep .fill{height:100%;background:linear-gradient(90deg,#0e9f50,#38c172);display:flex;align-items:center;padding-left:9px;color:#fff;font-weight:800;font-size:12px;min-width:34px}
+  .fstep .side{flex:0 0 auto;width:130px;text-align:right;font-size:12px;font-weight:800}
+  .fstep .drop{color:#e11d48;font-weight:800}
+  @media(max-width:560px){.fstep .name{width:96px;font-size:11.5px}.fstep .side{width:96px}}
+  .mut{color:#8a93a3}
+  .two{display:flex;gap:14px;flex-wrap:wrap}
+  .two>div{flex:1;min-width:250px}
+  .mini{width:100%;border-collapse:collapse;font-size:12.5px}
+  .mini th,.mini td{padding:7px 8px;border-bottom:1px solid #eef1f5;text-align:right}
+  .mini th:first-child,.mini td:first-child{text-align:left;font-weight:700}
+  .mini th{font-size:11px;color:#8a93a3;background:#fafbfd}
+  .spark{display:flex;align-items:flex-end;gap:4px;height:90px;margin-top:8px}
+  .spark .b{flex:1;background:linear-gradient(180deg,#FABE00,#ffd451);border-radius:4px 4px 0 0;min-height:3px;position:relative}
+  .spark .b span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9.5px;color:#556;font-weight:800}
+  .spark-x{display:flex;gap:4px;margin-top:4px}
+  .spark-x div{flex:1;text-align:center;font-size:9px;color:#8a93a3}
+  .empty{padding:18px;text-align:center;color:#a0a8b4;font-size:13px;background:#fafbfd;border-radius:10px}
+  .err{background:#fff2f2;border:1px solid #ffd0d0;color:#c0392b;border-radius:10px;padding:12px;font-size:12.5px}
+  .foot{max-width:940px;margin:18px auto 0;text-align:center;color:#9aa6b2;font-size:11px}
+  .foot a{color:#0369a1}
+</style>
+</head>
+<body>
+<div class="hd">
+  <span class="mark"><i></i><i></i><i></i></span><b>KEY<span class="y">DROP</span></b>
+  <span class="sub">アクセス解析</span>
+  <span class="rt" id="rt">—</span>
+</div>
+
+<div class="wrap">
+  <div class="lead">
+    <h1>📊 新サイト アクセス解析レポート</h1>
+    <p>新しいKEYDROP（TOP・代車の説明ページ・代車リクエスト・予約フロー・チャット）を、お客様がどう使っているかをまとめたページです。<b>「どのページがどれだけ見られ」「どのボタンが押され」「どこで離脱したか」</b>が分かります。</p>
+    <div class="badges"><span>集計：全期間</span><span>内部テストは自動除外</span><span>20秒ごと自動更新</span></div>
+  </div>
+
+  <div id="err"></div>
+
+  <!-- KPI -->
+  <div class="kpis" id="kpis">
+    <div class="kpi"><div class="n" id="kSess">–</div><div class="l">👤 訪問した人</div><div class="h">サイトを訪れた人数（重複を除いた実数）</div></div>
+    <div class="kpi"><div class="n" id="kPv">–</div><div class="l">📄 ページ閲覧</div><div class="h">見られたページの延べ回数</div></div>
+    <div class="kpi y"><div class="n" id="kClick">–</div><div class="l">🖱 クリック</div><div class="h">ボタン・リンクが押された延べ回数</div></div>
+    <div class="kpi"><div class="n" id="kDwell">–</div><div class="l">⏱ 平均滞在</div><div class="h">1ページあたり見ていた平均時間</div></div>
+  </div>
+
+  <!-- ページ別 -->
+  <div class="sec">
+    <h2>📄 ページ別のよく見られている度合い</h2>
+    <div class="whatb"><b>何を見てる？</b>：どのページがどれだけ見られ、そこでどれだけ押され、どれだけ離脱したか。数字が多いページ＝入口・関心が高いページです。</div>
+    <div id="pageBars"></div>
+    <div style="overflow-x:auto;margin-top:12px"><table class="ptbl" id="pageTbl"><thead><tr>
+      <th>ページ</th><th>閲覧</th><th>訪問者</th><th>クリック</th><th>離脱</th><th>平均滞在</th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- 離脱ファネル -->
+  <div class="sec">
+    <h2>🔻 どこで離脱したか（申込みの流れ）</h2>
+    <div class="whatb"><b>何を見てる？</b>：代車リクエスト・予約フローの各ステップに「何人が進んだか」。棒が短くなる所＝離脱が多い所。<span class="drop" style="color:#e11d48">赤い数字</span>＝直前のステップから減った割合です。</div>
+    <div class="fn" id="funnel"></div>
+    <div id="funnelInsight" style="margin-top:10px"></div>
+  </div>
+
+  <!-- クリックランキング -->
+  <div class="sec">
+    <h2>🖱 どのボタンが押されているか</h2>
+    <div class="whatb"><b>何を見てる？</b>：ページ内で実際に押された要素のランキング。押されていない大事なボタンは、位置や文言の見直し候補です。</div>
+    <div id="clickBars"></div>
+  </div>
+
+  <!-- 端末・流入 -->
+  <div class="sec">
+    <h2>📱 端末 ／ 🟣 どこから来たか</h2>
+    <div class="whatb"><b>何を見てる？</b>：スマホ/PCの比率と、検索・SNS・広告など「流入元」。多い所に合わせて改善やクリエイティブを寄せます。</div>
+    <div class="two">
+      <div><div style="font-weight:800;font-size:12.5px;margin-bottom:6px">📱 端末</div><table class="mini" id="devTbl"><thead><tr><th>端末</th><th>訪問者</th><th>閲覧</th></tr></thead><tbody></tbody></table></div>
+      <div><div style="font-weight:800;font-size:12.5px;margin-bottom:6px">🟣 流入元</div><table class="mini" id="srcTbl"><thead><tr><th>流入元</th><th>訪問者</th><th>閲覧</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- 日別 -->
+  <div class="sec">
+    <h2>📅 日ごとの推移</h2>
+    <div class="whatb"><b>何を見てる？</b>：日別の訪問者数。広告を出した日・投稿した日と見比べると効果が分かります。</div>
+    <div class="spark" id="spark"></div>
+    <div class="spark-x" id="sparkx"></div>
+  </div>
+</div>
+
+<div class="foot">
+  KEYDROP 新サイト解析 ／ より詳しい生データは <a href="kd-analytics.html">内製アナリティクス（詳細版）</a> ／ 検証時は各ページに <b>?internal=1</b> を付けると集計から除外されます。
+</div>
+
+<script>
+const SB='https://ckrxttbnawkclshczsia.supabase.co';
+const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+const H={apikey:AK,Authorization:'Bearer '+AK};
+async function q(v){const r=await fetch(SB+'/rest/v1/'+v,{headers:H});if(!r.ok)throw new Error(v+' '+r.status);return r.json();}
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+const PAGE={top:'TOP（トップ）',daisha_lp:'代車の説明ページ',daisha_flow:'代車リクエスト',flow:'予約フロー',daisha_chat:'代車チャット'};
+function pl(p){return PAGE[p]||p;}
+const AREA={daisha:'代車リクエスト',spk:'予約（札幌）',nha:'予約（那覇）','(all)':'全体'};
+const STEP_DAISHA={cond:'① 条件を入力',select:'② 車両・お届け先',customer:'③ お客様情報',confirm:'④ 内容確認',done:'⑤ 送信完了'};
+const STEP_BOOK={select:'① 日付・車両',options:'② オプション',customer:'③ お客様情報',confirm:'④ 内容確認',payment:'⑤ 決済',done:'⑥ 完了'};
+function stepLabel(area,key){var m=(area==='daisha')?STEP_DAISHA:STEP_BOOK;return m[key]||key;}
+function fmtSec(s){if(s==null)return '–';s=+s;if(s<60)return s+'秒';return Math.floor(s/60)+'分'+Math.round(s%60)+'秒';}
+
+async function load(){
+  try{
+    const [sum,pg,ck,fn,dv,sr,dl]=await Promise.all([
+      q('public_kd_ev_summary_v?select=*'),
+      q('public_kd_ev_page_v?select=*'),
+      q('public_kd_ev_click_v?select=*&order=clicks.desc&limit=40'),
+      q('public_kd_ev_funnel_v?select=*'),
+      q('public_kd_ev_device_v?select=*'),
+      q('public_kd_ev_source_v?select=*&limit=12'),
+      q('public_kd_ev_daily_v?select=*&order=day.asc')
+    ]);
+    document.getElementById('err').innerHTML='';
+    const s=sum&&sum[0]||{};
+    document.getElementById('kSess').textContent=(s.sessions||0);
+    document.getElementById('kPv').textContent=(s.pv||0);
+    document.getElementById('kClick').textContent=(s.clicks||0);
+    document.getElementById('kDwell').textContent=fmtSec(s.avg_sec);
+
+    // ページ別 バー＋表
+    const maxPv=Math.max.apply(null,(pg||[]).map(r=>r.pv||0))||1;
+    document.getElementById('pageBars').innerHTML=(pg&&pg.length)?pg.map(r=>{
+      var w=Math.round((r.pv||0)/maxPv*100);
+      return '<div class="barrow"><span class="lab">'+esc(pl(r.page))+'</span>'
+        +'<span class="track"><span class="fill" style="width:'+w+'%"></span></span>'
+        +'<span class="val">'+(r.pv||0)+'<small> 閲覧</small></span></div>';
+    }).join(''):'<div class="empty">まだデータがありません（計測開始後に表示）</div>';
+    document.querySelector('#pageTbl tbody').innerHTML=(pg&&pg.length)?pg.map(r=>{
+      var er=(r.pv?Math.round((r.exits||0)/r.pv*100):0);
+      return '<tr><td>'+esc(pl(r.page))+'</td><td>'+(r.pv||0)+'</td><td>'+(r.sessions||0)+'</td><td>'+(r.clicks||0)+'</td>'
+        +'<td>'+(r.exits||0)+' <small>('+er+'%)</small></td><td>'+(r.avg_sec!=null?fmtSec(r.avg_sec):'–')+'</td></tr>';
+    }).join(''):'<tr><td colspan="6" class="mut">–</td></tr>';
+
+    // ファネル（area別）
+    const byA={}; (fn||[]).forEach(r=>{(byA[r.area]=byA[r.area]||[]).push(r);});
+    var fh='',worst=null;
+    Object.keys(byA).forEach(a=>{
+      var rows=byA[a].slice().sort((x,y)=>(x.step_no||0)-(y.step_no||0));
+      var base=rows.length?(rows[0].sessions||0):0; if(!base)base=Math.max.apply(null,rows.map(r=>r.sessions||0))||1;
+      fh+='<div class="area"><span class="tag">'+esc(AREA[a]||a)+'</span></div>';
+      rows.forEach((r,i)=>{
+        var pct=Math.round((r.sessions||0)/base*100);
+        var drop=(i>0)?Math.round((1-(r.sessions||0)/(rows[i-1].sessions||1))*100):0;
+        if(i>0 && drop>0 && (!worst||drop>worst.drop)) worst={area:AREA[a]||a,from:stepLabel(a,rows[i-1].step),to:stepLabel(a,r.step),drop:drop};
+        fh+='<div class="fstep"><span class="name">'+esc(stepLabel(a,r.step))+'</span>'
+          +'<span class="track"><span class="fill" style="width:'+Math.max(pct,6)+'%">'+(r.sessions||0)+'</span></span>'
+          +'<span class="side">'+pct+'%'+(i>0&&drop>0?' <span class="drop">−'+drop+'%</span>':'')+'</span></div>';
+      });
+    });
+    document.getElementById('funnel').innerHTML=fh||'<div class="empty">まだフロー段階の記録がありません（お客様が申込みを始めると表示）</div>';
+    document.getElementById('funnelInsight').innerHTML=worst?('<div class="whatb" style="border-color:#e11d48">📌 <b>いちばん離脱が多いのは</b>「'+esc(worst.area)+'」の <b>'+esc(worst.from)+' → '+esc(worst.to)+'</b>（−'+worst.drop+'%）。ここの改善が効果的です。</div>'):'';
+
+    // クリックランキング
+    const maxC=Math.max.apply(null,(ck||[]).map(r=>r.clicks||0))||1;
+    document.getElementById('clickBars').innerHTML=(ck&&ck.length)?ck.slice(0,20).map(r=>{
+      var w=Math.round((r.clicks||0)/maxC*100);
+      return '<div class="barrow"><span class="lab" title="'+esc(r.target)+'">'+esc(r.target)+'</span>'
+        +'<span class="track"><span class="fill" style="width:'+w+'%"></span></span>'
+        +'<span class="val">'+(r.clicks||0)+' <small>'+esc(pl(r.page))+'</small></span></div>';
+    }).join(''):'<div class="empty">まだクリックがありません</div>';
+
+    // 端末・流入
+    document.querySelector('#devTbl tbody').innerHTML=(dv&&dv.length)?dv.map(r=>'<tr><td>'+esc(r.device)+'</td><td>'+(r.sessions||0)+'</td><td>'+(r.pv||0)+'</td></tr>').join(''):'<tr><td colspan="3" class="mut">–</td></tr>';
+    document.querySelector('#srcTbl tbody').innerHTML=(sr&&sr.length)?sr.map(r=>'<tr><td>'+esc(r.source)+'</td><td>'+(r.sessions||0)+'</td><td>'+(r.pv||0)+'</td></tr>').join(''):'<tr><td colspan="3" class="mut">–</td></tr>';
+
+    // 日別スパーク（直近14日）
+    var d=(dl||[]).slice(-14);
+    var maxS=Math.max.apply(null,d.map(r=>r.sessions||0))||1;
+    document.getElementById('spark').innerHTML=d.length?d.map(r=>{
+      var h=Math.round((r.sessions||0)/maxS*100);
+      return '<div class="b" style="height:'+Math.max(h,3)+'%"><span>'+(r.sessions||0)+'</span></div>';
+    }).join(''):'<div class="empty" style="width:100%">–</div>';
+    document.getElementById('sparkx').innerHTML=d.length?d.map(r=>{var mm=String(r.day).slice(5);return '<div>'+mm+'</div>';}).join(''):'';
+
+    var now=new Date();document.getElementById('rt').textContent='更新 '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  }catch(e){
+    document.getElementById('err').innerHTML='<div class="err">⚠️ 集計ビューが読めません（050_kd_events.sql 未適用の可能性）: '+esc(e.message)+'</div>';
+  }
+}
+load(); setInterval(load,20000);
+</script>
+</body>
+</html>

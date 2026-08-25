@@ -89,3 +89,13 @@ grant select on public.public_kd_ev_daily_v, public.public_kd_ev_page_v,
                 public.public_kd_ev_click_v, public.public_kd_ev_funnel_v,
                 public.public_kd_ev_device_v, public.public_kd_ev_source_v
   to anon, authenticated;
+create or replace view public.public_kd_ev_summary_v as
+select count(distinct session_id)                         as sessions,
+       count(*) filter (where kind='pv')                  as pv,
+       count(*) filter (where kind='click')               as clicks,
+       count(*) filter (where kind='exit')                as exits,
+       count(*) filter (where kind='step')                as steps,
+       round((avg(dwell_ms) filter (where kind='exit' and dwell_ms>0))/1000.0,1) as avg_sec
+from public.kd_events
+where coalesce(session_id,'') not like 'selftest%';
+grant select on public.public_kd_ev_summary_v to anon, authenticated;
