@@ -26,15 +26,35 @@
   .hd .mark i{height:3px;background:#FABE00;border-radius:2px;display:block}
   .hd b{font-size:18px;font-weight:900;letter-spacing:.04em;color:#fff}.hd .y{color:#FABE00}
   .hd .back{font-size:12px;color:#FABE00;text-decoration:none;font-weight:700;margin-left:auto;flex:none}
-  .hero{background:radial-gradient(1100px 420px at 72% -12%, #2b313d 0%, #11151b 55%, #0b0e13 100%);color:#fff;padding:46px 20px 34px;text-align:center;position:relative;overflow:hidden}
-  .hero::before{content:'';position:absolute;left:-40px;top:-40px;width:160px;height:160px;background:repeating-linear-gradient(135deg,#FABE00 0 6px,transparent 6px 14px);opacity:.10;transform:skewX(-12deg)}
-  .hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:#FABE00}
-  .hero h1{font-size:clamp(24px,7vw,33px);font-weight:900;letter-spacing:.02em;margin-top:11px;font-style:italic;line-height:1.4}
+  .hero{background:#0b0e13;color:#fff;padding:54px 20px 40px;text-align:center;position:relative;overflow:hidden;min-height:360px;display:flex;flex-direction:column;justify-content:center}
+  .hero .bg{position:absolute;inset:0;background:url('v3/images/kv2.jpg') center/cover no-repeat;z-index:0;transform:scale(1.03)}
+  .hero .ov{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(11,14,19,.56) 0%,rgba(11,14,19,.48) 42%,rgba(11,14,19,.88) 100%)}
+  .hero>.eyebrow,.hero>h1,.hero>.lead,.hero>.area{position:relative;z-index:2}
+  .hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:#FABE00;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+  .hero h1{font-size:clamp(24px,7vw,33px);font-weight:900;letter-spacing:.02em;margin-top:11px;font-style:italic;line-height:1.4;text-shadow:0 2px 14px rgba(0,0,0,.55)}
   .hero h1 .y{color:#FABE00}
-  .hero .lead{margin-top:14px;opacity:.88;font-size:14px;max-width:560px;margin:14px auto 0}
-  .hero .area{display:inline-block;margin-top:16px;font-size:12px;font-weight:900;color:#0e1116;background:#FABE00;border-radius:999px;padding:6px 16px}
+  .hero .lead{margin-top:14px;font-size:14px;max-width:560px;margin:14px auto 0;text-shadow:0 1px 10px rgba(0,0,0,.6);color:#eef1f4}
+  .hero .area{display:inline-block;margin-top:16px;font-size:12px;font-weight:900;color:#0e1116;background:#FABE00;border-radius:999px;padding:6px 16px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
   .why{max-width:780px;margin:20px auto 0;padding:0 16px;display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
   .why span{background:#fff;border:1px solid #eceef1;border-radius:11px;padding:9px 13px;font-size:12.5px;font-weight:800;color:#334155;box-shadow:0 4px 14px rgba(14,17,22,.05)}
+  /* 実写バンド */
+  .band{position:relative;max-width:1000px;margin:30px auto 0;min-height:250px;display:flex;align-items:center;overflow:hidden}
+  @media(min-width:820px){.band{border-radius:20px}}
+  .band .bg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0;transform:scale(1.02)}
+  .band .ov{position:absolute;inset:0;z-index:1}
+  .band .in{position:relative;z-index:2;padding:30px 24px;color:#fff;max-width:520px}
+  .band .in .k{font-size:11px;font-weight:800;letter-spacing:.16em;color:#FABE00;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+  .band .in h3{font-size:clamp(20px,5.4vw,26px);font-weight:900;margin-top:9px;line-height:1.45;text-shadow:0 2px 12px rgba(0,0,0,.55)}
+  .band .in p{font-size:13px;margin-top:9px;line-height:1.8;color:#eef1f4;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+  /* 実車ラインナップ */
+  .fleet{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+  @media(max-width:620px){.fleet{grid-template-columns:1fr 1fr}}
+  .fleet .v{background:#fff;border:1px solid #eceef1;border-radius:14px;padding:12px 10px 13px;text-align:center;box-shadow:0 6px 18px rgba(14,17,22,.06)}
+  .fleet .v .ph{height:78px;display:flex;align-items:center;justify-content:center}
+  .fleet .v img{max-width:100%;max-height:78px;object-fit:contain}
+  .fleet .v .n{font-size:13.5px;font-weight:900;margin-top:7px}
+  .fleet .v .s{font-size:11px;color:#7a7f87;margin-top:2px;line-height:1.5}
+  .fleet-note{font-size:11.5px;color:#7a7f87;margin-top:12px;text-align:center;line-height:1.7}
   .sec{max-width:780px;margin:0 auto;padding:32px 16px 4px}
   .sec-h{text-align:center;margin-bottom:18px}
   .sec-h .tag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.05em;color:#a07c00;background:#fffbf0;border:1px solid #FABE00;border-radius:999px;padding:4px 14px}
@@ -100,6 +120,7 @@
 
 <!-- ヒーロー -->
 <div class="hero">
+  <div class="bg"></div><div class="ov"></div>
   <div class="eyebrow">代車 × デリバリー ・ 札幌／那覇エリア</div>
   <h1>その<span class="y">代車</span>、<br>店に行かず、届けます。</h1>
   <p class="lead">事故・車検・修理で「今、車がない」。KEYDROPの代車サービスは、<b>代車をあなたのいる場所までお届け・回収</b>。店のカウンターに並ぶ必要はありません。</p>
@@ -107,6 +128,17 @@
 </div>
 <div class="why">
   <span>🚚 店に行かず届く</span><span>❄️ 冬タイヤでご用意</span><span>💴 代車価格（割引）</span><span>🗓 1日〜長期OK</span><span>💬 チャットで提案</span>
+</div>
+
+<!-- 実写バンド：デリバリーの概念 -->
+<div class="band">
+  <div class="bg" style="background-image:url('v3/images/kv3.jpg')"></div>
+  <div class="ov" style="background:linear-gradient(90deg,rgba(11,14,19,.86) 0%,rgba(11,14,19,.62) 48%,rgba(11,14,19,.15) 100%)"></div>
+  <div class="in">
+    <div class="k">NO PICKUP. JUST DELIVERY.</div>
+    <h3>借りに行かず、<br>代車が「来る」。</h3>
+    <p>事故・車検・修理で車がない時。ご指定の場所まで代車をお届けし、返却も回収にうかがいます。あなたは店のカウンターに並ばなくていい。</p>
+  </div>
 </div>
 
 <!-- こんな時に -->
@@ -128,6 +160,20 @@
     <div class="step"><div class="num">❄️</div><div><div class="t">冬タイヤ（スタッドレス）でご用意</div><div class="d">札幌の冬道でも安心してお使いいただけるよう、<em>冬期は冬タイヤでご用意</em>します。</div></div></div>
     <div class="step"><div class="num">💬</div><div><div class="t">チャットで車両をご提案</div><div class="d">ご希望を送ると、担当が在庫を確認して<em>実際にお出しできる車両をチャットでご提案</em>。長期・法人のご相談もそのまま進められます。</div></div></div>
   </div></div>
+</div>
+
+<!-- 車両ラインナップ（実車） -->
+<div class="sec">
+  <div class="sec-h"><span class="tag">LINE UP</span><h2>ご用意している代車（一例）</h2><p>軽〜ミニバンまで。冬期はスタッドレスでご用意します</p></div>
+  <div class="fleet">
+    <div class="v"><div class="ph"><img src="images/class_A.png" alt="アルファード" loading="lazy"></div><div class="n">プレミアムミニバン</div><div class="s">アルファード 等／7〜8名</div></div>
+    <div class="v"><div class="ph"><img src="images/class_B.png" alt="ノア / デリカ" loading="lazy"></div><div class="n">ミニバン</div><div class="s">ノア / デリカD5 等／7〜8名</div></div>
+    <div class="v"><div class="ph"><img src="images/class_S.png" alt="ハリアー / CX-5" loading="lazy"></div><div class="n">SUV</div><div class="s">ハリアー / CX-5 等／5名</div></div>
+    <div class="v"><div class="ph"><img src="images/class_C.png" alt="ロッキー / CX-3" loading="lazy"></div><div class="n">コンパクトSUV</div><div class="s">ロッキー / CX-3 等／5名</div></div>
+    <div class="v"><div class="ph"><img src="images/class_H.png" alt="アクセラ / プリウス" loading="lazy"></div><div class="n">セダン / ハイブリッド</div><div class="s">アクセラ / プリウス 等／5名</div></div>
+    <div class="v"><div class="ph"><img src="images/class_F.png" alt="ソリオ / コンパクト" loading="lazy"></div><div class="n">コンパクト</div><div class="s">ソリオ 等／5名</div></div>
+  </div>
+  <div class="fleet-note">※ 車種・色・年式はエリア・在庫により異なります。実際にお出しできる車両は、ご希望送信後にチャットでご提案します。</div>
 </div>
 
 <!-- 使い方 -->
@@ -172,6 +218,17 @@
     <details><summary><span class="q">Q.</span>冬タイヤ（スタッドレス）は付いていますか？</summary><div class="a">札幌の冬道に対応できるよう、冬期は冬タイヤでご用意します。</div></details>
     <details><summary><span class="q">Q.</span>対応エリアはどこですか？</summary><div class="a">札幌市内・近郊、那覇・沖縄本島が対象です。お届け・回収の可否は場所により異なる場合がありますので、ご希望送信時にご確認ください。</div></details>
     <details><summary><span class="q">Q.</span>店舗に行かなくて本当に借りられますか？</summary><div class="a">はい。ご指定の場所まで車をお届けし、その場で受け渡します。当日はご本人確認（免許証提示）のみ。約款・傷確認はオンラインで完了します。</div></details>
+  </div>
+</div>
+
+<!-- 実写バンド：生活の足を止めない -->
+<div class="band" style="margin-top:26px">
+  <div class="bg" style="background-image:url('v3/images/kv4.jpg')"></div>
+  <div class="ov" style="background:linear-gradient(90deg,rgba(11,14,19,.82) 0%,rgba(11,14,19,.5) 46%,rgba(11,14,19,.08) 100%)"></div>
+  <div class="in">
+    <div class="k">KEEP YOUR LIFE MOVING</div>
+    <h3>車がない数日も、<br>生活と仕事は止められない。</h3>
+    <p>通勤も、送り迎えも、買い物も。愛車が戻るまでの“もう1台”を、あなたの元へお届けします。</p>
   </div>
 </div>
 
