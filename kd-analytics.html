@@ -150,6 +150,32 @@
     <div class="mut" style="margin-top:6px">utm_source/medium/campaign と参照元ホストを記録。広告タグ(an 等)がどの媒体・どのキャンペーンか一目で分かる。</div>
   </div>
 
+  <div class="card" style="margin-bottom:12px;border:1px solid #FABE00">
+    <h2>🆕 新サイト解析（v3：TOP・代車LP・両フロー・チャット）<span class="mut" style="font-weight:600">／ 全期間</span></h2>
+    <div class="mut" style="margin:2px 0 10px">新KEYDROPの全ページを横断計測。<b>どこがどれだけ踏まれ・どこで離脱したか</b>を要素単位で表示（内部テストは自動除外）。</div>
+    <h2 style="font-size:12px;color:#8b97a6;margin-top:4px">📄 ページ別（閲覧・クリック・離脱・滞在）</h2>
+    <div style="overflow-x:auto"><table id="v3PageTbl"><thead><tr>
+      <th class="l">ページ</th><th>閲覧</th><th>セッション</th><th>クリック</th><th>離脱</th><th>平均滞在</th>
+    </tr></thead><tbody><tr><td class="l mut" colspan="6">読み込み中…（050 SQL適用後・計測開始後に表示）</td></tr></tbody></table></div>
+
+    <h2 style="font-size:12px;color:#8b97a6;margin-top:16px">🖱 どこが踏まれてるか（要素クリック順位・上位30）</h2>
+    <div style="overflow-x:auto"><table id="v3ClickTbl"><thead><tr>
+      <th class="l">ページ</th><th class="l">要素</th><th>クリック</th><th>セッション</th>
+    </tr></thead><tbody><tr><td class="l mut" colspan="4">–</td></tr></tbody></table></div>
+
+    <h2 style="font-size:12px;color:#8b97a6;margin-top:16px">🔻 フロー離脱（段階ごとの到達／残存率）</h2>
+    <div id="v3Funnel"><div class="mut">–</div></div>
+
+    <h2 style="font-size:12px;color:#8b97a6;margin-top:16px">📱 端末別 ／ 🟣 流入元</h2>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px;overflow-x:auto"><table id="v3DevTbl"><thead><tr><th class="l">端末</th><th>セッション</th><th>閲覧</th></tr></thead><tbody><tr><td class="l mut" colspan="3">–</td></tr></tbody></table></div>
+      <div style="flex:1;min-width:240px;overflow-x:auto"><table id="v3SrcTbl"><thead><tr><th class="l">流入元</th><th>セッション</th><th>閲覧</th></tr></thead><tbody><tr><td class="l mut" colspan="3">–</td></tr></tbody></table></div>
+    </div>
+
+    <h2 style="font-size:12px;color:#8b97a6;margin-top:16px">📅 日別トレンド（直近）</h2>
+    <div style="overflow-x:auto"><table id="v3DailyTbl"><thead><tr><th class="l">日</th><th>閲覧</th><th>セッション</th><th>クリック</th><th>離脱</th></tr></thead><tbody><tr><td class="l mut" colspan="5">–</td></tr></tbody></table></div>
+  </div>
+
   <div class="foot" id="foot">— 自動更新中 —</div>
 
 <script>
@@ -396,7 +422,55 @@ document.querySelectorAll('#storeSeg button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#storeSeg button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');STORE=b.getAttribute('data-s');load();
 });
+// ===== 🆕 新サイト解析（v3）=====
+const V3PAGE={top:'TOP',daisha_lp:'代車LP',daisha_flow:'代車フロー',daisha_chat:'代車チャット',flow:'予約フロー'};
+const V3AREA={daisha:'代車',spk:'札幌',nha:'那覇','(all)':'全体'};
+function v3pl(p){return V3PAGE[p]||p;}
+async function loadV3(){
+  try{
+    const [pg,ck,fn,dv,sr,dl]=await Promise.all([
+      q('public_kd_ev_page_v?select=*'), q('public_kd_ev_click_v?select=*&order=clicks.desc&limit=30'),
+      q('public_kd_ev_funnel_v?select=*'), q('public_kd_ev_device_v?select=*'),
+      q('public_kd_ev_source_v?select=*&limit=15'), q('public_kd_ev_daily_v?select=*&order=day.desc&limit=14')
+    ]);
+    // ページ別
+    document.querySelector('#v3PageTbl tbody').innerHTML = (pg&&pg.length)? pg.map(r=>
+      '<tr><td class="l">'+esc(v3pl(r.page))+'</td><td>'+ (r.pv||0) +'</td><td>'+ (r.sessions||0) +'</td><td>'+ (r.clicks||0) +'</td><td>'+ (r.exits||0) +'</td><td>'+ (r.avg_sec!=null? r.avg_sec+'秒':'–') +'</td></tr>'
+    ).join('') : '<tr><td class="l mut" colspan="6">まだデータがありません（計測開始後に表示）</td></tr>';
+    // 要素クリック順位
+    document.querySelector('#v3ClickTbl tbody').innerHTML = (ck&&ck.length)? ck.map(r=>
+      '<tr><td class="l">'+esc(v3pl(r.page))+'</td><td class="l">'+esc(r.target)+'</td><td>'+(r.clicks||0)+'</td><td>'+(r.sessions||0)+'</td></tr>'
+    ).join('') : '<tr><td class="l mut" colspan="4">まだクリックがありません</td></tr>';
+    // フロー離脱（area別・残存率）
+    const byArea={}; (fn||[]).forEach(r=>{(byArea[r.area]=byArea[r.area]||[]).push(r);});
+    let fh='';
+    Object.keys(byArea).forEach(a=>{
+      const rows=byArea[a].slice().sort((x,y)=>(x.step_no||0)-(y.step_no||0));
+      const base=Math.max.apply(null,rows.map(r=>r.sessions||0))||1;
+      fh+='<div style="margin:6px 0 12px"><div style="font-weight:800;font-size:12px;color:#cbd5e1;margin-bottom:4px">'+esc(V3AREA[a]||a)+'</div>';
+      rows.forEach((r,i)=>{ const p=Math.round((r.sessions||0)/base*100); const drop=(i>0)?Math.round((1-(r.sessions||0)/(rows[i-1].sessions||1))*100):0;
+        fh+='<div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px"><span style="width:118px;color:#9aa6b2">'+(r.step_no||i+1)+'. '+esc(r.step)+'</span>'
+          +'<span style="flex:1;background:#0e131b;border-radius:6px;overflow:hidden;height:16px"><span style="display:block;height:100%;width:'+p+'%;background:#FABE00"></span></span>'
+          +'<span style="width:120px;text-align:right">'+(r.sessions||0)+'（'+p+'%）'+(i>0&&drop>0?'<span style="color:#f87171"> −'+drop+'%</span>':'')+'</span></div>';
+      });
+      fh+='</div>';
+    });
+    document.getElementById('v3Funnel').innerHTML = fh || '<div class="mut">まだフロー段階の記録がありません</div>';
+    // 端末別
+    document.querySelector('#v3DevTbl tbody').innerHTML = (dv&&dv.length)? dv.map(r=>
+      '<tr><td class="l">'+esc(r.device)+'</td><td>'+(r.sessions||0)+'</td><td>'+(r.pv||0)+'</td></tr>').join('') : '<tr><td class="l mut" colspan="3">–</td></tr>';
+    // 流入元
+    document.querySelector('#v3SrcTbl tbody').innerHTML = (sr&&sr.length)? sr.map(r=>
+      '<tr><td class="l">'+esc(r.source)+'</td><td>'+(r.sessions||0)+'</td><td>'+(r.pv||0)+'</td></tr>').join('') : '<tr><td class="l mut" colspan="3">–</td></tr>';
+    // 日別
+    document.querySelector('#v3DailyTbl tbody').innerHTML = (dl&&dl.length)? dl.map(r=>
+      '<tr><td class="l">'+esc(r.day)+'</td><td>'+(r.pv||0)+'</td><td>'+(r.sessions||0)+'</td><td>'+(r.clicks||0)+'</td><td>'+(r.exits||0)+'</td></tr>').join('') : '<tr><td class="l mut" colspan="5">–</td></tr>';
+  }catch(e){
+    document.querySelector('#v3PageTbl tbody').innerHTML='<tr><td class="l mut" colspan="6">⚠️ 集計ビュー未適用（050_kd_events.sql をRUN）: '+esc(e.message)+'</td></tr>';
+  }
+}
 load(); setInterval(load,15000);
+loadV3(); setInterval(loadV3,20000);
 </script>
 </body>
 </html>

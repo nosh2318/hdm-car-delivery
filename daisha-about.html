@@ -262,7 +262,9 @@
 
 <script>
 // 🔧 代車フローへ（キャッシュ回避のため毎回タイムスタンプ付与＝常に最新フローを読む）
-function dq(a){try{gtag('event','daisha_cta',{event_label:a});}catch(e){}location.href='v3/keydrop-flow-daisha.html?area='+a+'&mode=daisha&method=delivery&_='+Date.now();}
+function dq(a){try{gtag('event','daisha_cta',{event_label:a});}catch(e){}try{if(window.KDT)KDT.event('click','cta:'+a);}catch(e){}location.href='v3/keydrop-flow-daisha.html?area='+a+'&mode=daisha&method=delivery&_='+Date.now();}
 </script>
+<script src="v3/kd-track.js"></script>
+<script>try{KDT.init({page:'daisha_lp',area:'daisha'});}catch(e){}</script>
 </body>
 </html>

@@ -782,6 +782,7 @@ var ORD=DAISHA?['cond','select','customer','confirm','done']:['select','options'
 var SCREEN={cond:'stepDaishaCond',select:'stepSelect',options:'stepOptions',customer:'stepCustomer',confirm:'stepConfirm',payment:'stepPayment',done:'stepDone'};
 function applyStep(){
   var cur=ORD.indexOf(step); if(cur<0){step=ORD[0];cur=0;}
+  try{if(window.KDT)KDT.step(step,cur+1);}catch(e){}
   Object.keys(SCREEN).forEach(function(k){var el=document.getElementById(SCREEN[k]);if(el)el.style.display=(step===k)?'block':'none';});
   // ステップバーを実ページ内容に一致（2=受取・車両=select, 3=options, 4=customer, 5=確認・決済=confirm/payment）
   if(DAISHA){
@@ -1097,4 +1098,6 @@ window.hdmOnLang=function(){try{kdLangActive();}catch(e){}try{cpApply();}catch(e
   <div style="color:rgba(255,255,255,.5)">© 2026 KEYDROP / Global Lines Inc.</div>
 </div>
 <script src="official-i18n.js"></script>
+<script src="kd-track.js"></script>
+<script>try{KDT.init({page:'daisha_flow',area:'daisha'});}catch(e){}</script>
 </body></html>

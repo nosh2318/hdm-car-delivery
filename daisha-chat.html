@@ -114,5 +114,7 @@ $("ta").addEventListener("input",e=>{e.target.style.height="auto";e.target.style
 if(!token){ $("body").innerHTML='<div class="center">チャットのリンクが正しくありません。</div>'; }
 else { load(true); setInterval(()=>{if(document.visibilityState==="visible")load();},8000); document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")load();}); }
 </script>
+<script src="v3/kd-track.js"></script>
+<script>try{KDT.init({page:'daisha_chat',area:'daisha'});}catch(e){}</script>
 </body>
 </html>

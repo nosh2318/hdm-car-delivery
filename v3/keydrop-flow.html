@@ -746,6 +746,7 @@ function qs(extra){return 'area='+area+'&method='+method+'&pd='+encodeURICompone
 var ORD=['select','options','customer','confirm','payment','done'];
 function applyStep(){
   var cur=ORD.indexOf(step); if(cur<0){step='select';cur=0;}
+  try{if(window.KDT)KDT.step(step,cur+1);}catch(e){}
   ['stepSelect','stepOptions','stepCustomer','stepConfirm','stepPayment','stepDone'].forEach(function(id,i){document.getElementById(id).style.display=(i===cur)?'block':'none';});
   // ステップバーを実ページ内容に一致（2=受取・車両=select, 3=options, 4=customer, 5=確認・決済=confirm/payment）
   [['st2',0],['st3',1],['st4',2]].forEach(function(p){var el=document.getElementById(p[0]);el.className='step '+(cur>p[1]?'done':(cur===p[1]?'on':''));});
@@ -934,4 +935,6 @@ window.hdmOnLang=function(){try{kdLangActive();}catch(e){}try{cpApply();}catch(e
   <div style="color:rgba(255,255,255,.5)">© 2026 KEYDROP / Global Lines Inc.</div>
 </div>
 <script src="official-i18n.js"></script>
+<script src="kd-track.js"></script>
+<script>try{KDT.init({page:'flow',area:(typeof area!=='undefined'?(area==='sapporo'?'spk':'nha'):'')});}catch(e){}</script>
 </body></html>
