@@ -422,7 +422,13 @@
   function hasNamedPlace(s){ return /(ホテル|旅館|ペンション|ゲストハウス|コンドミニアム|ヴィラ|ロッジ|東横イン|JRイン|イン札|アパ|ドーミー|ルートイン|コンフォート|リッチモンド|ビル|マンション|レジデンス|ハイツ|コーポ|荘|タワー|hotel|inn|resort)/i.test(String(s||'')); }
   function matchLandmark(clean) {
     if (!clean || hasBanchi(clean) || hasNamedPlace(clean)) return null;      // 具体的な番地入りは通常のジオコードに任せる
-    for (var i = 0; i < MEET_LANDMARKS.length; i++) if (MEET_LANDMARKS[i].re.test(clean)) return MEET_LANDMARKS[i];
+    for (var i = 0; i < MEET_LANDMARKS.length; i++) {
+      var m = MEET_LANDMARKS[i].re.exec(clean);
+      if (!m) continue;
+      // ★2026-08-26 部分一致が近隣の別地名を巻き込む誤爆を防ぐ：マッチ直前が方角/新旧接頭辞(新/西/東/南/北/旧)なら座標固定を無効化(新札幌駅→札幌駅・西岡→岡 等)。より具体的な地名の後続ルール/通常ジオコードに委ねる
+      if (m.index > 0 && /[新西東南北旧]/.test(clean.charAt(m.index - 1))) continue;
+      return MEET_LANDMARKS[i];
+    }
     return null;
   }
   // ★2026-08-04 地名にならない語（自宅/実家/ホテル単体/宿/未定 等）＝ジオコードすると誤爆する→ピンを立てない
