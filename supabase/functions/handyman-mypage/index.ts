@@ -375,9 +375,9 @@ Deno.serve(async (req) => {
       else if (c.field === "del_place" || c.field === "col_place" || c.field === "lend_time" || c.field === "return_time") msg = `【HANDYMAN 札幌デリバリー】大変恐縮でございますが、当日のご予約状況および道路状況により、調整がいたしかねました。\n何卒ご容赦くださいますようお願い申し上げます。ご不明点は公式LINEにて承ります。`;
       else msg = `【HANDYMAN 札幌デリバリー】ご依頼いただいた${label}${c.field === "cancel" ? "申請" : "変更"}につきまして、恐れ入りますが今回はお受けいたしかねます。\n詳細は公式LINEにてご連絡いたします。`;
     }
-    // 顧客通知＝LINE連携済みならLINE、未連携ならメール（rent-handyman.com経由）
-    const _linked = (await sbGet("spk_line_links", `resv_no=eq.${encodeURIComponent(resId2)}&select=resv_no&limit=1`))[0];
-    if (_linked) await pushLine(resId2, msg);
+    // 顧客通知＝LINE連携済み(line_user_id実在)ならLINE、未連携ならメール（rent-handyman.com経由）
+    const _lk = (await sbGet("spk_line_links", `resv_no=eq.${encodeURIComponent(resId2)}&select=line_user_id&limit=1`))[0];
+    if (_lk && String((_lk as any).line_user_id || "").trim()) await pushLine(resId2, msg);
     else await mailCustomer(resId2, `【HANDYMAN札幌デリバリー】ご予約 ${resId2} ${c.field === "cancel" ? "キャンセル受付" : "ご依頼"}のご連絡`, msg.replace(/公式LINE/g, "担当") + `\n\nHANDYMAN札幌デリバリー\nreserve@rent-handyman.com`);
 
     // 承認時の実反映
