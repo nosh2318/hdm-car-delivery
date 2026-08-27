@@ -157,7 +157,7 @@ async function notifySlack(text: string, channel?: string): Promise<void> {
   } catch (e) { console.error("[notifySlack] error:", String(e)); }
 }
 // SPKと同じ Block Kit カード形式（見やすい）で運営通知
-async function notifySlackCard(o: { emoji: string; title: string; name?: string; resId: string; ota?: string; period?: string; vehicle?: string; lines?: string[]; action?: string }, channel?: string): Promise<void> {
+async function notifySlackCard(o: { emoji: string; title: string; name?: string; resId: string; ota?: string; period?: string; vehicle?: string; lines?: string[]; action?: string; mgmtUrl?: string }, channel?: string): Promise<void> {
   const token = Deno.env.get("SLACK_BOT_TOKEN");
   const ch = channel || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36";
   if (!token || !ch) { console.log("[notifySlackCard] no token/ch (skip):", o.title); return; }
@@ -174,6 +174,12 @@ async function notifySlackCard(o: { emoji: string; title: string; name?: string;
   ];
   if (o.lines && o.lines.length) blocks.push({ type: "section", text: { type: "mrkdwn", text: o.lines.join("\n") } });
   if (o.action) blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: o.action }] });
+  // 承認が必要なカードには承認管理ページ（KEYDROP管理画面）へのボタンを付ける
+  if (o.mgmtUrl) {
+    blocks.push({ type: "actions", elements: [
+      { type: "button", text: { type: "plain_text", text: "🔔 承認管理ページを開く", emoji: true }, url: o.mgmtUrl, style: "primary" },
+    ] });
+  }
   blocks.push({ type: "divider" });
   try {
     const r = await fetch("https://slack.com/api/chat.postMessage", {
@@ -270,10 +276,17 @@ Deno.serve(async (req) => {
   // 🔑 スタッフ管理アクション（staff_token認証）は、顧客用の mail/token 認証ゲートより前に処理する。
   //    decide は change_id から予約を特定するため、顧客の mail/token を必要としない。
   if (action === "decide") {
-    const staffToken = String(p.staff_token || "").trim();
-    const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
-    if (!who.ok) return json({ error: "unauthorized" }, 401, origin);
-    const actor = "staff:" + (((await who.json().catch(() => ({}))) as any)?.email || "kd-admin");
+    // 認証: (a) 共通PIN（全店ダッシュボード・目視承認）／(b) スタッフJWT
+    const ADMIN_PIN = Deno.env.get("ADMIN_PIN") || "";
+    const adminPin = String(p.admin_pin || "");
+    let actor = "";
+    if (ADMIN_PIN && adminPin && adminPin === ADMIN_PIN) { actor = "staff:admin_pin"; }
+    else {
+      const staffToken = String(p.staff_token || "").trim();
+      const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
+      if (!who.ok) return json({ error: "unauthorized" }, 401, origin);
+      actor = "staff:" + (((await who.json().catch(() => ({}))) as any)?.email || "kd-admin");
+    }
     const changeId = p.change_id;
     const decision = String(p.decision || "").trim(); // approved | rejected
     if (!changeId || !["approved", "rejected"].includes(decision)) return json({ error: "パラメータ不正" }, 400, origin);
@@ -497,6 +510,7 @@ Deno.serve(async (req) => {
       vehicle: r.vehicle || "",
       lines: aLines.length ? ["*お客様の希望*", ...aLines] : undefined,
       action: "🟡 *承認待ち*：管理画面で承認するとOP/タスクへ反映＋お客様へ通知します",
+      mgmtUrl: `https://keydrop.jp/my-admin.html?store=${M.store === "nha" ? "nha" : "spk"}`,
     }, M.slack);
 
     return json({ ok: true, pendingApproval: true, requested: reqLabels }, 200, origin);
