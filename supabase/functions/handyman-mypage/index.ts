@@ -41,6 +41,18 @@ async function pushLine(resvNo: string, message: string): Promise<void> {
     const d = await r.json().catch(() => ({})); if (!d.ok) console.log("[line-push]", JSON.stringify(d));
   } catch (e) { console.error("[line-push]", String(e)); }
 }
+// 顧客へメール通知（LINEは当面使わずメールのみ・2026-08-27）。rent-handyman.com は BT project の notice-mail-send 経由で送る。
+const BT_NOTICE_URL = "https://ggqugvyskyiblxiycpci.supabase.co/functions/v1/notice-mail-send";
+const BT_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncXVndnlza3lpYmx4aXljcGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDc3NjksImV4cCI6MjA5MzY4Mzc2OX0.uNhWcBd_Dl5nzemZDQfJ8mQV6iY73MwystGGpTRPC18";
+async function mailCustomer(resvNo: string, subject: string, text: string): Promise<void> {
+  const secret = Deno.env.get("NOTICE_MAIL_SECRET");
+  if (!secret) { console.log("[mail skip] no NOTICE_MAIL_SECRET", resvNo); return; }
+  try {
+    const r = await fetch(BT_NOTICE_URL, { method: "POST", headers: { "content-type": "application/json", apikey: BT_ANON_KEY, Authorization: `Bearer ${BT_ANON_KEY}` },
+      body: JSON.stringify({ secret, store: "spk", resv_no: resvNo, subject, text, allow_cancel: true }) });
+    const d = await r.json().catch(() => ({})); if (!d.ok) console.log("[notice-mail]", JSON.stringify(d));
+  } catch (e) { console.error("[notice-mail]", String(e)); }
+}
 
 async function slackPost(text: string, blocks?: unknown[]): Promise<void> {
   // マイページ関連の全通知（変更/依頼/キャンセル/承認却下/整合アラート）は #sapporo_user_action へ
@@ -334,13 +346,15 @@ Deno.serve(async (req) => {
     }
     const sAct = "staff:" + actor; // 監査ログ用（誰が＝担当個人）
     const changeId = p.change_id;
-    const decision = String(p.decision || "").trim(); // approved | rejected
-    if (!changeId || (decision !== "approved" && decision !== "rejected")) return json({ error: "パラメータ不正" }, 400, origin);
+    const decision = String(p.decision || "").trim(); // approved | rejected | acknowledged
+    if (!changeId || (decision !== "approved" && decision !== "rejected" && decision !== "acknowledged")) return json({ error: "パラメータ不正" }, 400, origin);
     const st0 = STORES.spk;
     const cRows = await sbGet("mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}&select=id,reservation_id,field,new_value,note,status,payload`);
     const c = cRows[0];
     if (!c) return json({ error: "依頼が見つかりません" }, 404, origin);
     if (c.status !== "requested") return json({ error: "この依頼は既に処理済みです" }, 409, origin);
+    // 確認済み（対応不要・アーカイブのみ。反映も通知もしない）
+    if (decision === "acknowledged") { await sbPatch("mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: "acknowledged", actor: sAct }); return json({ ok: true, decided: "acknowledged" }, 200, origin); }
     const resId2 = String(c.reservation_id);
     const rr = (await sbGet(st0.resv, `id=eq.${encodeURIComponent(resId2)}&select=id,name,ota,vehicle,lend_date,return_date,lend_time,return_time,del_place,col_place,insurance,opt_b,opt_c,opt_j,mypage_locked,mypage_token`))[0] || {};
     const myUrl = rr.mypage_token ? `https://nosh2318.github.io/spk-task/my.html?t=${rr.mypage_token}` : "";
@@ -361,7 +375,7 @@ Deno.serve(async (req) => {
       else if (c.field === "del_place" || c.field === "col_place" || c.field === "lend_time" || c.field === "return_time") msg = `【HANDYMAN 札幌デリバリー】大変恐縮でございますが、当日のご予約状況および道路状況により、調整がいたしかねました。\n何卒ご容赦くださいますようお願い申し上げます。ご不明点は公式LINEにて承ります。`;
       else msg = `【HANDYMAN 札幌デリバリー】ご依頼いただいた${label}${c.field === "cancel" ? "申請" : "変更"}につきまして、恐れ入りますが今回はお受けいたしかねます。\n詳細は公式LINEにてご連絡いたします。`;
     }
-    await pushLine(resId2, msg);
+    await mailCustomer(resId2, `【HANDYMAN札幌デリバリー】ご予約 ${resId2} ${c.field === "cancel" ? "キャンセル受付" : "ご依頼"}のご連絡`, msg.replace(/公式LINE/g, "担当") + `\n\nHANDYMAN札幌デリバリー\nreserve@rent-handyman.com`);
 
     // 承認時の実反映
     if (decision === "approved") {

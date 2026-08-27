@@ -288,12 +288,14 @@ Deno.serve(async (req) => {
       actor = "staff:" + (((await who.json().catch(() => ({}))) as any)?.email || "kd-admin");
     }
     const changeId = p.change_id;
-    const decision = String(p.decision || "").trim(); // approved | rejected
-    if (!changeId || !["approved", "rejected"].includes(decision)) return json({ error: "パラメータ不正" }, 400, origin);
+    const decision = String(p.decision || "").trim(); // approved | rejected | acknowledged
+    if (!changeId || !["approved", "rejected", "acknowledged"].includes(decision)) return json({ error: "パラメータ不正" }, 400, origin);
     const cRows = await sbGet("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}&select=id,reservation_id,store,field,new_value,note,payload,status&limit=1`);
     const c = cRows[0];
     if (!c) return json({ error: "対象が見つかりません" }, 404, origin);
     if (c.status !== "requested") return json({ error: "既に処理済みです" }, 409, origin);
+    // 確認済み（対応不要・アーカイブのみ。反映も通知もしない）
+    if (decision === "acknowledged") { await sbPatch("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: "acknowledged", actor }); return json({ ok: true, decided: "acknowledged" }, 200, origin); }
     const M2 = mkStore(c.store === "nha" ? "nha" : "spk");
     const rid2 = String(c.reservation_id);
     const pl = (c.payload && typeof c.payload === "object") ? c.payload : {};
