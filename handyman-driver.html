@@ -378,24 +378,33 @@
   }
   let _geocoder = null, meetAddrTrying = '';
   // 目的地ピンを配置（座標が既知ならジオコードを待たず即置く・取りこぼし防止＝冪等）
-  function placeMeet(loc, label) {
+  // ★2026-08-27 precise=true=顧客がマイページでピン留めした確定座標／false=住所テキストから推定した"おおよそ"の位置。
+  //   推定ピンは色と文言で確定と区別し、ドライバーが誤爆した推定位置を正確な目的地と誤信しないようにする（お客様の現在地を優先）。
+  function placeMeet(loc, label, precise) {
     if (!map || !loc) return;
+    var isP = (precise !== false);
+    var fill = isP ? '#7c3aed' : '#d97706';
+    var ic = { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: fill, fillOpacity: 0.95, strokeColor: '#fff', strokeWeight: 3 };
+    var emoji = isP ? '🎯' : '📍';
+    var title = isP ? '🎯 目的地（待ち合わせ場所）' : '📍 おおよその位置（未確定）';
     if (!meetMarker) {
       meetMarker = new google.maps.Marker({
-        map, position: loc, title: '🎯 目的地（待ち合わせ場所）', zIndex: 999,
-        label: { text: '🎯', fontSize: '26px' },
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: '#7c3aed', fillOpacity: 0.95, strokeColor: '#fff', strokeWeight: 3 },
+        map, position: loc, title: title, zIndex: 999,
+        label: { text: emoji, fontSize: '26px' }, icon: ic,
         animation: google.maps.Animation.DROP
       });
       // ピンをタップすると吹き出しを再表示
       meetMarker.addListener('click', function () { meetIWClosed = false; if (meetIW) meetIW.open(map, meetMarker); });
-    } else meetMarker.setPosition(loc);
+    } else { meetMarker.setPosition(loc); meetMarker.setLabel({ text: emoji, fontSize: '26px' }); meetMarker.setIcon(ic); meetMarker.setTitle(title); }
     if (!meetIW) {
       meetIW = new google.maps.InfoWindow({ disableAutoPan: true });
       // ✖️で閉じたら再表示しない（地図更新で勝手に開き直さない）
       meetIW.addListener('closeclick', function () { meetIWClosed = true; });
     }
-    meetIW.setContent('<div style="font-weight:800;font-size:13px;white-space:nowrap;color:#6d28d9">🎯 目的地：' + (label || '') + '</div>');
+    var body = isP
+      ? '<div style="font-weight:800;font-size:13px;white-space:nowrap;color:#6d28d9">🎯 目的地：' + (label || '') + '</div>'
+      : '<div style="font-weight:800;font-size:13px;color:#b45309">📍 おおよその位置（未確定）：' + (label || '') + '<br><span style="font-weight:700;font-size:11px;color:#92400e">※住所から推定。お客様の現在地（🚗/🧍）を優先してください</span></div>';
+    meetIW.setContent(body);
     if (!meetIWClosed) meetIW.open(map, meetMarker);
     fitAll();
   }
@@ -448,7 +457,13 @@
     var col = (custData.kd_status === 'collecting');
     var la = col ? custData.col_lat : custData.del_lat;
     var ln = col ? custData.col_lng : custData.del_lng;
-    if (la == null || ln == null) { la = col ? custData.del_lat : custData.col_lat; ln = col ? custData.del_lng : custData.col_lng; }
+    // ★2026-08-27 片方の座標が無い時、反対レグ(お届け⇔回収)の座標を流用するのは「お届け先＝回収先が同じ場所」の時だけ。
+    //   住所が違うのに反対レグの座標を使うと別地点にピンが立つ＝誤ナビ（危険）。違う場合は座標なし＝住所テキストから解決に委ねる。
+    if (la == null || ln == null) {
+      var sameSpot = custData.del_place && custData.col_place && String(custData.del_place).trim() === String(custData.col_place).trim();
+      if (sameSpot) { la = col ? custData.del_lat : custData.col_lat; ln = col ? custData.del_lng : custData.col_lng; }
+      else { la = null; ln = null; }
+    }
     return [la, ln];
   }
   // 待ち合わせ住所→座標。リファラ制限キーはGeocoding RESTで弾かれるため、地図JSのGeocoder(Maps JS API経由)を使う
@@ -461,7 +476,7 @@
       const _ck = 'coord:' + (+plat) + ',' + (+plng);
       if (!(meetLoc && meetAddrDone === _ck)) { meetLoc = new google.maps.LatLng(+plat, +plng); meetAddrDone = _ck; meetAddrTrying = ''; }
       if (!map) { renderMap(); return; }
-      placeMeet(meetLoc, clean || '目的地'); return;
+      placeMeet(meetLoc, clean || '目的地', true); return;
     }
     if (!addr || !clean) return;
     // ★2) 地名として無効(自宅/ホテル単体/宿/未定 等)→ 誤爆位置にピンを立てない
@@ -470,16 +485,16 @@
     { const _lm = matchLandmark(clean); if (_lm) {
         if (!(meetLoc && meetAddrDone === clean)) { meetLoc = new google.maps.LatLng(_lm.lat, _lm.lng); meetAddrDone = clean; meetAddrTrying = ''; }
         if (!map) { renderMap(); return; }
-        placeMeet(meetLoc, _lm.name || clean); return;
+        placeMeet(meetLoc, _lm.name || clean, false); return;
     } }
     // 既に解決済みの住所→ジオコードせずピンだけ再配置（map生成タイミングでの取りこぼしを防ぐ）
-    if (meetLoc && clean === meetAddrDone) { placeMeet(meetLoc, clean); return; }
+    if (meetLoc && clean === meetAddrDone) { placeMeet(meetLoc, clean, false); return; }
     if (clean === meetAddrTrying) return; // 同一住所の多重リクエスト防止
     meetAddrTrying = clean;
     // ★2026-08-27 施設名(ホテル/旅館/ビル等)はPlaces(POI検索)でGoogleマップ同等に解決→全滅時のみジオコーダ。ジオコーダは住所専用でホテル名を拾えず大まかな中心に誤爆する
     if (hasNamedPlace(clean)) {
       placesFind(clean, function (loc) {
-        if (loc) { meetLoc = loc; meetAddrDone = clean; meetAddrTrying = ''; if (!map) { renderMap(); return; } placeMeet(meetLoc, clean); }
+        if (loc) { meetLoc = loc; meetAddrDone = clean; meetAddrTrying = ''; if (!map) { renderMap(); return; } placeMeet(meetLoc, clean, false); }
         else geocodeFallback(clean);
       });
       return;
@@ -521,7 +536,7 @@
         if (status === 'OK' && results && results[0]) {
           meetLoc = results[0].geometry.location; meetAddrDone = clean; meetAddrTrying = '';
           if (!map) { renderMap(); return; }
-          placeMeet(meetLoc, clean);
+          placeMeet(meetLoc, clean, false);
         } else { tryNext(); } // ZERO_RESULTS等→次のフォールバック候補で再試行
       });
     };
