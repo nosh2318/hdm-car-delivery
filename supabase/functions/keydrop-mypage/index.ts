@@ -17,6 +17,7 @@ const OPS_EMAIL = (Deno.env.get("KEYDROP_OPS_EMAIL") || "").trim();
 const ALLOWED = [
   "https://nosh2318.github.io",
   "https://keydrop.jp", // 独自ドメイン
+  "https://rent-handyman.com", // マイページ管理ダッシュボード
 ];
 function corsHeaders(origin: string | null) {
   const allow = origin && ALLOWED.includes(origin) ? origin : ALLOWED[0];
