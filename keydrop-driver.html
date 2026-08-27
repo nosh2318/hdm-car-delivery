@@ -102,7 +102,7 @@
     window.__drvMapReady = function () { gmapReady = true; renderMap(); };
     const s = document.createElement('script');
     s.id = 'gmScript'; s.async = true;
-    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAPS_KEY + '&language=ja&region=JP&loading=async&callback=__drvMapReady';
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAPS_KEY + '&language=ja&region=JP&libraries=places&loading=async&callback=__drvMapReady';
     s.onerror = function () { gmapReady = false; const fb = document.getElementById('mapFallback'); if (fb) fb.classList.add('show'); };
     document.head.appendChild(s);
   }
@@ -296,7 +296,7 @@
     if (!map) {
       const center = hasMe ? { lat: myLat, lng: myLng }
         : (hasCust ? { lat: +custData.cust_lat, lng: +custData.cust_lng } : (meetLoc || null));
-      if (!center) { geocodeMeet(goalAddr()); return; }
+      if (!center) { geocodeMeet(goalAddr(), goalCoords()[0], goalCoords()[1]); return; }
       map = new google.maps.Map(document.getElementById('map'), {
         center, zoom: (hasMe || hasCust) ? 15 : 14, disableDefaultUI: true, zoomControl: true, gestureHandling: 'greedy'
       });
@@ -336,7 +336,7 @@
       custIW.setContent('<div style="font-weight:800;font-size:12px;white-space:nowrap;color:#0369a1">' + custEmoji + ' お客様</div>');
     }
 
-    geocodeMeet(goalAddr());  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
+    geocodeMeet(goalAddr(), goalCoords()[0], goalCoords()[1]);  // 待ち合わせ住所を📍ピンに（お客様が未共有でも目的地が見える）
 
     const chip = document.getElementById('distChip');
     if (hasMe && hasCust) {
@@ -389,17 +389,100 @@
     if (!meetIWClosed) meetIW.open(map, meetMarker);
     fitAll();
   }
-  // 待ち合わせ住所→座標。リファラ制限キーはGeocoding RESTで弾かれるため、地図JSのGeocoder(Maps JS API経由)を使う
-  function geocodeMeet(addr) {
-    if (!gmapReady || !addr) return;
-    const clean = String(addr).replace(/[（(][^）)]*[）)]/g, '').trim();
-    if (!clean) return;
-    // 既に解決済みの住所→ジオコードせずピンだけ再配置（map生成タイミングでの取りこぼしを防ぐ）
+  // ★2026-08-27 目的地住所クリーニング＋ランドマーク補正＋施設名Places検索（handyman-driverと統一）
+  function cleanMeetAddr(addr) {
+    var x = String(addr || '').replace(/[（(][^）)]*[）)]/g, '');            // 括弧内除去
+    x = x.replace(/[。．][\s\S]*$/, '');                                      // 句点以降（便名等の補足）を除去
+    x = x.replace(/[、,][^、,]*便[^、,]*$/, '');                              // 「、JAL505便」等の末尾便名を除去
+    x = x.replace(/\s*(?:便名[：:\s]*)?[A-Za-zＡ-Ｚａ-ｚ]{0,4}\s?[0-9０-９]{1,4}\s*便\s*$/, ''); // 末尾フライト便
+    return x.replace(/\s+/g, ' ').trim();
+  }
+  var MEET_LANDMARKS = [
+    { re: /新千歳空港/,               lat: 42.77530, lng: 141.69200, name: '新千歳空港' },
+    { re: /新さっぽろ|新札幌/,         lat: 43.03918, lng: 141.46747, name: '新さっぽろ駅（新札幌）' },
+    { re: /札幌駅.*南口|南口.*札幌駅/, lat: 43.06955, lng: 141.35075, name: '札幌駅北口（南口は停車不可のため北口）' },
+    { re: /札幌駅.*北口|北口.*札幌駅/, lat: 43.06955, lng: 141.35075, name: '札幌駅北口' },
+    { re: /札幌駅/,                   lat: 43.06955, lng: 141.35075, name: '札幌駅北口' },
+    { re: /すすきの/,                 lat: 43.05540, lng: 141.35320, name: 'すすきの' },
+    { re: /大通(公園|駅|ビッセ|BISSE)?/, lat: 43.06070, lng: 141.34690, name: '大通' }
+  ];
+  function hasBanchi(s) { return /[0-9０-９]+\s*条|[0-9０-９]+\s*丁目|[0-9０-９]+\s*[-ー－]\s*[0-9０-９]+|[0-9０-９]+\s*番/.test(s); }
+  // 固有施設名(ホテル/旅館/ビル等)を含む→座標固定せず施設名で解決
+  function hasNamedPlace(s){ return /(ホテル|旅館|ペンション|ゲストハウス|コンドミニアム|ヴィラ|ロッジ|メルキュール|東横イン|JRイン|イン札|アパ|ドーミー|ルートイン|コンフォート|リッチモンド|プレミア|グランド|ビル|マンション|レジデンス|ハイツ|コーポ|荘|タワー|hotel|inn|resort|mercure)/i.test(String(s||'')); }
+  function matchLandmark(clean) {
+    if (!clean || hasBanchi(clean) || hasNamedPlace(clean)) return null;      // 番地入り/施設名は通常解決に任せる
+    for (var i = 0; i < MEET_LANDMARKS.length; i++) {
+      var m = MEET_LANDMARKS[i].re.exec(clean);
+      if (!m) continue;
+      if (m.index > 0 && /[新西東南北旧]/.test(clean.charAt(m.index - 1))) continue; // 新札幌/西岡 等の部分一致誤爆回避
+      return MEET_LANDMARKS[i];
+    }
+    return null;
+  }
+  function isVagueAddr(s) {
+    var x = String(s || '').replace(/\s+/g, '');
+    if (!x) return true;
+    if (hasBanchi(x)) return false;
+    if (/(駅|空港|港|公園|ホール|アリーナ|ドーム|スタジアム|大学|高校|学校|病院|市役所|区役所|役場|タワー|会館|神社|寺|城|温泉|水族館|美術館|博物館|球場|競技場)/.test(x)) return false;
+    if (/^(自宅|自宅前|自宅付近|実家|お?宅|うち|マイホーム|自分の家)/.test(x)) return true;
+    if (/^(宿|民泊|ホテル|旅館|ペンション|ゲストハウス|コンドミニアム|ヴィラ|ロッジ|Airbnb|エアビー|宿泊先|宿泊施設)(前|付近|周辺|内|の前|です|になります)?$/i.test(x)) return true;
+    if (/^(未定|未確定|要?相談|相談|確認中|調整中|検討中|不明|未入力|後(で|ほど)?(連絡|確認|入力)?(します)?|追って(連絡|確認)?|わからない|わかりません|なし|無し|特になし|ー+|―+|－+|—+|-+|\.+|・+)$/.test(x)) return true;
+    return false;
+  }
+  // 目的地の座標（顧客がマイページ地図でピン留めした del_lat/del_lng・col_lat/col_lng）
+  function goalCoords() {
+    if (!custData) return [null, null];
+    var col = (custData.kd_status === 'collecting' || custData.kd_status === 'returning');
+    var la = col ? custData.col_lat : custData.del_lat;
+    var ln = col ? custData.col_lng : custData.del_lng;
+    if (la == null || ln == null) { la = col ? custData.del_lat : custData.col_lat; ln = col ? custData.del_lng : custData.col_lng; }
+    return [la, ln];
+  }
+  // ★施設名(ホテル等)はPlaces(POI検索)で解決＝Googleマップアプリと同じヒット。ジオコーダは住所専用でホテル名を拾えない
+  var _places = null;
+  function placesFind(query, cb) {
+    try {
+      if (!(google.maps.places && google.maps.places.PlacesService)) { cb(null); return; }
+      if (!_places) _places = new google.maps.places.PlacesService(map || document.createElement('div'));
+      var req = { query: query, fields: ['geometry'], language: 'ja' };
+      if (myLat != null && myLng != null) req.locationBias = new google.maps.LatLngBounds({ lat: myLat - 0.3, lng: myLng - 0.3 }, { lat: myLat + 0.3, lng: myLng + 0.3 });
+      _places.findPlaceFromQuery(req, function (results, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0] && results[0].geometry) cb(results[0].geometry.location);
+        else cb(null);
+      });
+    } catch (e) { cb(null); }
+  }
+  // 待ち合わせ住所→座標。plat/plng=顧客ピン留め座標（あれば最優先）
+  function geocodeMeet(addr, plat, plng) {
+    if (!gmapReady) return;
+    const clean = cleanMeetAddr(addr);
+    // 1) ピン留め座標が最優先（テキストが施設名/便名混じりでも正確）
+    if (plat != null && plng != null && !isNaN(+plat) && !isNaN(+plng)) {
+      const _ck = 'coord:' + (+plat) + ',' + (+plng);
+      if (!(meetLoc && meetAddrDone === _ck)) { meetLoc = new google.maps.LatLng(+plat, +plng); meetAddrDone = _ck; meetAddrTrying = ''; }
+      if (!map) { renderMap(); return; }
+      placeMeet(meetLoc, clean || '目的地'); return;
+    }
+    if (!addr || !clean) return;
+    // 2) 地名にならない語（自宅/ホテル単体/宿/未定 等）→ 誤爆位置にピンを立てない
+    if (isVagueAddr(clean)) { meetAddrTrying = ''; return; }
     if (meetLoc && clean === meetAddrDone) { placeMeet(meetLoc, clean); return; }
-    if (clean === meetAddrTrying) return; // 同一住所の多重リクエスト防止
+    if (clean === meetAddrTrying) return;
     meetAddrTrying = clean;
+    // 3) 駅名/空港など一般名 → 正規座標に直置き
+    { const _lm = matchLandmark(clean); if (_lm) {
+        meetLoc = new google.maps.LatLng(_lm.lat, _lm.lng); meetAddrDone = clean; meetAddrTrying = '';
+        if (!map) { renderMap(); return; } placeMeet(meetLoc, _lm.name || clean); return;
+    } }
+    const _done = function (loc) { meetLoc = loc; meetAddrDone = clean; meetAddrTrying = ''; if (!map) { renderMap(); return; } placeMeet(meetLoc, clean); };
+    // 4) 施設名（ホテル/旅館/ビル等）→ Places(POI検索)でGoogleマップ同等に解決 → 全滅時のみジオコーダ
+    if (hasNamedPlace(clean)) { placesFind(clean, function (loc) { if (loc) _done(loc); else geocodeFallback(clean, _done); }); return; }
+    // 5) 通常住所 → ジオコーダ
+    geocodeFallback(clean, _done);
+  }
+  // ジオコーダ（番地付き→丁目→条丁目のフォールバック）。cb(loc)で成功時のみ確定
+  function geocodeFallback(clean, cb) {
     if (!_geocoder) _geocoder = new google.maps.Geocoder();
-    // フォールバック候補：番地付き → 番地を落として丁目 → 丁目まで（Googleが番地を解決できない条丁目住所対策）
     const cands = [clean];
     const c2 = clean.replace(/[0-9０-９]+\s*[-ー－]\s*[0-9０-９]+.*$/, '').trim();
     if (c2 && cands.indexOf(c2) < 0) cands.push(c2);
@@ -407,19 +490,13 @@
     if (mi > 0) { const c3 = clean.slice(0, mi + 2); if (cands.indexOf(c3) < 0) cands.push(c3); }
     let idx = 0;
     const tryNext = function () {
-      if (idx >= cands.length) { meetAddrTrying = ''; return; } // 全滅→次のpollで再挑戦
+      if (idx >= cands.length) { meetAddrTrying = ''; return; }
       const q = cands[idx++];
-      // 現在地(スタッフ位置)周辺に絞る＝一般名を近隣に解決させ全国誤爆を防ぐ
       const _req = { address: q, region: 'jp', language: 'ja' };
-      if (myLat != null && myLng != null) {
-        _req.bounds = new google.maps.LatLngBounds({ lat: myLat - 0.5, lng: myLng - 0.5 }, { lat: myLat + 0.5, lng: myLng + 0.5 });
-      }
+      if (myLat != null && myLng != null) _req.bounds = new google.maps.LatLngBounds({ lat: myLat - 0.5, lng: myLng - 0.5 }, { lat: myLat + 0.5, lng: myLng + 0.5 });
       _geocoder.geocode(_req, function (results, status) {
-        if (status === 'OK' && results && results[0]) {
-          meetLoc = results[0].geometry.location; meetAddrDone = clean; meetAddrTrying = '';
-          if (!map) { renderMap(); return; }
-          placeMeet(meetLoc, clean);
-        } else { tryNext(); } // ZERO_RESULTS等→次のフォールバック候補で再試行
+        if (status === 'OK' && results && results[0]) cb(results[0].geometry.location);
+        else tryNext();
       });
     };
     tryNext();

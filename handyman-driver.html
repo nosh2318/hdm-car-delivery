@@ -99,7 +99,7 @@
     window.__drvMapReady = function () { gmapReady = true; renderMap(); };
     const s = document.createElement('script');
     s.id = 'gmScript'; s.async = true;
-    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAPS_KEY + '&language=ja&region=JP&loading=async&callback=__drvMapReady';
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAPS_KEY + '&language=ja&region=JP&libraries=places&loading=async&callback=__drvMapReady';
     s.onerror = function () { gmapReady = false; const fb = document.getElementById('mapFallback'); if (fb) fb.classList.add('show'); };
     document.head.appendChild(s);
   }
@@ -419,7 +419,7 @@
   ];
   function hasBanchi(s) { return /[0-9０-９]+\s*条|[0-9０-９]+\s*丁目|[0-9０-９]+\s*[-ー－]\s*[0-9０-９]+|[0-9０-９]+\s*番/.test(s); }
   // ★2026-08-24 固有施設名(ホテル/旅館/ビル等)を含む住所は座標固定せず住所全体をジオコーディング(例:東横イン札幌駅北口→駅でなくホテルへ)
-  function hasNamedPlace(s){ return /(ホテル|旅館|ペンション|ゲストハウス|コンドミニアム|ヴィラ|ロッジ|東横イン|JRイン|イン札|アパ|ドーミー|ルートイン|コンフォート|リッチモンド|ビル|マンション|レジデンス|ハイツ|コーポ|荘|タワー|hotel|inn|resort)/i.test(String(s||'')); }
+  function hasNamedPlace(s){ return /(ホテル|旅館|ペンション|ゲストハウス|コンドミニアム|ヴィラ|ロッジ|メルキュール|東横イン|JRイン|イン札|アパ|ドーミー|ルートイン|コンフォート|リッチモンド|プレミア|グランド|ビル|マンション|レジデンス|ハイツ|コーポ|荘|タワー|hotel|inn|resort|mercure)/i.test(String(s||'')); }
   function matchLandmark(clean) {
     if (!clean || hasBanchi(clean) || hasNamedPlace(clean)) return null;      // 具体的な番地入りは通常のジオコードに任せる
     for (var i = 0; i < MEET_LANDMARKS.length; i++) {
@@ -476,6 +476,31 @@
     if (meetLoc && clean === meetAddrDone) { placeMeet(meetLoc, clean); return; }
     if (clean === meetAddrTrying) return; // 同一住所の多重リクエスト防止
     meetAddrTrying = clean;
+    // ★2026-08-27 施設名(ホテル/旅館/ビル等)はPlaces(POI検索)でGoogleマップ同等に解決→全滅時のみジオコーダ。ジオコーダは住所専用でホテル名を拾えず大まかな中心に誤爆する
+    if (hasNamedPlace(clean)) {
+      placesFind(clean, function (loc) {
+        if (loc) { meetLoc = loc; meetAddrDone = clean; meetAddrTrying = ''; if (!map) { renderMap(); return; } placeMeet(meetLoc, clean); }
+        else geocodeFallback(clean);
+      });
+      return;
+    }
+    geocodeFallback(clean);
+  }
+  // ★施設名はPlaces(POI検索)で解決＝Googleマップアプリと同じヒット
+  var _places = null;
+  function placesFind(query, cb) {
+    try {
+      if (!(google.maps.places && google.maps.places.PlacesService)) { cb(null); return; }
+      if (!_places) _places = new google.maps.places.PlacesService(map || document.createElement('div'));
+      var req = { query: query, fields: ['geometry'], language: 'ja' };
+      if (myLat != null && myLng != null) req.locationBias = new google.maps.LatLngBounds({ lat: myLat - 0.3, lng: myLng - 0.3 }, { lat: myLat + 0.3, lng: myLng + 0.3 });
+      _places.findPlaceFromQuery(req, function (results, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0] && results[0].geometry) cb(results[0].geometry.location);
+        else cb(null);
+      });
+    } catch (e) { cb(null); }
+  }
+  function geocodeFallback(clean) {
     if (!_geocoder) _geocoder = new google.maps.Geocoder();
     // フォールバック候補：番地付き → 番地を落として丁目 → 丁目まで（Googleが番地を解決できない条丁目住所対策）
     const cands = [clean];
