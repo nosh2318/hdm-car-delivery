@@ -14,6 +14,12 @@ const URLBASE = "https://nosh2318.github.io/spk-task/my.html?t=";
 async function sbGet(t: string, q: string): Promise<any[]> { const r = await fetch(`${SB_URL}/rest/v1/${t}?${q}`, { headers: H }); if (!r.ok) { console.error(`GET ${t}`, await r.text()); return []; } return await r.json(); }
 function jstNow(): Date { return new Date(Date.now() + 9 * 3600 * 1000); }
 function dstr(off: number): string { const d = jstNow(); d.setUTCDate(d.getUTCDate() + off); return d.toISOString().slice(0, 10); }
+// OP/マイページと同じ時刻解決（c-/d-タスクの _timeChange最優先→_ssTime→time）。予約生値(return_time/col_time)を直読みしない。
+function resolveTaskTime(t: any): string {
+  if (!t) return "";
+  let cj = t.changed_json; if (typeof cj === "string") { try { cj = JSON.parse(cj); } catch { cj = {}; } } cj = cj || {};
+  return String(cj._timeChange || cj._ssTime || t.time || "");
+}
 
 // テンプレ（日本語＋English）＋ URL
 const TPL: Record<string, (u: string, r: any) => string> = {
@@ -22,7 +28,7 @@ const TPL: Record<string, (u: string, r: any) => string> = {
   mypage_daybefore: (u) => `【HANDYMAN 札幌デリバリー】明日がご利用日です。日時・お届け場所を今一度ご確認ください👇\nYour rental starts tomorrow. Please review the date/time & location 👇\n${u}`,
   mypage_return3h: (u) => `【HANDYMAN 札幌デリバリー】まもなくご返却のお時間です（約3時間後）。回収の場所・時間をご確認ください👇\nPickup is in about 3 hours. Please review the pickup place & time 👇\n${u}`,
   // 返却日の朝に送る（返却案内＋早め回収ボタンの使い方・訴求）
-  mypage_returnday: (u, r) => `【HANDYMAN 札幌デリバリー】\nこの度はHANDYMANをご利用いただきまして誠にありがとうございます。\n本日がご返却日です🚗（回収予定 ${((r && (r.return_time || r.col_time)) || "")}）\n\nもし予定より早くご返却の準備ができましたら、マイページの【🟢 返却の準備ができました（早めの回収OK）】ボタンを押してください。スケジュールに余裕があれば早めに回収へ伺います（確約ではありません）。\nご返却場所・時間のご確認、早め回収のご希望はこちらから👇\nIf you're ready to return early, tap the green "Ready for pickup" button on your page. Check return details here 👇\n${u}`,
+  mypage_returnday: (u, r) => `【HANDYMAN 札幌デリバリー】\nこの度はHANDYMANをご利用いただきまして誠にありがとうございます。\n本日がご返却日です🚗（回収予定 ${((r && (r._colTimeResolved || r.return_time || r.col_time)) || "")}）\n\nもし予定より早くご返却の準備ができましたら、マイページの【🟢 返却の準備ができました（早めの回収OK）】ボタンを押してください。スケジュールに余裕があれば早めに回収へ伺います（確約ではありません）。\nご返却場所・時間のご確認、早め回収のご希望はこちらから👇\nIf you're ready to return early, tap the green "Ready for pickup" button on your page. Check return details here 👇\n${u}`,
 };
 
 // 無人貸出・乗り捨ての担当が付いた予約は、貸出/返却リマインドを自動送信しない（スタッフ手動運用）。
@@ -59,7 +65,7 @@ Deno.serve(async (req) => {
   const today = dstr(0), d1 = dstr(1), d3 = dstr(3);
   const RESV = "reservations";
   // 対象＝返却が今日以降・未キャンセル
-  const resvsAll = await sbGet(RESV, `return_date=gte.${today}&status=not.in.("キャンセル",cancelled,cancel)&select=id,name,ota,lend_date,lend_time,return_date,return_time,del_time,col_time,del_place,mypage_token&limit=1000`);
+  const resvsAll = await sbGet(RESV, `return_date=gte.${today}&status=not.in.("キャンセル",cancelled,cancel)&select=id,name,ota,lend_date,lend_time,return_date,return_time,del_time,col_time,del_place,col_place,mypage_token&limit=1000`);
   // KEYDROPは独自マイページ(keydrop.jp)を使うため、HANDYMANマイページの送信対象から除外
   const resvs = resvsAll.filter((r: any) => String(r.ota || "").toUpperCase() !== "KEYDROP");
   // LINE連携済み（userIdあり）だけが対象
@@ -92,20 +98,23 @@ Deno.serve(async (req) => {
     .map((r: any) => r.id);
   const lendAsg: Record<string, string> = {};
   const colAsg: Record<string, string> = {};
+  const colTimeByRes: Record<string, string> = {}; // c-(返却)タスクの解決時刻（OP/マイページと一致）
   for (let i = 0; i < remIds.length; i += 60) {
     const chunk = remIds.slice(i, i + 60).map((x: string) => encodeURIComponent(x)).join(",");
     if (!chunk) continue;
-    const ts = await sbGet("tasks", `reservation_id=in.(${chunk})&deleted=not.is.true&select=reservation_id,_id,assignee`);
+    const ts = await sbGet("tasks", `reservation_id=in.(${chunk})&deleted=not.is.true&select=reservation_id,_id,assignee,time,changed_json`);
     for (const t of ts) {
       const id = String(t._id || "");
       if (id.startsWith("d-")) lendAsg[t.reservation_id] = String(t.assignee || "");
-      else if (id.startsWith("c-")) colAsg[t.reservation_id] = String(t.assignee || "");
+      else if (id.startsWith("c-")) { colAsg[t.reservation_id] = String(t.assignee || ""); const ct = resolveTaskTime(t); if (ct) colTimeByRes[t.reservation_id] = ct; }
     }
   }
   const unLend = (id: string) => lendAsg[id] && UNATTENDED_RE.test(lendAsg[id]);
   const unCol = (id: string) => colAsg[id] && UNATTENDED_RE.test(colAsg[id]);
 
   const nowMs = Date.now();
+  const jstHour = new Date(Date.now() + 9 * 3600 * 1000).getUTCHours();
+  const daytime = jstHour >= 9 && jstHour < 21; // 深夜送信防止（JST 9〜21時のみ・初動/場所/前日）
   const results: any[] = [];
   const push = async (r: any, action: string) => {
     const key = r.id + "|" + action;
@@ -119,17 +128,22 @@ Deno.serve(async (req) => {
 
   for (const r of resvs) {
     if (!linked.has(r.id) || !r.mypage_token) continue;
-    // ① 初動（LINE ID取得後、まだ送っていなければ）
-    await push(r, "mypage_initial");
+    // 回収予定時刻＝OP/マイページと同じ解決値(c-タスク _timeChange/_ssTime優先)。予約生値(return_time/col_time)より優先。
+    r._colTimeResolved = colTimeByRes[r.id] || "";
+    // ① 初動（LINE ID取得後、まだ送っていなければ）※深夜は送らない
+    if (daytime) await push(r, "mypage_initial");
     // ② 場所未設定リマインド（貸出3日前・OP解決場所が空）※無人貸出は除外
-    if (r.lend_date === d3 && !(placeByRes[r.id]) && !unLend(r.id)) await push(r, "mypage_place");
-    // ③ 前日 ※無人貸出は除外
-    if (r.lend_date === d1 && !unLend(r.id)) await push(r, "mypage_daybefore");
+    // 場所は OPタスク解決値(placeByRes) だけでなく 予約(del_place/col_place) も見る。
+    // HP直販予約は場所が予約側にのみ入りOPタスクのplace列は空のため、予約を見ないと誤って未設定判定になる。
+    const hasPlace = !!(String(placeByRes[r.id] || "").trim() || String(r.del_place || "").trim() || String(r.col_place || "").trim());
+    if (r.lend_date === d3 && !hasPlace && !unLend(r.id) && daytime) await push(r, "mypage_place");
+    // ③ 前日 ※無人貸出は除外・深夜は送らない
+    if (r.lend_date === d1 && !unLend(r.id) && daytime) await push(r, "mypage_daybefore");
     // ③' 返却日の朝(9時以降)に「本日返却日＋早め回収ボタンの使い方・訴求」を1回（札幌のみ・乗り捨て/無人返却は除外）※8時=傷チェックと被らせないため9時
     if (r.return_date === today && new Date(Date.now() + 9 * 3600 * 1000).getUTCHours() >= 9 && !unCol(r.id)) await push(r, "mypage_returnday");
     // ④ 返却3時間前（返却日時が now〜now+3h+window内）※乗り捨て/無人返却は除外
     if (r.return_date && r.return_date >= today && !unCol(r.id)) {
-      const rt = (r.return_time || r.col_time || "18:00");
+      const rt = (r._colTimeResolved || r.return_time || r.col_time || "18:00");
       if (/^\d{1,2}:\d{2}$/.test(rt)) {
         const dep = new Date(`${r.return_date}T${rt}:00+09:00`).getTime();
         const win = (cfg.window_min || 30) * 60000;
