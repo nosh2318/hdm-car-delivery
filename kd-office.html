@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>KEYDROP カンパニー — 訪問者が部署を移動するライブ図</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:-apple-system,"Hiragino Sans",sans-serif;background:#0a0f1c;color:#e7edf3;overflow:hidden}
+  #app{position:relative;width:100vw;height:100vh;background:
+    radial-gradient(1000px 460px at 30% -10%,rgba(37,99,235,.16),transparent 60%),
+    radial-gradient(900px 460px at 80% 120%,rgba(250,190,0,.10),transparent 60%),#0a0f1c}
+  .hud{position:absolute;top:0;left:0;right:0;display:flex;gap:8px;align-items:center;padding:9px 12px;z-index:50;flex-wrap:wrap}
+  .hud .t{font-size:15px;font-weight:900;letter-spacing:.03em;display:flex;align-items:center;gap:7px}
+  .hud .t .dot{width:9px;height:9px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .stat{background:rgba(18,24,36,.8);border:1px solid #22304a;border-radius:10px;padding:5px 10px;font-size:11px;color:#9fb0c6;font-weight:800}
+  .stat b{color:#fff;font-size:15px;margin-left:5px}.stat b.y{color:#FABE00}.stat b.g{color:#34d399}.stat b.r{color:#f87171}
+  .back{margin-left:auto;font-size:12px;color:#FABE00;text-decoration:none;font-weight:800;background:rgba(18,24,36,.8);border:1px solid #22304a;border-radius:10px;padding:7px 11px}
+  /* フロア */
+  #floor{position:absolute;left:10px;right:10px;top:46px;bottom:8px;display:grid;gap:9px;
+    grid-template-columns:repeat(4,1fr);
+    grid-template-rows:0.9fr 1fr 1fr;
+    grid-template-areas:
+      "lobby lobby goal exit"
+      "bsel  bopt  bcust bconf"
+      "dcond dsel  dchat dchat";}
+  .room{position:relative;border:1px solid #223049;border-radius:14px;background:linear-gradient(180deg,rgba(20,27,42,.9),rgba(13,18,30,.9));overflow:hidden;display:flex;flex-direction:column}
+  .room .rt{display:flex;align-items:center;gap:6px;padding:7px 10px;font-size:12px;font-weight:900;border-bottom:1px solid #1b2740;color:#dbe4f0}
+  .room .rt .bdg{margin-left:auto;font-size:10px;font-weight:900;background:#0e1830;border:1px solid #2a3a58;border-radius:99px;padding:2px 8px;color:#8ea0bb}
+  .room .rt .bdg .n{color:#fff;font-size:12px}
+  .room .rfloor{flex:1;position:relative;background-image:radial-gradient(rgba(255,255,255,.045) 1px,transparent 1px);background-size:18px 18px}
+  .room.book{border-color:#274a86}.room.book .rt{color:#9dc0ff}
+  .room.dai{border-color:#7a5a1e}.room.dai .rt{color:#ffd98a}
+  .room#lobby{border-color:#2f6b45}.room#lobby .rt{color:#8ef0b6}
+  .room#goal{border-color:#FABE00;background:linear-gradient(180deg,rgba(48,40,10,.9),rgba(20,16,4,.92))}.room#goal .rt{color:#FABE00}
+  .room#exit{border-color:#5a2740}.room#exit .rt{color:#f0a0bf}
+  .wingtag{position:absolute;z-index:10;font-size:10px;font-weight:900;letter-spacing:.05em;padding:2px 8px;border-radius:0 0 8px 0;color:#0a0f1c}
+  /* キャラ */
+  .ch{position:absolute;width:26px;height:30px;z-index:20;transition:left 1s cubic-bezier(.4,.1,.3,1),top 1s cubic-bezier(.4,.1,.3,1),opacity .5s;will-change:left,top}
+  .ch .body{width:22px;height:20px;border-radius:7px 7px 6px 6px;margin:0 auto;position:relative;box-shadow:0 2px 3px rgba(0,0,0,.5);animation:bob 1.6s ease-in-out infinite}
+  .ch .body:before,.ch .body:after{content:"";position:absolute;top:6px;width:3px;height:3px;background:#0a0f1c;border-radius:50%}
+  .ch .body:before{left:5px}.ch .body:after{right:5px}
+  .ch .foot{width:16px;height:4px;background:rgba(0,0,0,.35);border-radius:50%;margin:1px auto 0;filter:blur(1px)}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  .ch.book .body{background:#4b93ff}.ch.dai .body{background:#f5a524}.ch.browse .body{background:#8ea0bb}
+  .ch.live:after{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:30px;height:30px;border:2px solid #34d399;border-radius:50%;animation:ring 1.3s infinite}
+  @keyframes ring{0%{transform:translate(-50%,0) scale(.6);opacity:1}100%{transform:translate(-50%,0) scale(1.4);opacity:0}}
+  .ch.win .body{background:#FABE00;animation:winb .5s ease-in-out infinite}
+  @keyframes winb{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-5px) rotate(6deg)}}
+  .ch.fall{animation:fall .9s forwards ease-in}
+  @keyframes fall{100%{transform:translateY(40px);opacity:0}}
+  .conf{position:absolute;width:6px;height:10px;z-index:60;animation:cf 1.4s forwards ease-out}
+  @keyframes cf{to{transform:translateY(200px) rotate(500deg);opacity:0}}
+  .toast{position:absolute;left:50%;top:12%;transform:translateX(-50%);z-index:70;background:linear-gradient(90deg,#FABE00,#ffd34d);color:#0b0e14;font-weight:900;padding:9px 16px;border-radius:12px;font-size:15px;box-shadow:0 8px 30px rgba(250,190,0,.5);animation:toast 2.2s forwards}
+  @keyframes toast{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}12%{opacity:1;transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-14px)}}
+  .foot{position:absolute;bottom:2px;left:12px;z-index:50;font-size:10px;color:#5b6675}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hud">
+    <div class="t"><span class="dot"></span>KEYDROP カンパニー</div>
+    <div class="stat">🟢 いま <b class="g" id="hLive">–</b></div>
+    <div class="stat">🎯 成約(3日) <b class="y" id="hCv">–</b></div>
+    <div class="stat">👣 来訪(3日) <b id="hTot">–</b></div>
+    <div class="stat">💥 入口離脱 <b class="r" id="hLeak">–</b></div>
+    <a class="back" href="kd-analytics.html">← 数字で見る</a>
+  </div>
+
+  <div id="floor">
+    <div class="room" id="lobby"      style="grid-area:lobby"><div class="rt">🚪 受付ロビー（サイト訪問）<span class="bdg">在室 <span class="n" id="c_lobby">0</span></span></div><div class="rfloor"></div></div>
+    <div class="room" id="goal"       style="grid-area:goal"><div class="rt">🎯 成約室（予約完了）<span class="bdg">在室 <span class="n" id="c_goal">0</span></span></div><div class="rfloor"></div></div>
+    <div class="room" id="exit"       style="grid-area:exit"><div class="rt">😴 退出（離脱）<span class="bdg">在室 <span class="n" id="c_exit">0</span></span></div><div class="rfloor"></div></div>
+
+    <div class="room book" id="bsel"  style="grid-area:bsel"><div class="wingtag" style="background:#4b93ff">🚗 一般予約 部門</div><div class="rt">🚗 車両選択<span class="bdg">在室 <span class="n" id="c_bsel">0</span></span></div><div class="rfloor"></div></div>
+    <div class="room book" id="bopt"  style="grid-area:bopt"><div class="rt">🧩 オプション<span class="bdg">在室 <span class="n" id="c_bopt">0</span></span></div><div class="rfloor"></div></div>
+    <div class="room book" id="bcust" style="grid-area:bcust"><div class="rt">📝 お客様情報<span class="bdg">在室 <span class="n" id="c_bcust">0</span></span></div><div class="rfloor"></div></div>
+    <div class="room book" id="bconf" style="grid-area:bconf"><div class="rt">✅ 内容確認<span class="bdg">在室 <span class="n" id="c_bconf">0</span></span></div><div class="rfloor"></div></div>
+
+    <div class="room dai" id="dcond"  style="grid-area:dcond"><div class="wingtag" style="background:#f5a524">🔧 代車 部門</div><div class="rt">🔧 条件入力<span class="bdg">在室 <span class="n" id="c_dcond">0</span></span></div><div class="rfloor"></div></div>
+    <div class="room dai" id="dsel"   style="grid-area:dsel"><div class="rt">🚙 車両提案<span class="bdg">在室 <span class="n" id="c_dsel">0</span></span></div><div class="rfloor"></div></div>
+    <div class="room dai" id="dchat"  style="grid-area:dchat"><div class="rt">💬 チャット相談<span class="bdg">在室 <span class="n" id="c_dchat">0</span></span></div><div class="rfloor"></div></div>
+  </div>
+  <div id="stage" style="position:absolute;inset:0;pointer-events:none;z-index:15"></div>
+  <div class="foot">実データ（過去3日の訪問の道のり）を再現。訪問者が受付→各部署→成約/退出へ移動。🟢＝今この瞬間サイトにいる人。約15秒ごと更新。</div>
+</div>
+
+<script>
+var SB="https://ckrxttbnawkclshczsia.supabase.co";
+var AK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+async function q(p){var r=await fetch(SB+"/rest/v1/"+p,{headers:{apikey:AK,Authorization:"Bearer "+AK}});if(!r.ok)throw new Error(await r.text());return r.json();}
+
+var stage=document.getElementById("stage"), APP=document.getElementById("app");
+var roomCount={};
+function setCount(id,v){roomCount[id]=Math.max(0,v);var el=document.getElementById("c_"+id);if(el)el.textContent=roomCount[id];}
+function bump(id,d){setCount(id,(roomCount[id]||0)+d);}
+// 部屋のランダムな床座標（stage基準）
+function roomSpot(id){
+  var r=document.getElementById(id); if(!r) return {x:innerWidth/2,y:innerHeight/2};
+  var fr=r.querySelector(".rfloor").getBoundingClientRect(), ar=APP.getBoundingClientRect();
+  var pad=16;
+  return {x:(fr.left-ar.left)+pad+Math.random()*(fr.width-pad*2), y:(fr.top-ar.top)+pad+Math.random()*(fr.height-pad*2)};
+}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+
+// path → 部屋の順路
+function roomsOf(j){
+  var path=j.path||[]; var pages={}, maxBook=0,maxDai=0, done=!!(j.max_step&&j.max_step>=5);
+  path.forEach(function(e){var pg=String(e.page||"");pages[pg]=1;var a=String(e.area||"");
+    if(e.kind==="step"){ if(a==="nha"||a==="spk")maxBook=Math.max(maxBook,e.step||0); if(a==="daisha")maxDai=Math.max(maxDai,e.step||0);}
+    if(pg==="complete"||pg==="done"||e.kind==="complete")done=true;});
+  var isBook=maxBook>0||pages["flow"], isDai=maxDai>0||pages["daisha_flow"]||pages["daishaLP"]||pages["daisha_chat"];
+  var kind=isBook?"book":(isDai?"dai":"browse");
+  var seq=["lobby"];
+  if(isBook){ if(maxBook>=1||pages["flow"])seq.push("bsel"); if(maxBook>=2)seq.push("bopt"); if(maxBook>=3)seq.push("bcust"); if(maxBook>=4)seq.push("bconf"); }
+  else if(isDai){ seq.push("dcond"); if(maxDai>=1||pages["daisha_flow"])seq.push("dsel"); if(pages["daisha_chat"])seq.push("dchat"); }
+  var end = done?"goal":(j.exited?"exit":"leave");
+  return {seq:seq, end:end, kind:(kind==="book"?"book":kind==="dai"?"dai":"browse"), live:!!j.live, done:done};
+}
+
+function conf(x){var cols=["#FABE00","#34d399","#3b82f6","#f87171","#fff"];for(var i=0;i<22;i++){var c=document.createElement("div");c.className="conf";c.style.left=x+"px";c.style.top="18%";c.style.background=cols[i%cols.length];c.style.transform="translateX("+(Math.random()*120-60)+"px)";c.style.animationDelay=(Math.random()*.2)+"s";stage.appendChild(c);(function(el){setTimeout(function(){el.remove()},1500)})(c);}}
+function toast(m){var t=document.createElement("div");t.className="toast";t.textContent=m;stage.appendChild(t);setTimeout(function(){t.remove()},2200);}
+
+function mkChar(c){
+  var d=document.createElement("div"); d.className="ch "+c.kind+(c.live?" live":"");
+  d.innerHTML='<div class="body"></div><div class="foot"></div>';
+  stage.appendChild(d); return d;
+}
+async function runChar(c){
+  var d=mkChar(c); var cur=null;
+  function moveTo(id){ var s=roomSpot(id); d.style.left=s.x+"px"; d.style.top=s.y+"px"; }
+  // 受付から出発
+  var s0=roomSpot(c.seq[0]); d.style.left=s0.x+"px"; d.style.top=s0.y+"px";
+  cur=c.seq[0]; bump(cur,1); await sleep(120);
+  for(var i=1;i<c.seq.length;i++){
+    await sleep(700+Math.random()*500);
+    bump(cur,-1); cur=c.seq[i]; moveTo(cur); bump(cur,1);
+  }
+  await sleep(800+Math.random()*500);
+  // 退場
+  bump(cur,-1);
+  if(c.end==="goal"){ cur="goal"; moveTo("goal"); bump("goal",1); d.classList.add("win"); var g=roomSpot("goal"); conf(g.x); toast("🎉 成約！予約完了 +1");
+    await sleep(2200); bump("goal",-1); d.remove(); }
+  else if(c.end==="exit"){ cur="exit"; moveTo("exit"); bump("exit",1); await sleep(1200); d.classList.add("fall"); await sleep(900); bump("exit",-1); d.remove(); }
+  else { d.style.opacity="0"; await sleep(500); d.remove(); } // leave: そっと退出
+}
+
+var POOL=[], spTimer=null, active=0, CAP=42, ri=0;
+function startLoop(){
+  if(spTimer)clearInterval(spTimer);
+  spTimer=setInterval(function(){
+    if(!POOL.length||active>=CAP)return;
+    var c=POOL[ri%POOL.length]; ri++;
+    active++; runChar(c).then(function(){active--;});
+  }, 650);
+}
+
+async function load(){
+  try{
+    var rows=await q("public_kd_journey_v?select=sid,live,area,max_step,exited,device,path&limit=150");
+    POOL=(rows||[]).map(roomsOf);
+    var liveN=(rows||[]).filter(function(r){return r.live}).length;
+    var cvN=POOL.filter(function(c){return c.done}).length;
+    document.getElementById("hLive").textContent=liveN;
+    document.getElementById("hCv").textContent=cvN;
+    document.getElementById("hTot").textContent=POOL.length;
+    var tot=POOL.length||1, reached=POOL.filter(function(c){return c.seq.length>1}).length;
+    document.getElementById("hLeak").textContent="−"+Math.round((1-reached/tot)*100)+"%";
+    if(!spTimer)startLoop();
+  }catch(e){ document.querySelector(".foot").textContent="⚠️ ライブビュー未適用（public_kd_journey_v）："+e.message; }
+}
+load(); setInterval(load,15000);
+addEventListener("resize",function(){});
+</script>
+</body>
+</html>
