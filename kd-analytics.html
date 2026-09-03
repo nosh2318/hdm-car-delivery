@@ -469,12 +469,12 @@ async function loadV3(){
     }
     function mergeSteps(areas){const m={};areas.forEach(a=>{(byArea[a]||[]).forEach(r=>{const k=(r.step_no||0)+'|'+r.step;if(!m[k])m[k]={step:r.step,step_no:r.step_no||0,sessions:0};m[k].sessions+=(r.sessions||0);});});return Object.values(m).sort((x,y)=>x.step_no-y.step_no);}
     let fh='';
-    const book=mergeSteps(['那覇','札幌']);
+    const book=mergeSteps(['nha','spk']);
     if(book.length){
       const nodes=[{label:'🚪 TOP（サイト訪問）',n:topS}].concat(book.map(s=>({label:s.step,n:s.sessions})));
       fh+='<div style="margin:4px 0 16px"><div style="font-weight:800;font-size:12px;color:#cbd5e1;margin-bottom:6px">🚗 予約フロー（那覇＋札幌）— TOP訪問 → 予約完了</div>'+fcNodes(nodes)+'</div>';
     }
-    ['代車','daisha'].forEach(function(ak){
+    ['daisha'].forEach(function(ak){
       const rows=(byArea[ak]||[]).slice().sort((x,y)=>(x.step_no||0)-(y.step_no||0));
       if(!rows.length) return;
       fh+='<div style="margin:4px 0 16px"><div style="font-weight:800;font-size:12px;color:#cbd5e1;margin-bottom:6px">🔧 代車フロー</div>'+fcNodes(rows.map(s=>({label:s.step,n:s.sessions})))+'</div>';
