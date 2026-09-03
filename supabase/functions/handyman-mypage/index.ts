@@ -41,18 +41,6 @@ async function pushLine(resvNo: string, message: string): Promise<void> {
     const d = await r.json().catch(() => ({})); if (!d.ok) console.log("[line-push]", JSON.stringify(d));
   } catch (e) { console.error("[line-push]", String(e)); }
 }
-// 顧客へメール通知（LINEは当面使わずメールのみ・2026-08-27）。rent-handyman.com は BT project の notice-mail-send 経由で送る。
-const BT_NOTICE_URL = "https://ggqugvyskyiblxiycpci.supabase.co/functions/v1/notice-mail-send";
-const BT_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncXVndnlza3lpYmx4aXljcGNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDc3NjksImV4cCI6MjA5MzY4Mzc2OX0.uNhWcBd_Dl5nzemZDQfJ8mQV6iY73MwystGGpTRPC18";
-async function mailCustomer(resvNo: string, subject: string, text: string): Promise<void> {
-  const secret = Deno.env.get("NOTICE_MAIL_SECRET");
-  if (!secret) { console.log("[mail skip] no NOTICE_MAIL_SECRET", resvNo); return; }
-  try {
-    const r = await fetch(BT_NOTICE_URL, { method: "POST", headers: { "content-type": "application/json", apikey: BT_ANON_KEY, Authorization: `Bearer ${BT_ANON_KEY}` },
-      body: JSON.stringify({ secret, store: "spk", resv_no: resvNo, subject, text, allow_cancel: true }) });
-    const d = await r.json().catch(() => ({})); if (!d.ok) console.log("[notice-mail]", JSON.stringify(d));
-  } catch (e) { console.error("[notice-mail]", String(e)); }
-}
 
 async function slackPost(text: string, blocks?: unknown[]): Promise<void> {
   // マイページ関連の全通知（変更/依頼/キャンセル/承認却下/整合アラート）は #sapporo_user_action へ
@@ -65,7 +53,7 @@ async function slackPost(text: string, blocks?: unknown[]): Promise<void> {
 const OTA_JP: Record<string, string> = { J: "じゃらん", R: "楽天", S: "skyticket", O: "エアトリ", RC: "レンタカーcom", G: "GoGoOut", HP: "オフィシャル(HP)", SP: "オフィシャル(HP)", direct: "直販", KEYDROP: "KEYDROP" };
 function otaJp(o?: string): string { const k = String(o || ""); return OTA_JP[k] || k || "—"; }
 // 承認管理ページ（マイページ管理コンソール）URL＝承認待ちカードのボタンから飛べるように
-const MGMT_URL = "https://rent-handyman.com/mypage-admin.html?bucket=hdm_spk";
+const MGMT_URL = "https://nosh2318.github.io/spk-task/my-admin.html";
 // マイページ通知カード（統一フォーマット）＝ 見出し＋基本情報(お客様/予約番号/予約もと/利用/車両)＋内容＋対応の要否
 type MpCard = { emoji: string; title: string; name: string; resId: string; ota?: string; period?: string; vehicle?: string; lines?: string[]; action: string };
 function mpCard(c: MpCard): { text: string; blocks: unknown[] } {
@@ -331,30 +319,21 @@ Deno.serve(async (req) => {
   // ==== 管理者アクション: decide（承認/却下→実反映＋顧客LINE通知）====
   // スタッフの本体ログインJWTを検証（token=mypage_tokenは使わない）。
   if (action === "decide") {
-    // 認証: (a) 共通PIN（全店ダッシュボード・目視承認）／(b) スタッフJWT
-    const ADMIN_PIN = Deno.env.get("ADMIN_PIN") || "";
-    const adminPin = String(p.admin_pin || "");
-    let actor: string;
-    if (ADMIN_PIN && adminPin && adminPin === ADMIN_PIN) { actor = "admin_pin"; }
-    else {
-      const staffToken = String(p.staff_token || "").trim();
-      if (!staffToken) return json({ error: "スタッフ認証（PIN）がありません" }, 401, origin);
-      const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
-      if (!who.ok) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
-      const user = await who.json().catch(() => ({}));
-      actor = String(user?.email || user?.id || "staff");
-    }
+    const staffToken = String(p.staff_token || "").trim();
+    if (!staffToken) return json({ error: "スタッフ認証がありません" }, 401, origin);
+    const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
+    if (!who.ok) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
+    const user = await who.json().catch(() => ({}));
+    const actor = String(user?.email || user?.id || "staff");
     const sAct = "staff:" + actor; // 監査ログ用（誰が＝担当個人）
     const changeId = p.change_id;
-    const decision = String(p.decision || "").trim(); // approved | rejected | acknowledged
-    if (!changeId || (decision !== "approved" && decision !== "rejected" && decision !== "acknowledged")) return json({ error: "パラメータ不正" }, 400, origin);
+    const decision = String(p.decision || "").trim(); // approved | rejected
+    if (!changeId || (decision !== "approved" && decision !== "rejected")) return json({ error: "パラメータ不正" }, 400, origin);
     const st0 = STORES.spk;
     const cRows = await sbGet("mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}&select=id,reservation_id,field,new_value,note,status,payload`);
     const c = cRows[0];
     if (!c) return json({ error: "依頼が見つかりません" }, 404, origin);
     if (c.status !== "requested") return json({ error: "この依頼は既に処理済みです" }, 409, origin);
-    // 確認済み（対応不要・アーカイブのみ。反映も通知もしない）
-    if (decision === "acknowledged") { await sbPatch("mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: "acknowledged", actor: sAct }); return json({ ok: true, decided: "acknowledged" }, 200, origin); }
     const resId2 = String(c.reservation_id);
     const rr = (await sbGet(st0.resv, `id=eq.${encodeURIComponent(resId2)}&select=id,name,ota,vehicle,lend_date,return_date,lend_time,return_time,del_place,col_place,insurance,opt_b,opt_c,opt_j,mypage_locked,mypage_token`))[0] || {};
     const myUrl = rr.mypage_token ? `https://nosh2318.github.io/spk-task/my.html?t=${rr.mypage_token}` : "";
@@ -375,10 +354,7 @@ Deno.serve(async (req) => {
       else if (c.field === "del_place" || c.field === "col_place" || c.field === "lend_time" || c.field === "return_time") msg = `【HANDYMAN 札幌デリバリー】大変恐縮でございますが、当日のご予約状況および道路状況により、調整がいたしかねました。\n何卒ご容赦くださいますようお願い申し上げます。ご不明点は公式LINEにて承ります。`;
       else msg = `【HANDYMAN 札幌デリバリー】ご依頼いただいた${label}${c.field === "cancel" ? "申請" : "変更"}につきまして、恐れ入りますが今回はお受けいたしかねます。\n詳細は公式LINEにてご連絡いたします。`;
     }
-    // 顧客通知＝LINE連携済み(line_user_id実在)ならLINE、未連携ならメール（rent-handyman.com経由）
-    const _lk = (await sbGet("spk_line_links", `resv_no=eq.${encodeURIComponent(resId2)}&select=line_user_id&limit=1`))[0];
-    if (_lk && String((_lk as any).line_user_id || "").trim()) await pushLine(resId2, msg);
-    else await mailCustomer(resId2, `【HANDYMAN札幌デリバリー】ご予約 ${resId2} ${c.field === "cancel" ? "キャンセル受付" : "ご依頼"}のご連絡`, msg.replace(/公式LINE/g, "担当") + `\n\nHANDYMAN札幌デリバリー\nreserve@rent-handyman.com`);
+    await pushLine(resId2, msg);
 
     // 承認時の実反映
     if (decision === "approved") {
@@ -759,6 +735,12 @@ Deno.serve(async (req) => {
     //  お届け/回収の【時間・場所変更は、時間制限に関係なく全て承認制】。
     //  お客様は自由に申請でき、スタッフが管理コンソール →「🔔変更依頼」で承認すると
     //  OPシート/タスク(applyPlaceTime)へ反映＋お客様へLINE通知。即時反映はしない。
+    // 締切（オーナー確定 2026-09-01・SPK）:
+    //  お届け(DEL)の場所・時間変更は【貸出前日19:00（営業時間外）で受付終了】。
+    //  以降（＝翌営業日1発目のタスク直前の変更）は申請不可→公式LINEへ誘導。
+    //  ※回収(COL)は従来どおり承認制で時間制限なし。
+    if ((delPlace !== null || lendTime !== null) && pastOptionDeadline(r.lend_date))
+      return json({ error: "お届け場所・お届け時間の変更は、貸出日前日19:00までのご依頼を承っております。以降は当日のご準備の都合上、変更のご依頼は公式LINEにて承ります。", lineOnly: true }, 409, origin);
     const num = (k: string) => (has(k) && p[k] != null && p[k] !== "") ? Number(p[k]) : null;
     const dLat = num("del_lat"), dLng = num("del_lng"), cLat = num("col_lat"), cLng = num("col_lng");
     const cAct = "customer:" + resId;
@@ -826,7 +808,11 @@ Deno.serve(async (req) => {
     const rdyTime = (typeof p.time === "string" && /^\d{1,2}:\d{2}$/.test(p.time.trim())) ? p.time.trim() : "";
     const newVal = rdyTime ? `返却準備完了(早め回収OK) 希望時間 ${rdyTime}〜` : "返却準備完了(早め回収OK)";
     await sbPost("mypage_changes", { reservation_id: resId, store: "spk", field: "ready", old_value: "", new_value: newVal, source: "customer", status: "requested", note: rdyTime ? `希望回収時間の目安 ${rdyTime}〜` : "予定時間より早い回収OK" }, "customer:" + resId);
-    await notifySlackCard({ emoji: "🟢", title: "早め回収OK（返却準備完了）", name: r.name, resId, ota: r.ota, period: `${r.lend_date}〜${r.return_date}`, vehicle: r.vehicle, lines: [`🕐 *予定回収*　${r.return_time || r.col_time || "-"}`, `🕒 *お客様の希望*　${rdyTime ? `*${rdyTime}〜*` : "指定なし"}`], action: "💡 スケジュールに余裕があれば早めに回収をご検討ください（お客様には「確認中」と表示中）" });
+    // 予定回収はOP/マイページと同じ resolveTaskTime(回収タスク) 優先（予約生値 return_time/col_time 直読みだと食い違う）
+    const rdyTasks = await sbGet(store.tasks, `reservation_id=eq.${encodeURIComponent(resId)}&deleted=not.is.true&select=_id,place,time,insurance,changed_json`);
+    const rdyCTask = rdyTasks.find((t: any) => String(t._id || "").startsWith("c-"));
+    const schedCol = resolveTaskTime(rdyCTask) || r.return_time || r.col_time || "-";
+    await notifySlackCard({ emoji: "🟢", title: "早め回収OK（返却準備完了）", name: r.name, resId, ota: r.ota, period: `${r.lend_date}〜${r.return_date}`, vehicle: r.vehicle, lines: [`🕐 *予定回収*　${schedCol}`, `🕒 *お客様の希望*　${rdyTime ? `*${rdyTime}〜*` : "指定なし"}`], action: "💡 スケジュールに余裕があれば早めに回収をご検討ください（お客様には「確認中」と表示中）" });
     return json({ ok: true, requested: true }, 200, origin);
   }
 
