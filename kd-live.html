@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>KEYDROP LIVE MAP — 訪問者の動きをゲームで見る</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:-apple-system,"Hiragino Sans",sans-serif;background:#070b16;color:#e7edf3;overflow:hidden}
+  #app{position:relative;width:100vw;height:100vh;background:
+    radial-gradient(1200px 500px at 50% -10%,rgba(37,99,235,.18),transparent 60%),
+    radial-gradient(900px 400px at 50% 120%,rgba(250,190,0,.10),transparent 60%),
+    #070b16}
+  /* うっすらグリッド */
+  #grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:40px 40px;mask:linear-gradient(#000,transparent 85%)}
+  /* HUD */
+  .hud{position:absolute;top:0;left:0;right:0;display:flex;gap:8px;align-items:center;padding:10px 12px;z-index:20;flex-wrap:wrap}
+  .hud .t{font-size:15px;font-weight:900;letter-spacing:.04em;display:flex;align-items:center;gap:7px}
+  .hud .t .dot{width:9px;height:9px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .stat{background:rgba(20,26,36,.72);border:1px solid #23304a;border-radius:10px;padding:6px 11px;font-size:11px;color:#9fb0c6;font-weight:800;backdrop-filter:blur(6px)}
+  .stat b{color:#fff;font-size:15px;margin-left:5px}
+  .stat b.y{color:#FABE00}.stat b.g{color:#34d399}.stat b.r{color:#f87171}
+  .back{margin-left:auto;font-size:12px;color:#FABE00;text-decoration:none;font-weight:800;background:rgba(20,26,36,.72);border:1px solid #23304a;border-radius:10px;padding:8px 11px}
+  /* 道 */
+  #track{position:absolute;left:4%;right:4%;top:52%;height:8px;transform:translateY(-50%);
+    background:linear-gradient(90deg,#22c55e,#3b82f6 45%,#3b82f6 78%,#FABE00);border-radius:99px;
+    box-shadow:0 0 24px rgba(59,130,246,.4);opacity:.85}
+  #track:before{content:"";position:absolute;inset:-3px;border-radius:99px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.5) 0 8px,transparent 8px 20px);opacity:.25;animation:flow 1s linear infinite}
+  @keyframes flow{to{background-position:20px 0}}
+  .station{position:absolute;top:52%;transform:translate(-50%,-50%);text-align:center;z-index:5}
+  .station .pin{width:16px;height:16px;border-radius:50%;background:#0e1830;border:3px solid #3b82f6;margin:0 auto;box-shadow:0 0 12px rgba(59,130,246,.6)}
+  .station.start .pin{border-color:#22c55e;box-shadow:0 0 14px #22c55e}
+  .station.goal .pin{border-color:#FABE00;box-shadow:0 0 18px #FABE00;width:22px;height:22px}
+  .station .lb{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11.5px;font-weight:900;color:#dbe4f0;text-shadow:0 1px 4px #000}
+  .station .lb.up{bottom:26px}.station .lb.dn{top:26px}
+  .station .cnt{display:block;font-size:10px;font-weight:800;color:#8ea0bb;margin-top:1px}
+  .station .cnt .n{color:#fff;font-size:12px}
+  .drop{position:absolute;top:60%;transform:translateX(-50%);font-size:9.5px;color:#f87171;font-weight:900;white-space:nowrap;text-shadow:0 1px 3px #000}
+  /* キャラ */
+  .avatar{position:absolute;top:52%;font-size:22px;transform:translate(-50%,-50%);transition:left 2.2s cubic-bezier(.45,.05,.3,1),top .5s;z-index:8;will-change:left,top;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+  .avatar.live:after{content:"";position:absolute;inset:-6px;border:2px solid #34d399;border-radius:50%;box-shadow:0 0 12px #34d399;animation:ring 1.2s infinite}
+  @keyframes ring{0%{transform:scale(.7);opacity:1}100%{transform:scale(1.5);opacity:0}}
+  .avatar .tag{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:8px;background:#0b1220;border:1px solid #2a3650;border-radius:6px;padding:1px 4px;color:#9fb0c6;white-space:nowrap;font-weight:800}
+  .avatar.fall{animation:fall 1s forwards ease-in}
+  @keyframes fall{60%{transform:translate(-50%,60px) rotate(30deg);opacity:.8}100%{transform:translate(-50%,220px) rotate(120deg);opacity:0}}
+  .avatar.win{animation:win 1.1s forwards}
+  @keyframes win{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-130%) scale(1.5)}100%{transform:translate(-50%,-260%) scale(.2);opacity:0}}
+  .puff{position:absolute;top:56%;transform:translate(-50%,-50%);font-size:16px;z-index:7;animation:puff .9s forwards}
+  @keyframes puff{0%{opacity:.9;transform:translate(-50%,-50%) scale(.6)}100%{opacity:0;transform:translate(-50%,10px) scale(1.6)}}
+  .conf{position:absolute;width:7px;height:11px;z-index:30;animation:cf 1.5s forwards ease-out}
+  @keyframes cf{to{transform:translateY(240px) rotate(540deg);opacity:0}}
+  .toast{position:absolute;left:50%;top:24%;transform:translateX(-50%);z-index:40;background:linear-gradient(90deg,#FABE00,#ffd34d);color:#0b0e14;font-weight:900;padding:10px 18px;border-radius:12px;font-size:16px;box-shadow:0 8px 30px rgba(250,190,0,.5);animation:toast 2.2s forwards}
+  @keyframes toast{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}12%{opacity:1;transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-16px)}}
+  .legend{position:absolute;bottom:10px;left:12px;right:12px;z-index:20;display:flex;gap:10px;flex-wrap:wrap;font-size:10.5px;color:#8ea0bb;font-weight:700}
+  .legend b{color:#cbd5e1}
+  .note{position:absolute;bottom:34px;left:12px;z-index:20;font-size:10px;color:#5b6675}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="grid"></div>
+  <div class="hud">
+    <div class="t"><span class="dot"></span>KEYDROP LIVE MAP</div>
+    <div class="stat">🟢 いま <b class="g" id="hLive">–</b></div>
+    <div class="stat">🎯 完了(3日) <b class="y" id="hCv">–</b></div>
+    <div class="stat">👣 訪問(3日) <b id="hTot">–</b></div>
+    <div class="stat">💥 最大の穴 <b class="r" id="hLeak">–</b></div>
+    <a class="back" href="kd-analytics.html">← 数字で見る</a>
+  </div>
+  <div id="track"></div>
+  <div id="stations"></div>
+  <div id="stage"></div>
+  <div class="note">実データ（過去3日の訪問の道のり）をキャラで再現。🟢リング＝今この瞬間サイトにいる人。</div>
+  <div class="legend">
+    <span>🚗 予約フローの人</span><span>🔧 代車の人</span><span>👤 見ただけ</span>
+    <span><b>右へ進む</b>＝先の段階へ</span><span><b>ポトッ↓</b>＝離脱</span><span><b>🎆上へ</b>＝予約完了</span>
+  </div>
+</div>
+
+<script>
+var SB="https://ckrxttbnawkclshczsia.supabase.co";
+var AK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+async function q(path){ var r=await fetch(SB+"/rest/v1/"+path,{headers:{apikey:AK,Authorization:"Bearer "+AK}}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+
+// 道のステーション（予約フロー）
+var ST=[
+  {key:"top",   lb:"🚪 TOP",       sub:"サイト訪問", start:true},
+  {key:"select",lb:"🚗 車両選択"},
+  {key:"options",lb:"🧩 オプション"},
+  {key:"customer",lb:"📝 お客様情報"},
+  {key:"confirm",lb:"✅ 内容確認"},
+  {key:"goal",  lb:"🎯 予約完了",  goal:true}
+];
+function stX(i){ return (4 + (i/(ST.length-1))*92) ; } // %(track left4%~right4%)
+
+function layoutStations(counts){
+  var host=document.getElementById("stations"); host.innerHTML="";
+  ST.forEach(function(s,i){
+    var up=(i%2===0);
+    var c=counts&&counts[i]!=null?counts[i]:null;
+    var d=document.createElement("div");
+    d.className="station"+(s.start?" start":"")+(s.goal?" goal":"");
+    d.style.left=stX(i)+"%";
+    d.innerHTML='<div class="lb '+(up?"up":"dn")+'">'+s.lb+(c!=null?'<span class="cnt">到達 <span class="n">'+c+'</span></span>':'')+'</div><div class="pin"></div>';
+    host.appendChild(d);
+  });
+}
+
+// セッション→到達ステーション index & 種別 & 離脱/完了
+function classify(j){
+  var path=j.path||[]; var idx=0, kind="browse", exited=!!j.exited, done=false;
+  var pages={}, maxBook=0, maxDai=0;
+  path.forEach(function(e){
+    var pg=String(e.page||""); pages[pg]=1;
+    if(e.kind==="step"){
+      var a=String(e.area||"");
+      if(a==="nha"||a==="spk") maxBook=Math.max(maxBook, e.step||0);
+      if(a==="daisha") maxDai=Math.max(maxDai, e.step||0);
+    }
+    if(pg==="complete"||pg==="done"||e.kind==="complete") done=true;
+  });
+  var isBook = maxBook>0 || pages["flow"];
+  var isDai  = maxDai>0 || pages["daisha_flow"]||pages["daishaLP"]||pages["daisha_chat"];
+  if(isBook){ kind="book"; idx=Math.min(1+maxBook, ST.length-1); if(!maxBook && pages["flow"]) idx=1; }
+  else if(isDai){ kind="dai"; idx=Math.min(1+Math.max(1,maxDai), 2); } // 代車は車両選択止まりまで
+  else { kind="browse"; idx=0; }
+  if(j.max_step && j.max_step>=5){ done=true; idx=ST.length-1; }
+  if(done){ idx=ST.length-1; exited=false; }
+  return {idx:idx, kind:kind, exited:exited, done:done, live:!!j.live, device:j.device||""};
+}
+
+var ICON={book:"🚗",dai:"🔧",browse:"👤"};
+var stage=document.getElementById("stage");
+var POOL=[], counts=new Array(ST.length).fill(0), spawnTimer=null;
+
+function conf(x){
+  var cols=["#FABE00","#34d399","#3b82f6","#f87171","#ffd34d","#fff"];
+  for(var i=0;i<26;i++){ var c=document.createElement("div"); c.className="conf";
+    c.style.left=(x+(Math.random()*16-8))+"%"; c.style.top="30%";
+    c.style.background=cols[i%cols.length]; c.style.transform="translateY(0) rotate("+(Math.random()*360)+"deg)";
+    c.style.animationDelay=(Math.random()*.2)+"s"; stage.appendChild(c); setTimeout(function(el){return function(){el.remove()}}(c),1600); }
+}
+function toast(msg){ var t=document.createElement("div"); t.className="toast"; t.textContent=msg; stage.appendChild(t); setTimeout(function(){t.remove()},2200); }
+
+function spawn(c){
+  var a=document.createElement("div"); a.className="avatar"+(c.live?" live":"");
+  a.style.left=stX(0)+"%"; a.textContent=ICON[c.kind]||"👤";
+  if(c.live){ var tg=document.createElement("div"); tg.className="tag"; tg.textContent="LIVE"; a.appendChild(tg); }
+  stage.appendChild(a);
+  // 少し歩かせてから到達点へ
+  requestAnimationFrame(function(){
+    setTimeout(function(){
+      a.style.left=stX(c.idx)+"%";
+      counts[c.idx]=(counts[c.idx]||0)+1;
+      // 到達後の演出
+      setTimeout(function(){
+        if(c.done){ a.classList.add("win"); conf(stX(ST.length-1)); toast("🎉 予約完了！CV +1"); setTimeout(function(){a.remove()},1100); }
+        else if(c.exited){ var p=document.createElement("div"); p.className="puff"; p.style.left=stX(c.idx)+"%"; p.textContent="💨"; stage.appendChild(p); setTimeout(function(){p.remove()},900); a.classList.add("fall"); setTimeout(function(){a.remove()},1000); }
+        else { a.style.opacity=".55"; setTimeout(function(){ a.style.transition="opacity .6s"; a.style.opacity="0"; setTimeout(function(){a.remove()},600); }, 1400); } // 未離脱=検討中→そっと退場
+      }, 2300);
+    }, 250+Math.random()*400);
+  });
+}
+
+function startSpawning(){
+  if(spawnTimer) clearInterval(spawnTimer);
+  var i=0;
+  spawnTimer=setInterval(function(){
+    if(!POOL.length) return;
+    // liveを優先で混ぜつつ、プールを巡回して常に動きを出す
+    var c=POOL[i%POOL.length]; i++;
+    // 到達カウントは1巡ごとにリセットして最新化
+    if(i%POOL.length===0){ counts=new Array(ST.length).fill(0); }
+    spawn(c);
+    layoutStations(counts);
+  }, 900);
+}
+
+async function load(){
+  try{
+    var rows=await q("public_kd_journey_v?select=sid,live,area,max_step,exited,device,path&limit=150");
+    POOL=(rows||[]).map(classify);
+    var liveN=POOL.filter(function(c){return c.live}).length;
+    var cvN=POOL.filter(function(c){return c.done}).length;
+    document.getElementById("hLive").textContent=liveN;
+    document.getElementById("hCv").textContent=cvN;
+    document.getElementById("hTot").textContent=POOL.length;
+    // 最大の穴＝TOP→車両選択の離脱率（到達ベース）
+    var topN=POOL.length||1, selN=POOL.filter(function(c){return c.idx>=1}).length;
+    var leak=Math.round((1-selN/topN)*100);
+    document.getElementById("hLeak").textContent="TOP→選択 −"+leak+"%";
+    layoutStations();
+    if(!spawnTimer) startSpawning();
+  }catch(e){
+    document.querySelector(".note").textContent="⚠️ ライブビュー未適用（public_kd_journey_v）："+e.message;
+  }
+}
+load(); setInterval(load, 15000);
+</script>
+</body>
+</html>
