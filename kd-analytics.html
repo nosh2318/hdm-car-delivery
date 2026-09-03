@@ -165,7 +165,7 @@
       <th class="l">ページ</th><th class="l">要素</th><th>クリック</th><th>セッション</th>
     </tr></thead><tbody><tr><td class="l mut" colspan="4">–</td></tr></tbody></table></div>
 
-    <h2 style="font-size:12px;color:#8b97a6;margin-top:16px">🔻 フロー離脱（段階ごとの到達／残存率）</h2>
+    <h2 style="font-size:12px;color:#8b97a6;margin-top:16px">🔻 CVまでのフロー（スタート→ゴール・各段の離脱）</h2>
     <div id="v3Funnel"><div class="mut">–</div></div>
 
     <h2 style="font-size:12px;color:#8b97a6;margin-top:16px">📱 端末別 ／ 🟣 流入元</h2>
@@ -443,19 +443,41 @@ async function loadV3(){
     document.querySelector('#v3ClickTbl tbody').innerHTML = (ck&&ck.length)? ck.map(r=>
       '<tr><td class="l">'+esc(v3pl(r.page))+'</td><td class="l">'+esc(r.target)+'</td><td>'+(r.clicks||0)+'</td><td>'+(r.sessions||0)+'</td></tr>'
     ).join('') : '<tr><td class="l mut" colspan="4">まだクリックがありません</td></tr>';
-    // フロー離脱（area別・残存率）
+    // CVまでのフロー可視化：スタート→各段→ゴール の連結フローチャート（各段の離脱%・最大の穴を強調）
+    const STEP_JP={cond:'条件入力',select:'車両選択',vehicle:'車両選択',step_vehicle:'車両選択',options:'オプション',opt:'オプション',customer:'お客様情報',form:'お客様情報',confirm:'内容確認',terms:'約款同意',payment:'お支払い',done:'予約完了',complete:'予約完了'};
+    const stJp=s=>STEP_JP[String(s||'').toLowerCase()]||s;
+    const topS=(pg||[]).reduce((m,r)=>r.page==='top'?(r.sessions||0):m,0)||0;
     const byArea={}; (fn||[]).forEach(r=>{(byArea[r.area]=byArea[r.area]||[]).push(r);});
-    let fh='';
-    Object.keys(byArea).forEach(a=>{
-      const rows=byArea[a].slice().sort((x,y)=>(x.step_no||0)-(y.step_no||0));
-      const base=Math.max.apply(null,rows.map(r=>r.sessions||0))||1;
-      fh+='<div style="margin:6px 0 12px"><div style="font-weight:800;font-size:12px;color:#cbd5e1;margin-bottom:4px">'+esc(V3AREA[a]||a)+'</div>';
-      rows.forEach((r,i)=>{ const p=Math.round((r.sessions||0)/base*100); const drop=(i>0)?Math.round((1-(r.sessions||0)/(rows[i-1].sessions||1))*100):0;
-        fh+='<div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px"><span style="width:118px;color:#9aa6b2">'+(r.step_no||i+1)+'. '+esc(r.step)+'</span>'
-          +'<span style="flex:1;background:#0e131b;border-radius:6px;overflow:hidden;height:16px"><span style="display:block;height:100%;width:'+p+'%;background:#FABE00"></span></span>'
-          +'<span style="width:120px;text-align:right">'+(r.sessions||0)+'（'+p+'%）'+(i>0&&drop>0?'<span style="color:#f87171"> −'+drop+'%</span>':'')+'</span></div>';
+    function fcNodes(nodes){
+      if(!nodes.length) return '';
+      const start=nodes[0].n||0; let h='';
+      nodes.forEach((nd,i)=>{
+        const isStart=i===0,isGoal=i===nodes.length-1;
+        const ps=start?Math.round((nd.n/start)*100):0;
+        const bd=isStart?'#22c55e':isGoal?'#FABE00':'#2a3442';
+        const bg=isStart?'🚩 スタート':isGoal?'🎯 ゴール':'';
+        h+='<div style="border:2px solid '+bd+';background:#0e131b;border-radius:12px;padding:9px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+          +'<div style="font-size:12.5px;font-weight:800;color:#e2e8f0">'+esc(stJp(nd.label))+(bg?' <span style="font-size:10px;color:#94a3b8">'+bg+'</span>':'')+'</div>'
+          +'<div style="text-align:right;flex:none"><span style="font-size:19px;font-weight:900;color:'+(isGoal?'#FABE00':'#fff')+'">'+(nd.n||0)+'</span> <span style="font-size:11px;color:#8b97a6">('+ps+'%)</span></div></div>';
+        if(i<nodes.length-1){
+          const nx=nodes[i+1].n||0,lost=(nd.n||0)-nx,dp=(nd.n)?Math.round(lost/nd.n*100):0;
+          const big=dp>=50,col=big?'#f87171':(dp>0?'#fbbf24':'#64748b');
+          h+='<div style="text-align:center;padding:2px 0;color:'+col+';font-size:12px;font-weight:800">↓ '+(dp>0?('−'+dp+'%（−'+lost+'人）'+(big?' ⚠最大の穴':'')):'維持')+'</div>';
+        }
       });
-      fh+='</div>';
+      return h;
+    }
+    function mergeSteps(areas){const m={};areas.forEach(a=>{(byArea[a]||[]).forEach(r=>{const k=(r.step_no||0)+'|'+r.step;if(!m[k])m[k]={step:r.step,step_no:r.step_no||0,sessions:0};m[k].sessions+=(r.sessions||0);});});return Object.values(m).sort((x,y)=>x.step_no-y.step_no);}
+    let fh='';
+    const book=mergeSteps(['那覇','札幌']);
+    if(book.length){
+      const nodes=[{label:'🚪 TOP（サイト訪問）',n:topS}].concat(book.map(s=>({label:s.step,n:s.sessions})));
+      fh+='<div style="margin:4px 0 16px"><div style="font-weight:800;font-size:12px;color:#cbd5e1;margin-bottom:6px">🚗 予約フロー（那覇＋札幌）— TOP訪問 → 予約完了</div>'+fcNodes(nodes)+'</div>';
+    }
+    ['代車','daisha'].forEach(function(ak){
+      const rows=(byArea[ak]||[]).slice().sort((x,y)=>(x.step_no||0)-(y.step_no||0));
+      if(!rows.length) return;
+      fh+='<div style="margin:4px 0 16px"><div style="font-weight:800;font-size:12px;color:#cbd5e1;margin-bottom:6px">🔧 代車フロー</div>'+fcNodes(rows.map(s=>({label:s.step,n:s.sessions})))+'</div>';
     });
     document.getElementById('v3Funnel').innerHTML = fh || '<div class="mut">まだフロー段階の記録がありません</div>';
     // 端末別
