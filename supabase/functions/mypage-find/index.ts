@@ -47,9 +47,9 @@ function telMatch(a: string, b: string): boolean {
 
 // 店舗定義: 検索するテーブルと、マイページURLの組み立て
 const STORES = [
-  { db: "main", table: "reservations",     url: (t: string) => `https://nosh2318.github.io/spk-task/my.html?t=${t}`,          label: "札幌" },
-  { db: "main", table: "nha_reservations", url: (t: string) => `https://nosh2318.github.io/naha-project/my-nha.html?t=${t}`,  label: "那覇" },
-  { db: "bt",   table: "bt_reservations",  url: (t: string) => `https://rent-handyman.com/my-tkm.html?t=${t}`,                label: "高松" },
+  { code: "spk", db: "main", table: "reservations",     dateCol: "lend_date",  url: (t: string) => `https://nosh2318.github.io/spk-task/my.html?t=${t}`,          label: "札幌" },
+  { code: "nha", db: "main", table: "nha_reservations", dateCol: "start_date", url: (t: string) => `https://nosh2318.github.io/naha-project/my-nha.html?t=${t}`,  label: "那覇" },
+  { code: "tkm", db: "bt",   table: "bt_reservations",  dateCol: "start_date", url: (t: string) => `https://rent-handyman.com/my-tkm.html?t=${t}`,                label: "高松" },
 ];
 
 Deno.serve(async (req) => {
@@ -61,34 +61,42 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { /* noop */ }
   if (body?.action === "ping") return json({ ok: true, warm: true }, 200, origin);
 
-  // 2026-09-03 オーナー確定: 予約番号 / 電話番号 / メール の「いずれか1つ」で照会OK。
+  // 2026-09-03 オーナー確定: エリア選定(store)を必須にする＝複数エリアに予約履歴があると
+  //   メール/電話が複数店で一致し誤った店へ飛ぶため。選択した店だけを照会する。
+  //   照会キーは 予約番号 / 電話 / メール の「いずれか1つ」。
+  const storeCode = norm(body?.store);
   const q = norm(body?.q || body?.resv_no || body?.contact);
+  const st = STORES.find((s) => s.code === storeCode);
+  if (!st) return json({ ok: false, error: "store_required" }, 200, origin);
   if (q.length < 4) return json({ ok: false, error: "invalid_input" }, 200, origin);
   const qd = digits(q);
   const isCancel = (s: string) => { const x = String(s || "").toLowerCase(); return x.indexOf("cancel") >= 0 || String(s || "").indexOf("キャンセル") >= 0; };
+
+  const base = st.db === "bt" ? BT_URL : SB_URL;
+  const key = st.db === "bt" ? BT_KEY : SB_KEY;
+  if (!base || !key) return json({ ok: false, error: "store_unavailable" }, 200, origin);
 
   const enc = encodeURIComponent(q);
   // id完全一致 / mail完全一致(大小無視=ilikeでワイルドカードなし) / tel(入力そのまま・数字のみ) のいずれか
   let orFilt = `or=(id.eq.${enc},mail.ilike.${enc},tel.eq.${enc}`;
   if (qd.length >= 8) orFilt += `,tel.eq.${encodeURIComponent(qd)}`;
   orFilt += `)`;
-
-  for (const st of STORES) {
-    const base = st.db === "bt" ? BT_URL : SB_URL;
-    const key = st.db === "bt" ? BT_KEY : SB_KEY;
-    if (!base || !key) continue; // BT未設定なら高松はスキップ(安全)
-    let rows = await sbGet(base, key, st.table, `${orFilt}&select=id,mail,tel,name,mypage_token,status&limit=8`);
-    // tel の表記ゆれ(ハイフン等)は or= で拾えないことがある → 数字一致でクライアント側フォールバック
-    if ((!rows || rows.length === 0) && qd.length >= 8) {
-      const cand = await sbGet(base, key, st.table, `tel=not.is.null&select=id,mail,tel,name,mypage_token,status&limit=2000`);
-      rows = (cand || []).filter((r) => telMatch(r.tel, q));
-    }
-    if (!rows || rows.length === 0) continue;
-    const withTok = rows.filter((r) => r.mypage_token);
-    if (withTok.length === 0) continue; // token未発行は開けない
-    const pick = withTok.find((r) => !isCancel(r.status)) || withTok[0]; // 有効予約を優先
-    return json({ ok: true, url: st.url(String(pick.mypage_token)), store: st.label }, 200, origin);
+  const sel = `select=id,mail,tel,name,mypage_token,status,${st.dateCol}&limit=20`;
+  let rows = await sbGet(base, key, st.table, `${orFilt}&${sel}`);
+  // tel の表記ゆれ(ハイフン等)は or= で拾えないことがある → 数字一致でクライアント側フォールバック
+  if ((!rows || rows.length === 0) && qd.length >= 8) {
+    const cand = await sbGet(base, key, st.table, `tel=not.is.null&${sel.replace("limit=20", "limit=3000")}`);
+    rows = (cand || []).filter((r) => telMatch(r.tel, q));
   }
-  // 一致なし: 理由を明かさない
-  return json({ ok: false, error: "not_found" }, 200, origin);
+  const withTok = (rows || []).filter((r) => r.mypage_token);
+  if (withTok.length === 0) return json({ ok: false, error: "not_found" }, 200, origin);
+  // 同一店内で複数一致(同じメール/電話で複数予約)時の優先順: 予約番号の完全一致 > 有効(非キャンセル) > 利用日が新しい
+  withTok.sort((a, b) => {
+    const ai = String(a.id) === q ? 1 : 0, bi = String(b.id) === q ? 1 : 0;
+    if (ai !== bi) return bi - ai;
+    const ac = isCancel(a.status) ? 1 : 0, bc = isCancel(b.status) ? 1 : 0;
+    if (ac !== bc) return ac - bc;
+    return String(b[st.dateCol] || "").localeCompare(String(a[st.dateCol] || ""));
+  });
+  return json({ ok: true, url: st.url(String(withTok[0].mypage_token)), store: st.label }, 200, origin);
 });
