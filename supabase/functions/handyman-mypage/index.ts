@@ -319,12 +319,19 @@ Deno.serve(async (req) => {
   // ==== 管理者アクション: decide（承認/却下→実反映＋顧客LINE通知）====
   // スタッフの本体ログインJWTを検証（token=mypage_tokenは使わない）。
   if (action === "decide") {
-    const staffToken = String(p.staff_token || "").trim();
-    if (!staffToken) return json({ error: "スタッフ認証がありません" }, 401, origin);
-    const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
-    if (!who.ok) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
-    const user = await who.json().catch(() => ({}));
-    const actor = String(user?.email || user?.id || "staff");
+    // 認証: (a) 共通PIN（全店ダッシュボード mypage-admin） / (b) スタッフJWT。他店EFと統一。
+    const ADMIN_PIN = Deno.env.get("ADMIN_PIN") || "";
+    const adminPin = String(p.admin_pin || "");
+    let actor = "";
+    if (ADMIN_PIN && adminPin && adminPin === ADMIN_PIN) { actor = "admin_pin"; }
+    else {
+      const staffToken = String(p.staff_token || "").trim();
+      if (!staffToken) return json({ error: "スタッフ認証（PIN）が必要です" }, 401, origin);
+      const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
+      if (!who.ok) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
+      const user = await who.json().catch(() => ({}));
+      actor = String(user?.email || user?.id || "staff");
+    }
     const sAct = "staff:" + actor; // 監査ログ用（誰が＝担当個人）
     const changeId = p.change_id;
     const decision = String(p.decision || "").trim(); // approved | rejected
