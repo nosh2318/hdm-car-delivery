@@ -91,6 +91,17 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .quizbnr .qb-tx b{display:block;font-size:15px;font-weight:900}
 .quizbnr .qb-tx span{display:block;font-size:11.5px;opacity:.85;margin-top:1px}
 .quizbnr .qb-go{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:#38bdf8;color:#0F1F45;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px}
+.tvbox{background:#fff;border:1px solid #e6e9ef;border-radius:16px;padding:14px 14px 12px;margin-bottom:14px;box-shadow:0 4px 14px rgba(15,31,69,.08)}
+.tvbox .tv-h{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.tvbox .tv-h .ic{font-size:20px}
+.tvbox .tv-h b{font-size:15px;font-weight:900;color:#0F1F45}
+.tvbox .tv-sub{font-size:11.5px;color:#7b8aa3;margin:0 0 11px 28px}
+.tv-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.tv-item{display:flex;align-items:center;gap:9px;border:1px solid #e6e9ef;border-radius:12px;padding:11px 12px;cursor:pointer;text-decoration:none;color:#0F1F45;background:#fbfcfe}
+.tv-item:active{transform:translateY(1px)}
+.tv-item .te{font-size:22px;flex:0 0 auto}
+.tv-item .tt{font-size:12.5px;font-weight:800;line-height:1.3}
+.tv-item .tg{margin-left:auto;color:#c7cfdb;font-weight:900;font-size:12px}
 .licalert{display:flex;align-items:center;gap:11px;background:#fef2f2;border:2px solid #dc2626;border-radius:14px;padding:13px 15px;margin-bottom:14px;cursor:pointer;animation:licpulse 1.15s ease-in-out infinite}
 .licalert .la-ic{font-size:26px;flex:none}
 .licalert .la-tx{flex:1;min-width:0}
@@ -495,6 +506,12 @@ const TX={
  // ── 新カルテUI（KV/クイズ/受取ボタン/スポット/しおり）──
  quiz_hd:{ja:"ご当地クイズに挑戦！",en:"Take the Local Quiz!",zh:"挑戰在地測驗！",ko:"현지 퀴즈에 도전!"},
  quiz_sub:{ja:"全15問・約1分でわかるご当地ツウ度",en:"15 questions · about 1 min",zh:"共15題・約1分鐘",ko:"전 15문항 · 약 1분"},
+ tv_hd:{ja:"旅をもっと楽しむ",en:"Make your trip better",zh:"讓旅程更精彩",ko:"여행을 더 즐겁게"},
+ tv_sub:{ja:"ホテル・体験・グルメをお得に予約",en:"Hotels, activities & food deals",zh:"飯店・體驗・美食優惠預約",ko:"호텔·체험·미식 예약"},
+ tv_exp:{ja:"体験・アクティビティ",en:"Activities",zh:"體驗・活動",ko:"체험·액티비티"},
+ tv_hotel:{ja:"ホテル・宿",en:"Hotels",zh:"飯店・住宿",ko:"호텔·숙소"},
+ tv_gourmet:{ja:"グルメ・お店",en:"Food & dining",zh:"美食・餐廳",ko:"맛집·식당"},
+ tv_spot:{ja:"おすすめスポット",en:"Spots",zh:"推薦景點",ko:"추천 명소"},
  recv_head:{ja:"車両の受け取り",en:"Vehicle Handover",zh:"車輛領取",ko:"차량 수령"},
  recv_btn:{ja:"車を受け取りました",en:"I've received the car",zh:"我已取車",ko:"차량을 받았습니다"},
  recv_hint:{ja:"車両をお受け取りになったら押してください。担当スタッフに通知されます。",en:"Tap once you've received the car. Our staff will be notified.",zh:"取車後請按此，將通知負責人員。",ko:"차량을 받으신 후 눌러 주세요. 담당 직원에게 통지됩니다."},
@@ -608,6 +625,12 @@ function qtrack(ev,extra){try{fetch(QEF,{method:"POST",headers:{"Content-Type":"
 let _qviewed=false;
 window.openQuiz=function(){ qtrack('banner_click'); var st=((DATA&&DATA.store)||"spk"); var ov=document.createElement('div'); ov.id='quizOv'; ov.style.cssText='position:fixed;inset:0;z-index:99999;background:#0b0d10'; ov.innerHTML='<button onclick="closeQuiz()" style="position:absolute;top:calc(env(safe-area-inset-top) + 8px);right:10px;z-index:2;width:38px;height:38px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:19px;font-weight:800;cursor:pointer">✕</button><iframe src="quiz.html?v=2&t='+encodeURIComponent(TOKEN||"")+'&store='+st+'" style="width:100%;height:100%;border:0"></iframe>'; document.body.appendChild(ov); };
 window.closeQuiz=function(){ var o=document.getElementById('quizOv'); if(o)o.remove(); };
+/* ★ 旅を楽しむ/お得情報 リンク＋クリック計測(店舗別 北海道/沖縄・ASP登録後にアフィリURLへ差替) */
+window.TRAVEL_LINKS={
+  spk:{exp:"https://activityjapan.com/lp/hokkaido/",hotel:"https://www.jalan.net/",gourmet:"https://tabelog.com/hokkaido/",spot:"https://www.jalan.net/kankou/010000/"},
+  nha:{exp:"https://activityjapan.com/lp/okinawa/",hotel:"https://www.jalan.net/",gourmet:"https://tabelog.com/okinawa/",spot:"https://www.jalan.net/kankou/470000/"}
+};
+window.tvClick=function(cat){ var st=((DATA&&DATA.store)==="nha")?"nha":"spk"; try{qtrack('travel_'+cat,{cat:cat});}catch(e){} var m=(window.TRAVEL_LINKS||{})[st]||{}; var u=m[cat]; if(u)window.open(u,'_blank','noopener'); };
 // 車の受け取り完了報告（EF receive_done）
 async function receiveDone(){
   if(!confirm(t('recv_confirm')))return;
@@ -827,6 +850,17 @@ function render(){
     <div class="nh-st">${esc(stLabel)}</div>
   </div>
 
+
+  ${!cancelled?`<div class="tvbox">
+    <div class="tv-h"><span class="ic">🎁</span><b>${t('tv_hd')}</b></div>
+    <div class="tv-sub">${t('tv_sub')}</div>
+    <div class="tv-grid">
+      <a class="tv-item" onclick="tvClick('exp')"><span class="te">🎫</span><span class="tt">${t('tv_exp')}</span><span class="tg">›</span></a>
+      <a class="tv-item" onclick="tvClick('hotel')"><span class="te">🏨</span><span class="tt">${t('tv_hotel')}</span><span class="tg">›</span></a>
+      <a class="tv-item" onclick="tvClick('gourmet')"><span class="te">🍽</span><span class="tt">${t('tv_gourmet')}</span><span class="tg">›</span></a>
+      <a class="tv-item" onclick="tvClick('spot')"><span class="te">🗺</span><span class="tt">${t('tv_spot')}</span><span class="tg">›</span></a>
+    </div>
+  </div>`:""}
 
   ${(!RO&&!cancelled)?`<div class="licalert" id="licAlert" style="display:none" onclick="scrollLic()">
     <div class="la-ic">🪪</div>
