@@ -113,7 +113,11 @@ Deno.serve(async (req) => {
     if (hasImg && !imgUrl) return json({ ok: false, error: "画像の送信に失敗しました" }, 200, origin);
     await sbInsert("cs_chat_messages", { thread_id: th.id, sender: "customer", body, image_url: imgUrl });
     const last = body ? body.slice(0, 120) : "📷 画像";
-    await sbPatch("cs_chat_threads", `id=eq.${th.id}`, { unread_staff: (th.unread_staff || 0) + 1, unread_cust: 0, status: "open", last_msg: last, last_msg_at: new Date().toISOString() });
+    await sbPatch("cs_chat_threads", `id=eq.${th.id}`, { unread_staff: (th.unread_staff || 0) + 1, unread_cust: 0, status: "open", work_status: "未対応", last_msg: last, last_msg_at: new Date().toISOString() });
+    // ★初動＝スレッド最初のメッセージなら全店共通の定型文を自動返信（対応状況は「未対応」のまま＝スタッフの対応を促す）
+    if ((await msgs(th.id)).length === 1) {
+      await sbInsert("cs_chat_messages", { thread_id: th.id, sender: "staff", body: "ご連絡ありがとうございます！AI・HANDYMANが対応させていただきますので暫しお待ちください！", image_url: null });
+    }
     const areaJp = store === "nha" ? "那覇" : "札幌";
     await slack(CH[store], `💬 CSチャット新着［${areaJp}］ ${resv.name || ""}様`, [
       { type: "header", text: { type: "plain_text", text: `💬 CSチャット新着（${areaJp}）`, emoji: true } },
@@ -134,10 +138,18 @@ Deno.serve(async (req) => {
   if (action === "staff_list") {
     if (!await verifyStaff(S(p.staff_token))) return json({ ok: false, error: "認証が必要です" }, 401, origin);
     const scope = store; const onlyUnread = p.only_unread !== false;
-    let q = `store=eq.${scope}&status=eq.open&order=last_msg_at.desc&select=id,store,reservation_id,cust_name,unread_staff,last_msg,last_msg_at,status&limit=200`;
+    const box = S(p.box) || "active";
+    const cols = "id,store,reservation_id,cust_name,unread_staff,last_msg,last_msg_at,status,work_status";
+    // ★2026-09-06 完了BOX: 完了チャットは消さず別管理で見返せる（また連絡が来たら顧客送信で自動再オープン）
+    if (box === "done") {
+      const q = `store=eq.${scope}&work_status=eq.${encodeURIComponent("完了")}&order=last_msg_at.desc&select=${cols}&limit=300`;
+      const list = await sbGet("cs_chat_threads", q);
+      return json({ ok: true, threads: list, box: "done" }, 200, origin);
+    }
+    let q = `store=eq.${scope}&status=eq.open&order=last_msg_at.desc&select=${cols}&limit=200`;
     let list = await sbGet("cs_chat_threads", q);
-    if (onlyUnread) list = list.filter((t: any) => (t.unread_staff || 0) > 0);
-    return json({ ok: true, threads: list }, 200, origin);
+    if (onlyUnread) list = list.filter((t: any) => t.work_status === "未対応" || t.work_status === "対応中");
+    return json({ ok: true, threads: list, box: "active" }, 200, origin);
   }
 
   // ── スタッフ: スレッド取得（既読化＋予約詳細） ──
@@ -146,7 +158,7 @@ Deno.serve(async (req) => {
     const tid = S(p.thread_id); if (!tid) return json({ ok: false, error: "thread_id" }, 400, origin);
     const th = (await sbGet("cs_chat_threads", `id=eq.${tid}&limit=1`))[0];
     if (!th) return json({ ok: false, error: "スレッドが見つかりません" }, 200, origin);
-    await sbPatch("cs_chat_threads", `id=eq.${tid}`, { unread_staff: 0 }); // スタッフ既読
+    // ★開いただけでは「対応済」にしない（未対応のまま）。対応済はチェックボックス(staff_mark)のみ。
     let resv: any = null;
     if (th.reservation_id) { const rows = await sbGet(RESV[th.store], `id=eq.${encodeURIComponent(th.reservation_id)}&select=*&limit=1`); resv = rows[0] || null; }
     return json({ ok: true, thread: th, reservation: resv, messages: await msgs(tid) }, 200, origin);
@@ -163,15 +175,30 @@ Deno.serve(async (req) => {
     const imgUrl = hasImg ? await uploadImage(tid, p.image) : null;
     if (hasImg && !imgUrl) return json({ ok: false, error: "画像の送信に失敗しました" }, 200, origin);
     await sbInsert("cs_chat_messages", { thread_id: tid, sender: "staff", body, image_url: imgUrl });
-    await sbPatch("cs_chat_threads", `id=eq.${tid}`, { unread_staff: 0, unread_cust: (th.unread_cust || 0) + 1, last_msg: body ? body.slice(0, 120) : "📷 画像", last_msg_at: new Date().toISOString() });
+    // ★返信しても自動で「対応済」にしない（未対応のまま・対応済はチェックボックスのみ）
+    await sbPatch("cs_chat_threads", `id=eq.${tid}`, { unread_cust: (th.unread_cust || 0) + 1, last_msg: body ? body.slice(0, 120) : "📷 画像", last_msg_at: new Date().toISOString() });
     return json({ ok: true, messages: await msgs(tid) }, 200, origin);
   }
 
-  // ── スタッフ: クローズ ──
+  // ── スタッフ: 対応ステータス設定（4状態: 未対応/対応中/対応済み/完了）──
+  //   未対応・対応中＝アラート対象。完了＝スレッドをクローズ(一覧から外れる)。
+  if (action === "staff_mark") {
+    if (!await verifyStaff(S(p.staff_token))) return json({ ok: false, error: "認証が必要です" }, 401, origin);
+    const tid = S(p.thread_id); if (!tid) return json({ ok: false, error: "thread_id" }, 400, origin);
+    const VALID = ["未対応", "対応中", "完了"];
+    let ws = S(p.work_status);
+    if (!ws) ws = (p.handled !== false) ? "完了" : "未対応"; // 旧checkbox互換
+    if (!VALID.includes(ws)) return json({ ok: false, error: "不正なステータス" }, 400, origin);
+    const patch: any = { work_status: ws, unread_staff: ws === "未対応" ? 1 : 0, status: ws === "完了" ? "closed" : "open" };
+    await sbPatch("cs_chat_threads", `id=eq.${tid}`, patch);
+    return json({ ok: true, work_status: ws }, 200, origin);
+  }
+
+  // ── スタッフ: クローズ（=完了）──
   if (action === "staff_close") {
     if (!await verifyStaff(S(p.staff_token))) return json({ ok: false, error: "認証が必要です" }, 401, origin);
     const tid = S(p.thread_id); if (!tid) return json({ ok: false, error: "thread_id" }, 400, origin);
-    await sbPatch("cs_chat_threads", `id=eq.${tid}`, { status: "closed", unread_staff: 0 });
+    await sbPatch("cs_chat_threads", `id=eq.${tid}`, { status: "closed", work_status: "完了", unread_staff: 0 });
     return json({ ok: true }, 200, origin);
   }
 
