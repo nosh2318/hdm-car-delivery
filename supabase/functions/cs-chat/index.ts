@@ -52,10 +52,11 @@ async function resolveResv(store: string, token: string): Promise<any | null> {
   const rows = await sbGet(tbl, `mypage_token=eq.${encodeURIComponent(token)}&select=*&limit=1`);
   return rows[0] || null;
 }
-// 予約に対応するスレッドを取得 or 作成
-async function getThread(store: string, resv: any): Promise<any | null> {
+// 予約に対応するスレッドを取得（create=true の時だけ無ければ作成）。開いただけで空スレッドを作らない
+async function getThread(store: string, resv: any, create = false): Promise<any | null> {
   const ex = await sbGet("cs_chat_threads", `store=eq.${store}&reservation_id=eq.${encodeURIComponent(resv.id)}&limit=1`);
   if (ex[0]) return ex[0];
+  if (!create) return null;
   const row = await sbInsert("cs_chat_threads", { store, reservation_id: resv.id, source: "mypage", cust_name: resv.name || "", status: "open", unread_staff: 0, unread_cust: 0 });
   return row;
 }
@@ -76,8 +77,8 @@ Deno.serve(async (req) => {
   if (action === "cust_open" || action === "cust_poll") {
     const resv = await resolveResv(store, S(p.mypage_token));
     if (!resv) return json({ ok: false, error: "予約が見つかりません" }, 200, origin);
-    const th = await getThread(store, resv);
-    if (!th) return json({ ok: false, error: "スレッド作成に失敗" }, 500, origin);
+    const th = await getThread(store, resv); // create=false：開いただけで空スレッドを作らない
+    if (!th) return json({ ok: true, thread_id: null, cust_name: resv.name || "", messages: [] }, 200, origin); // まだ会話なし
     await sbPatch("cs_chat_threads", `id=eq.${th.id}`, { unread_cust: 0 }); // お客様は既読
     return json({ ok: true, thread_id: th.id, cust_name: resv.name || "", messages: await msgs(th.id) }, 200, origin);
   }
@@ -87,7 +88,7 @@ Deno.serve(async (req) => {
     const body = S(p.body); if (!body) return json({ ok: false, error: "メッセージを入力してください" }, 400, origin);
     const resv = await resolveResv(store, S(p.mypage_token));
     if (!resv) return json({ ok: false, error: "予約が見つかりません" }, 200, origin);
-    const th = await getThread(store, resv);
+    const th = await getThread(store, resv, true); // 送信時のみスレッド作成
     if (!th) return json({ ok: false, error: "送信に失敗" }, 500, origin);
     await sbInsert("cs_chat_messages", { thread_id: th.id, sender: "customer", body });
     await sbPatch("cs_chat_threads", `id=eq.${th.id}`, { unread_staff: (th.unread_staff || 0) + 1, unread_cust: 0, status: "open", last_msg: body.slice(0, 120), last_msg_at: new Date().toISOString() });
