@@ -61,7 +61,25 @@ async function getThread(store: string, resv: any, create = false): Promise<any 
   return row;
 }
 async function msgs(threadId: string): Promise<any[]> {
-  return await sbGet("cs_chat_messages", `thread_id=eq.${threadId}&order=id.asc&select=id,sender,body,created_at`);
+  return await sbGet("cs_chat_messages", `thread_id=eq.${threadId}&order=id.asc&select=id,sender,body,image_url,created_at`);
+}
+// 画像(dataURL)を cs-chat バケットにアップロード→公開URLを返す（失敗時null）
+async function uploadImage(threadId: string, dataUrl: string): Promise<string | null> {
+  try {
+    const m = /^data:(image\/(png|jpe?g|webp|gif));base64,(.+)$/i.exec(dataUrl || "");
+    if (!m) return null;
+    const ext = m[2].toLowerCase() === "jpeg" ? "jpg" : m[2].toLowerCase();
+    const bin = Uint8Array.from(atob(m[3]), (c) => c.charCodeAt(0));
+    if (bin.length > 6_000_000) return null; // 6MB上限
+    const path = `${threadId}/${Date.now()}.${ext}`;
+    const r = await fetch(`${SB_URL}/storage/v1/object/cs-chat/${path}`, {
+      method: "POST",
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": m[1], "x-upsert": "true" },
+      body: bin,
+    });
+    if (!r.ok) { console.error("upload", await r.text()); return null; }
+    return `${SB_URL}/storage/v1/object/public/cs-chat/${path}`;
+  } catch (e) { console.error("uploadImage", String(e)); return null; }
 }
 
 Deno.serve(async (req) => {
@@ -83,15 +101,19 @@ Deno.serve(async (req) => {
     return json({ ok: true, thread_id: th.id, cust_name: resv.name || "", messages: await msgs(th.id) }, 200, origin);
   }
 
-  // ── お客様: メッセージ送信 ──
+  // ── お客様: メッセージ送信（画像可） ──
   if (action === "cust_send") {
-    const body = S(p.body); if (!body) return json({ ok: false, error: "メッセージを入力してください" }, 400, origin);
+    const body = S(p.body); const hasImg = typeof p.image === "string" && p.image.startsWith("data:image/");
+    if (!body && !hasImg) return json({ ok: false, error: "メッセージを入力してください" }, 400, origin);
     const resv = await resolveResv(store, S(p.mypage_token));
     if (!resv) return json({ ok: false, error: "予約が見つかりません" }, 200, origin);
     const th = await getThread(store, resv, true); // 送信時のみスレッド作成
     if (!th) return json({ ok: false, error: "送信に失敗" }, 500, origin);
-    await sbInsert("cs_chat_messages", { thread_id: th.id, sender: "customer", body });
-    await sbPatch("cs_chat_threads", `id=eq.${th.id}`, { unread_staff: (th.unread_staff || 0) + 1, unread_cust: 0, status: "open", last_msg: body.slice(0, 120), last_msg_at: new Date().toISOString() });
+    const imgUrl = hasImg ? await uploadImage(th.id, p.image) : null;
+    if (hasImg && !imgUrl) return json({ ok: false, error: "画像の送信に失敗しました" }, 200, origin);
+    await sbInsert("cs_chat_messages", { thread_id: th.id, sender: "customer", body, image_url: imgUrl });
+    const last = body ? body.slice(0, 120) : "📷 画像";
+    await sbPatch("cs_chat_threads", `id=eq.${th.id}`, { unread_staff: (th.unread_staff || 0) + 1, unread_cust: 0, status: "open", last_msg: last, last_msg_at: new Date().toISOString() });
     const areaJp = store === "nha" ? "那覇" : "札幌";
     await slack(CH[store], `💬 CSチャット新着［${areaJp}］ ${resv.name || ""}様`, [
       { type: "header", text: { type: "plain_text", text: `💬 CSチャット新着（${areaJp}）`, emoji: true } },
@@ -101,7 +123,7 @@ Deno.serve(async (req) => {
         { type: "mrkdwn", text: `*ご予約元*\n${resv.ota || "-"}` },
         { type: "mrkdwn", text: `*車両*\n${resv.vehicle || resv.vehicle_class || "-"}` },
       ] },
-      { type: "section", text: { type: "mrkdwn", text: `*内容*\n${body.slice(0, 500)}` } },
+      { type: "section", text: { type: "mrkdwn", text: `*内容*\n${body ? body.slice(0, 500) : "📷 画像が送信されました（管理画面でご確認ください）"}` } },
       { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "💬 このお客様に返信", emoji: true }, url: `${ADMIN_URL}?store=${store}&id=${th.id}`, style: "primary" }] },
       { type: "divider" },
     ]);
@@ -134,11 +156,14 @@ Deno.serve(async (req) => {
   if (action === "staff_send") {
     if (!await verifyStaff(S(p.staff_token))) return json({ ok: false, error: "認証が必要です" }, 401, origin);
     const tid = S(p.thread_id); const body = S(p.body);
-    if (!tid || !body) return json({ ok: false, error: "内容が空です" }, 400, origin);
+    const hasImg = typeof p.image === "string" && p.image.startsWith("data:image/");
+    if (!tid || (!body && !hasImg)) return json({ ok: false, error: "内容が空です" }, 400, origin);
     const th = (await sbGet("cs_chat_threads", `id=eq.${tid}&limit=1`))[0];
     if (!th) return json({ ok: false, error: "スレッドが見つかりません" }, 200, origin);
-    await sbInsert("cs_chat_messages", { thread_id: tid, sender: "staff", body });
-    await sbPatch("cs_chat_threads", `id=eq.${tid}`, { unread_staff: 0, unread_cust: (th.unread_cust || 0) + 1, last_msg: body.slice(0, 120), last_msg_at: new Date().toISOString() });
+    const imgUrl = hasImg ? await uploadImage(tid, p.image) : null;
+    if (hasImg && !imgUrl) return json({ ok: false, error: "画像の送信に失敗しました" }, 200, origin);
+    await sbInsert("cs_chat_messages", { thread_id: tid, sender: "staff", body, image_url: imgUrl });
+    await sbPatch("cs_chat_threads", `id=eq.${tid}`, { unread_staff: 0, unread_cust: (th.unread_cust || 0) + 1, last_msg: body ? body.slice(0, 120) : "📷 画像", last_msg_at: new Date().toISOString() });
     return json({ ok: true, messages: await msgs(tid) }, 200, origin);
   }
 
