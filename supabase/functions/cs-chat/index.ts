@@ -4,7 +4,7 @@
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";
-const CH = { spk: "C08TDTPEB36", nha: "C06KZ56NTDF" } as Record<string, string>;
+const CH = { spk: "C0BER0YC6AK", nha: "C06L91W6T08" } as Record<string, string>; // 札幌=#sapporo_user_action / 沖縄=#okinawa_operations-team
 const RESV = { spk: "reservations", nha: "nha_reservations" } as Record<string, string>;
 const ADMIN_URL = "https://nosh2318.github.io/spk-task/cs-chat-admin.html";
 
@@ -49,7 +49,7 @@ const st = (s: string) => (s === "nha" ? "nha" : "spk");
 async function resolveResv(store: string, token: string): Promise<any | null> {
   if (!token) return null;
   const tbl = RESV[store]; if (!tbl) return null;
-  const rows = await sbGet(tbl, `mypage_token=eq.${encodeURIComponent(token)}&select=id,name,vehicle,ota&limit=1`);
+  const rows = await sbGet(tbl, `mypage_token=eq.${encodeURIComponent(token)}&select=*&limit=1`);
   return rows[0] || null;
 }
 // 予約に対応するスレッドを取得 or 作成
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
         { type: "mrkdwn", text: `*お客様*\n${resv.name || "-"}様` },
         { type: "mrkdwn", text: `*予約番号*\n${resv.id}` },
         { type: "mrkdwn", text: `*ご予約元*\n${resv.ota || "-"}` },
-        { type: "mrkdwn", text: `*車両*\n${resv.vehicle || "-"}` },
+        { type: "mrkdwn", text: `*車両*\n${resv.vehicle || resv.vehicle_class || "-"}` },
       ] },
       { type: "section", text: { type: "mrkdwn", text: `*内容*\n${body.slice(0, 500)}` } },
       { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "💬 このお客様に返信", emoji: true }, url: `${ADMIN_URL}?store=${store}&id=${th.id}`, style: "primary" }] },
