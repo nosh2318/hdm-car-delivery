@@ -1,0 +1,153 @@
+// CS チャット（マイページ⇄CS部 直接コミュニケーション）
+// お客様: cust_open / cust_send / cust_poll（mypage_token で本人認証＝予約に自動紐付け）
+// スタッフ: staff_list / staff_thread / staff_send（本体ログインJWTで認証）
+const SB_URL = Deno.env.get("SUPABASE_URL")!;
+const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";
+const CH = { spk: "C08TDTPEB36", nha: "C06KZ56NTDF" } as Record<string, string>;
+const RESV = { spk: "reservations", nha: "nha_reservations" } as Record<string, string>;
+const ADMIN_URL = "https://nosh2318.github.io/spk-task/cs-chat-admin.html";
+
+function cors(o: string | null) {
+  return { "Access-Control-Allow-Origin": o || "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "content-type, apikey, authorization" };
+}
+function json(b: unknown, s: number, o: string | null) {
+  return new Response(JSON.stringify(b), { status: s, headers: { ...cors(o), "content-type": "application/json" } });
+}
+async function sbGet(table: string, query: string): Promise<any[]> {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${query}`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } });
+  if (!r.ok) return [];
+  return await r.json().catch(() => []);
+}
+async function sbInsert(table: string, body: unknown): Promise<any | null> {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}`, { method: "POST", headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": "application/json", Prefer: "return=representation" }, body: JSON.stringify(body) });
+  if (!r.ok) { console.error(`INSERT ${table}:`, await r.text()); return null; }
+  const d = await r.json().catch(() => []);
+  return Array.isArray(d) ? d[0] : d;
+}
+async function sbPatch(table: string, query: string, body: unknown): Promise<void> {
+  await fetch(`${SB_URL}/rest/v1/${table}?${query}`, { method: "PATCH", headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" }, body: JSON.stringify(body) });
+}
+async function sbRpc(fn: string, body: unknown): Promise<any> {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" }, body: JSON.stringify(body) });
+  return r.ok ? await r.json().catch(() => null) : null;
+}
+async function slack(channel: string, text: string, blocks?: unknown) {
+  if (!SLACK_TOKEN || !channel) return;
+  try { await fetch("https://slack.com/api/chat.postMessage", { method: "POST", headers: { Authorization: `Bearer ${SLACK_TOKEN}`, "content-type": "application/json; charset=utf-8" }, body: JSON.stringify({ channel, text, blocks }) }); }
+  catch (e) { console.error("slack", String(e)); }
+}
+async function verifyStaff(token: string): Promise<boolean> {
+  if (!token) return false;
+  const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${token}` } });
+  return r.ok;
+}
+const S = (v: unknown) => String(v ?? "").trim().slice(0, 4000);
+const st = (s: string) => (s === "nha" ? "nha" : "spk");
+
+// mypage_token → 予約(id,name) を解決
+async function resolveResv(store: string, token: string): Promise<any | null> {
+  if (!token) return null;
+  const tbl = RESV[store]; if (!tbl) return null;
+  const rows = await sbGet(tbl, `mypage_token=eq.${encodeURIComponent(token)}&select=id,name,vehicle,ota&limit=1`);
+  return rows[0] || null;
+}
+// 予約に対応するスレッドを取得 or 作成
+async function getThread(store: string, resv: any): Promise<any | null> {
+  const ex = await sbGet("cs_chat_threads", `store=eq.${store}&reservation_id=eq.${encodeURIComponent(resv.id)}&limit=1`);
+  if (ex[0]) return ex[0];
+  const row = await sbInsert("cs_chat_threads", { store, reservation_id: resv.id, source: "mypage", cust_name: resv.name || "", status: "open", unread_staff: 0, unread_cust: 0 });
+  return row;
+}
+async function msgs(threadId: string): Promise<any[]> {
+  return await sbGet("cs_chat_messages", `thread_id=eq.${threadId}&order=id.asc&select=id,sender,body,created_at`);
+}
+
+Deno.serve(async (req) => {
+  const origin = req.headers.get("origin");
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors(origin) });
+  if (req.method !== "POST") return json({ error: "POST only" }, 405, origin);
+  let p: any = {};
+  try { p = await req.json(); } catch { return json({ error: "invalid json" }, 400, origin); }
+  const action = String(p.action || "");
+  const store = st(S(p.store));
+
+  // ── お客様: スレッドを開く（予約に自動紐付け） ──
+  if (action === "cust_open" || action === "cust_poll") {
+    const resv = await resolveResv(store, S(p.mypage_token));
+    if (!resv) return json({ ok: false, error: "予約が見つかりません" }, 200, origin);
+    const th = await getThread(store, resv);
+    if (!th) return json({ ok: false, error: "スレッド作成に失敗" }, 500, origin);
+    await sbPatch("cs_chat_threads", `id=eq.${th.id}`, { unread_cust: 0 }); // お客様は既読
+    return json({ ok: true, thread_id: th.id, cust_name: resv.name || "", messages: await msgs(th.id) }, 200, origin);
+  }
+
+  // ── お客様: メッセージ送信 ──
+  if (action === "cust_send") {
+    const body = S(p.body); if (!body) return json({ ok: false, error: "メッセージを入力してください" }, 400, origin);
+    const resv = await resolveResv(store, S(p.mypage_token));
+    if (!resv) return json({ ok: false, error: "予約が見つかりません" }, 200, origin);
+    const th = await getThread(store, resv);
+    if (!th) return json({ ok: false, error: "送信に失敗" }, 500, origin);
+    await sbInsert("cs_chat_messages", { thread_id: th.id, sender: "customer", body });
+    await sbPatch("cs_chat_threads", `id=eq.${th.id}`, { unread_staff: (th.unread_staff || 0) + 1, unread_cust: 0, status: "open", last_msg: body.slice(0, 120), last_msg_at: new Date().toISOString() });
+    const areaJp = store === "nha" ? "那覇" : "札幌";
+    await slack(CH[store], `💬 CSチャット新着［${areaJp}］ ${resv.name || ""}様`, [
+      { type: "header", text: { type: "plain_text", text: `💬 CSチャット新着（${areaJp}）`, emoji: true } },
+      { type: "section", fields: [
+        { type: "mrkdwn", text: `*お客様*\n${resv.name || "-"}様` },
+        { type: "mrkdwn", text: `*予約番号*\n${resv.id}` },
+        { type: "mrkdwn", text: `*ご予約元*\n${resv.ota || "-"}` },
+        { type: "mrkdwn", text: `*車両*\n${resv.vehicle || "-"}` },
+      ] },
+      { type: "section", text: { type: "mrkdwn", text: `*内容*\n${body.slice(0, 500)}` } },
+      { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "💬 このお客様に返信", emoji: true }, url: `${ADMIN_URL}?store=${store}&id=${th.id}`, style: "primary" }] },
+      { type: "divider" },
+    ]);
+    return json({ ok: true, thread_id: th.id, messages: await msgs(th.id) }, 200, origin);
+  }
+
+  // ── スタッフ: 未対応スレッド一覧 ──
+  if (action === "staff_list") {
+    if (!await verifyStaff(S(p.staff_token))) return json({ ok: false, error: "認証が必要です" }, 401, origin);
+    const scope = store; const onlyUnread = p.only_unread !== false;
+    let q = `store=eq.${scope}&status=eq.open&order=last_msg_at.desc&select=id,store,reservation_id,cust_name,unread_staff,last_msg,last_msg_at,status&limit=200`;
+    let list = await sbGet("cs_chat_threads", q);
+    if (onlyUnread) list = list.filter((t: any) => (t.unread_staff || 0) > 0);
+    return json({ ok: true, threads: list }, 200, origin);
+  }
+
+  // ── スタッフ: スレッド取得（既読化＋予約詳細） ──
+  if (action === "staff_thread") {
+    if (!await verifyStaff(S(p.staff_token))) return json({ ok: false, error: "認証が必要です" }, 401, origin);
+    const tid = S(p.thread_id); if (!tid) return json({ ok: false, error: "thread_id" }, 400, origin);
+    const th = (await sbGet("cs_chat_threads", `id=eq.${tid}&limit=1`))[0];
+    if (!th) return json({ ok: false, error: "スレッドが見つかりません" }, 200, origin);
+    await sbPatch("cs_chat_threads", `id=eq.${tid}`, { unread_staff: 0 }); // スタッフ既読
+    let resv: any = null;
+    if (th.reservation_id) { const rows = await sbGet(RESV[th.store], `id=eq.${encodeURIComponent(th.reservation_id)}&select=*&limit=1`); resv = rows[0] || null; }
+    return json({ ok: true, thread: th, reservation: resv, messages: await msgs(tid) }, 200, origin);
+  }
+
+  // ── スタッフ: 返信送信 ──
+  if (action === "staff_send") {
+    if (!await verifyStaff(S(p.staff_token))) return json({ ok: false, error: "認証が必要です" }, 401, origin);
+    const tid = S(p.thread_id); const body = S(p.body);
+    if (!tid || !body) return json({ ok: false, error: "内容が空です" }, 400, origin);
+    const th = (await sbGet("cs_chat_threads", `id=eq.${tid}&limit=1`))[0];
+    if (!th) return json({ ok: false, error: "スレッドが見つかりません" }, 200, origin);
+    await sbInsert("cs_chat_messages", { thread_id: tid, sender: "staff", body });
+    await sbPatch("cs_chat_threads", `id=eq.${tid}`, { unread_staff: 0, unread_cust: (th.unread_cust || 0) + 1, last_msg: body.slice(0, 120), last_msg_at: new Date().toISOString() });
+    return json({ ok: true, messages: await msgs(tid) }, 200, origin);
+  }
+
+  // ── スタッフ: クローズ ──
+  if (action === "staff_close") {
+    if (!await verifyStaff(S(p.staff_token))) return json({ ok: false, error: "認証が必要です" }, 401, origin);
+    const tid = S(p.thread_id); if (!tid) return json({ ok: false, error: "thread_id" }, 400, origin);
+    await sbPatch("cs_chat_threads", `id=eq.${tid}`, { status: "closed", unread_staff: 0 });
+    return json({ ok: true }, 200, origin);
+  }
+
+  return json({ error: "unknown action" }, 400, origin);
+});
