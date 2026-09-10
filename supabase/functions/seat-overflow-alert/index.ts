@@ -4,8 +4,9 @@
 //   SPK: reservations / app_settings(seat_stock_spk) → #sapporo_reservation(C08TDTPEB36)
 //   BT : bt_reservations / bt_app_settings(seat_stock_bt) → 高松の reservation_notification
 // 需要ロジックはOPシートのシート在庫バッジと完全一致:
-//   sheet日Dの需要 = 非キャンセル予約で lend<=D+1 かつ (return>=D または lend>=D) の optB/C/J 合計
-//   （＝当日アクティブ + 翌日出発の積込準備分。★2026-08-13 返却日もシートを占有(>=)＝返却当日も在庫にカウント[オーナー承認]）
+//   sheet日Dの需要 = 非キャンセル予約で lend<=D かつ return>=D の optB/C/J 合計（＝その日に物理的に出ているシート）
+//   ★2026-09-11 [現場要望] 翌日出発準備(洗車積込)分(旧: lend<=D+1)を除外。当日足りるかを正しく判定。
+//   （継続貸出中のシートは物理的に出払っているので含む・返却当日も占有 >=）
 // dedup: seat_alert_state(store,alert_date,seat,over)。新規発生 or 不足増加のみ通知。
 //   解消した(date,seat)は state から削除→再発時に再通知。過去日も掃除。
 // pg_cron が x-cron-secret + body{store} で起動。既存機能には一切手を入れない（監視・通知のみ）。
@@ -100,8 +101,8 @@ Deno.serve(async (req) => {
   const shortages: Short[] = [];
   for (let i = 0; i <= WINDOW_DAYS; i++) {
     const D = ymd(addDays(nowJST, i));
-    const tomorrow = ymd(addDays(nowJST, i + 1));
-    const act = active.filter((r) => r._lend <= tomorrow && (r._ret >= D || r._lend >= D));
+    // ★2026-09-11 その日Dに物理的に出ているシートだけ（翌日出発準備=洗車積込は除外）
+    const act = active.filter((r) => r._lend <= D && r._ret >= D);
     for (const s of SEATS) {
       const demand = act.reduce((sum, r) => sum + (+(r[s.col] || 0)), 0);
       const stk = stock[s.k] || 0;
