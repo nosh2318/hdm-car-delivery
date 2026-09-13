@@ -32,18 +32,51 @@ Deno.serve(async (req) => {
   if (!rec) return json({ ok: false, reason: "invalid_driver_token" }, 401);
 
   // ★到着通知：driverページの「到着」ボタンから {r,d,action:'arrival'} で呼ばれる
+  //   OPシート／タスクサマリーの「到着」ボタンと同機能に揃える（本文にナンバー／KEYDROPはメール／OP到着済みバッジ連動）
   if (reqAction === "arrival") {
-    const nm = rec.name ? `${String(rec.name).trim()} 様\n\n` : "";
-    let pushAction = "", msg = "";
-    if (rec.kd_status === "delivering") {
-      pushAction = "arrival";
-      msg = `【車両到着のお知らせ】\n${nm}お待たせいたしました。只今スタッフが到着いたしました。\nご準備整い次第、受け取り対応をお願いいたします。引き続きどうぞ宜しくお願い申し上げます。`;
-    } else if (rec.kd_status === "collecting" || rec.kd_status === "returning") {
-      pushAction = "col_arrival";
-      msg = `【ご返却場所到着のお知らせ】\n${nm}回収スタッフがご返却場所に到着致しました。\nご準備できましたら対応のほどお願い申しあげます。\n何卒よろしくお願いいたします。`;
-    } else {
-      return json({ ok: false, reason: "not_in_delivery_or_collection:" + (rec.kd_status || "") });
+    const cn = (rec.name ? String(rec.name).trim() : "") + "様";
+    const isKD = String(rec.ota || "") === "KEYDROP";
+    const delivering = rec.kd_status === "delivering";
+    const collecting = rec.kd_status === "collecting" || rec.kd_status === "returning";
+    if (!delivering && !collecting) return json({ ok: false, reason: "not_in_delivery_or_collection:" + (rec.kd_status || "") });
+
+    // お届け到着メッセージ用のナンバー（OPと同じくタスクの plate_no を使う）
+    let plate = "";
+    if (delivering) {
+      try {
+        if (store === "nha") {
+          const t = await sbGet(`nha_tasks?${encodeURIComponent("予約番号")}=eq.${encodeURIComponent(r)}&${encodeURIComponent("内容")}=eq.DEL&select=No&limit=1`);
+          plate = (t[0] && t[0]["No"]) ? String(t[0]["No"]).trim() : "";
+        } else {
+          const t = await sbGet(`tasks?reservation_id=eq.${encodeURIComponent(r)}&type=eq.DEL&select=plate_no&limit=1`);
+          plate = (t[0] && t[0].plate_no) ? String(t[0].plate_no).trim() : "";
+        }
+      } catch (_) { /* ナンバー取得失敗時は本文に含めない */ }
     }
+
+    const pushAction = delivering ? "arrival" : "col_arrival";
+    const msg = delivering
+      ? `【車両到着のお知らせ】\n${cn}\n\nお待たせいたしました。只今スタッフが到着いたしました。\nご準備整い次第、受け取り対応をお願いいたします。 引き続きどうぞ宜しくお願い申し上げます。` + (plate ? `\n\n対象車両のナンバーは ${plate} でございます。` : "")
+      : `【ご返却場所到着のお知らせ】\n${cn}\n\n回収スタッフがご返却場所に到着致しました。\nご準備できましたら対応のほどお願い申しあげます。\n何卒よろしくお願いいたします。`;
+
+    // KEYDROP予約＝メール（OPと同じ keydrop_enqueue_button）／それ以外＝LINE(line-push)
+    if (isKD) {
+      const kind = delivering ? "arrive_del" : "arrive_col";
+      const kb = delivering ? { p_resv: r, p_kind: kind, p_plate: plate } : { p_resv: r, p_kind: kind };
+      let kok = false;
+      try {
+        const kr = await fetch(`${SB_URL}/rest/v1/rpc/keydrop_enqueue_button`, { method: "POST", headers: H, body: JSON.stringify(kb) });
+        const kd = await kr.json().catch(() => null);
+        kok = (kd === "ok");
+      } catch (_) { /* ignore */ }
+      // OP到着済みバッジ同期（keydrop_enqueue_button は line_sends に残さないため補記）
+      if (kok) {
+        try { await fetch(`${SB_URL}/rest/v1/${store}_line_sends`, { method: "POST", headers: { ...H, Prefer: "return=minimal" }, body: JSON.stringify({ resv_no: r, action: pushAction, status: "manual_done", message: "到着(KEYDROPメール)" }) }); } catch (_) { /* ignore */ }
+      }
+      return json({ ok: kok, store, action: pushAction, via: "keydrop-mail" });
+    }
+
+    // LINE送信（line-push が ${store}_line_sends に status=sent で記録＝OP到着済みバッジも自動連動）
     const pr = await fetch(`${SB_URL}/functions/v1/line-push`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ secret: FUNC_SECRET, store, resv_no: r, action: pushAction, message: msg }),
