@@ -46,6 +46,7 @@
   .btn{flex:1;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:900;cursor:pointer}
   .btn-start{background:#FABE00;color:#1a1a1a;box-shadow:0 6px 18px rgba(250,190,0,.35)}
   .btn-stop{background:#fff;color:#c0392b;border:2px solid #c0392b}
+  .btn-arrive{background:#0e9f50;color:#fff;box-shadow:0 6px 18px rgba(14,159,80,.35)}
   .btn:active{transform:translateY(1px)}
   .modebar{padding:0 16px 4px;flex:none}
   .modebar .lbl{font-size:12px;font-weight:800;color:#0369a1;display:block;margin-bottom:6px}
@@ -137,12 +138,14 @@
         <div class="map-fallback" id="mapFallback">地図を表示できませんでした。送信機能は継続して動作します。</div>
       </div>
       <div class="bar">
-        <button class="btn btn-start" id="startBtn">📡 位置送信を開始</button>
-        <button class="btn btn-stop" id="stopBtn" disabled>■ 送信を停止</button>
+        <button class="btn btn-start" id="startBtn">📡 送信</button>
+        <button class="btn btn-stop" id="stopBtn" disabled>■ 停止</button>
+        <button class="btn btn-arrive" id="arriveBtn">🏁 到着</button>
       </div>
     `;
     document.getElementById('startBtn').addEventListener('click', startSending);
     document.getElementById('stopBtn').addEventListener('click', stopSending);
+    document.getElementById('arriveBtn').addEventListener('click', doArrive);
     // 移動手段ボタン
     document.querySelectorAll('.modebtn').forEach(function (b) {
       b.addEventListener('click', function () { setMode(b.getAttribute('data-mode')); });
@@ -262,6 +265,35 @@
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
     setSendState('off', '送信を停止しました', '');
+  }
+
+  // ===== 到着通知（お客様へLINEで「到着しました」） =====
+  async function doArrive() {
+    if (!R || !D) { alert('リンク情報が不足しています（r/d）。'); return; }
+    if (!confirm('お客様に「スタッフが到着しました」と通知します。よろしいですか？')) return;
+    const b = document.getElementById('arriveBtn');
+    const prev = b.textContent;
+    b.disabled = true; b.textContent = '送信中…';
+    try {
+      // 到着地点を最終送信（お客様の地図に反映）
+      if (sending && myLat != null && myLng != null) { try { await sendPos(); } catch (e) {} }
+      const res = await fetch('https://ckrxttbnawkclshczsia.supabase.co/functions/v1/line-track', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ r: R, d: D, action: 'arrival' })
+      }).then(x => x.json()).catch(() => null);
+      if (res && res.ok) {
+        b.textContent = '✅ 通知済み';
+        alert('✅ お客様に到着を通知しました。');
+      } else {
+        b.disabled = false; b.textContent = prev;
+        const reason = (res && (res.reason || res.error)) || '通信エラー';
+        if (reason === 'no_userid') alert('お客様がLINE未連携のため自動通知できません。お電話等でご連絡ください。');
+        else alert('通知できませんでした（' + reason + '）。もう一度お試しください。');
+      }
+    } catch (e) {
+      b.disabled = false; b.textContent = prev;
+      alert('通知できませんでした。電波状況をご確認のうえ、もう一度お試しください。');
+    }
   }
 
   let sendHeartbeat = null;

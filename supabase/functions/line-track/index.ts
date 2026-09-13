@@ -16,10 +16,11 @@ Deno.serve(async (req) => {
   let body: any; try { body = await req.json(); } catch { return json({ ok: false, error: "bad json" }, 400); }
   const r = String(body.r || "").toUpperCase().trim();
   const d = String(body.d || "").trim();
+  const reqAction = String(body.action || "track").trim();
   if (!r || !d) return json({ ok: false, error: "missing r/d" }, 400);
 
   // 予約がどちらの予約表にあるか＝店舗を自動判定（driverページは共有のため）
-  const sel = "select=id,ota,kd_status,kd_track_token";
+  const sel = "select=id,ota,kd_status,kd_track_token,name";
   let store = "spk";
   let rows = await sbGet(`reservations?id=eq.${encodeURIComponent(r)}&kd_driver_token=eq.${encodeURIComponent(d)}&${sel}`);
   let rec = rows[0];
@@ -29,6 +30,27 @@ Deno.serve(async (req) => {
     rec = rows[0];
   }
   if (!rec) return json({ ok: false, reason: "invalid_driver_token" }, 401);
+
+  // ★到着通知：driverページの「到着」ボタンから {r,d,action:'arrival'} で呼ばれる
+  if (reqAction === "arrival") {
+    const nm = rec.name ? `${String(rec.name).trim()} 様\n\n` : "";
+    let pushAction = "", msg = "";
+    if (rec.kd_status === "delivering") {
+      pushAction = "arrival";
+      msg = `【車両到着のお知らせ】\n${nm}お待たせいたしました。只今スタッフが到着いたしました。\nご準備整い次第、受け取り対応をお願いいたします。引き続きどうぞ宜しくお願い申し上げます。`;
+    } else if (rec.kd_status === "collecting" || rec.kd_status === "returning") {
+      pushAction = "col_arrival";
+      msg = `【ご返却場所到着のお知らせ】\n${nm}回収スタッフがご返却場所に到着致しました。\nご準備できましたら対応のほどお願い申しあげます。\n何卒よろしくお願いいたします。`;
+    } else {
+      return json({ ok: false, reason: "not_in_delivery_or_collection:" + (rec.kd_status || "") });
+    }
+    const pr = await fetch(`${SB_URL}/functions/v1/line-push`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secret: FUNC_SECRET, store, resv_no: r, action: pushAction, message: msg }),
+    });
+    const jr = await pr.json().catch(() => ({}));
+    return json({ ok: jr.ok === true, store, action: pushAction, via: "line-push", ...jr });
+  }
 
   let action = "", guide = "", head = "";
   if (rec.kd_status === "delivering") { action = "track_del"; guide = "handyman-delivery-guide.html"; head = "お届けに向かっております🚚\nスタッフの現在地と到着予定を下記URLからリアルタイムでご確認いただけます（アプリ不要）。"; }
