@@ -81,8 +81,10 @@ Deno.serve(async (req) => {
     if (!S(p.tel) && !S(p.email)) return json({ error: "電話番号かメールのいずれかを入力してください" }, 400, origin);
     if (!S(p.choice1)) return json({ error: "第1希望の車両を選択してください" }, 400, origin);
     const store = S(p.store) === "nha" ? "nha" : "spk";
+    const brand = S(p.brand) === "hdm" ? "hdm" : "keydrop";
+    const dom = brand === "hdm" ? "https://rent-handyman.com" : "https://keydrop.jp";
     const row = await sbInsert("daisha_requests", {
-      store,
+      store, brand,
       use_case: S(p.use_case), start_date: S(p.start_date), end_date: S(p.end_date), period_note: S(p.period_note),
       del_place: S(p.del_place), col_place: S(p.col_place), same_col: p.same_col !== false,
       cust_type: S(p.cust_type) || "individual", company: S(p.company),
@@ -96,8 +98,9 @@ Deno.serve(async (req) => {
     const period = row.start_date ? `${row.start_date}〜${row.end_date || "未定"}${row.period_note ? `（${row.period_note}）` : ""}` : (row.period_note || "未定");
     const choices = [row.choice1, row.choice2, row.choice3].filter(Boolean).map((c: string, i: number) => `第${i + 1}希望：${c}`).join(" / ");
     const areaJp = store === "nha" ? "那覇" : "札幌";
-    await slack(chOf(store), `🚗 代車リクエスト［${areaJp}］ ${name}様`, [
-      { type: "header", text: { type: "plain_text", text: `🚗 代車リクエスト（${areaJp}・要提案）`, emoji: true } },
+    const brandJp = brand === "hdm" ? "HANDYMAN" : "KEYDROP";
+    await slack(chOf(store), `🚗 代車リクエスト［${brandJp}・${areaJp}］ ${name}様`, [
+      { type: "header", text: { type: "plain_text", text: `🚗 代車リクエスト（${brandJp}・${areaJp}・要提案）`, emoji: true } },
       { type: "section", fields: [
         { type: "mrkdwn", text: `*お客様*\n${name}様${row.company ? `（${row.company}）` : ""}` },
         { type: "mrkdwn", text: `*区分*\n${row.cust_type === "business" ? "事業者" : "個人"}` },
@@ -108,12 +111,12 @@ Deno.serve(async (req) => {
       ] },
       { type: "section", text: { type: "mrkdwn", text: `*車両ご希望*\n${choices || "-"}${row.memo ? `\n*メモ*\n${row.memo}` : ""}` } },
       { type: "context", elements: [{ type: "mrkdwn", text: `📞 ${row.tel || "-"} ／ ✉️ ${row.email || "-"}` }] },
-      { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "🔧 このリクエストに回答する", emoji: true }, url: `https://keydrop.jp/daisha-admin.html?id=${row.id}&store=${store}`, style: "primary" }] },
+      { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "🔧 このリクエストに回答する", emoji: true }, url: `${dom}/daisha-admin.html?id=${row.id}&store=${store}`, style: "primary" }] },
       { type: "divider" },
     ]);
-    // お客様へ「相談チャットURL」を自動送信（メール登録＝この送信のため。電話は取得しない）
-    if (row.email) {
-      const chatUrl = `https://keydrop.jp/daisha-chat.html?t=${row.id}`;
+    // お客様へ「相談チャットURL」を自動送信（KEYDROPのみ＝rent-handyman.comはResend鍵がmain projectに無いためHDMはメール送信せずチャットへ直遷移）
+    if (row.email && brand === "keydrop") {
+      const chatUrl = `${dom}/daisha-chat.html?t=${row.id}`;
       await sendMail(row.email, "【KEYDROP】代車のご相談を受け付けました",
 `${name} 様
 
@@ -156,11 +159,12 @@ KEYDROP カーデリバリー
   if (action === "send") {
     const token = S(p.token), body = S(p.body);
     if (!token || !body) return json({ error: "empty" }, 400, origin);
-    const rows = await sbGet("daisha_requests", `id=eq.${token}&select=id,name,store&limit=1`);
+    const rows = await sbGet("daisha_requests", `id=eq.${token}&select=id,name,store,brand&limit=1`);
     if (!rows.length) return json({ error: "not_found" }, 404, origin);
     await sbInsert("daisha_messages", { request_id: token, sender: "customer", body });
     const areaJp = rows[0].store === "nha" ? "那覇" : "札幌";
-    await slack(chOf(rows[0].store), `💬 代車チャット新着［${areaJp}・${rows[0].name}様］\n${body}\n→ <https://keydrop.jp/daisha-admin.html?id=${token}&store=${rows[0].store}|このチャットを開いて返信する>`);
+    const sdom = rows[0].brand === "hdm" ? "https://rent-handyman.com" : "https://keydrop.jp";
+    await slack(chOf(rows[0].store), `💬 代車チャット新着［${areaJp}・${rows[0].name}様］\n${body}\n→ <${sdom}/daisha-admin.html?id=${token}&store=${rows[0].store}|このチャットを開いて返信する>`);
     return json({ ok: true }, 200, origin);
   }
 
