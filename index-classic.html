@@ -4450,11 +4450,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         addressSearchTimer = setTimeout(() => searchAddress(val), 400);
     }
 
-    // 検索ディスパッチャ：Photon(OSM・無料・キー不要・施設名/部分入力に強くオートコンプリート可)を主
-    //  → GSI(国土地理院・日本の住所に正確) → Nominatim の順に自動フォールバック。Google Placesは未有効化のため不使用。
+    // 検索ディスパッチャ：Google Places(日本語)を主。読込中は英語Photonに落とさず少し待って再試行。
+    //  Googleが使えない時のキーレスは日本語のGSI(国土地理院)→Nominatim(accept-language=ja)を使う。
+    //  ※Photon(komoot)は結果が英語ローマ字(例:Sapporo Ekimae Dori)になるため自動フォールバックには使わない。
+    var _gSearchWait = 0;
     function searchAddress(query) {
-        if (USE_GOOGLE_SEARCH && gReady && gAuto) { gSearch(query); return; } // Google Places（最良）→ 失敗時はphoton/GSI/Nominatim
-        photonSearch(query);
+        if (USE_GOOGLE_SEARCH && gReady && gAuto) { _gSearchWait = 0; gSearch(query); return; } // Google Places（日本語）
+        if (USE_GOOGLE_SEARCH && !gReady && _gSearchWait < 5) { // Google読込中：英語Photonに落とさず最大~3秒待って再試行
+            _gSearchWait++; clearTimeout(addressSearchTimer);
+            addressSearchTimer = setTimeout(function(){ searchAddress(query); }, 600);
+            return;
+        }
+        _gSearchWait = 0;
+        gsiSearch(query); // キーレスは日本語のGSI→Nominatim(ja)。Photon(英語)は使わない
     }
     function photonLabel(p){
         const name=p.name||'';
