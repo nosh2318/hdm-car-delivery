@@ -1,3 +1,8 @@
 .vercel
 
 supabase/.temp/
+
+# セキュリティ点検・設計メモは公開リポに置かない（2026-10-14）
+docs/sec_work_*/
+omni_strengthen/
+**/omni_strengthen/
