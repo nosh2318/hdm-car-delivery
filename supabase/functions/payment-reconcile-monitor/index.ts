@@ -22,14 +22,17 @@ async function sbPatch(u: string, k: string, q: string, data: unknown) {
   const r = await fetch(`${u}/rest/v1/${q}`, { method: "PATCH", headers: { apikey: k, Authorization: `Bearer ${k}`, "content-type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify(data) });
   if (!r.ok) console.error("PATCH", q, await r.text());
 }
+// 2026-10-14: Square 照会の失敗(401等)を黙って「未払い」扱いにしていた→件数と最後のstatusだけ数えて既存ログ1行に出す（判定・書込は不変）
+let sqErr = 0;
+let sqLast = "";
 async function squarePaid(orderId: string): Promise<boolean> {
   if (!SQ || !orderId) return false;
   try {
     const r = await fetch(`https://connect.squareup.com/v2/orders/${orderId}`, { headers: { Authorization: `Bearer ${SQ}`, "Square-Version": "2024-01-18" } });
-    if (!r.ok) return false;
+    if (!r.ok) { sqErr++; sqLast = String(r.status); return false; }
     const o = (await r.json())?.order || {};
     return o.state === "COMPLETED" || (Array.isArray(o.tenders) && o.tenders.length > 0); // tender有り=支払い済み(OPEN残りも救済)
-  } catch { return false; }
+  } catch { sqErr++; sqLast = "fetch_error"; return false; }
 }
 async function notifySlack(text: string) {
   if (!SLACK_TOKEN || !SLACK_CH) return;
@@ -42,6 +45,7 @@ Deno.serve(async (req) => {
   const dry = !!p.dry;
   const fixed: string[] = [];
   let checked = 0;
+  sqErr = 0; sqLast = "";
 
   // 対象: MAIN(jalan_payments/nha_jalan_payments=status系, nha_accounting/spk_accounting=paid系) + BT(bt_jalan_payments/bt_accounting)
   const targets = [
@@ -68,6 +72,6 @@ Deno.serve(async (req) => {
   if (fixed.length > 0 && !dry) {
     await notifySlack(`⚠️ *決済 消し込み漏れを是正（webhook見逃し検知）* ${fixed.length}件\n${fixed.slice(0, 20).join("\n")}\n→ DBをpaid化しました（誤催促を防止）。webhookの疎通を確認してください。`);
   }
-  console.log(`[reconcile] checked=${checked} fixed=${fixed.length}`);
+  console.log(`[reconcile] checked=${checked} fixed=${fixed.length} sqErr=${sqErr}${sqErr ? `(${sqLast})` : ""}`);
   return new Response(JSON.stringify({ ok: true, checked, fixed: fixed.length, detail: fixed }), { headers: { "content-type": "application/json" } });
 });
