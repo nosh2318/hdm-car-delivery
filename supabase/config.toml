@@ -14,3 +14,7 @@ verify_jwt = false
 #    決済確定が止まる。関数内でHMAC-SHA256署名検証するため verify_jwt=false 固定（本番もfalse）。
 [functions.payment-webhook]
 verify_jwt = false
+
+# payment-reconcile-monitor も pg_cron(jobid=60・毎時:15) が x-cron-secret のみ(JWT無し)で叩く → verify_jwt=false 固定（本番も false・2026-10-14 追記）
+[functions.payment-reconcile-monitor]
+verify_jwt = false
