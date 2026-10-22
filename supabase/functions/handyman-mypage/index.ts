@@ -12,6 +12,21 @@
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const H = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" };
+// ★security 2026-10-23 スタッフ許可リスト：「ログインしていれば誰でも」→ 正規スタッフのメールドメインだけ通す。
+//   main(ckrxttbnawkclshczsia) の auth.users ドメイン＝spk.hdm/nha.hdm/g-lines.jp/partner.hdm（2026-10-23確認）。協力会社 partner.hdm は不可。新規登録は無効(disable_signup=true)のためドメインで判定できる。EF は個別デプロイなので各 EF に同じ小関数をコピー。
+const STAFF_EMAIL_RE = /@(spk\.hdm|nha\.hdm|g-lines\.jp)$/i;
+async function staffUser(token: string): Promise<{ id: string; email: string } | null> {
+  const t = String(token || "").replace(/^Bearer\s+/i, "").trim();
+  if (!t) return null;
+  try {
+    const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${t}` } });
+    if (!r.ok) return null;
+    const u: any = await r.json().catch(() => null);
+    const email = String(u?.email || "").trim();
+    if (!u?.id || !STAFF_EMAIL_RE.test(email)) return null;
+    return { id: String(u.id), email };
+  } catch (_) { return null; }
+}
 
 // 認証はbody内のmypage_token(推測不能UUID)のみ・Cookie/資格情報を一切使わない → CORSは全origin許可でよい。
 // 旧実装は非allowlist origin(例:Apple Notesアプリ内WebView=Origin:null / 各種アプリ内ブラウザ)に対し固定でnosh2318.github.ioを返し、
@@ -272,8 +287,8 @@ Deno.serve(async (req) => {
     if (!bySecret) {
       const staffToken = String(p.staff_token || "").trim();
       if (!staffToken) return json({ error: "認証がありません" }, 401, origin);
-      const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
-      if (!who.ok) return json({ error: "認証に失敗しました" }, 401, origin);
+      const who = await staffUser(staffToken);
+      if (!who) return json({ error: "認証に失敗しました" }, 401, origin);
     }
     const token = Deno.env.get("SQUARE_ACCESS_TOKEN") || "";
     if (!token) return json({ error: "SQUARE未設定" }, 503, origin);
@@ -301,8 +316,8 @@ Deno.serve(async (req) => {
 
   // ==== notify_preview: 全通知パターンをサンプルデータでSlackへ（DB書込/LINEなし・リリース前確認用）====
   if (action === "notify_preview") {
-    const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${String(p.staff_token || "").trim()}` } });
-    if (!who.ok) return json({ error: "unauthorized" }, 401, origin);
+    const who = await staffUser(String(p.staff_token || "").trim());
+    if (!who) return json({ error: "unauthorized" }, 401, origin);
     const N = "山田 太郎", ID = "R0SAMPLE01", OT = "R", PD = "2026-07-10〜2026-07-12", V = "ノア（Bクラス）";
     const samples: MpCard[] = [
       { emoji: "✏️", title: "マイページで変更（即時反映済）", name: N, resId: ID, ota: OT, period: PD, vehicle: V,
@@ -346,9 +361,9 @@ Deno.serve(async (req) => {
     else {
       const staffToken = String(p.staff_token || "").trim();
       if (!staffToken) return json({ error: "スタッフ認証（PIN）が必要です" }, 401, origin);
-      const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
-      if (!who.ok) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
-      const user = await who.json().catch(() => ({}));
+      const who = await staffUser(staffToken);
+      if (!who) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
+      const user = who;
       actor = String(user?.email || user?.id || "staff");
     }
     const sAct = "staff:" + actor; // 監査ログ用（誰が＝担当個人）
@@ -495,8 +510,8 @@ Deno.serve(async (req) => {
     if (!bySecret) {
       const staffToken = String(p.staff_token || "").trim();
       if (!staffToken) return json({ error: "認証がありません" }, 401, origin);
-      const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
-      if (!who.ok) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
+      const who = await staffUser(staffToken);
+      if (!who) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
     }
     const st0 = STORES.spk;
     const today = nowJst().slice(0, 10);
@@ -552,9 +567,9 @@ Deno.serve(async (req) => {
   if (action === "resolve") {
     const staffToken = String(p.staff_token || "").trim();
     if (!staffToken) return json({ error: "スタッフ認証がありません" }, 401, origin);
-    const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
-    if (!who.ok) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
-    const user = await who.json().catch(() => ({})); const actor = String(user?.email || "staff");
+    const who = await staffUser(staffToken);
+    if (!who) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
+    const user = who; const actor = String(user?.email || "staff");
     const sAct = "staff:" + actor;
     const st0 = STORES.spk;
     const rid = String(p.reservation_id || "");

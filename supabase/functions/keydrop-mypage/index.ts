@@ -8,6 +8,21 @@
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// ★security 2026-10-23 スタッフ許可リスト：「ログインしていれば誰でも」→ 正規スタッフのメールドメインだけ通す。
+//   main(ckrxttbnawkclshczsia) の auth.users ドメイン＝spk.hdm/nha.hdm/g-lines.jp/partner.hdm（2026-10-23確認）。協力会社 partner.hdm は不可。新規登録は無効(disable_signup=true)のためドメインで判定できる。EF は個別デプロイなので各 EF に同じ小関数をコピー。
+const STAFF_EMAIL_RE = /@(spk\.hdm|nha\.hdm|g-lines\.jp)$/i;
+async function staffUser(token: string): Promise<{ id: string; email: string } | null> {
+  const t = String(token || "").replace(/^Bearer\s+/i, "").trim();
+  if (!t) return null;
+  try {
+    const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${t}` } });
+    if (!r.ok) return null;
+    const u: any = await r.json().catch(() => null);
+    const email = String(u?.email || "").trim();
+    if (!u?.id || !STAFF_EMAIL_RE.test(email)) return null;
+    return { id: String(u.id), email };
+  } catch (_) { return null; }
+}
 // キャンセル依頼の運営通知は Slack を主とする。メールは「専用アドレスを設定した時だけ」送る。
 // ⚠️ reserve@ を既定にしない（問い合わせ管理GASが reserve@ 受信箱を監視＝誤取込を避ける）。
 // 設定する場合は Slackチャンネルのメール連携アドレス or 専用 ops@ を KEYDROP_OPS_EMAIL に入れる。未設定ならメールは送らずSlackのみ。
@@ -284,9 +299,9 @@ Deno.serve(async (req) => {
     if (ADMIN_PIN && adminPin && adminPin === ADMIN_PIN) { actor = "staff:admin_pin"; }
     else {
       const staffToken = String(p.staff_token || "").trim();
-      const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
-      if (!who.ok) return json({ error: "unauthorized" }, 401, origin);
-      actor = "staff:" + (((await who.json().catch(() => ({}))) as any)?.email || "kd-admin");
+      const who = await staffUser(staffToken);
+      if (!who) return json({ error: "unauthorized" }, 401, origin);
+      actor = "staff:" + (((who) as any)?.email || "kd-admin");
     }
     const changeId = p.change_id;
     const decision = String(p.decision || "").trim(); // approved | rejected | acknowledged
