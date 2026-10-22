@@ -7,7 +7,7 @@
 //   ・返金額 = 入金 − キャンセル料（ポリシー）。Square返金が成功した時だけ DBをrefunded/キャンセルに更新。
 //   ・Square失敗時は DB を一切変更せず error 返却＋Slack警告（手動対応へ）。
 //   ・autoRefund:false を渡せば旧挙動（記録のみ＝手動返金前提）。返金0（100%料）はSquare不要。
-//   ・authenticated（SPKログイン）以外は拒否。冪等：refunded済はスキップ＋idempotency_key=kdrefund-予約番号。
+//   ・Supabase Auth で検証済みのスタッフ（spk.hdm/nha.hdm/g-lines.jp）以外は拒否（2026-10-23 署名未検証の穴を修正）。冪等：refunded済はスキップ＋idempotency_key=kdrefund-予約番号。
 //
 // ポリシー（hdm-car-delivery getCancelFee と一致・表示と記録の根拠）:
 //   出発まで ≥7日=無料(0%) / 6〜3日=20% / 2〜1日=30% / 当日以降=50%
@@ -77,15 +77,19 @@ function resolveStore(p: any, resId: string) {
   return { store: s, ...m, slack };
 }
 
-// JWTのrole claimを読む（gatewayが署名検証済み。ここでは認可のためroleだけ見る）
-function jwtRole(auth: string | null): string {
+// ★2026-10-23 セキュリティ修正：JWT の署名を検証せず role だけ読んでいたため、偽 JWT で返金できた。
+//   Supabase Auth（/auth/v1/user）で本物のログインか確認し、スタッフのドメインだけ許可（協力会社 partner.hdm は不可）。
+const STAFF_EMAIL = /@(spk\.hdm|nha\.hdm|g-lines\.jp)$/i;
+async function verifyStaff(auth: string | null): Promise<string | null> {
+  const tok = (auth || "").replace(/^Bearer\s+/i, "").trim();
+  if (!tok || tok.split(".").length !== 3) return null;
   try {
-    const tok = (auth || "").replace(/^Bearer\s+/i, "");
-    const p = tok.split(".")[1]; if (!p) return "";
-    const pad = p.replace(/-/g, "+").replace(/_/g, "/");
-    const payload = JSON.parse(atob(pad + "=".repeat((4 - pad.length % 4) % 4)));
-    return payload.role || "";
-  } catch { return ""; }
+    const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${tok}` } });
+    if (!r.ok) return null;
+    const u = await r.json();
+    const email = String(u?.email || "");
+    return (u?.id && STAFF_EMAIL.test(email)) ? email : null;
+  } catch { return null; }
 }
 
 // ポリシー：出発までの日数からキャンセル率(%)を返す（hdm getCancelFee と一致）
@@ -104,8 +108,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors(_o) });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
-  // 認可：authenticated（SPKログイン）のみ。anon/未ログインは拒否。
-  if (jwtRole(req.headers.get("authorization")) !== "authenticated") {
+  // 認可：Supabase Auth で検証済みのスタッフのみ。anon/未ログイン/偽トークン/協力会社は拒否。
+  const staffEmail = await verifyStaff(req.headers.get("authorization"));
+  if (!staffEmail) {
     return json({ error: "権限がありません（SPKにログインして操作してください）" }, 403);
   }
 
