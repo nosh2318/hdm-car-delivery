@@ -368,9 +368,13 @@ Deno.serve(async (req) => {
       try {
         const fl = await sbGet(M.fleet, `reservation_id=eq.${enc}&select=vehicle_code`);
         const code = fl[0]?.vehicle_code; if (!code) return null;
-        const vs = await sbGet("vehicles", `code=eq.${encodeURIComponent(code)}&select=plate_no`);
-        const plate = vs[0]?.plate_no; if (!plate) return null;
-        const tw = await sbGet("vehicle_twins", `display_label=ilike.*${encodeURIComponent(plate)}*&share_enabled=eq.true&select=share_token&limit=1`);
+        // 🔴 2026-09-28根治: vehicle_code=vehicle_twins.id 完全一致(plate部分一致は短ナンバー車で別車を誤マッチ→那覇C260801412と同型)
+        let tw = await sbGet("vehicle_twins", `id=eq.${encodeURIComponent(code)}&store=eq.sapporo&share_enabled=eq.true&select=share_token&limit=1`);
+        if (!tw[0]) {
+          const vs = await sbGet("vehicles", `code=eq.${encodeURIComponent(code)}&select=plate_no`);
+          const plate = vs[0]?.plate_no;
+          if (plate) tw = await sbGet("vehicle_twins", `display_label=ilike.*/ ${encodeURIComponent(plate)}&store=eq.sapporo&share_enabled=eq.true&select=share_token&limit=1`);
+        }
         return tw[0]?.share_token ? `https://nosh2318.github.io/handyman-damage/v.html?t=${tw[0].share_token}&v=v3` : null;
       } catch (_) { return null; }
     })() : Promise.resolve(null);

@@ -4,7 +4,7 @@
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";
-const CH = { spk: "C0BER0YC6AK", nha: "C06L91W6T08" } as Record<string, string>; // 札幌=#sapporo_user_action / 沖縄=#okinawa_operations-team
+const CH = { spk: "C0B66BVCSPM", nha: "C0B66BVCSPM" } as Record<string, string>; // 2026-09-06 CSチャット通知はC0B66BVCSPM一本に統一（旧: spk=#sapporo_user_action / nha=#okinawa_operations-team を廃止）
 const RESV = { spk: "reservations", nha: "nha_reservations" } as Record<string, string>;
 const ADMIN_URL = "https://nosh2318.github.io/spk-task/cs-chat-admin.html";
 
@@ -60,8 +60,23 @@ async function getThread(store: string, resv: any, create = false): Promise<any 
   const row = await sbInsert("cs_chat_threads", { store, reservation_id: resv.id, source: "mypage", cust_name: resv.name || "", status: "open", unread_staff: 0, unread_cust: 0 });
   return row;
 }
+// 2026-10-23 cs-chat バケット非公開化：保存済みURL(公開形式)から署名付きURL(1時間)を発行して返す
+async function signImg(u: string | null): Promise<string | null> {
+  if (!u) return u;
+  const k = "/storage/v1/object/public/cs-chat/";
+  const i = u.indexOf(k); if (i < 0) return u;
+  const path = u.slice(i + k.length);
+  try {
+    const r = await fetch(`${SB_URL}/storage/v1/object/sign/cs-chat/${path}`, { method: "POST", headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" }, body: JSON.stringify({ expiresIn: 3600 }) });
+    if (!r.ok) return null;
+    const d = await r.json().catch(() => null);
+    return d && d.signedURL ? `${SB_URL}/storage/v1${d.signedURL}` : null;
+  } catch { return null; }
+}
 async function msgs(threadId: string): Promise<any[]> {
-  return await sbGet("cs_chat_messages", `thread_id=eq.${threadId}&order=id.asc&select=id,sender,body,image_url,created_at`);
+  const rows = await sbGet("cs_chat_messages", `thread_id=eq.${threadId}&order=id.asc&select=id,sender,body,image_url,created_at`);
+  for (const x of rows) if (x.image_url) x.image_url = await signImg(x.image_url);
+  return rows;
 }
 // 画像(dataURL)を cs-chat バケットにアップロード→公開URLを返す（失敗時null）
 async function uploadImage(threadId: string, dataUrl: string): Promise<string | null> {
@@ -118,19 +133,7 @@ Deno.serve(async (req) => {
     if ((await msgs(th.id)).length === 1) {
       await sbInsert("cs_chat_messages", { thread_id: th.id, sender: "staff", body: "ご連絡ありがとうございます！AI・HANDYMANが対応させていただきますので暫しお待ちください！", image_url: null });
     }
-    const areaJp = store === "nha" ? "那覇" : "札幌";
-    await slack(CH[store], `💬 CSチャット新着［${areaJp}］ ${resv.name || ""}様`, [
-      { type: "header", text: { type: "plain_text", text: `💬 CSチャット新着（${areaJp}）`, emoji: true } },
-      { type: "section", fields: [
-        { type: "mrkdwn", text: `*お客様*\n${resv.name || "-"}様` },
-        { type: "mrkdwn", text: `*予約番号*\n${resv.id}` },
-        { type: "mrkdwn", text: `*ご予約元*\n${resv.ota || "-"}` },
-        { type: "mrkdwn", text: `*車両*\n${resv.vehicle || resv.vehicle_class || "-"}` },
-      ] },
-      { type: "section", text: { type: "mrkdwn", text: `*内容*\n${body ? body.slice(0, 500) : "📷 画像が送信されました（管理画面でご確認ください）"}` } },
-      { type: "actions", elements: [{ type: "button", text: { type: "plain_text", text: "💬 このお客様に返信", emoji: true }, url: `${ADMIN_URL}?store=${store}&id=${th.id}`, style: "primary" }] },
-      { type: "divider" },
-    ]);
+    // ★2026-09-06 EFの「CSチャット新着」即時通知は撤去（AI回答案の投稿が通知を兼ねるため重複）。通知はcs_autoreply.pyの回答案のみ。
     return json({ ok: true, thread_id: th.id, messages: await msgs(th.id) }, 200, origin);
   }
 

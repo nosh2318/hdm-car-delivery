@@ -38,10 +38,19 @@ Deno.serve(async (req) => {
     }));
   if (!clean.length) return j({ ok: true, count: 0, note: "有効行なし" });
 
+  // 同一CSV内で予約番号が重複すると upsert が 21000(ON CONFLICT ...second time) で全体失敗する。
+  // 予約番号ごとに最新(answer_id が大きい=後の回答)を残して1行に畳んでから送る。
+  const byResv = new Map<string, any>();
+  for (const r of clean) {
+    const prev = byResv.get(r.resv_no);
+    if (!prev || (Number(r.answer_id) || 0) >= (Number(prev.answer_id) || 0)) byResv.set(r.resv_no, r);
+  }
+  const deduped = Array.from(byResv.values());
+
   const resp = await fetch(`${SB_URL}/rest/v1/${TABLE}?on_conflict=resv_no`, {
     method: "POST", headers: { ...H, Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify(clean),
+    body: JSON.stringify(deduped),
   });
   if (!resp.ok) return j({ error: (await resp.text()).slice(0, 300) }, 500);
-  return j({ ok: true, count: clean.length });
+  return j({ ok: true, count: deduped.length });
 });

@@ -678,8 +678,12 @@ Deno.serve(async (req) => {
     };
     const delPlaceR = appliedChg("del_place") ?? (resolveTaskPlace(dTask) || (r.del_place || "") || String(link.del_place || "").trim());
     const colPlaceR = appliedChg("col_place") ?? (resolveTaskPlace(cTask) || (r.col_place || "") || String(link.col_place || "").trim());
-    const lendTimeR = appliedChg("lend_time") ?? (resolveTaskTime(dTask) || r.lend_time || r.del_time || String(link.del_time || "").trim());
-    const returnTimeR = appliedChg("return_time") ?? (resolveTaskTime(cTask) || r.return_time || r.col_time || String(link.col_time || "").trim());
+    // 🔴 2026-10-05 再発根治(複製ドリフト): 時間はapplied変更履歴より先にタスク実効値(resolveTaskTime)を見る。
+    //   受付フォーム(spk_line_links)での時間変更はmypage_changesに行を作らずタスク_ssTimeだけ更新するため、
+    //   applied履歴(例9/8の17:00)が古いまま最新のフォーム値(17:30=OP実表示)を追い越していた。
+    //   タスクは承認反映時にも_timeChangeが入るのでappliedChg優先は冗長かつ有害→削除し実効値を正本に統一。
+    const lendTimeR = resolveTaskTime(dTask) || appliedChg("lend_time") || r.lend_time || r.del_time || String(link.del_time || "").trim();
+    const returnTimeR = resolveTaskTime(cTask) || appliedChg("return_time") || r.return_time || r.col_time || String(link.col_time || "").trim();
     // オプション：reservations と tasks の大きい方（どちらかにしか入っていないケースを両方拾う）
     const optBR = Math.max(Number(r.opt_b) || 0, taskOptNum(dTask, "_optB"), taskOptNum(cTask, "_optB"));
     const optCR = Math.max(Number(r.opt_c) || 0, taskOptNum(dTask, "_optC"), taskOptNum(cTask, "_optC"));
@@ -720,6 +724,7 @@ Deno.serve(async (req) => {
         del_lat: r.del_lat ?? null, del_lng: r.del_lng ?? null, col_lat: r.col_lat ?? null, col_lng: r.col_lng ?? null,
         opt_b: optBR, opt_c: optCR, opt_j: optJR, opt_usb: r.opt_usb || 0,
         kd_status: r.kd_status || null,
+        price: Number(r.price || 0),  // 2026-10-21 オーナー指示: マイページのご予約内容に料金を表示
       },
       damage: { ready: damageReady, url: damageUrl },
       tracking: { active: r.kd_status === "delivering" || r.kd_status === "collecting", kd_status: r.kd_status || null, token: r.kd_track_token || null },
@@ -811,8 +816,10 @@ Deno.serve(async (req) => {
     const _cT = _uTasks.find((t: any) => String(t._id || "").startsWith("c-"));
     const curDelPlace = _uApplied("del_place") || resolveTaskPlace(_dT) || String(r.del_place || "").trim();
     const curColPlace = _uApplied("col_place") || resolveTaskPlace(_cT) || String(r.col_place || "").trim();
-    const curLendTime = _uApplied("lend_time") || resolveTaskTime(_dT) || r.lend_time || r.del_time || "";
-    const curReturnTime = _uApplied("return_time") || resolveTaskTime(_cT) || r.return_time || r.col_time || "";
+    // 🔴 2026-10-05 再発根治(複製ドリフト): 時間はapplied変更履歴より先にタスク実効値を見る(lookupと統一)。
+    //   受付フォーム経由の時間変更はmypage_changesに残らずタスク_ssTimeだけ更新するため、古いapplied履歴が最新を追い越していた。
+    const curLendTime = resolveTaskTime(_dT) || _uApplied("lend_time") || r.lend_time || r.del_time || "";
+    const curReturnTime = resolveTaskTime(_cT) || _uApplied("return_time") || r.return_time || r.col_time || "";
     const oldOf = (f: string) => String((f === "del_place" ? curDelPlace : f === "col_place" ? curColPlace : f === "lend_time" ? curLendTime : curReturnTime) ?? "");
     const noteOf = (f: string) => f === "del_place" ? "お届け場所変更（承認制）" : f === "col_place" ? "回収場所変更（承認制）" : f === "lend_time" ? "お届け時間変更（承認制）" : "回収時間変更（承認制）";
     const mkReq = async (field: string, newV: string, payload: any) => {
