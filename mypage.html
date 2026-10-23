@@ -273,7 +273,7 @@ const SB_BASE = "https://ckrxttbnawkclshczsia.supabase.co";
 // 免許証 事前登録（Drive保存GAS＋license_uploads完了印）
 const GAS_LIC_URL = "https://script.google.com/macros/s/AKfycbyR29DN3sCW2addxE8_Elg2tvCPaopPJPNLlc4JNbQTXemwwVQkbaDER-blieKdMy0P/exec";
 const GAS_LIC_SECRET = "hdm-lic-7c3f9a21";
-const SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+const SB_ANON = "sb_publishable_aTVhlY0YD-5BBfI03ZNnsg_MzO_vsIe";
 async function uploadLicense(){
   const r = DATA && DATA.reservation; if(!r) return;
   if(RO){ alert("スタッフ確認用のため登録はできません"); return; }
@@ -305,7 +305,7 @@ async function uploadLicense(){
     btn.disabled=false; btn.textContent=t('lic_upload'); msg.style.color="#c00"; msg.textContent="送信に失敗しました。通信環境をご確認のうえ再度お試しください。";
   }
 }
-const KD_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+const KD_ANON = "sb_publishable_aTVhlY0YD-5BBfI03ZNnsg_MzO_vsIe";
 let CATALOG=null; // 店舗別クラスカタログ(公開ビュー)＝車種名の唯一の正
 async function fetchCatalog(store){
   const view=(store==="nha")?"public_keydrop_classes_nha_v":"public_keydrop_classes_v";

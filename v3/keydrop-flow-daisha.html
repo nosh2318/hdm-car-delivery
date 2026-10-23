@@ -511,7 +511,7 @@ var DAISHA_FN='https://ckrxttbnawkclshczsia.supabase.co/functions/v1/daisha-requ
 if(DAISHA && !P.get('step')) step='cond'; // 代車＝最初に条件入力ステップ
 // ===== 在庫（選択日程で空車があるクラスのみ表示・KEYDROP公開ビュー準拠／anon）=====
 var SB_URL='https://ckrxttbnawkclshczsia.supabase.co';
-var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+var SB_KEY='sb_publishable_aTVhlY0YD-5BBfI03ZNnsg_MzO_vsIe';
 function sbView(t){return (area==='naha'&&/^public_.*_v$/.test(t))?t.replace(/_v$/,'_nha_v'):t;}
 function sbGet(t,q){return fetch(SB_URL+'/rest/v1/'+sbView(t)+'?'+(q||'')+'&select=*',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});}
 function ymList(a,b){var out=[];if(!a||!b)return out;var s=new Date(a.slice(0,7)+'-01'),e=new Date(b.slice(0,7)+'-01');var g=0;while(s<=e&&g<24){out.push(s.getFullYear()+'-'+('0'+(s.getMonth()+1)).slice(-2));s.setMonth(s.getMonth()+1);g++;}return out;}
@@ -838,7 +838,7 @@ function goNext(){
 function onAgree(){var _ck=document.getElementById('agreeTerms');var _ok=!!(_ck&&_ck.checked);if(_ok){var _c=document.getElementById('termsAgreeCard');if(_c)_c.classList.remove('need');}if(step==='confirm'){document.getElementById('ctaBtn').disabled=!_ok;}}
 // ===== クレジットカード決済（Square Web Payments SDK・KEYDROPと同一方式） =====
 var SUPABASE_URL='https://ckrxttbnawkclshczsia.supabase.co';
-var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+var SUPABASE_KEY='sb_publishable_aTVhlY0YD-5BBfI03ZNnsg_MzO_vsIe';
 var SQUARE_APP_ID='sq0idp-C0XgrzYXhgIEbE7G8GGgpA';
 var SQUARE_LOCATION_ID='L8N7J9RKPN3WH';
 var sqPayments=null,sqCard=null,_sqTries=0,_sqInitting=false,_sqQueued=false;

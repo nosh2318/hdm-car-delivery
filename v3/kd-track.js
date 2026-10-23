@@ -7,7 +7,7 @@
  */
 (function(){
   var SB='https://ckrxttbnawkclshczsia.supabase.co';
-  var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+  var KEY='sb_publishable_aTVhlY0YD-5BBfI03ZNnsg_MzO_vsIe';
   var PAGE='', AREA='', t0=(window.performance&&performance.now)?performance.now():Date.now(), exited=false;
 
   function internal(){ try{

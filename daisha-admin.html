@@ -89,7 +89,7 @@
 <script>
 const SB="https://ckrxttbnawkclshczsia.supabase.co";
 const FN=SB+"/functions/v1/daisha-request";
-const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8";
+const ANON="sb_publishable_aTVhlY0YD-5BBfI03ZNnsg_MzO_vsIe";
 const $=s=>document.querySelector(s);
 const esc=s=>String(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 function tok(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf("sb-")===0&&k.indexOf("auth-token")>=0){let v=null;try{v=JSON.parse(localStorage.getItem(k))}catch(e){continue}const t=(v&&v.access_token)||(v&&v.currentSession&&v.currentSession.access_token)||(Array.isArray(v)&&typeof v[0]==="string"?v[0]:null);if(t)return t}}}catch(e){}return null}

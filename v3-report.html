@@ -154,7 +154,7 @@
 
 <script>
 const SB='https://ckrxttbnawkclshczsia.supabase.co';
-const AK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+const AK='sb_publishable_aTVhlY0YD-5BBfI03ZNnsg_MzO_vsIe';
 const H={apikey:AK,Authorization:'Bearer '+AK};
 async function q(v){const r=await fetch(SB+'/rest/v1/'+v,{headers:H});if(!r.ok)throw new Error(v+' '+r.status);return r.json();}
 function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}

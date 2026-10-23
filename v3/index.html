@@ -392,7 +392,7 @@ function setCar(a){
 var _ctCur='naha';
 function ctTab(a){_ctCur=a;document.querySelectorAll('#cttabs .cttab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-a')===a);});setCar(a);}
 var SB_URL='https://ckrxttbnawkclshczsia.supabase.co';
-var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnh0dGJuYXdrY2xzaGN6c2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4Nzg1NTAsImV4cCI6MjA4NzQ1NDU1MH0.kDC_UDVWvcrS97wzqQ3NXP79ewjgYwF4vSFdV7y06S8';
+var SB_KEY='sb_publishable_aTVhlY0YD-5BBfI03ZNnsg_MzO_vsIe';
 function sbGetTop(view){return fetch(SB_URL+'/rest/v1/'+view+'?select=*&limit=1',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});}
 function applyClasses(a,rows){try{var raw=rows&&rows[0]&&rows[0].value;if(!raw)return;var d=(typeof raw==='string')?JSON.parse(raw):raw;if(!d||!d.items)return;var order=[],cls={};(d.order||Object.keys(d.items)).forEach(function(k){var it=d.items[k];if(!it||it.show===false)return;order.push(k);cls[k]={l:it.label||k,s:(''+(it.seats||'')).replace(/[名人]/g,''),v:it.vehicles||'',p:+it.price||0};});if(!order.length)return;STORE[a]=STORE[a]||{};STORE[a].order=order;STORE[a].cls=cls;}catch(e){}}
 function fetchTopClasses(){Promise.all([sbGetTop('public_keydrop_classes_v'),sbGetTop('public_keydrop_classes_nha_v')]).then(function(r){applyClasses('sapporo',r[0]);applyClasses('naha',r[1]);try{setCar(_ctCur);}catch(e){}});}
