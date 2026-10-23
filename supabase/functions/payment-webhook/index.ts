@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // ============================================================
 // payment-webhook : Square 入金 webhook → KEYDROP予約を confirmed 化
 // 2026-06-10 / omni  (Phase B)
@@ -18,7 +21,7 @@
 // ============================================================
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const SIG_KEY = Deno.env.get("SQUARE_WEBHOOK_SIGNATURE_KEY") || "";
 // Square ダッシュボードに登録する webhook エンドポイントURL（署名計算に厳密一致が必要）
 const NOTIFICATION_URL = Deno.env.get("SQUARE_WEBHOOK_URL") ||
@@ -59,6 +62,25 @@ async function sbPatch(table: string, query: string, data: unknown): Promise<any
   });
   if (!r.ok) { console.error(`PATCH ${table}: ${await r.text()}`); return null; }
   return await r.json();
+}
+
+// --- 高松(BT別DB) cross-DB helpers（じゃらん消し込みを bt_jalan_payments にも・全店1webhook）---
+const BT_URL = Deno.env.get("BT_URL") || "";
+const BT_KEY = Deno.env.get("BT_SERVICE_KEY") || "";
+async function btGet(q: string): Promise<any[]> {
+  if (!BT_URL || !BT_KEY) return [];
+  try {
+    const r = await fetch(`${BT_URL}/rest/v1/${q}`, { headers: { apikey: BT_KEY, Authorization: `Bearer ${BT_KEY}` } });
+    if (!r.ok) { console.error("BT GET", await r.text()); return []; }
+    return await r.json();
+  } catch (e) { console.error("BT GET", e); return []; }
+}
+async function btPatch(q: string, data: unknown): Promise<void> {
+  if (!BT_URL || !BT_KEY) return;
+  try {
+    const r = await fetch(`${BT_URL}/rest/v1/${q}`, { method: "PATCH", headers: { apikey: BT_KEY, Authorization: `Bearer ${BT_KEY}`, "content-type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify(data) });
+    if (!r.ok) console.error("BT PATCH", await r.text());
+  } catch (e) { console.error("BT PATCH", e); }
 }
 
 // --- HMAC-SHA256 署名検証 ---
@@ -184,6 +206,56 @@ Deno.serve(async (req) => {
     }
   }
   if (!resvId) {
+    // --- じゃらん事前決済 消し込み（KEYDROP以外の入金）: order_id → jalan_payments(札幌)/nha_jalan_payments(那覇) を DB paid に ---
+    // ★ポーリング廃止＝払った瞬間にwebhookでDB paid化＝「入金済みなのに催促」を構造的に根絶。正本はDB1本。square_order_idで突合(reference_idは付与しない＝KEYDROP経路と衝突させない)。
+    for (const jt of ["jalan_payments", "nha_jalan_payments"]) {
+      const jr = orderId ? await sbGet(jt, `square_order_id=eq.${encodeURIComponent(orderId)}&select=reservation_id,status&limit=1`) : [];
+      if (jr && jr.length) {
+        if (jr[0].status !== "paid") {
+          await sbPatch(jt, `reservation_id=eq.${encodeURIComponent(jr[0].reservation_id)}`,
+            { status: "paid", paid_at: new Date().toISOString() });
+          const jamt = payment.amount_money?.amount ? `¥${Number(payment.amount_money.amount).toLocaleString()}` : "";
+          console.log(`[webhook] JALAN PAID ${jt} ${jr[0].reservation_id} order=${orderId} ${jamt}`);
+        }
+        return new Response("ok", { status: 200 }); // 冪等：既paidも200
+      }
+    }
+    // 高松(BT別DB): bt_jalan_payments を square_order_id で消し込み(cross-DB・全店1webhook)
+    if (orderId && BT_URL && BT_KEY) {
+      const btr = await btGet(`bt_jalan_payments?square_order_id=eq.${encodeURIComponent(orderId)}&select=reservation_id,status&limit=1`);
+      if (btr && btr.length) {
+        if (btr[0].status !== "paid") {
+          await btPatch(`bt_jalan_payments?reservation_id=eq.${encodeURIComponent(btr[0].reservation_id)}`,
+            { status: "paid", paid_at: new Date().toISOString() });
+          console.log(`[webhook] JALAN PAID bt_jalan_payments ${btr[0].reservation_id} order=${orderId}`);
+        }
+        return new Response("ok", { status: 200 });
+      }
+    }
+    // --- 立替/予約外 消し込み（統合Bot発行のSquareリンク）: order_id → {store}_accounting を paid=true に（スプシ廃止・DB1本）---
+    if (orderId) {
+      for (const at of ["nha_accounting", "spk_accounting"]) {
+        const ar = await sbGet(at, `square_order_id=eq.${encodeURIComponent(orderId)}&select=id,paid&limit=1`);
+        if (ar && ar.length) {
+          if (!ar[0].paid) {
+            await sbPatch(at, `id=eq.${encodeURIComponent(ar[0].id)}`, { paid: true });
+            console.log(`[webhook] ACCOUNTING PAID ${at} ${ar[0].id} order=${orderId}`);
+          }
+          return new Response("ok", { status: 200 });
+        }
+      }
+      // 高松(BT別DB): bt_accounting（cross-DB）
+      if (BT_URL && BT_KEY) {
+        const bar = await btGet(`bt_accounting?square_order_id=eq.${encodeURIComponent(orderId)}&select=id,paid&limit=1`);
+        if (bar && bar.length) {
+          if (!bar[0].paid) {
+            await btPatch(`bt_accounting?id=eq.${encodeURIComponent(bar[0].id)}`, { paid: true });
+            console.log(`[webhook] ACCOUNTING PAID bt_accounting ${bar[0].id} order=${orderId}`);
+          }
+          return new Response("ok", { status: 200 });
+        }
+      }
+    }
     console.error(`[webhook] 予約特定できず order=${orderId} payment=${paymentId}`);
     return new Response("reservation not found", { status: 200 });
   }

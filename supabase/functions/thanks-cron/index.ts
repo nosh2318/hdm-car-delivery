@@ -1,10 +1,13 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // Supabase Edge Function: thanks-cron (店舗対応: spk / nha)
 // 返却翌日、前日に返却した予約へ御礼を自動送信（line-push経由・重複なし）
 // pg_cron が x-cron-secret + body{store} で日次起動。thanks_enabled(or test_mode)がONの時のみ動作。
 // deploy: functions deploy thanks-cron --no-verify-jwt （secrets: FUNC_SECRET, CRON_SECRET）
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const FUNC_SECRET = Deno.env.get("FUNC_SECRET")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET")!;
 const H = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json" };

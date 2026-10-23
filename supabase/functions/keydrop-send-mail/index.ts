@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // ============================================================
 // keydrop-send-mail : KEYDROP 通知メール送信ワーカー（Resend直送・GAS代替）
 // 2026-06-11 / omni
@@ -13,7 +16,7 @@
 // ============================================================
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const CRON_SECRET = Deno.env.get("CRON_SECRET") || "";
 const FROM = Deno.env.get("KEYDROP_FROM") || "CARデリバリー KEY-DROP <reserve@keydrop.jp>";
@@ -122,6 +125,22 @@ function buildReturnday(n: any) {
   return { subject: `【KEY-DROP】本日がご返却日です（予約番号: ${id}）`, body:
     `${p.name || "お客様"} 様\n\nこの度はCARデリバリー KEY-DROP をご利用いただきまして誠にありがとうございます。\n本日がご返却日です🚗${rt ? `（回収予定 ${rt}）` : ""}\n\nもし予定より早くご返却の準備ができましたら、マイページの【🟢 返却の準備ができました（早めの回収OK）】ボタンを押してください。スケジュールに余裕があれば早めに回収へ伺います（確約ではありません）。\nご返却場所・時間のご確認、早め回収のご希望はこちらから👇\nIf you're ready to return early, tap the green "Ready for pickup" button on your page. Check return details here 👇\n${mypageLink(n)}\n\nCARデリバリー KEY-DROP\n` };
 }
+// ⑩ 遅延のご案内（お届け/回収 遅延ボタン）＝アプリ msgColDelay と同一文面・URLなし
+function buildDelay(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "", collecting = !!p.collecting;
+  const t = String(p.atime || "").trim() || "（　）";
+  const who = collecting ? "回収" : "お届け";
+  return { subject: `【KEY-DROP】${who}時間遅延のご案内（予約番号: ${id}）`, body:
+    `【${who}時間について】\n${p.name || "お客様"} 様\n\nこの度はCARデリバリー KEY-DROP をご利用いただき、誠にありがとうございます。\nただいま道路状況・混雑状況により、お車の${who}に向かうスタッフの到着が予定より遅れております。\nご迷惑をおかけし誠に申し訳ございません。\n到着予定は「${t}」頃を見込んでおります。\nお手数をおかけいたしますが、もう暫しお待ちくださいませ。\n\nCARデリバリー KEY-DROP\n` };
+}
+
+// ⑪ 乗り捨て対応のお願い（乗捨ボタン）＝アプリ dropoff と同一文面・URLなし
+function buildDropoff(n: any) {
+  const p = n.payload || {}, id = n.reservation_id || "";
+  return { subject: `【KEY-DROP】乗り捨て対応のお願い（予約番号: ${id}）`, body:
+    `${p.name || "お客様"} 様\n\nご返却時刻の混雑により、大変お手数ではございますが返却予定場所近隣駐車場に乗り捨て駐車いただきたく、ご連絡させていただきました。\nお待たせする時間回避の目的のためご協力の程何卒よろしくお願いいたします。\n\n✅駐車完了しましたら"鍵と駐車券"をダッシュボード内に格納し、鍵を開けた状態でそのままお降りくださいませ。\n✅燃料の給油とお忘れ物（ETCカード等）のないようご注意ください。\n✅駐車場所が確定しましたら詳細場所をご連絡いただけますと幸いです。\n　例：駐車場看板写真／GoogleマップURL／住所／駐車場名／●階 等\n\n駐車後の車両トラブルに関しては一切の責任は問いませんのでご安心くださいませ。\n万一の盗難等の際にも弊社セキュリティにて追跡可能となっております。\n\nCARデリバリー KEY-DROP\n` };
+}
+
 // ⑨ 到着のお知らせ（到着ボタン）＝URLなし（HANDYMAN同方針）お届け/回収で文面別
 function buildArrival(n: any) {
   const p = n.payload || {}, id = n.reservation_id || "", collecting = !!p.collecting;
@@ -198,6 +217,8 @@ function buildMail(n: any) {
     case "thanks": return withFooter(buildThanks(n));
     case "returnday": return withFooter(buildReturnday(n));
     case "arrival": return withFooter(buildArrival(n));
+    case "delay": return withFooter(buildDelay(n));
+    case "dropoff": return withFooter(buildDropoff(n));
     default: return buildCancelRequest(n); // 運営向け（cancel_request）はフッター無し
   }
 }

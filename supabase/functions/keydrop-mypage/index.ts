@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // ============================================================
 // keydrop-mypage : 顧客のマイページ（予約確認・キャンセル）を安全に提供
 // 2026-06-10 / omni
@@ -7,7 +10,7 @@
 // ============================================================
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 // ★security 2026-10-23 スタッフ許可リスト：「ログインしていれば誰でも」→ 正規スタッフのメールドメインだけ通す。
 //   main(ckrxttbnawkclshczsia) の auth.users ドメイン＝spk.hdm/nha.hdm/g-lines.jp/partner.hdm（2026-10-23確認）。協力会社 partner.hdm は不可。新規登録は無効(disable_signup=true)のためドメインで判定できる。EF は個別デプロイなので各 EF に同じ小関数をコピー。
 const STAFF_EMAIL_RE = /@(spk\.hdm|nha\.hdm|g-lines\.jp)$/i;
@@ -534,7 +537,7 @@ Deno.serve(async (req) => {
       vehicle: r.vehicle || "",
       lines: aLines.length ? ["*お客様の希望*", ...aLines] : undefined,
       action: "🟡 *承認待ち*：管理画面で承認するとOP/タスクへ反映＋お客様へ通知します",
-      mgmtUrl: `https://nosh2318.github.io/spk-task/mypage-admin.html?bucket=key_${M.store === "nha" ? "nha" : "spk"}`,
+      mgmtUrl: `https://rent-handyman.com/mypage-admin.html?bucket=key_${M.store === "nha" ? "nha" : "spk"}`,
     }, M.slack);
 
     return json({ ok: true, pendingApproval: true, requested: reqLabels }, 200, origin);

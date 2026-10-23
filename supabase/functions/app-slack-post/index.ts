@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_PUBLISHABLE_KEYS", "default") ? "publishable" : "legacy");
 // app-slack-post ─ アプリ内からのSlack投稿を"サーバ側"で中継する。
 // 目的: クライアント(app.js)にSlack botトークンを埋めない（公開露出の根絶）。
 // 認証: ログイン済みSupabaseユーザーのJWTを検証（authenticatedのみ許可）。
@@ -13,7 +16,7 @@ async function staffUser(token: string): Promise<{ id: string; email: string } |
   const t = String(token || "").replace(/^Bearer\s+/i, "").trim();
   if (!t) return null;
   try {
-    const r = await fetch(`${MAIN_URL}/auth/v1/user`, { headers: { apikey: Deno.env.get("SUPABASE_ANON_KEY") || "", Authorization: `Bearer ${t}` } });
+    const r = await fetch(`${MAIN_URL}/auth/v1/user`, { headers: { apikey: (__newKey("SUPABASE_PUBLISHABLE_KEYS", "default") || Deno.env.get("SUPABASE_ANON_KEY")) || "", Authorization: `Bearer ${t}` } });
     if (!r.ok) return null;
     const u: any = await r.json().catch(() => null);
     const email = String(u?.email || "").trim();

@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // ============================================================
 // mypage-notify : マイページURLを最適タイミングで自動送信（cron）
 // 2026-07-05 / omni  ※札幌(spk)先行。テンプレ＋マイページURLを line-push で送る。
@@ -7,7 +10,7 @@
 //  認証: x-cron-secret = CRON_SECRET（cron）。
 // ============================================================
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const H = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" };
 const URLBASE = "https://nosh2318.github.io/spk-task/my.html?t=";
 
@@ -72,7 +75,7 @@ Deno.serve(async (req) => {
   const links = await sbGet(`${store}_line_links`, `select=resv_no,line_user_id&limit=5000`);
   const linked = new Set(links.filter((l: any) => l.resv_no && l.line_user_id).map((l: any) => l.resv_no));
   // 既送信（sent）マップ
-  const sends = await sbGet(`${store}_line_sends`, `action=like.mypage_*&status=eq.sent&select=resv_no,action&limit=20000`);
+  const sends = await sbGet(`${store}_line_sends`, `action=like.mypage_*&status=eq.sent&select=resv_no,action&order=id.desc&limit=20000`);
   const sentSet = new Set(sends.map((s: any) => s.resv_no + "|" + s.action));
 
   // 場所リマインド判定用: 貸出3日後の予約の d- タスク解決場所

@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // Supabase Edge Function: line-push (店舗対応: spk / nha)
 // 予約番号→userId解決→LINE push→ログ。挨拶文付与・設定ON/OFF・テストモード・誤送信ガード。
 // body: { secret, store('spk'|'nha'), resv_no, action, message }
@@ -6,7 +9,7 @@
 //   secrets: LINE_CHANNEL_TOKEN(spk), NHA_LINE_CHANNEL_TOKEN(nha), FUNC_SECRET
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const FUNC_SECRET = Deno.env.get("FUNC_SECRET")!;
 const TOKENS: Record<string, string> = {
   spk: Deno.env.get("LINE_CHANNEL_TOKEN") || "",
@@ -52,7 +55,7 @@ Deno.serve(async (req) => {
     const dstr = (off: number) => new Date(nowMs + off * 86400000).toISOString().slice(0, 10);
     const todayJST = dstr(0);
     // 返却時アクション(回収追跡/乗り捨て/御礼)は返却日で、貸出時アクション(傷チェック/お届け追跡/到着)は貸出日で判定
-    const returnAct = action === "track_col" || action === "dropoff" || action === "thanks" || action === "col_arrival";
+    const returnAct = action === "track_col" || action === "dropoff" || action === "thanks" || action === "col_arrival" || action === "collect_mypage" || action === "col_delay" || action === "returnday_reminder";
     const refDate = returnAct ? resv[0][colCol] : resv[0][delCol];
     const rd = refDate ? String(refDate).slice(0, 10) : "";
     if (action === "thanks") {

@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // ============================================================
 // create-booking : 顧客申込 → 札幌SPK adminと同一DBへ「SPKと同じ形」で予約成立
 // 2026-06-09 / omni
@@ -18,7 +21,7 @@
 // ============================================================
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 
 // --- Square (Phase B) ---
 const SQUARE_TOKEN = Deno.env.get("SQUARE_ACCESS_TOKEN") || "";
@@ -262,8 +265,10 @@ Deno.serve(async (req) => {
     insurance: String(p.insurance || "なし"),
     del_place: String(p.del_place || ""),
     col_place: String(p.col_place || ""),
-    visit_type: p.visit_type ? String(p.visit_type) : "DEL",
-    return_type: p.return_type ? String(p.return_type) : "COL",
+    // ★2026-07-15 根治(正本側で防ぐ): KEYDROPは配達専門。予約(正本)に来店/返却を書かせない＝取込時に非を防ぐ。
+    //   旧: p.visit_type をそのまま採用→LP側が稀に「来店」を送ると正本が非になりタスクが来店化(KDN-2607-0003-WXW)。DEL/COL固定。
+    visit_type: "DEL",
+    return_type: "COL",
     requireStock: p.requireStock === true,
   };
   const rpc = await sbRpc("keydrop_book", { p: rpcParam });

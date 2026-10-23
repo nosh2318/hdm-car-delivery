@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // ============================================================
 // payment-reconcile-monitor : 消し込みの安全網（webhook落ち対策・誤催促の最後の砦）
 // 2026-09-16 / 全店全種別の"未払い(square_order_id有)"をSquareで照合し、
@@ -5,7 +8,7 @@
 //   webhookが主（払った瞬間）、これは保険（毎時）。差分0なら静か＝webhook正常の証明も兼ねる。
 // ============================================================
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const SQ = Deno.env.get("SQUARE_ACCESS_TOKEN") || "";
 const CRON_SECRET = Deno.env.get("CRON_SECRET") || "";
 const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";

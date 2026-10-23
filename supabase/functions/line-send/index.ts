@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_PUBLISHABLE_KEYS", "default") ? "publishable" : "legacy");
 // Supabase Edge Function: line-send
 // アプリのボタンからLINE送信するための汎用ブリッジ（到着通知・決済・免許証依頼 等）
 // 認証: ログイン済みスタッフのアクセストークン(Authorization: Bearer <user jwt>)を /auth/v1/user で検証
@@ -5,7 +8,7 @@
 // deploy: functions deploy line-send --no-verify-jwt （secret: FUNC_SECRET）
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
+const ANON = (__newKey("SUPABASE_PUBLISHABLE_KEYS", "default") || Deno.env.get("SUPABASE_ANON_KEY"))!;
 // ★security 2026-10-23 スタッフ許可リスト：「ログインしていれば誰でも」→ 正規スタッフのメールドメインだけ通す。
 //   main(ckrxttbnawkclshczsia) の auth.users ドメイン＝spk.hdm/nha.hdm/g-lines.jp/partner.hdm（2026-10-23確認）。協力会社 partner.hdm は不可。新規登録は無効(disable_signup=true)のためドメインで判定できる。EF は個別デプロイなので各 EF に同じ小関数をコピー。
 const STAFF_EMAIL_RE = /@(spk\.hdm|nha\.hdm|g-lines\.jp)$/i;

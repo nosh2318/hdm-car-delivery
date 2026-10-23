@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // Supabase Edge Function: keydrop-returnday
 // KEYDROP予約の「返却日の朝(8時以降)」に、返却のご案内＋早め回収ボタンの訴求を【メールで】1回だけ送る。
 //   keydrop_notifications に type=returnday を enqueue → keydrop-send-mail が Resend でメール送信。
@@ -7,7 +10,7 @@
 // deploy: functions deploy keydrop-returnday --no-verify-jwt / secrets: CRON_SECRET
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET")!;
 const H = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json" };
 

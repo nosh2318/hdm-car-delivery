@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // ============================================================
 // keydrop-budget-watch : KEYDROP 地図API 予算監視ワーカー（日次・Slack通知）
 // 2026-06-13 / omni
@@ -14,10 +17,10 @@
 // ============================================================
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET") || "";
 const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";
-const SLACK_CH = Deno.env.get("SLACK_BUDGET_CHANNEL") || Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36"; // 既定=KEYDROPチャンネル（オーナー指定 2026-06-13・現在のデプロイ済挙動と一致）
+const SLACK_CH = Deno.env.get("SLACK_KEYDROP_CHANNEL") || "C08TDTPEB36"; // 既定=札幌KEYDROP ch
 
 function yen(n: number) { return "¥" + Math.round(n).toLocaleString("ja-JP"); }
 function jstYM() {

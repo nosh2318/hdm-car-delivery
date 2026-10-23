@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // ============================================================
 // mypage-find : 予約番号 ＋ 連絡先(メール/電話) の2点照合でマイページURLを返す
 // ------------------------------------------------------------
@@ -16,7 +19,7 @@
 //   要 secrets: BT_URL, BT_SERVICE_KEY (license-overdue-alert と同じ値でOK)
 // ============================================================
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const BT_URL = Deno.env.get("BT_URL") || "";
 const BT_KEY = Deno.env.get("BT_SERVICE_KEY") || "";
 

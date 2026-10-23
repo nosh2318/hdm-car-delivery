@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // Supabase Edge Function: seat-overflow-alert (店舗対応: spk / bt)
 // オプション（チャイルド/ベビー/ジュニアシート）の在庫を先の日付まで走査し、
 // ある日の必要数が在庫を超えたら Slack にアラート。
@@ -14,7 +17,7 @@
 //   secrets: CRON_SECRET, SLACK_BOT_TOKEN
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET")!;
 const SLACK_TOKEN = Deno.env.get("SLACK_BOT_TOKEN") || "";
 const H = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json" };

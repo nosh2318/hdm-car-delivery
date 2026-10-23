@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // Supabase Edge Function: damage-check-cron (店舗対応: spk / nha)
 // 出発日の朝8:00に、割当車両の傷チェックURLを対象顧客へ自動送信（line-push経由）※2026-07-08 8時統一(那覇/札幌)
 //   SPK: type=DEL / tasks / reservations.lend_date
@@ -6,7 +9,7 @@
 // deploy: functions deploy damage-check-cron --no-verify-jwt  (secrets: FUNC_SECRET, CRON_SECRET)
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const FUNC_SECRET = Deno.env.get("FUNC_SECRET")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET")!;
 const DMG_BASE = "https://nosh2318.github.io/handyman-damage/v.html";
@@ -67,7 +70,9 @@ Deno.serve(async (req) => {
   if (!cands.length) return json({ ok: true, store, candidates: 0 });
 
   const resvList = cands.map((t) => t.resv);
-  const sent = await sbGet(`${S.sends}?action=eq.damage_check&status=eq.sent&resv_no=in.(${resvList.map(enc).join(",")})&select=resv_no`);
+  // dedup: sent だけでなく no_userid(LINE未連携)/skipped も「試行済み」に含める＝再送ループ防止
+  // (LINE未連携客は .com の mail_damage メールで傷チェックが届くので実害なし)
+  const sent = await sbGet(`${S.sends}?action=eq.damage_check&status=in.(sent,no_userid,skipped)&resv_no=in.(${resvList.map(enc).join(",")})&select=resv_no`);
   const sentSet = new Set((sent as any[]).map((s) => s.resv_no));
 
   const vcodes = [...new Set(cands.map((t) => t.veh).filter(Boolean))];

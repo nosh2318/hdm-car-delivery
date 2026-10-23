@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // Supabase Edge Function: license-reminder-cron (札幌SPK / 那覇NHA 対応)
 // 出発 3日前 / 2日前 / 前日 の朝に、免許証「未提出」の顧客へ
 // 「円滑な貸出のための事前登録のお願い」を自動送信。各段階1回のみ（重複送信なし）。
@@ -7,7 +10,7 @@
 // deploy: functions deploy license-reminder-cron --no-verify-jwt  (secrets: FUNC_SECRET, CRON_SECRET)
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const FUNC_SECRET = Deno.env.get("FUNC_SECRET")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET")!;
 const H = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json" };

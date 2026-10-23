@@ -1,3 +1,6 @@
+// 2026-10-23 新API鍵移行：新形式の鍵を優先し、無ければ旧鍵（移行期間の保険・旧鍵の無効化前に外す）
+function __newKey(env: string, name: string): string { try { return (JSON.parse(Deno.env.get(env) || "{}") as Record<string, string>)[name] || ""; } catch { return ""; } }
+console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "legacy");
 // ============================================================
 // keydrop-refund : SPK運営がキャンセル依頼を「承認」→ Square自動返金＋キャンセル確定
 // 2026-06-10 / omni  (Phase B) / 2026-06-11 自動返金化（オーナー指示）
@@ -15,7 +18,7 @@
 // ============================================================
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
-const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_KEY = (__newKey("SUPABASE_SECRET_KEYS", "edge") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const SQUARE_TOKEN = Deno.env.get("SQUARE_ACCESS_TOKEN") || "";
 const SQUARE_API = "https://connect.squareup.com";
 
