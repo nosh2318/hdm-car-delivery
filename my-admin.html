@@ -979,8 +979,8 @@ async function decide(id,status){
     const resv=String(id).slice(6); const r=RES.find(x=>x.id===resv)||{};
     if(!sure(status==="approved"?"この変更を承認して予約に反映しますか？（顧客へメール通知）":"この変更を差し戻しますか？（反映しません・顧客へ通知）"))return;
     try{
-      const body=r.mypage_token?{action:(status==="approved"?"approve_change":"reject_change"),token:r.mypage_token,store:STORE}
-                               :{action:(status==="approved"?"approve_change":"reject_change"),resId:resv,mail:r.mail,store:STORE};
+      const body=r.mypage_token?{action:(status==="approved"?"approve_change":"reject_change"),token:r.mypage_token,store:STORE,staff_token:tok()}
+                               :{action:(status==="approved"?"approve_change":"reject_change"),resId:resv,mail:r.mail,store:STORE,staff_token:tok()};
       const rr=await fetch(FN+"/keydrop-mypage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
       const j=await rr.json().catch(()=>({}));
       if(!rr.ok||!j.ok){toast("処理失敗："+(j.error||rr.status));return}
