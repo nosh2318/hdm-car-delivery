@@ -459,6 +459,8 @@ Deno.serve(async (req) => {
   }
 
   if (action === "cancel") {
+    // ★security 2026-10-23: 顧客の URL だけで返金なし即キャンセル＋配車/タスク削除ができたため停止（呼出元なし。顧客は cancel_request＝承認制、スタッフは keydrop-refund）
+    return json({ error: "この操作は利用できません（キャンセルはマイページの「キャンセル依頼」から）" }, 410, origin);
     const st = String(r.status || "");
     if (st === "cancelled" || st === "キャンセル" || st === "cancel") {
       return json({ ok: true, alreadyCancelled: true }, 200, origin);
@@ -574,6 +576,8 @@ Deno.serve(async (req) => {
 
   // ── 変更リクエストの承認（SPK現場が押す）→ reservations/tasks に反映＋change_reqクリア＋顧客へ反映メール ──
   if (action === "approve_change") {
+    // ★security 2026-10-23: 承認/差戻しはスタッフのみ（旧: 顧客の URL/メールで自分の変更を承認できた）
+    if (!(await staffUser(String(p.staff_token || "")))) return json({ error: "スタッフのログインが必要です（ページを再読み込みしてください）" }, 401, origin);
     const pay0 = (await sbGet("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}&select=change_req`).catch(() => []))[0];
     const cr: any = pay0?.change_req;
     if (!cr || cr.status !== "pending") return json({ error: "承認対象の変更申請がありません" }, 409, origin);
@@ -633,6 +637,8 @@ Deno.serve(async (req) => {
 
   // ── 変更リクエストの差戻し（SPK現場が押す）→ change_reqクリア（反映しない）＋フラグ除去 ──
   if (action === "reject_change") {
+    // ★security 2026-10-23: 承認/差戻しはスタッフのみ（旧: 顧客の URL/メールで自分の変更を承認できた）
+    if (!(await staffUser(String(p.staff_token || "")))) return json({ error: "スタッフのログインが必要です（ページを再読み込みしてください）" }, 401, origin);
     await sbPatch("keydrop_payments", `reservation_id=eq.${encodeURIComponent(resId)}`, { change_req: null, change_req_at: null });
     if (M.store === "nha") {
       const _ts = await sbGet("nha_tasks", encodeURIComponent("予約番号") + "=eq." + encodeURIComponent(resId) + "&select=_id," + encodeURIComponent("メモ"));
