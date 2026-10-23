@@ -534,7 +534,7 @@ Deno.serve(async (req) => {
       vehicle: r.vehicle || "",
       lines: aLines.length ? ["*お客様の希望*", ...aLines] : undefined,
       action: "🟡 *承認待ち*：管理画面で承認するとOP/タスクへ反映＋お客様へ通知します",
-      mgmtUrl: `https://rent-handyman.com/mypage-admin.html?bucket=key_${M.store === "nha" ? "nha" : "spk"}`,
+      mgmtUrl: `https://nosh2318.github.io/spk-task/mypage-admin.html?bucket=key_${M.store === "nha" ? "nha" : "spk"}`,
     }, M.slack);
 
     return json({ ok: true, pendingApproval: true, requested: reqLabels }, 200, origin);

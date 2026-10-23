@@ -77,7 +77,7 @@ const isNewSite = (o?: string, id?: string) => String(o || "") === "HANDYMAN" ||
 const OTA_JP: Record<string, string> = { J: "じゃらん", R: "楽天", S: "skyticket", O: "エアトリ", RC: "レンタカーcom", G: "GoGoOut", HP: "オフィシャル(HP)", SP: "オフィシャル(HP)", direct: "直販", KEYDROP: "KEYDROP" };
 function otaJp(o?: string): string { const k = String(o || ""); return OTA_JP[k] || k || "—"; }
 // 承認管理ページ（マイページ管理コンソール）URL＝承認待ちカードのボタンから飛べるように
-const MGMT_URL = "https://rent-handyman.com/mypage-admin.html?bucket=but_tkm";
+const MGMT_URL = "https://nosh2318.github.io/spk-task/mypage-admin.html?bucket=but_tkm";
 // マイページ通知カード（統一フォーマット）＝ 見出し＋基本情報(お客様/予約番号/予約もと/利用/車両)＋内容＋対応の要否
 type MpCard = { emoji: string; title: string; name: string; resId: string; ota?: string; period?: string; vehicle?: string; lines?: string[]; action: string };
 function mpCard(c: MpCard): { text: string; blocks: unknown[] } {
@@ -556,7 +556,7 @@ Deno.serve(async (req) => {
     // 監視アラートは MYPAGE_SILENT に関係なく必ず発報（slackPost で強制）
     if (conflicts.length > 0) {
       const lines = conflicts.slice(0, 15).map((c: any) => `・${c.name || ""}様 ${c.id}: ${c.fields.map((f: any) => `${f.field}[予約:${f.reservations}≠OP:${f.op}]`).join(" / ")}`).join("\n");
-      await slackPost(`🔍 *マイページ整合アラート* [札幌]\n照合${checked}件 → 一致${okCount} / *要対応 ${conflicts.length}件*\n${lines}${conflicts.length > 15 ? `\n…他${conflicts.length - 15}件` : ""}\n\n👉 *対応はこちら（1画面で確認→ボタンで統一）*\nhttps://rent-handyman.com/mypage-admin.html?bucket=but_tkm の「🛠 対応」タブ`);
+      await slackPost(`🔍 *マイページ整合アラート* [札幌]\n照合${checked}件 → 一致${okCount} / *要対応 ${conflicts.length}件*\n${lines}${conflicts.length > 15 ? `\n…他${conflicts.length - 15}件` : ""}\n\n👉 *対応はこちら（1画面で確認→ボタンで統一）*\nhttps://nosh2318.github.io/spk-task/mypage-admin.html?bucket=but_tkm の「🛠 対応」タブ`);
     } else if (bySecret) {
       await slackPost(`🟢 *マイページ整合パトロール* [札幌] 照合${checked}件すべて一致（予約情報＝マイページ＝OPシート）。`);
     }
