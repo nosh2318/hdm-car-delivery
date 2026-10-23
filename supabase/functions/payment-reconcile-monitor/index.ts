@@ -41,7 +41,8 @@ async function notifySlack(text: string) {
 
 Deno.serve(async (req) => {
   const p = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-  if (CRON_SECRET && req.headers.get("x-cron-secret") !== CRON_SECRET && !p.test) return new Response("forbidden", { status: 403 });
+  // ★security 2026-10-23: {test:true} での素通りを廃止（cron は x-cron-secret 付き）
+  if (!CRON_SECRET || req.headers.get("x-cron-secret") !== CRON_SECRET) return new Response("forbidden", { status: 403 });
   const dry = !!p.dry;
   const fixed: string[] = [];
   let checked = 0;

@@ -69,6 +69,8 @@ Deno.serve(async (req) => {
   const st = STORES.find((s) => s.code === storeCode);
   if (!st) return json({ ok: false, error: "store_required" }, 200, origin);
   if (q.length < 4) return json({ ok: false, error: "invalid_input" }, 200, origin);
+  // ★security 2026-10-23: PostgREST の or=/ilike に効く記号（ワイルドカード %,*,_／区切り ,()"\:）を拒否（空白は電話の表記ゆれで使うので許可）＝他人の予約に一致させない
+  if (/[%*,()"\\:]/.test(q)) return json({ ok: false, error: "invalid_input" }, 200, origin);
   const qd = digits(q);
   const isCancel = (s: string) => { const x = String(s || "").toLowerCase(); return x.indexOf("cancel") >= 0 || String(s || "").indexOf("キャンセル") >= 0; };
 
@@ -78,7 +80,7 @@ Deno.serve(async (req) => {
 
   const enc = encodeURIComponent(q);
   // id完全一致 / mail完全一致(大小無視=ilikeでワイルドカードなし) / tel(入力そのまま・数字のみ) のいずれか
-  let orFilt = `or=(id.eq.${enc},mail.ilike.${enc},tel.eq.${enc}`;
+  let orFilt = `or=(id.eq.${enc},mail.ilike.${encodeURIComponent(q.replace(/_/g, "\\_"))},tel.eq.${enc}`;
   if (qd.length >= 8) orFilt += `,tel.eq.${encodeURIComponent(qd)}`;
   orFilt += `)`;
   const sel = `select=id,mail,tel,name,mypage_token,status,${st.dateCol}&limit=20`;
