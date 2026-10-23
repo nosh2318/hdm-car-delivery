@@ -454,8 +454,8 @@ select.fld:focus{box-shadow:0 0 0 3px rgba(250,190,0,.35)}
 </div></div>
 
 <script>
-var P=new URLSearchParams(location.search);
-var area=P.get('area')||'naha';
+var P=(function(q){return {get:function(k){var v=q.get(k);return v==null?null:String(v).replace(/[^A-Za-z0-9_\-:.]/g,'');}};})(new URLSearchParams(location.search)); // ★security 2026-10-23: URL の値をそのまま画面に入れない（反射型XSS対策）。値は英数字・日付・時刻のみ
+var area=P.get('area')||'naha';if(['naha','sapporo','takamatsu'].indexOf(area)<0)area='naha';
 var method=P.get('method')||'delivery';
 function T(k){return (window.hdmT?window.hdmT(k):k);}
 var MKEY={delivery:'del',airport:'air',store:'store'};
