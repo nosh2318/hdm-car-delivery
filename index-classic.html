@@ -6557,7 +6557,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     (function handlePaymentReturn() {
         try {
             const sp = new URLSearchParams(window.location.search);
-            const paid = sp.get('paid');
+            const paid = String(sp.get('paid') || '').replace(/[^A-Za-z0-9_\-]/g, ''); // ★security 2026-10-24: 予約番号は英数字とハイフンのみ（URLの値を画面に出す前に除去＝反射型XSS対策）
             if (paid) {
                 state._lastResId = paid;
                 saveReservationToLocal(paid);
