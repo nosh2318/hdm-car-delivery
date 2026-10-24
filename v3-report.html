@@ -157,7 +157,7 @@ const SB='https://ckrxttbnawkclshczsia.supabase.co';
 const AK='sb_publishable_aTVhlY0YD-5BBfI03ZNnsg_MzO_vsIe';
 const H={apikey:AK,Authorization:'Bearer '+AK};
 async function q(v){const r=await fetch(SB+'/rest/v1/'+v,{headers:H});if(!r.ok)throw new Error(v+' '+r.status);return r.json();}
-function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));} // XSS: kd_events 由来の値は必ず通す（" ' も変換・属性内でも安全）
 const PAGE={top:'TOP（トップ）',daisha_lp:'代車の説明ページ',daisha_flow:'代車リクエスト',flow:'予約フロー',daisha_chat:'代車チャット'};
 function pl(p){return PAGE[p]||p;}
 const AREA={daisha:'代車リクエスト',spk:'予約（札幌）',nha:'予約（那覇）','(all)':'全体'};
@@ -190,12 +190,12 @@ async function load(){
       var w=Math.round((r.pv||0)/maxPv*100);
       return '<div class="barrow"><span class="lab">'+esc(pl(r.page))+'</span>'
         +'<span class="track"><span class="fill" style="width:'+w+'%"></span></span>'
-        +'<span class="val">'+(r.pv||0)+'<small> 閲覧</small></span></div>';
+        +'<span class="val">'+esc(r.pv||0)+'<small> 閲覧</small></span></div>';
     }).join(''):'<div class="empty">まだデータがありません（計測開始後に表示）</div>';
     document.querySelector('#pageTbl tbody').innerHTML=(pg&&pg.length)?pg.map(r=>{
       var er=(r.pv?Math.round((r.exits||0)/r.pv*100):0);
-      return '<tr><td>'+esc(pl(r.page))+'</td><td>'+(r.pv||0)+'</td><td>'+(r.sessions||0)+'</td><td>'+(r.clicks||0)+'</td>'
-        +'<td>'+(r.exits||0)+' <small>('+er+'%)</small></td><td>'+(r.avg_sec!=null?fmtSec(r.avg_sec):'–')+'</td></tr>';
+      return '<tr><td>'+esc(pl(r.page))+'</td><td>'+esc(r.pv||0)+'</td><td>'+esc(r.sessions||0)+'</td><td>'+esc(r.clicks||0)+'</td>'
+        +'<td>'+esc(r.exits||0)+' <small>('+er+'%)</small></td><td>'+(r.avg_sec!=null?fmtSec(r.avg_sec):'–')+'</td></tr>';
     }).join(''):'<tr><td colspan="6" class="mut">–</td></tr>';
 
     // ファネル（area別）
@@ -210,7 +210,7 @@ async function load(){
         var drop=(i>0)?Math.round((1-(r.sessions||0)/(rows[i-1].sessions||1))*100):0;
         if(i>0 && drop>0 && (!worst||drop>worst.drop)) worst={area:AREA[a]||a,from:stepLabel(a,rows[i-1].step),to:stepLabel(a,r.step),drop:drop};
         fh+='<div class="fstep"><span class="name">'+esc(stepLabel(a,r.step))+'</span>'
-          +'<span class="track"><span class="fill" style="width:'+Math.max(pct,6)+'%">'+(r.sessions||0)+'</span></span>'
+          +'<span class="track"><span class="fill" style="width:'+Math.max(pct,6)+'%">'+esc(r.sessions||0)+'</span></span>'
           +'<span class="side">'+pct+'%'+(i>0&&drop>0?' <span class="drop">−'+drop+'%</span>':'')+'</span></div>';
       });
     });
@@ -223,21 +223,21 @@ async function load(){
       var w=Math.round((r.clicks||0)/maxC*100);
       return '<div class="barrow"><span class="lab" title="'+esc(r.target)+'">'+esc(r.target)+'</span>'
         +'<span class="track"><span class="fill" style="width:'+w+'%"></span></span>'
-        +'<span class="val">'+(r.clicks||0)+' <small>'+esc(pl(r.page))+'</small></span></div>';
+        +'<span class="val">'+esc(r.clicks||0)+' <small>'+esc(pl(r.page))+'</small></span></div>';
     }).join(''):'<div class="empty">まだクリックがありません</div>';
 
     // 端末・流入
-    document.querySelector('#devTbl tbody').innerHTML=(dv&&dv.length)?dv.map(r=>'<tr><td>'+esc(r.device)+'</td><td>'+(r.sessions||0)+'</td><td>'+(r.pv||0)+'</td></tr>').join(''):'<tr><td colspan="3" class="mut">–</td></tr>';
-    document.querySelector('#srcTbl tbody').innerHTML=(sr&&sr.length)?sr.map(r=>'<tr><td>'+esc(r.source)+'</td><td>'+(r.sessions||0)+'</td><td>'+(r.pv||0)+'</td></tr>').join(''):'<tr><td colspan="3" class="mut">–</td></tr>';
+    document.querySelector('#devTbl tbody').innerHTML=(dv&&dv.length)?dv.map(r=>'<tr><td>'+esc(r.device)+'</td><td>'+esc(r.sessions||0)+'</td><td>'+esc(r.pv||0)+'</td></tr>').join(''):'<tr><td colspan="3" class="mut">–</td></tr>';
+    document.querySelector('#srcTbl tbody').innerHTML=(sr&&sr.length)?sr.map(r=>'<tr><td>'+esc(r.source)+'</td><td>'+esc(r.sessions||0)+'</td><td>'+esc(r.pv||0)+'</td></tr>').join(''):'<tr><td colspan="3" class="mut">–</td></tr>';
 
     // 日別スパーク（直近14日）
     var d=(dl||[]).slice(-14);
     var maxS=Math.max.apply(null,d.map(r=>r.sessions||0))||1;
     document.getElementById('spark').innerHTML=d.length?d.map(r=>{
       var h=Math.round((r.sessions||0)/maxS*100);
-      return '<div class="b" style="height:'+Math.max(h,3)+'%"><span>'+(r.sessions||0)+'</span></div>';
+      return '<div class="b" style="height:'+Math.max(h,3)+'%"><span>'+esc(r.sessions||0)+'</span></div>';
     }).join(''):'<div class="empty" style="width:100%">–</div>';
-    document.getElementById('sparkx').innerHTML=d.length?d.map(r=>{var mm=String(r.day).slice(5);return '<div>'+mm+'</div>';}).join(''):'';
+    document.getElementById('sparkx').innerHTML=d.length?d.map(r=>{var mm=String(r.day).slice(5);return '<div>'+esc(mm)+'</div>';}).join(''):'';
 
     var now=new Date();document.getElementById('rt').textContent='更新 '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   }catch(e){
