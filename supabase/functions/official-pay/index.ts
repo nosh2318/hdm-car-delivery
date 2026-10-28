@@ -34,7 +34,9 @@ const SEL: Record<string, string> = {
   nha: "name,mail,vehicle:vehicle_class,lend_date:start_date,lend_time:start_time,return_date:end_date,return_time:end_time,del_place,insurance,mypage_token",
 };
 
-const ALLOWED = ["https://nosh2318.github.io", "https://rent-handyman.com", "https://www.rent-handyman.com", "https://handyman-official.github.io"];
+const ALLOWED = ["https://nosh2318.github.io", "https://rent-handyman.com", "https://www.rent-handyman.com", "https://handyman-official.github.io", "https://hdm-rentacar.jp", "https://www.hdm-rentacar.jp"];
+// 2026-10-28 新サイト(hdm-rentacar.jp)からの予約＝site=hdm2（ota=HANDYMANのまま・バッジHDM2・メール送り元を新ドメインに）
+const HDM2_ORIGINS = ["https://hdm-rentacar.jp", "https://www.hdm-rentacar.jp"];
 function cors(o: string | null) {
   const allow = o && ALLOWED.includes(o) ? o : ALLOWED[0];
   return { "Access-Control-Allow-Origin": allow, "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -86,14 +88,14 @@ async function notifySlack(text: string, ch: string) {
 }
 // ★確定メールはBTのofficial-notify経由で送る（MAIN Resendはrent-handyman.com不可・BTのRESEND_API_KEYが認可済）。
 //   store+reservationIdを渡し、中継側が予約を読んでHANDYMANブランドで送信。
-async function sendConfirmMail(store: string, resId: string): Promise<string> {
+async function sendConfirmMail(store: string, resId: string, site = ""): Promise<string> {
   const url = Deno.env.get("OFFICIAL_NOTIFY_URL") || "";
   const sec = Deno.env.get("OFFICIAL_NOTIFY_SECRET") || "";
   if (!url || !sec) return "";
   try {
     const r = await fetch(url, { method: "POST",
       headers: { "content-type": "application/json", "x-cron-secret": sec },
-      body: JSON.stringify({ confirm: true, store, reservationId: resId }) });
+      body: JSON.stringify({ confirm: true, store, reservationId: resId, site }) });
     const d = await r.json().catch(() => ({}));
     return d?.ok ? "relay" : "";
   } catch (_) { return ""; }
@@ -101,6 +103,7 @@ async function sendConfirmMail(store: string, resId: string): Promise<string> {
 
 Deno.serve(async (req) => {
   _o = req.headers.get("origin");
+  const isHdm2 = !!_o && HDM2_ORIGINS.includes(_o);
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors(_o) });
   if (req.method !== "POST") return J({ error: "POST only" }, 405);
 
@@ -192,14 +195,15 @@ Deno.serve(async (req) => {
       payId = j.payment.id;
     }
     const _patch: Record<string, unknown> = { status: "confirmed" };
+    if (isHdm2) _patch.site = "hdm2";
     if (couponCode) { _patch.price = chargeAmount; _patch.discount = couponDiscount; _patch.coupon_code = couponCode; }
     await sbPatch(M.resv, `id=eq.${encodeURIComponent(resId)}&status=eq.pending_payment`, _patch);
     await sbPost("keydrop_payments", { reservation_id: resId, square_payment_id: payId, amount: chargeAmount, status: "paid", paid_at: new Date().toISOString(), store });
     await finalizeCoupon();
     const rv = (await sbGet(M.resv, `id=eq.${encodeURIComponent(resId)}&select=${SEL[store]}`))[0] || { name, mail };
     const mypageUrl = M.mypage + encodeURIComponent(rv.mypage_token || "");
-    const mailId = await sendConfirmMail(store, resId);
-    const slackMsg = [`🆕 *HANDYMAN ${M.shop} 新規予約*（🆕NEW リニューアル公式サイト rent-handyman.com・カード決済確定）`,
+    const mailId = await sendConfirmMail(store, resId, isHdm2 ? "hdm2" : "");
+    const slackMsg = [isHdm2 ? `🆕 *HANDYMAN ${M.shop} 新規予約*（🆕HDM2 新サイト hdm-rentacar.jp・カード決済確定）` : `🆕 *HANDYMAN ${M.shop} 新規予約*（🆕NEW リニューアル公式サイト rent-handyman.com・カード決済確定）`,
       `予約番号: ${resId} / ${rv.name || name}様`, `車両: ${rv.vehicle || cls}クラス`,
       `出発: ${rv.lend_date || lend} ${rv.lend_time || ""}　返却: ${rv.return_date || ret} ${rv.return_time || ""}`,
       `受け渡し: ${rv.del_place || ""}　補償: ${rv.insurance || "なし"}`,
