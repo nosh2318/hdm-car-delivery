@@ -160,14 +160,14 @@ var NHA_HOTELS=['ホテルコレクティブ','ホテルリソルトリニティ
 var _P=new URLSearchParams(location.search);
 var _AREA=(_P.get('area')==='sapporo')?'sapporo':'naha';
 var _EMBED=(_P.get('embed')==='1');
-var AREACFG={naha:{center:[26.2124,127.6809],areas:['沖縄県'],airport:[26.1958,127.6459],label:'沖縄本島'},sapporo:{center:[43.0621,141.3544],areas:['札幌市','北広島市'],airport:null,label:'札幌市・北広島市'}};
+var AREACFG={naha:{center:[26.2124,127.6809],areas:['那覇市','豊見城市','那霸市','豐見城市','Naha','Tomigusuku','나하','도미구스쿠'],airport:[26.1958,127.6459],label:'那覇市・豊見城市'},sapporo:{center:[43.0621,141.3544],areas:['札幌市','北広島市','北廣島市','Sapporo','Kitahiroshima','삿포로','기타히로시마'],airport:null,label:'札幌市・北広島市'}};
 var CENTER=AREACFG[_AREA].center, AREAS=AREACFG[_AREA].areas, AIRPORT=AREACFG[_AREA].airport, AREALABEL=AREACFG[_AREA].label;
 var AREABBOX={naha:[127.5,26.0,128.6,26.95],sapporo:[141.12,42.88,141.68,43.28]};
 function inArea(lat,lng){var b=AREABBOX[_AREA];if(!b||lat==null)return true;return (lng>=b[0]&&lng<=b[2]&&lat>=b[1]&&lat<=b[3]);}
 
 /* ===== KEYDROP お届けUX 多言語（親フローから ?lang= / postMessage で連動） ===== */
 var _dlang=(function(){var l=_P.get('lang');return (l&&['ja','en','zh','ko'].indexOf(l)>=0)?l:'ja';})();
-var AREALABELS={naha:{ja:'沖縄本島',en:'Okinawa main island',zh:'沖繩本島',ko:'오키나와 본섬'},sapporo:{ja:'札幌市・北広島市',en:'Sapporo & Kitahiroshima',zh:'札幌市・北廣島市',ko:'삿포로시·기타히로시마시'}};
+var AREALABELS={naha:{ja:'那覇市・豊見城市',en:'Naha & Tomigusuku',zh:'那霸市・豐見城市',ko:'나하시·도미구스쿠시'},sapporo:{ja:'札幌市・北広島市',en:'Sapporo & Kitahiroshima',zh:'札幌市・北廣島市',ko:'삿포로시·기타히로시마시'}};
 function curAreaLabel(){var m=AREALABELS[_AREA]||AREALABELS.sapporo;return m[_dlang]||m.ja;}
 var DI={
  ja:{hdr:'お届け先を選ぶ',q:'車をどこにお届けしますか？',qsub:'ホテル名・住所・駅名で検索するか、地図を動かしてピンを合わせてください。<b style="color:var(--gr)">回収も同じ場所が既定</b>です。',ph1:'ホテル名・住所・駅名で検索',maptip:'地図を動かして、お届けしたい場所にピンを合わせてください',lb_del:'お届け先',sel_empty:'場所を選ぶと、ここに表示されます',ret_tt:'🔄 回収も同じ場所にする',ret_td:'別の場所で返す場合はオフに',ret_lead:'🏁 回収（返却）先を選ぶ',ph2:'回収先を検索',maptip2:'回収してほしい場所にピンを合わせてください',lb_col:'回収先',note:'<b style="color:var(--gr)">お届け・回収は{area}のみ</b>です。営業時間 9:00〜19:00。<br>コインパーキング・自宅・ホテル・駅など、どこでもOK（地図で指定できます）。',mapph_a:'地図で場所を指定する',mapph_b:'タップして地図を開く',noresult:'該当する候補が見つかりません。地図を動かしてピンで指定できます。',err_air:'🚫 空港はお届け対象外です。<br>市内の場所をご指定ください。',err_pin:'📍 地図で正確な場所（ピン）を指定してください。',err_area:'🚫 対応エリア外です。<br>お届け・回収は<b>{area}</b>のみ承ります。',cta_empty:'お届け先を選んでください'},
@@ -240,6 +240,8 @@ function regeoAll(){['del','col'].forEach(function(k){if(_ll[k]){var vid=(k==='c
 function apply(which,name,addr,lat,lng,comps){var k=which===2?'col':'del';var sc=document.getElementById(which===2?'selcard2':'selcard');var vid=which===2?'selval2':'selval';var aid=which===2?'seladdr2':'seladdr';
   if(isAirport(lat,lng,(name||'')+' '+(addr||''))){loc[k]='';locName[k]='';_ll[k]=null;sc.className='selcard err';document.getElementById(vid).innerHTML=diT('err_air');document.getElementById(aid).textContent='';renderCta();return;}
   if(!inArea(lat,lng)){loc[k]='';locName[k]='';_ll[k]=null;sc.className='selcard err';document.getElementById(vid).innerHTML=diT('err_area').replace('{area}',curAreaLabel());document.getElementById(aid).textContent='';renderCta();return;}
+  /* 2026-10-30 オーナー「大至急戻せ」「札幌も確認しろ」：対応エリア＝那覇は那覇市・豊見城市／札幌は札幌市・北広島市（管理設定 hdm_delivery_config.cityFilter と同じ）。v3移行(8/20)で本島全域になっていたのを戻す。住所未解決(座標文字列)の時は弾かない */
+  if(lat!=null&&((comps&&comps.length)||(addr&&!/^\s*-?\d+\.\d+\s*,\s*-?\d+\.\d+\s*$/.test(addr)))&&!inCity(comps,addr)){loc[k]='';locName[k]='';_ll[k]=null;sc.className='selcard err';document.getElementById(vid).innerHTML=diT('err_area').replace('{area}',curAreaLabel());document.getElementById(aid).textContent='';renderCta();postState();return;}
   if(lat==null){loc[k]='';locName[k]='';_ll[k]=null;sc.className='selcard err';document.getElementById(vid).innerHTML=diT('err_pin');document.getElementById(aid).textContent='';renderCta();return;}
   loc[k]=addr||name||'';locName[k]=name||'';_ll[k]=[lat,lng];sc.className='selcard';
   document.getElementById(vid).textContent=name||addr||'';
