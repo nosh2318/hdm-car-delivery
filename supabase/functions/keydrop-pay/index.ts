@@ -138,6 +138,22 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ★2026-10-30 オーナー「大至急戻せ」：対応エリア外（那覇＝那覇市・豊見城市／札幌＝札幌市・北広島市）は決済前に弾く。
+  //   v3移行(8/20)で画面側が本島全域/範囲枠のみになり KDN-2611-0007(回収=浦添市)が通った。画面側も同日修正済み・これは二重の守り。
+  //   住所（*_place_full・番地を含むもの）の先頭から「〇〇市/郡〇〇町村」を取り出せた時だけ判定（施設名だけ等で市が読めない時は弾かない＝正しい予約を止めない）。
+  {
+    const OK = M.store === "nha" ? ["那覇市", "豊見城市"] : ["札幌市", "北広島市"];
+    const LABEL = M.store === "nha" ? "那覇市・豊見城市" : "札幌市・北広島市";
+    const fulls = [p.del_place_full || p.del_place, p.col_place_full || p.col_place].map((x: any) => String(x || "").replace(/^日本、?/, "").replace(/〒?\d{3}-?\d{4}\s*/, "").replace(/^(沖縄県|北海道)/, "").trim());
+    for (const s of fulls) {
+      if (!/[0-9０-９]/.test(s)) continue; // 番地の無い文字列（施設名・駅名など。例「市立病院前駅」「公設市場」）は判定しない
+      const m = s.match(/^[^\s0-9０-９、,（(]+?(市|郡[^\s0-9０-９、,]*?[町村]|町|村)/);
+      if (m && !OK.some((c) => m[0].indexOf(c) >= 0)) {
+        return json({ error: "対応エリア外です。お届け・回収は" + LABEL + "のみ承ります。", outOfArea: true }, 400);
+      }
+    }
+  }
+
   // 予約作成＋総額確定（サーバ計算・店舗別RPC）
   const rpc = await sbRpc(M.rpc, { p: {
     vehicleClass: cls, vehicleModel: String(p.vehicleModel || ""),
