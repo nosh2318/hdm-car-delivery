@@ -1220,13 +1220,13 @@ function optLabel(o){return t(o.tkey);}
 // 補償プラン（プルダウン・リクエスト制）※オーナー提供の正式料金/24h
 const INS_PLANS=[
   {v:"なし",price:0,
-    label:{ja:"基本プラン（保険付き）",en:"Basic plan (insured)",zh:"基本方案（含保險）",ko:"기본 플랜(보험 포함)"},
+    label:{ja:"基本補償",en:"Basic coverage",zh:"基本保障",ko:"기본 보장"}/*INS_LABELS_1030*/,
     desc:{ja:"基本保証のみ適用されるプランです。<br>・対人／対物 無制限（免責保証なし）<br>・車両保証 車両時価総額まで（免責負担額15万円）<br>・人身損害補償 3000万円まで",en:"Basic coverage only.<br>・Bodily/property: unlimited (no deductible waiver)<br>・Vehicle: up to market value (¥150,000 deductible)<br>・Personal injury: up to ¥30 million",zh:"僅適用基本保障。<br>・對人／對物 無上限（無免責保障）<br>・車輛保障 至車輛時價（免責自付額15萬日圓）<br>・人身損害 至3000萬日圓",ko:"기본 보장만 적용.<br>・대인/대물 무제한(면책 보장 없음)<br>・차량 보장 시가까지(면책 부담 15만엔)<br>・인신 손해 3000만엔까지"}},
   {v:"免責",price:1100,unit:"/24h",
-    label:{ja:"基本プラン＋免責補償",en:"Basic + CDW",zh:"基本方案＋免責保障",ko:"기본 플랜＋면책 보장"},
+    label:{ja:"免責補償つき",en:"With CDW",zh:"含免責保障",ko:"면책 보장 포함"},
     desc:{ja:"事故時に、お客様が自己負担する費用（免責額）を免除する制度です。<br>基本補償ではカバーできない車両補償の自己負担額15万円が免除されます。",en:"Waives your out-of-pocket deductible in an accident.<br>The ¥150,000 vehicle deductible not covered by basic is waived.",zh:"事故時免除您的自付免責額。<br>基本方案未涵蓋的車輛自付額15萬日圓可免除。",ko:"사고 시 자기부담(면책액)을 면제합니다.<br>기본에서 커버되지 않는 차량 자기부담 15만엔이 면제됩니다."}},
   {v:"NOC",price:1650,unit:"/24h",
-    label:{ja:"基本＋免責＋NOC補償（安心ワイドパック）",en:"Basic + CDW + NOC (Full Pack)",zh:"基本＋免責＋NOC（安心全包）",ko:"기본＋면책＋NOC(안심 와이드팩)"},
+    label:{ja:"安心ワイドパック（免責補償＋NOC補償）",en:"Wide Assurance Pack (CDW + NOC)",zh:"安心廣域套餐（免責＋NOC）",ko:"안심 와이드 팩(면책＋NOC)"},
     desc:{ja:"免責補償もノンオペレーションチャージの心配もなくしたい方へ、すべての補償をひとまとめにした安心ワイドパック。<br>損傷タイヤの修理代・ホイールキャップ紛失の補償も付きます。",en:"All-in-one pack: no deductible and no non-operation charge worries.<br>Also covers damaged tire repair and hubcap loss.",zh:"將所有保障整合的安心全包，免除免責與NOC的擔憂。<br>另含輪胎損傷修理與輪圈蓋遺失保障。",ko:"면책도 NOC 걱정도 없는 올인원 안심 와이드팩.<br>손상 타이어 수리·휠캡 분실 보장도 포함."}},
 ];
 function insLabel(v){const p=INS_PLANS.find(x=>x.v===v);return p?(p.label[L]||p.label.ja):(v||"—");}
@@ -1417,6 +1417,7 @@ async function doMypageLogin(){
   const btn=document.querySelector("#app button"); if(btn){btn.disabled=true;btn.textContent="…";}
   LOGIN.resId=rid; LOGIN.mail=ml;
   const {json}=await call("lookup",{});
+  {var _cj=json;if(_cj&&_cj.cancelled){/* KD_1030_mypage キャンセル済みはこの1文だけ表示 */var _cd=String(_cj.cancel_date||""),_m=+_cd.slice(5,7),_d=+_cd.slice(8,10),_MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];var _cm=_cd?{ja:_m+"月"+_d+"日にキャンセル済みです",en:"This reservation was cancelled on "+_MO[_m-1]+" "+_d+".",zh:"此預約已於"+_m+"月"+_d+"日取消",ko:_m+"월 "+_d+"일에 취소된 예약입니다"}:{ja:"キャンセル済みです",en:"This reservation has been cancelled.",zh:"此預約已取消",ko:"취소된 예약입니다"};document.getElementById("app").innerHTML='<div class="center" style="padding:60px 10px;font-weight:700;font-size:16px">'+(_cm[L]||_cm.ja)+'</div>';return;}}
   if(!json||!json.ok){LOGIN.resId="";LOGIN.mail="";showLoginForm((json&&json.error)||t('login_fail'));return}
   DATA=json;
   CATALOG=await fetchCatalog(json.store);
@@ -1426,6 +1427,7 @@ async function doMypageLogin(){
 async function load(){
   if(!TOKEN && !(LOGIN.resId && LOGIN.mail)){ showLoginForm(); return; } // トークンURL以外＝ログインフォーム
   const {status,json}=await call("lookup",{});
+  {var _cj=json;if(_cj&&_cj.cancelled){/* KD_1030_mypage キャンセル済みはこの1文だけ表示 */var _cd=String(_cj.cancel_date||""),_m=+_cd.slice(5,7),_d=+_cd.slice(8,10),_MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];var _cm=_cd?{ja:_m+"月"+_d+"日にキャンセル済みです",en:"This reservation was cancelled on "+_MO[_m-1]+" "+_d+".",zh:"此預約已於"+_m+"月"+_d+"日取消",ko:_m+"월 "+_d+"일에 취소된 예약입니다"}:{ja:"キャンセル済みです",en:"This reservation has been cancelled.",zh:"此預約已取消",ko:"취소된 예약입니다"};document.getElementById("app").innerHTML='<div class="center" style="padding:60px 10px;font-weight:700;font-size:16px">'+(_cm[L]||_cm.ja)+'</div>';return;}}
   if(!json.ok){ if(!TOKEN){LOGIN.resId="";LOGIN.mail="";showLoginForm(json.error||t('login_fail'));return;} $("#app").innerHTML=`<div class="center">${esc(json.error||t('not_found'))}</div>`;return}
   DATA=json;
   CATALOG=await fetchCatalog(json.store); // 店舗別の正しい車種名（那覇/札幌でラインナップが違う）

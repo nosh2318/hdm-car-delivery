@@ -288,7 +288,21 @@ select.fld:focus{box-shadow:0 0 0 3px rgba(250,190,0,.35)}
 .pc-footer{background:#1a1a1a;color:#fff;padding:28px 24px;text-align:center;font-size:12px;margin-top:32px}
 .pc-footer a{color:#FABE00;text-decoration:none;margin:0 10px;white-space:nowrap;display:inline-block}
 .pc-footer a:hover{text-decoration:underline}
-</style></head>
+</style><style>/* KD_1030_flow 約款同意を分かりやすく・選択の解除 */
+.termsagree #agreeBox{background:#fff8d6;border:2px solid var(--y);border-radius:8px;padding:14px;align-items:center;animation:kdAgreePulse 1.6s ease-in-out infinite}
+.termsagree #agreeBox input{width:26px;height:26px}
+.termsagree #agreeBox b{display:block;font-size:14.5px}
+.termsagree #agreeBox small{display:block;font-size:12px;font-weight:700;color:#9a6a00;margin-top:2px}
+.termsagree #agreeBox:has(input:checked){background:#eaf6ee;border-color:#2e8b57;animation:none}
+.termsagree #agreeBox:has(input:checked) small{color:#2e8b57}
+.termsagree.need #agreeBox{border-color:#e03b3b;background:#fdecea;animation:kdAgreeShake .5s ease 2}
+.termsagree.need #agreeBox small{color:#e03b3b}
+@keyframes kdAgreePulse{0%,100%{box-shadow:0 0 0 0 rgba(250,190,0,0)}50%{box-shadow:0 0 0 6px rgba(250,190,0,.35)}}
+@keyframes kdAgreeShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#ctaBtn.is-wait{opacity:.45}
+.vpick .ux{margin-left:8px;padding-left:8px;border-left:1px solid currentColor;font-size:11px;opacity:.8}
+</style>
+</head>
 <body>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KVF3F48X" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
@@ -410,7 +424,7 @@ select.fld:focus{box-shadow:0 0 0 3px rgba(250,190,0,.35)}
     <div class="sec"><h2 data-i18n="terms_head">📄 貸渡約款</h2><div class="card termsagree" id="termsAgreeCard">
       <div class="termsnote" data-i18n="terms_read">ご予約前に貸渡約款を必ずお読みください（下記をスクロールしてご確認いただけます）。</div>
       <div class="termsbox" id="clauseBox"><div class="loading">貸渡約款を読み込み中…</div></div>
-      <label class="tagree"><input type="checkbox" id="agreeTerms" onchange="onAgree()"> <span data-i18n="terms_agree">貸渡約款に同意します（同意しないとご予約を確定できません）</span></label>
+      <label class="tagree" id="agreeBox"><input type="checkbox" id="agreeTerms" onchange="onAgree()"> <span><b data-i18n="terms_agree">貸渡約款に同意します（同意しないとご予約を確定できません）</b><small data-i18n="terms_hint">ここにチェックを入れると「お支払いに進む」が押せます</small></span></label>
     </div></div>
   </div>
 
@@ -671,7 +685,7 @@ function renderV(){
   document.getElementById('vgrid').innerHTML=ORDER.map(function(k){var c=CLS[k];var av=classAvail(k);return (
     '<div class="vc'+(state.cls===k?' on':'')+(av?'':' soldout')+'" data-k="'+k+'"><div class="pic">'+carImg(k)+'<span class="clschip">'+kdCls(c.l)+'</span>'+''+(av?'<span class="check">✓</span>':'<span class="soldbadge">'+T('fl_full')+'</span>')+'</div>'+
     '<div class="bd"><div class="nm">'+kdVeh(c.v)+'</div><div class="pr">'+(priceOf(k)?('<b>¥'+priceOf(k).toLocaleString()+'</b><small>'+T('perday')+'</small>'):'<b>¥—</b>')+'</div><div class="sp">👥 '+(''+c.s).replace(/[名人]/g,'')+T('seats')+'</div>'+
-    '<div class="vbtns">'+(av?'<button class="vpick" onclick="decideV(\''+k+'\')">'+(state.cls===k?T('fl_decided'):T('fl_decide'))+'</button>':'<div class="soldmsg">'+T('fl_nostock')+'</div>')+
+    '<div class="vbtns">'+(av?'<button class="vpick'+(state.cls===k?' is-on':'')+'" onclick="toggleV(\''+k+'\')">'+(state.cls===k?T('fl_decided')+'<span class="ux">'+T('fl_unpick')+'</span>':T('fl_decide'))+'</button>':'<div class="soldmsg">'+T('fl_nostock')+'</div>')+
     '<button class="vdetail" onclick="openDetail(\''+k+'\')">'+T('fl_detail')+'</button></div></div></div>');
   }).join('');
   document.getElementById('vgrid').className='vgrid '+(state.cls?'hassel':'nosel');
@@ -680,6 +694,8 @@ function renderV(){
 // 車両を決定→受取(送迎/お届け/来店)をアンロックし、そこへスクロール
 function decideV(k){state.cls=k;renderV();calc();unlockMethod();var s=document.getElementById('methodSec');if(s)setTimeout(function(){s.scrollIntoView({behavior:'smooth',block:'start'});},70);}
 function pickV(k){decideV(k);} // 後方互換
+// KD_1030_flow 選択中の車をもう一度押すと解除（受取の詳細も閉じる）
+function toggleV(k){if(state.cls!==k){decideV(k);return;}state.cls='';renderV();calc();var lk=document.getElementById('methodLock');if(lk)lk.style.display='';var mc=document.getElementById('methodCard');if(mc)mc.style.display='none';var s=document.getElementById('methodSec');if(s)s.classList.add('locked');try{if(typeof renderNext==='function')renderNext();}catch(e){}}
 function unlockMethod(){var lk=document.getElementById('methodLock');if(lk)lk.style.display='none';var mc=document.getElementById('methodCard');if(mc)mc.style.display='';var s=document.getElementById('methodSec');if(s)s.classList.remove('locked');if(typeof delMap!=='undefined'&&delMap){setTimeout(function(){try{delMap.invalidateSize();}catch(e){}},130);}}
 // 車両クラス詳細モーダル（KEYDROPと同じ情報＝STA.equip / STA.note を使用）
 function openDetail(k){var c=CLS[k];if(!c)return;
@@ -755,9 +771,9 @@ function applyStep(){
   var btn=document.getElementById('ctaBtn');btn.textContent=lbl[step]||'';
   try{updCtaTotal();}catch(e){}
   // 確認画面：貸渡約款を実際に表示し、同意しないと「お支払いに進む」を押せない(KEYDROP方式)
-  if(step==='confirm'){loadClause();var _ck=document.getElementById('agreeTerms');btn.disabled=!(_ck&&_ck.checked);}
-  else if(step==='payment'){btn.disabled=false;requestAnimationFrame(function(){initSquareCard();});}
-  else{btn.disabled=false;}
+  if(step==='confirm'){loadClause();var _ck=document.getElementById('agreeTerms');btn.disabled=false;btn.classList.toggle('is-wait',!(_ck&&_ck.checked));}
+  else if(step==='payment'){btn.disabled=false;btn.classList.remove('is-wait');requestAnimationFrame(function(){initSquareCard();});}
+  else{btn.disabled=false;btn.classList.remove('is-wait');}
   document.querySelector('.cta').style.display=(step==='done')?'none':'flex';
   document.getElementById('ctaBack').style.display=(step==='select'||step==='done')?'none':'inline-block';
   if(step==='options')renderChosen();
@@ -772,11 +788,11 @@ function goNext(){
     step='options';}
   else if(step==='options'){if(!state.ins){var _is=document.querySelector('.ins');if(_is)_is.scrollIntoView({behavior:'smooth',block:'center'});var _am={ja:'補償プランをお選びください。',en:'Please choose a coverage plan.',zh:'請選擇保障方案。',ko:'보장 플랜을 선택해 주세요.'};var _lg='ja';try{_lg=localStorage.getItem('hdm_lang')||'ja';}catch(e){}alert(_am[_lg]||_am.ja);return;}step='customer';}
   else if(step==='customer'){if(!vForm(true))return;step='confirm';}
-  else if(step==='confirm'){var _ck=document.getElementById('agreeTerms');if(!_ck||!_ck.checked){var _c=document.getElementById('termsAgreeCard');if(_c){_c.classList.add('need');_c.scrollIntoView({block:'center'});}alert(T('terms_need'));return;}step='payment';}
+  else if(step==='confirm'){var _ck=document.getElementById('agreeTerms');if(!_ck||!_ck.checked){var _c=document.getElementById('termsAgreeCard');if(_c){_c.classList.remove('need');void _c.offsetWidth;_c.classList.add('need');_c.scrollIntoView({behavior:'smooth',block:'center'});}return;}step='payment';}
   else if(step==='payment'){payWithCard();return;}
   applyStep();
 }
-function onAgree(){var _ck=document.getElementById('agreeTerms');var _ok=!!(_ck&&_ck.checked);if(_ok){var _c=document.getElementById('termsAgreeCard');if(_c)_c.classList.remove('need');}if(step==='confirm'){document.getElementById('ctaBtn').disabled=!_ok;}}
+function onAgree(){var _ck=document.getElementById('agreeTerms');var _ok=!!(_ck&&_ck.checked);if(_ok){var _c=document.getElementById('termsAgreeCard');if(_c)_c.classList.remove('need');}if(step==='confirm'){var _b=document.getElementById('ctaBtn');_b.disabled=false;_b.classList.toggle('is-wait',!_ok);}}
 // ===== クレジットカード決済（Square Web Payments SDK・KEYDROPと同一方式） =====
 var SUPABASE_URL='https://ckrxttbnawkclshczsia.supabase.co';
 var SUPABASE_KEY='sb_publishable_aTVhlY0YD-5BBfI03ZNnsg_MzO_vsIe';
@@ -937,4 +953,7 @@ window.hdmOnLang=function(){try{kdLangActive();}catch(e){}try{cpApply();}catch(e
 <script src="official-i18n.js"></script>
 <script src="kd-track.js"></script>
 <script>try{KDT.init({page:'flow',area:(typeof area!=='undefined'?(area==='sapporo'?'spk':'nha'):'')});}catch(e){}</script>
+<script>/* KD_1030_until 予約できる期間（HANDYMANと共通）を超える日程は受け付けない */
+(function(){try{var st=(area==='sapporo'||area==='spk')?'spk':'nha';fetch(SB_URL+'/rest/v1/app_settings?key=eq.hdm_official_price&select=value',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(!d||!d[0])return;var m;try{m=JSON.parse(d[0].value)[st];}catch(e){return;}var u=m&&m.book_until;if(!u)return;var x=rD||pD;if(x&&x>u){alert(T('fl_until').replace('{d}',u));location.href='index.html';}}).catch(function(){});}catch(e){}})();
+</script>
 </body></html>
