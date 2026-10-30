@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
     const slackMsg = [isHdm2 ? `🆕 *HANDYMAN ${M.shop} 新規予約*（🆕HDM2 新サイト hdm-rentacar.jp・カード決済確定）` : `🆕 *HANDYMAN ${M.shop} 新規予約*（🆕NEW リニューアル公式サイト rent-handyman.com・カード決済確定）`,
       `予約番号: ${resId} / ${rv.name || name}様`, `車両: ${rv.vehicle || cls}クラス`,
       `出発: ${rv.lend_date || lend} ${rv.lend_time || ""}　返却: ${rv.return_date || ret} ${rv.return_time || ""}`,
-      `受け渡し: ${_leg.vt === "PUB" ? "送迎バス（空港⇄第2ヤード）" : _leg.vt === "来店" ? "来店（営業所）" : "お届け：" + (rv.del_place || "（マイページで登録待ち）")}　補償: ${rv.insurance || "なし"}`,
+      `受け渡し: ${_leg.vt === "PUB" ? "店舗で受け渡し（空港から送迎バス）" : _leg.vt === "来店" ? "来店（営業所）" : "お届け：" + (rv.del_place || "（マイページで登録待ち）")}　補償: ${rv.insurance || "なし"}`,
       couponCode ? `クーポン: ${couponCode}（-¥${couponDiscount.toLocaleString()}）` : null,
       `金額: ¥${chargeAmount.toLocaleString()}　確定メール: ${mailId ? "送信済" : "未送信"}`,
       (String(p.note || "").trim() ? `📝 備考・ご要望: ${String(p.note).trim()}` : "")].filter(Boolean).join("\n");
