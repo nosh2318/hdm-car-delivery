@@ -83,14 +83,6 @@ html,body{margin:0;background:var(--bg);color:var(--ink);
 .spg .sp .mp{display:inline-block;margin-top:5px;font-size:11.5px;font-weight:800;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:999px;padding:3px 11px}
 .oshin{text-align:center;padding:22px 18px;background:linear-gradient(180deg,#0c3f86,#03081c);color:#fff;border-radius:18px;margin:14px 0 6px;font-family:"Hiragino Mincho ProN",serif}
 .oshin p{font-size:13.5px;line-height:1.9;margin:8px 4px 0;opacity:.95}.oshin .sig{font-size:11px;letter-spacing:2px;opacity:.8;margin-top:12px}
-.quizbnr{display:flex;align-items:center;gap:11px;background:linear-gradient(120deg,#0F1F45,#1e3a8a);color:#fff;border-radius:16px;padding:13px 15px;margin-bottom:14px;cursor:pointer;box-shadow:0 6px 18px rgba(15,31,69,.28);position:relative;overflow:hidden}
-.quizbnr::after{content:"";position:absolute;right:-30px;top:-30px;width:90px;height:90px;background:radial-gradient(circle,rgba(56,189,248,.4),transparent 70%)}
-.quizbnr .qb-ic{font-size:26px;flex:0 0 auto;animation:qbwiggle 2s ease-in-out infinite}
-@keyframes qbwiggle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
-.quizbnr .qb-tx{flex:1;line-height:1.3;min-width:0}
-.quizbnr .qb-tx b{display:block;font-size:15px;font-weight:900}
-.quizbnr .qb-tx span{display:block;font-size:11.5px;opacity:.85;margin-top:1px}
-.quizbnr .qb-go{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:#38bdf8;color:#0F1F45;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px}
 .tvbox{background:#fff;border:1px solid #e6e9ef;border-radius:16px;padding:14px 14px 12px;margin-bottom:14px;box-shadow:0 4px 14px rgba(15,31,69,.08)}
 .tvbox .tv-h{display:flex;align-items:center;gap:8px;margin-bottom:2px}
 .tvbox .tv-h .ic{font-size:20px}
@@ -319,6 +311,8 @@ const RO = new URLSearchParams(location.search).get("ro")==="1"; // スタッフ
 // トークンURL(?t=)が無い入口（サイトのメニュー等）＝予約番号＋メールでログイン。EFはtoken か resId+mail の両方に対応。
 let LOGIN = { resId: (new URLSearchParams(location.search).get("resv")||new URLSearchParams(location.search).get("id")||"").trim().toUpperCase(), mail: (new URLSearchParams(location.search).get("mail")||"").trim() };
 const $ = s=>document.querySelector(s);
+/* ★2026-11-03 オーナー指示：満タン返却のお願いを常に目立つ場所に表示（4言語・キャンセル済みは非表示） */
+function fuelBox(){var M={ja:["⛽ 給油してからのご返却をお願いします","満タンでのご返却がルールです。ご返却前に、返却場所の近くのガソリンスタンドで指定の燃料を満タンにしてください。"],en:["⛽ Please refuel before returning the car","Returning the car with a full tank is our rule. Before returning, please fill up with the specified fuel at a gas station near your return location."],zh:["⛽ 請加滿油後再還車","還車時須加滿油。還車前，請在還車地點附近的加油站加滿指定燃料。"],ko:["⛽ 주유 후 반납해 주세요","만탱크 반납이 원칙입니다. 반납 전 반납 장소 근처 주유소에서 지정 연료를 가득 채워 주세요."]};var m=M[(typeof L!=="undefined"&&M[L])?L:"ja"];return '<div class="fuelbox" role="note" style="display:flex;gap:10px;align-items:flex-start;background:#fff7e6;border:2px solid #f59e0b;border-radius:14px;padding:12px 14px;margin:12px 0 14px;color:#7c2d12;box-shadow:0 4px 14px rgba(245,158,11,.18)"><div style="flex:1;min-width:0"><b style="display:block;font-size:15.5px;font-weight:900;line-height:1.35;color:#9a3412">'+m[0]+'</b><span style="display:block;font-size:12.5px;line-height:1.55;margin-top:3px">'+m[1]+'</span></div></div>';}
 let DATA = null;
 
 /* ================= 多言語 i18n（日本語/English/繁體中文/한국어）================= */
@@ -507,8 +501,6 @@ const TX={
  ready_send:{ja:"この内容で知らせる",en:"Notify",zh:"通知",ko:"알리기"},
  ready_at:{ja:"希望時間の目安",en:"Preferred time",zh:"希望時間",ko:"희망 시간"},
  // ── 新カルテUI（KV/クイズ/受取ボタン/スポット/しおり）──
- quiz_hd:{ja:"ご当地クイズに挑戦！",en:"Take the Local Quiz!",zh:"挑戰在地測驗！",ko:"현지 퀴즈에 도전!"},
- quiz_sub:{ja:"全15問・約1分でわかるご当地ツウ度",en:"15 questions · about 1 min",zh:"共15題・約1分鐘",ko:"전 15문항 · 약 1분"},
  tv_hd:{ja:"旅をもっと楽しむ",en:"Make your trip better",zh:"讓旅程更精彩",ko:"여행을 더 즐겁게"},
  tv_sub:{ja:"ホテル・体験・グルメをお得に予約",en:"Hotels, activities & food deals",zh:"飯店・體驗・美食優惠預約",ko:"호텔·체험·미식 예약"},
  tv_exp:{ja:"体験・アクティビティ",en:"Activities",zh:"體驗・活動",ko:"체험·액티비티"},
@@ -626,8 +618,6 @@ const QEF="https://ckrxttbnawkclshczsia.supabase.co/functions/v1/quiz-track";
 let _qsess=""; try{_qsess=localStorage.getItem("hdm_quiz_sess")||"";if(!_qsess){_qsess="s"+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36);localStorage.setItem("hdm_quiz_sess",_qsess);}}catch(e){}
 function qtrack(ev,extra){try{fetch(QEF,{method:"POST",headers:{"Content-Type":"application/json"},keepalive:true,body:JSON.stringify(Object.assign({event:ev,store:((DATA&&DATA.store)||"spk"),token:TOKEN||null,lang:(typeof L!=="undefined"?L:"ja"),session:_qsess},extra||{}))}).catch(function(){});}catch(e){}}
 let _qviewed=false;
-window.openQuiz=function(){ qtrack('banner_click'); var st=((DATA&&DATA.store)||"spk"); var ov=document.createElement('div'); ov.id='quizOv'; ov.style.cssText='position:fixed;inset:0;z-index:99999;background:#0b0d10'; ov.innerHTML='<button onclick="closeQuiz()" style="position:absolute;top:calc(env(safe-area-inset-top) + 8px);right:10px;z-index:2;width:38px;height:38px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:19px;font-weight:800;cursor:pointer">✕</button><iframe src="quiz.html?v=2&t='+encodeURIComponent(TOKEN||"")+'&store='+st+'" style="width:100%;height:100%;border:0"></iframe>'; document.body.appendChild(ov); };
-window.closeQuiz=function(){ var o=document.getElementById('quizOv'); if(o)o.remove(); };
 /* ★ 旅を楽しむ/お得情報 リンク＋クリック計測(店舗別 北海道/沖縄・ASP登録後にアフィリURLへ差替) */
 window.TRAVEL_LINKS={
   spk:{exp:"https://activityjapan.com/lp/hokkaido/",hotel:"https://www.jalan.net/",gourmet:"https://tabelog.com/hokkaido/",spot:"https://www.jalan.net/kankou/010000/"},
@@ -854,6 +844,7 @@ function render(){
   </div>
 
 
+  ${!cancelled?fuelBox():""}
   ${!cancelled?`<div class="tvbox">
     <div class="tv-h"><span class="ic">🎁</span><b>${t('tv_hd')}</b></div>
     <div class="tv-sub">${t('tv_sub')}</div>
@@ -1460,7 +1451,7 @@ async function load(){
     function observeAll(){ try{ document.querySelectorAll("details.acc").forEach(function(el){ io.observe(el); }); }catch(e){} }
     if(typeof window.render==="function"){ var _r=window.render; window.render=function(){ var x=_r.apply(this,arguments); setTimeout(observeAll,60); return x; }; }
     setTimeout(observeAll,400);
-    ["reqOption","sendOption","reqInsurance","sendInsurance","askCancel","sendCancel","openReady","confirmReady","saveField","mpSave","mpPick","uploadLicense","licUpload","receiveDone","setLang","openQuiz","scrollLic","closeQuiz","doMypageLogin"].forEach(function(n){ var o=window[n]; if(typeof o!=="function")return; window[n]=function(){ try{trk("btn_"+n,"click");}catch(e){} return o.apply(this,arguments); }; });
+    ["reqOption","sendOption","reqInsurance","sendInsurance","askCancel","sendCancel","openReady","confirmReady","saveField","mpSave","mpPick","uploadLicense","licUpload","receiveDone","setLang","scrollLic","doMypageLogin"].forEach(function(n){ var o=window[n]; if(typeof o!=="function")return; window[n]=function(){ try{trk("btn_"+n,"click");}catch(e){} return o.apply(this,arguments); }; });
     ["mapPicker","editField"].forEach(function(n){ var o=window[n]; if(typeof o!=="function")return; window[n]=function(f){ try{trk(n+"_"+(f||""),"click");}catch(e){} return o.apply(this,arguments); }; });
     if(typeof window.call==="function"){ var _c=window.call; window.call=function(a){ try{ if(a&&a!=="lookup")trk("call_"+a,"click"); }catch(e){} return _c.apply(this,arguments); }; }
     function flush(){
