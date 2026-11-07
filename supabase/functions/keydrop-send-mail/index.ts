@@ -168,19 +168,13 @@ function buildReturnReminder(n: any) {
 }
 function buildDecision(n: any) {
   const p = n.payload || {}, id = n.reservation_id || "";
-  // 2026-11-07 別の案（お客様がマイページで「この案でOK／やめる」を押す）
-  if (p.decision === "proposed") {
-    const label0 = p.label || "ご依頼", detail0 = p.detail ? `（${p.detail}）` : "";
-    return { subject: `【KEY-DROP】ご依頼について別の案のご提案｜予約番号: ${id}`,
-      text: `${p.name || "お客様"} 様\n\nマイページからいただいた${label0}${detail0}について、別の案のご提案です。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\nご提案　　：${p.proposal || ""}\n回答期限　：${p.expires || ""}\n━━━━━━━━━━━━━━━━━━━━\n\nマイページで「この案でOK」を押していただくと確定します。ご都合が合わない場合は「やめる」を押してください。今のご予約はそのままです。\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n` };
-  }
   const approved = p.decision === "approved";
   const label = p.label || "ご依頼", detail = p.detail ? `（${p.detail}）` : "";
   return {
     subject: approved ? `【KEY-DROP】ご依頼を承認しました｜予約番号: ${id}` : `【KEY-DROP】ご依頼について｜予約番号: ${id}`,
     text: approved
       ? `${p.name || "お客様"} 様\n\nマイページからいただいた${label}${detail}を確認し、承認・反映いたしました。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\n内容　　　：${label}${detail}\n状態　　　：✅ 承認・反映済み\n━━━━━━━━━━━━━━━━━━━━\n\n■ ご確認\nマイページで最新の予約内容をご確認いただけます（ログイン不要）。\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n`
-      : `${p.name || "お客様"} 様\n\nマイページからいただいた${label}${detail}を確認いたしました。\n誠に恐れ入りますが、今回は下記のとおり承れませんでした。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\n内容　　　：${label}${detail}\n状態　　　：今回は見送りとさせていただきました\n${p.reason ? `理由　　　：${String(p.reason).replace(/\n/g, "\n　　　　　　")}\n` : ""}━━━━━━━━━━━━━━━━━━━━\n\n詳細・別のご希望については、お手数ですが公式LINEよりご連絡ください。\n\n■ ご確認\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n` };
+      : `${p.name || "お客様"} 様\n\nマイページからいただいた${label}${detail}を確認いたしました。\n誠に恐れ入りますが、今回は下記のとおり承れませんでした。\n\n━━━━━━━━━━━━━━━━━━━━\n予約番号　：${id}\n内容　　　：${label}${detail}\n状態　　　：今回は見送りとさせていただきました\n━━━━━━━━━━━━━━━━━━━━\n\n詳細・別のご希望については、お手数ですが公式LINEよりご連絡ください。\n\n■ ご確認\n${mypageLink(n)}\n\n■ お問い合わせ\n公式LINE：${LINE_URL}（ID: ${LINE_ID}）\n営業時間：9:00〜19:00\n\nCARデリバリー KEY-DROP\n` };
 }
 // オプション/補償/受渡 変更依頼の受付（未確定・承認制）
 function buildRequestAck(n: any) {
