@@ -296,7 +296,7 @@ function proposalExpires(field: string, sd: string, st: string, ed: string, et: 
 function declineMsg(head: string, label: string, field: string, newV: string, oldV: string, why: string, alt: string, next: string, url: string): string {
   // 11/7 nosh「返信の内容には気を付ける 丁寧な内容で」
   const want = field === "cancel" ? "ご予約のキャンセル" : field === "ready" ? "早めの回収" : `${label}の変更${newV ? `（${newV}）` : ""}`;
-  const lines = [`${head}ご依頼いただいた${want}につきまして、誠に申し訳ございませんが、今回はお受けいたしかねます。`];
+  const lines = [`${head}ご依頼いただいた${want}につきまして、ご連絡いたします。`];
   if (why) lines.push(why);
   if (alt) lines.push(`代わりに、${alt}${/[。！？!?]$/.test(alt) ? "" : "。"}`);
   if (next) lines.push(next);
