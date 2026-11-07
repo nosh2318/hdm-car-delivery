@@ -268,6 +268,10 @@ function resolveTaskPlace(t: any): string { if (!t) return ""; const cj = parseC
 function resolveTaskTime(t: any): string { if (!t) return ""; const cj = parseCJ(t); return String(t.timeChange || cj._timeChange || cj._ssTime || t.time || ""); }
 function taskOptNum(t: any, k: string): number { if (!t) return 0; const cj = parseCJ(t); return Number(cj[k]) || 0; }
 
+// ==== 2026-11-07 別の案・お断り理由（アクションタブ仕様。HANDYMAN 札幌・那覇・高松と同じ形） ====
+const REJ_JP: Record<string, string> = { no_vehicle: "ご希望の日時は、空いているお車がございません。", out_of_area: "ご希望の場所は、お届け・回収の対象エリア外です。", past_deadline: "変更の受付締切を過ぎております。", other: "" };
+function rejectLine(code: string, text: string): string { const a = REJ_JP[code] || ""; const t = String(text || "").trim().slice(0, 200); return [a, t].filter(Boolean).join("\n"); }
+
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(origin) });
@@ -307,7 +311,7 @@ Deno.serve(async (req) => {
       actor = "staff:" + (((who) as any)?.email || "kd-admin");
     }
     const changeId = p.change_id;
-    const decision = String(p.decision || "").trim(); // approved | rejected | acknowledged
+    const decision = String(p.decision || "").trim(); // approved | rejected | acknowledged（別の案は KEYDROP マイページ未対応のため受け付けない）
     if (!changeId || !["approved", "rejected", "acknowledged"].includes(decision)) return json({ error: "パラメータ不正" }, 400, origin);
     const cRows = await sbGet("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}&select=id,reservation_id,store,field,new_value,note,payload,status&limit=1`);
     const c = cRows[0];
@@ -318,6 +322,9 @@ Deno.serve(async (req) => {
     const M2 = mkStore(c.store === "nha" ? "nha" : "spk");
     const rid2 = String(c.reservation_id);
     const pl = (c.payload && typeof c.payload === "object") ? c.payload : {};
+    const rejCode = String(p.reject_reason || ""), rejText = String(p.reject_text || "").trim().slice(0, 200);
+    const rejLine = decision === "rejected" ? rejectLine(rejCode, rejText) : "";
+    const rejPayload = decision === "rejected" && (rejCode || rejText) ? { payload: { ...pl, reject: { reason: rejCode || "other", text: rejText, by: actor, at: new Date().toISOString() } } } : {};
     if (decision === "approved") {
       if (c.field === "insurance" && pl.insurance) {
         await sbPatch(M2.resv, `id=eq.${encodeURIComponent(rid2)}`, { insurance: String(pl.insurance) });
@@ -340,12 +347,12 @@ Deno.serve(async (req) => {
         });
       }
     }
-    await sbPatch("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: decision, actor });
+    await sbPatch("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: decision, actor, ...rejPayload });
     const rr = (await sbGet(M2.resv, `id=eq.${encodeURIComponent(rid2)}&select=name,mail`).catch(() => []))[0] || {};
     if (rr.mail && String(rr.mail).includes("@")) {
-      await sbPost("keydrop_notifications", { reservation_id: rid2, store: M2.store, to_email: rr.mail, type: "mypage_decision", sent: false, payload: { name: rr.name || "", decision, label: c.note || c.field, detail: c.new_value || "" } }).catch(() => {});
+      await sbPost("keydrop_notifications", { reservation_id: rid2, store: M2.store, to_email: rr.mail, type: "mypage_decision", sent: false, payload: { name: rr.name || "", decision, label: c.note || c.field, detail: (c.new_value || "") + (rejLine ? `／理由：${rejLine.replace(/\n/g, " ")}` : "") } }).catch(() => {});
     }
-    await notifySlack(`${decision === "approved" ? "✅ *承認*" : "🚫 *却下*"} [KEYDROP] ${rr.name || ""}様 ${rid2}\n依頼: ${c.note || c.field}（${c.new_value || ""}）\n担当: ${actor}\n→ 顧客へメール通知`, M2.slack);
+    await notifySlack(`${decision === "approved" ? "✅ *承認*" : "🚫 *却下*"} [KEYDROP] ${rr.name || ""}様 ${rid2}\n依頼: ${c.note || c.field}（${c.new_value || ""}）${rejLine ? `\n理由: ${rejLine.replace(/\n/g, " ")}` : ""}\n担当: ${actor}\n→ 顧客へメール通知`, M2.slack);
     return json({ ok: true, decided: decision }, 200, origin);
   }
 
@@ -377,6 +384,17 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ★KD_1030_kdef キャンセル済みは「M月D日にキャンセル済みです」だけを返す（予約の中身は一切返さない／以降の全アクション共通）
+  if (r) { const _cs = String(r.status || ""); if (/cancel/i.test(_cs) || _cs.indexOf("キャンセル") >= 0) {
+    let _at = "";
+    try { const _lg = await sbGet("reservation_cancel_ledger", `reservation_id=eq.${encodeURIComponent(String(r.id || resId))}&event=eq.cancel&order=changed_at.desc&limit=1&select=changed_at`); _at = String((_lg[0] && _lg[0].changed_at) || ""); } catch (_) { /* noop */ }
+    // 台帳が無い古い予約は audit_log の status 変更時刻。updated_at は解約後の更新でも動くので日付に使わない（根拠が無ければ日付なしで返す）
+    if (!_at) { try { const _a = await sbGet("audit_log", `tbl=eq.${M.resv}&row_id=eq.${encodeURIComponent(String(r.id || resId))}&diff->status->>new=in.(cancelled,${encodeURIComponent("キャンセル")},cancel)&order=changed_at.desc&limit=1&select=changed_at`); _at = String((_a[0] && _a[0].changed_at) || ""); } catch (_) { /* noop */ } }
+    const _t = _at ? new Date(_at).getTime() : NaN;
+    const _cd = isNaN(_t) ? "" : new Date(_t + 9 * 3600 * 1000).toISOString().slice(0, 10);
+    const _msg = _cd ? `${+_cd.slice(5, 7)}月${+_cd.slice(8, 10)}日にキャンセル済みです` : "キャンセル済みです";
+    return json({ ok: false, cancelled: true, cancel_date: _cd, error: _msg }, 200, origin);
+  } }
   if (action === "lookup") {
     const enc = encodeURIComponent(resId);
     // 傷チェック解禁：出発日8:00以降（KEYDROP札幌のみ vehicle_twins あり・best-effort）
@@ -405,7 +423,7 @@ Deno.serve(async (req) => {
       : sbGet(M.tasks, `reservation_id=eq.${enc}&deleted=not.is.true&select=_id,place,time,insurance,changed_json`)
       ).catch(() => []);
     // 変更履歴＝KEYDROP独自ログ（keydrop_mypage_changes）＝HANDYMANの mypage_changes と切り分け
-    const chgP = sbGet("keydrop_mypage_changes", `reservation_id=eq.${enc}&order=created_at.desc&limit=12&select=field,old_value,new_value,source,status,actor,created_at`).catch(() => []);
+    const chgP = sbGet("keydrop_mypage_changes", `reservation_id=eq.${enc}&order=created_at.desc&limit=12&select=id,field,old_value,new_value,source,status,actor,created_at,payload`).catch(() => []);
     const payP = sbGet("keydrop_payments", `reservation_id=eq.${enc}&select=cancel_requested_at,cancel_reason,change_req`).catch(() => []);
     const [damageUrl, fleet, opTasks, chg, pay] = await Promise.all([damageP, fleetP, opTasksP, chgP, payP]);
     const dTask = opTasks.find((t: any) => String(t._id || "").startsWith("d-"));
@@ -537,7 +555,7 @@ Deno.serve(async (req) => {
       vehicle: r.vehicle || "",
       lines: aLines.length ? ["*お客様の希望*", ...aLines] : undefined,
       action: "🟡 *承認待ち*：管理画面で承認するとOP/タスクへ反映＋お客様へ通知します",
-      mgmtUrl: `https://rent-handyman.com/mypage-admin.html?bucket=key_${M.store === "nha" ? "nha" : "spk"}`,
+      mgmtUrl: `https://nosh2318.github.io/spk-task/mypage-admin.html?bucket=key_${M.store === "nha" ? "nha" : "spk"}`,
     }, M.slack);
 
     return json({ ok: true, pendingApproval: true, requested: reqLabels }, 200, origin);
