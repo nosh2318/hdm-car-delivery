@@ -274,7 +274,7 @@ async function applyPlaceTime(store: any, r: any, resId: string, delPlace: strin
 }
 
 // ==== 2026-11-07 別の案・お断り理由（アクションタブ仕様。マイページ側の「この案でOK／やめる」と対。那覇・高松・KEYと同じ形） ====
-const REJ_JP: Record<string, string> = { no_vehicle: "ご希望の日時は、空いているお車がございません。", out_of_area: "ご希望の場所は、お届け・回収の対象エリア外です。", past_deadline: "変更の受付締切を過ぎております。", other: "" };
+const REJ_JP: Record<string, string> = { no_vehicle: "ご希望の日時は、空いているお車がございません。", out_of_area: "ご希望の場所は、お届け・回収の対象エリア外です。", past_deadline: "変更の受付締切を過ぎております。", full_slot: "ご希望のお時間は、お届け・回収の予定が埋まっております。", out_of_stock: "ご希望のオプションは、ご用意できる数がございません。", other: "" };
 function rejectLine(code: string, text: string): string { const a = REJ_JP[code] || ""; const t = String(text || "").trim().slice(0, 200); return [a, t].filter(Boolean).join("\n"); }
 const PROP_FIELDS_END = ["col_place", "return_time", "ready"];
 function proposalExpires(field: string, sd: string, st: string, ed: string, et: string): string {
@@ -286,12 +286,14 @@ function proposalExpires(field: string, sd: string, st: string, ed: string, et: 
 }
 // お断り＝「できない理由＋代わりにできること＋今のご予約はそのまま」の1通（別の案・お断り共通の文面）
 function declineMsg(head: string, label: string, field: string, newV: string, oldV: string, why: string, alt: string, next: string, url: string): string {
-  const want = field === "cancel" ? "ご予約のキャンセル" : `ご希望の${label}${newV && field !== "ready" ? `（${newV}）` : ""}`;
-  const lines = [`${head}${want}は、お受けできませんでした。`];
+  // 11/7 nosh「返信の内容には気を付ける 丁寧な内容で」
+  const want = field === "cancel" ? "ご予約のキャンセル" : field === "ready" ? "早めの回収" : `${label}の変更${newV ? `（${newV}）` : ""}`;
+  const lines = [`${head}ご依頼いただいた${want}につきまして、誠に申し訳ございませんが、今回はお受けいたしかねます。`];
   if (why) lines.push(why);
   if (alt) lines.push(`代わりに、${alt}${/[。！？!?]$/.test(alt) ? "" : "。"}`);
   if (next) lines.push(next);
   lines.push(field === "cancel" || !oldV ? "今のご予約はそのままです。" : `今のご予約（${label}：${oldV}）はそのままです。`);
+  lines.push("ご不便をおかけいたしますが、何卒よろしくお願いいたします。");
   if (url) lines.push(url);
   return lines.join("\n");
 }
@@ -420,9 +422,10 @@ Deno.serve(async (req) => {
     const rejCode = String(p.reject_reason || ""), rejText = String(p.reject_text || "").trim().slice(0, 200);
     const rejLine = decision === "rejected" ? rejectLine(rejCode, rejText) : "";
     const altText = String(p.alt_text || "").trim().slice(0, 300);
+    const keep = p.keep_as_is === true || p.keep_as_is === "true";  // 11/7 nosh「NGだけもあり得る＝既存予約のままでお願いします」
     // 2026-11-07 nosh決定「お断り＝できないが〜ならできます」：代わりの案なしのお断りは受け付けない（早め回収＝予定通り回収 は例外）
-    if (decision === "rejected" && !altText) return json({ error: "代わりにできること（〜ならできます）を書いてください" }, 400, origin);
-    const rejPayload = decision === "rejected" ? { payload: { ...pl, reject: { reason: rejCode || "other", text: rejText, alt: altText, by: actor, at: new Date().toISOString() } } } : {};
+    if (decision === "rejected" && !altText && !keep) return json({ error: "代わりにできること（〜ならできます）を書いてください" }, 400, origin);
+    const rejPayload = decision === "rejected" ? { payload: { ...pl, reject: { reason: rejCode || "other", text: rejText, alt: altText, ...(keep ? { keep: true } : {}), by: actor, at: new Date().toISOString() } } } : {};
     // ---- 別の案（お客様がマイページで「この案でOK」を押すと承認と同じ処理で確定）----
     if (decision === "proposed") {
       const ptext = String(p.proposal_text || "").trim().slice(0, 300); const pval = String(p.proposal_value || "").trim().slice(0, 100);
@@ -444,7 +447,8 @@ Deno.serve(async (req) => {
       else if (c.field === "ready") msg = rdyHM ? `【HANDYMAN 札幌デリバリー】早めのご返却（回収）を承りました。\n回収予定時間を ${rdyHM} に調整いたしました。マイページよりご確認ください。\n${myUrl}` : `【HANDYMAN 札幌デリバリー】早めのご返却（回収）を承りました。\nスケジュールを調整し、回収時間が早まる場合は改めてご連絡いたします。`;
       else msg = `【HANDYMAN 札幌デリバリー】ご依頼の${label}変更を承り、反映いたしました。\nマイページよりご確認ください。\n${myUrl}`;
     } else {
-      if (c.field === "ready" && !altText) msg = `【HANDYMAN 札幌デリバリー】ご連絡ありがとうございます。今回は予定のお時間での回収とさせていただきます。${rejLine ? "\n" + rejLine : ""}`;
+      if (c.field === "ready" && (keep || !altText)) msg = `【HANDYMAN 札幌デリバリー】ご連絡ありがとうございます。誠に申し訳ございませんが、今回は予定のお時間での回収とさせていただきます。${rejLine ? "\n" + rejLine : ""}\n何卒ご理解いただけますと幸いです。`;
+      else if (keep) msg = declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), rejLine, "", "", myUrl).replace(/はそのままです。/, "のままでのご利用をお願いできますでしょうか。");
       else msg = declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), rejLine, altText, c.field === "cancel" ? "" : "こちらでよろしければ、マイページから改めてご依頼ください。", myUrl);
     }
     await pushLine(resId2, msg);
@@ -532,7 +536,7 @@ Deno.serve(async (req) => {
       name: rr.name || "", resId: resId2, ota: rr.ota,
       period: (rr.lend_date ? `${rr.lend_date}〜${rr.return_date}` : undefined),
       vehicle: rr.vehicle,
-      lines: [`📝 *内容*　${c.note || c.new_value || "-"}`, `👤 *担当*　${actor}`, ...(extraLine ? [extraLine] : []), ...(rejLine ? [`💬 *理由*　${rejLine.replace(/\n/g, " ")}`] : []), ...(altText ? [`🔁 *代わりの案*　${altText}`] : [])],
+      lines: [`📝 *内容*　${c.note || c.new_value || "-"}`, `👤 *担当*　${actor}`, ...(extraLine ? [extraLine] : []), ...(rejLine ? [`💬 *理由*　${rejLine.replace(/\n/g, " ")}`] : []), ...(altText || keep ? [`🔁 *代わりの案*　${altText || "今のご予約のまま"}`] : [])],
       action: decision === "approved"
         ? `✅ 顧客へLINE通知済み${c.field === "cancel" ? "＋キャンセル確定・配車解除" : "・予約に反映済み"}`
         : "✅ 顧客へLINE通知済み（見送り）",
