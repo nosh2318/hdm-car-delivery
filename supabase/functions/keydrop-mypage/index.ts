@@ -324,7 +324,10 @@ Deno.serve(async (req) => {
     const pl = (c.payload && typeof c.payload === "object") ? c.payload : {};
     const rejCode = String(p.reject_reason || ""), rejText = String(p.reject_text || "").trim().slice(0, 200);
     const rejLine = decision === "rejected" ? rejectLine(rejCode, rejText) : "";
-    const rejPayload = decision === "rejected" && (rejCode || rejText) ? { payload: { ...pl, reject: { reason: rejCode || "other", text: rejText, by: actor, at: new Date().toISOString() } } } : {};
+    const altText = String(p.alt_text || "").trim().slice(0, 300);
+    // 2026-11-07 nosh決定「お断り＝できないが〜ならできます」：代わりの案なしのお断りは受け付けない（早め回収＝予定通り回収 は例外）
+    if (decision === "rejected" && c.field !== "ready" && !altText) return json({ error: "代わりにできること（〜ならできます）を書いてください" }, 400, origin);
+    const rejPayload = decision === "rejected" ? { payload: { ...pl, reject: { reason: rejCode || "other", text: rejText, alt: altText, by: actor, at: new Date().toISOString() } } } : {};
     if (decision === "approved") {
       if (c.field === "insurance" && pl.insurance) {
         await sbPatch(M2.resv, `id=eq.${encodeURIComponent(rid2)}`, { insurance: String(pl.insurance) });
@@ -350,9 +353,9 @@ Deno.serve(async (req) => {
     await sbPatch("keydrop_mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: decision, actor, ...rejPayload });
     const rr = (await sbGet(M2.resv, `id=eq.${encodeURIComponent(rid2)}&select=name,mail`).catch(() => []))[0] || {};
     if (rr.mail && String(rr.mail).includes("@")) {
-      await sbPost("keydrop_notifications", { reservation_id: rid2, store: M2.store, to_email: rr.mail, type: "mypage_decision", sent: false, payload: { name: rr.name || "", decision, label: c.note || c.field, detail: (c.new_value || "") + (rejLine ? `／理由：${rejLine.replace(/\n/g, " ")}` : "") } }).catch(() => {});
+      await sbPost("keydrop_notifications", { reservation_id: rid2, store: M2.store, to_email: rr.mail, type: "mypage_decision", sent: false, payload: { name: rr.name || "", decision, label: c.note || c.field, detail: (c.new_value || "") + (rejLine ? `／理由：${rejLine.replace(/\n/g, " ")}` : "") + (altText ? `／代わりに：${altText}（今のご予約はそのままです。こちらでよろしければマイページから改めてご依頼ください）` : "") } }).catch(() => {});
     }
-    await notifySlack(`${decision === "approved" ? "✅ *承認*" : "🚫 *却下*"} [KEYDROP] ${rr.name || ""}様 ${rid2}\n依頼: ${c.note || c.field}（${c.new_value || ""}）${rejLine ? `\n理由: ${rejLine.replace(/\n/g, " ")}` : ""}\n担当: ${actor}\n→ 顧客へメール通知`, M2.slack);
+    await notifySlack(`${decision === "approved" ? "✅ *承認*" : "🚫 *却下*"} [KEYDROP] ${rr.name || ""}様 ${rid2}\n依頼: ${c.note || c.field}（${c.new_value || ""}）${rejLine ? `\n理由: ${rejLine.replace(/\n/g, " ")}` : ""}${altText ? `\n代わりの案: ${altText}` : ""}\n担当: ${actor}\n→ 顧客へメール通知`, M2.slack);
     return json({ ok: true, decided: decision }, 200, origin);
   }
 
