@@ -377,6 +377,17 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ★KD_1030_kdef キャンセル済みは「M月D日にキャンセル済みです」だけを返す（予約の中身は一切返さない／以降の全アクション共通）
+  if (r) { const _cs = String(r.status || ""); if (/cancel/i.test(_cs) || _cs.indexOf("キャンセル") >= 0) {
+    let _at = "";
+    try { const _lg = await sbGet("reservation_cancel_ledger", `reservation_id=eq.${encodeURIComponent(String(r.id || resId))}&event=eq.cancel&order=changed_at.desc&limit=1&select=changed_at`); _at = String((_lg[0] && _lg[0].changed_at) || ""); } catch (_) { /* noop */ }
+    // 台帳が無い古い予約は audit_log の status 変更時刻。updated_at は解約後の更新でも動くので日付に使わない（根拠が無ければ日付なしで返す）
+    if (!_at) { try { const _a = await sbGet("audit_log", `tbl=eq.${M.resv}&row_id=eq.${encodeURIComponent(String(r.id || resId))}&diff->status->>new=in.(cancelled,${encodeURIComponent("キャンセル")},cancel)&order=changed_at.desc&limit=1&select=changed_at`); _at = String((_a[0] && _a[0].changed_at) || ""); } catch (_) { /* noop */ } }
+    const _t = _at ? new Date(_at).getTime() : NaN;
+    const _cd = isNaN(_t) ? "" : new Date(_t + 9 * 3600 * 1000).toISOString().slice(0, 10);
+    const _msg = _cd ? `${+_cd.slice(5, 7)}月${+_cd.slice(8, 10)}日にキャンセル済みです` : "キャンセル済みです";
+    return json({ ok: false, cancelled: true, cancel_date: _cd, error: _msg }, 200, origin);
+  } }
   if (action === "lookup") {
     const enc = encodeURIComponent(resId);
     // 傷チェック解禁：出発日8:00以降（KEYDROP札幌のみ vehicle_twins あり・best-effort）
@@ -537,7 +548,7 @@ Deno.serve(async (req) => {
       vehicle: r.vehicle || "",
       lines: aLines.length ? ["*お客様の希望*", ...aLines] : undefined,
       action: "🟡 *承認待ち*：管理画面で承認するとOP/タスクへ反映＋お客様へ通知します",
-      mgmtUrl: `https://rent-handyman.com/mypage-admin.html?bucket=key_${M.store === "nha" ? "nha" : "spk"}`,
+      mgmtUrl: `https://nosh2318.github.io/spk-task/mypage-admin.html?bucket=key_${M.store === "nha" ? "nha" : "spk"}`,
     }, M.slack);
 
     return json({ ok: true, pendingApproval: true, requested: reqLabels }, 200, origin);
