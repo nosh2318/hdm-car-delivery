@@ -421,12 +421,13 @@ Deno.serve(async (req) => {
     const rejLine = decision === "rejected" ? rejectLine(rejCode, rejText) : "";
     const altText = String(p.alt_text || "").trim().slice(0, 300);
     // 2026-11-07 nosh決定「お断り＝できないが〜ならできます」：代わりの案なしのお断りは受け付けない（早め回収＝予定通り回収 は例外）
-    if (decision === "rejected" && c.field !== "ready" && !altText) return json({ error: "代わりにできること（〜ならできます）を書いてください" }, 400, origin);
+    if (decision === "rejected" && !altText) return json({ error: "代わりにできること（〜ならできます）を書いてください" }, 400, origin);
     const rejPayload = decision === "rejected" ? { payload: { ...pl, reject: { reason: rejCode || "other", text: rejText, alt: altText, by: actor, at: new Date().toISOString() } } } : {};
     // ---- 別の案（お客様がマイページで「この案でOK」を押すと承認と同じ処理で確定）----
     if (decision === "proposed") {
       const ptext = String(p.proposal_text || "").trim().slice(0, 300); const pval = String(p.proposal_value || "").trim().slice(0, 100);
       if (!ptext) return json({ error: "別の案の内容を書いてください" }, 400, origin);
+      if (c.field === "ready" && !/^\d{1,2}:\d{2}$/.test(pval)) return json({ error: "回収できる時間を 15:00 の形で入れてください" }, 400, origin);  // 11/7 nosh「早め回収も〜時ならOK」
       if (!["del_place", "col_place", "lend_time", "return_time", "ready"].includes(String(c.field))) return json({ error: "この種類の依頼は、マイページのボタンではなく文でお返事します（decision=rejected＋alt_text）" }, 400, origin);
       const exp = proposalExpires(String(c.field), rr.lend_date, rr.lend_time, rr.return_date, rr.return_time);
       const whyP = rejectLine(rejCode, rejText);

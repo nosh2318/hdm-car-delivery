@@ -326,7 +326,7 @@ Deno.serve(async (req) => {
     const rejLine = decision === "rejected" ? rejectLine(rejCode, rejText) : "";
     const altText = String(p.alt_text || "").trim().slice(0, 300);
     // 2026-11-07 nosh決定「お断り＝できないが〜ならできます」：代わりの案なしのお断りは受け付けない（早め回収＝予定通り回収 は例外）
-    if (decision === "rejected" && c.field !== "ready" && !altText) return json({ error: "代わりにできること（〜ならできます）を書いてください" }, 400, origin);
+    if (decision === "rejected" && !altText) return json({ error: "代わりにできること（〜ならできます）を書いてください" }, 400, origin);
     const rejPayload = decision === "rejected" ? { payload: { ...pl, reject: { reason: rejCode || "other", text: rejText, alt: altText, by: actor, at: new Date().toISOString() } } } : {};
     if (decision === "approved") {
       if (c.field === "insurance" && pl.insurance) {
