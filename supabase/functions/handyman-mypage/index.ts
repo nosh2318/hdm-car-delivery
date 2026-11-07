@@ -274,8 +274,16 @@ async function applyPlaceTime(store: any, r: any, resId: string, delPlace: strin
 }
 
 // ==== 2026-11-07 別の案・お断り理由（アクションタブ仕様。マイページ側の「この案でOK／やめる」と対。那覇・高松・KEYと同じ形） ====
-const REJ_JP: Record<string, string> = { no_vehicle: "ご希望の日時は、空いているお車がございません。", out_of_area: "ご希望の場所は、お届け・回収の対象エリア外です。", past_deadline: "変更の受付締切を過ぎております。", full_slot: "ご希望のお時間は、お届け・回収の予定が埋まっております。", out_of_stock: "ご希望のオプションは、ご用意できる数がございません。", other: "" };
-function rejectLine(code: string, text: string): string { const a = REJ_JP[code] || ""; const t = String(text || "").trim().slice(0, 200); return [a, t].filter(Boolean).join("\n"); }
+const REJ_JP: Record<string, string> = {  // 11/7 nosh「理由は明確に（予約状況の兼ね合いにて・回収スタッフ状況など）」
+  no_vehicle: "誠に恐れ入りますが、予約状況の兼ね合いにより、ご希望の日時にご用意できるお車がございません。",
+  full_slot: "誠に恐れ入りますが、{staff}の状況により、ご希望のお時間に伺うことができません。",
+  out_of_area: "ご希望の場所は、お届け・回収の対象エリア外のため、伺うことができません。",
+  out_of_stock: "誠に恐れ入りますが、在庫状況により、ご希望のオプションをご用意できる数がございません。",
+  past_deadline: "変更の受付締切を過ぎているため、ご変更を承ることができません。",
+  other: "",
+};
+function staffOf(field: string): string { return ["del_place", "lend_time"].includes(field) ? "お届けスタッフ" : ["col_place", "return_time", "ready"].includes(field) ? "回収スタッフ" : "担当スタッフ"; }
+function rejectLine(code: string, text: string, field = ""): string { const a = (REJ_JP[code] || "").replace("{staff}", staffOf(field)); const t = String(text || "").trim().slice(0, 200); return [a, t].filter(Boolean).join("\n"); }
 const PROP_FIELDS_END = ["col_place", "return_time", "ready"];
 function proposalExpires(field: string, sd: string, st: string, ed: string, et: string): string {
   const now = Date.now(); let exp = now + 24 * 3600e3;
@@ -420,7 +428,7 @@ Deno.serve(async (req) => {
     // ready(早め回収)の希望回収時刻を note/new_value から抽出（HH:MM）
     const rdyHM = c.field === "ready" ? ((String(c.note || "") + " " + String(c.new_value || "")).match(/(\d{1,2}:\d{2})/)?.[1] || "") : "";
     const rejCode = String(p.reject_reason || ""), rejText = String(p.reject_text || "").trim().slice(0, 200);
-    const rejLine = decision === "rejected" ? rejectLine(rejCode, rejText) : "";
+    const rejLine = decision === "rejected" ? rejectLine(rejCode, rejText, String(c.field)) : "";
     const altText = String(p.alt_text || "").trim().slice(0, 300);
     const keep = p.keep_as_is === true || p.keep_as_is === "true";  // 11/7 nosh「NGだけもあり得る＝既存予約のままでお願いします」
     // 2026-11-07 nosh決定「お断り＝できないが〜ならできます」：代わりの案なしのお断りは受け付けない（早め回収＝予定通り回収 は例外）
@@ -433,7 +441,7 @@ Deno.serve(async (req) => {
       if (c.field === "ready" && !/^\d{1,2}:\d{2}$/.test(pval)) return json({ error: "回収できる時間を 15:00 の形で入れてください" }, 400, origin);  // 11/7 nosh「早め回収も〜時ならOK」
       if (!["del_place", "col_place", "lend_time", "return_time", "ready"].includes(String(c.field))) return json({ error: "この種類の依頼は、マイページのボタンではなく文でお返事します（decision=rejected＋alt_text）" }, 400, origin);
       const exp = proposalExpires(String(c.field), rr.lend_date, rr.lend_time, rr.return_date, rr.return_time);
-      const whyP = rejectLine(rejCode, rejText);
+      const whyP = rejectLine(rejCode, rejText, String(c.field));
       await sbPatch("mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: "proposed", actor, payload: { ...pl, proposal: { text: ptext, value: pval, reason: rejCode || "", reason_text: rejText, expires_at: exp, by: actor, at: new Date().toISOString() } } }, sAct);
       await pushLine(resId2, declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), whyP, ptext, `マイページで「この案でOK」を押すと確定します（${jstMdHm(exp)}まで）。ご都合が合わなければ「やめる」を押してください。`, myUrl));
       await slackPost(`💬 別の案を送りました [札幌] ${label} / ${resId2}：${ptext}（お客様の返事待ち・${jstMdHm(exp)}まで）／ ${actor}`);
