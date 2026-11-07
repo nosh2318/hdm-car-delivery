@@ -68,11 +68,11 @@ async function slackPost(text: string, blocks?: unknown[]): Promise<void> {
   try { const r = await fetch("https://slack.com/api/chat.postMessage", { method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json; charset=utf-8" }, body: JSON.stringify(body) }); const d = await r.json().catch(() => ({})); if (!d.ok) console.error("[slack]", JSON.stringify(d)); } catch (e) { console.error("[slack]", String(e)); }
 }
 // ★新規予約(official-pay)の逆パターン：キャンセルも予約取込ch #sapporo_reservation に出す（那覇と統一）
-async function slackResv(text: string): Promise<void> {
+async function slackResv(text: string, blocks?: unknown[]): Promise<void> {
   if (Deno.env.get("MYPAGE_SILENT") === "1") { console.log("[slackResv muted]", text); return; }
   const token = Deno.env.get("SLACK_BOT_TOKEN"); const ch = Deno.env.get("SLACK_SPK_RESV_CHANNEL") || "C08TDTPEB36";
   if (!token) { console.log("[slackResv skip]", text); return; }
-  try { const r = await fetch("https://slack.com/api/chat.postMessage", { method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json; charset=utf-8" }, body: JSON.stringify({ channel: ch, text }) }); const d = await r.json().catch(() => ({})); if (!d.ok) console.error("[slackResv]", JSON.stringify(d)); } catch (e) { console.error("[slackResv]", String(e)); }
+  try { const r = await fetch("https://slack.com/api/chat.postMessage", { method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json; charset=utf-8" }, body: JSON.stringify(blocks ? { channel: ch, text, blocks } : { channel: ch, text }) }); const d = await r.json().catch(() => ({})); if (!d.ok) console.error("[slackResv]", JSON.stringify(d)); } catch (e) { console.error("[slackResv]", String(e)); }
 }
 // 新サイト(rent-handyman.com)判定＝ota'HANDYMAN' or id HDMS始まり
 const isNewSite = (o?: string, id?: string) => String(o || "") === "HANDYMAN" || /^HDMS/.test(String(id || ""));
@@ -81,6 +81,8 @@ const OTA_JP: Record<string, string> = { J: "じゃらん", R: "楽天", S: "sky
 function otaJp(o?: string): string { const k = String(o || ""); return OTA_JP[k] || k || "—"; }
 // 承認管理ページ（マイページ管理コンソール）URL＝承認待ちカードのボタンから飛べるように
 const MGMT_URL = "https://nosh2318.github.io/spk-task/mypage-admin.html?bucket=but_tkm";
+// 2026-11-07 キャンセル申請などは該当予約をアクションタブで直接開く（札幌=hdm_spk）
+const actUrl = (rid: string) => `https://nosh2318.github.io/spk-task/mypage-active.html?tab=action&bucket=hdm_spk&rid=${encodeURIComponent(rid)}`;
 // マイページ通知カード（統一フォーマット）＝ 見出し＋基本情報(お客様/予約番号/予約もと/利用/車両)＋内容＋対応の要否
 type MpCard = { emoji: string; title: string; name: string; resId: string; ota?: string; period?: string; vehicle?: string; lines?: string[]; action: string };
 function mpCard(c: MpCard): { text: string; blocks: unknown[] } {
@@ -100,7 +102,7 @@ function mpCard(c: MpCard): { text: string; blocks: unknown[] } {
   // 承認/対応が要るカードには管理コンソール（承認管理ページ）へのボタンを付ける
   if (/管理コンソール/.test(c.action)) {
     blocks.push({ type: "actions", elements: [
-      { type: "button", text: { type: "plain_text", text: "🔔 承認管理ページを開く", emoji: true }, url: MGMT_URL, style: "primary" },
+      { type: "button", text: { type: "plain_text", text: "🔔 承認管理ページを開く", emoji: true }, url: c.resId ? actUrl(c.resId) : MGMT_URL, style: "primary" },
     ] });
   }
   blocks.push({ type: "divider" });
@@ -971,7 +973,18 @@ Deno.serve(async (req) => {
     if (already[0]) return json({ ok: true, alreadyRequested: true }, 200, origin);
     await sbPost("mypage_changes", { reservation_id: resId, store: "spk", field: "cancel", old_value: st, new_value: "キャンセル依頼", source: "customer", status: "requested", note: reason }, "customer:" + resId);
     await notifySlackCard({ emoji: "🔴", title: "キャンセル申請（承認待ち）", name: r.name, resId, ota: r.ota, period: `${r.lend_date}〜${r.return_date}`, vehicle: r.vehicle, lines: [`📝 *理由*\n${reason || "（記載なし）"}`], action: "⚠️ *要対応*：管理コンソール →「🔔変更依頼」で承認/却下（承認でキャンセル確定＋配車解除＋顧客LINE）" });
-    await slackResv(`🔴 キャンセル申請（承認待ち）[札幌]${isNewSite(r.ota, resId) ? "（🆕NEW リニューアル公式サイト rent-handyman.com）" : ""} ${r.name || ""} / ${resId}`);
+    { const _nw = isNewSite(r.ota, resId);
+    await slackResv(`🔴 キャンセル申請（承認待ち）[札幌]${_nw ? "（🆕NEW リニューアル公式サイト rent-handyman.com）" : ""} ${r.name || ""} / ${resId}`, [
+      { type: "header", text: { type: "plain_text", text: `🔴 キャンセル申請（承認待ち）[札幌]${_nw ? " 🆕NEW" : ""}`, emoji: true } },
+      { type: "section", fields: [
+        { type: "mrkdwn", text: `*お客様:*\n${r.name || "-"} 様` }, { type: "mrkdwn", text: `*予約番号:*\n${resId}` },
+        { type: "mrkdwn", text: `*ご予約元:*\n${otaJp(r.ota)}` }, { type: "mrkdwn", text: `*利用期間:*\n${r.lend_date || "-"} 〜 ${r.return_date || "-"}` },
+        { type: "mrkdwn", text: `*車両:*\n${r.vehicle || "-"}` }, { type: "mrkdwn", text: `*金額:*\n¥${Number(r.price || 0).toLocaleString()}` },
+      ] },
+      { type: "section", text: { type: "mrkdwn", text: `*理由:*\n${reason || "（記載なし）"}` } },
+      { type: "actions", elements: [ { type: "button", text: { type: "plain_text", text: "✅ キャンセル処理を開く", emoji: true }, style: "primary", url: actUrl(resId) } ] },
+      { type: "context", elements: [ { type: "mrkdwn", text: "⚠️ 承認制です。上のボタンでこの予約の承認/却下画面が開きます（承認＝キャンセル確定＋配車解除＋お客様へLINE。返金は規定に沿って手動Square返金）。" } ] },
+    ]); }
     return json({ ok: true, requested: true }, 200, origin);
   }
 
