@@ -8,7 +8,7 @@ console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "l
 //  ・token(=mypage_token) 所持＝本人（URLはLINE個別送信のみ・非公開）。KEYDROP追跡URLと同じ信頼モデル。
 //  ・変更は必ず mypage_changes に追記（上書き・消失しても検出&復元できる保険）。
 //  ・確定項目は reservations.mypage_locked に印を付ける → GAS再取込/タスク自動生成は上書きしない(protect相乗り)。
-//  ・危険な変更(出発24h以内/キャンセル)は自動確定せず「申請→スタッフ承認」or「公式LINE」にフォールバック。
+//  ・変更・キャンセルは全て「申請→スタッフ承認」（2026-11-07 nosh：期限は目安・期限後も申請可・公式LINEへは誘導しない）。
 //  ・service_role は関数内のみ。deploy: --no-verify-jwt
 // ============================================================
 
@@ -914,8 +914,7 @@ Deno.serve(async (req) => {
     //  お届け(DEL)の場所・時間変更は【貸出前日19:00（営業時間外）で受付終了】。
     //  以降（＝翌営業日1発目のタスク直前の変更）は申請不可→公式LINEへ誘導。
     //  ※回収(COL)は従来どおり承認制で時間制限なし。
-    if ((delPlace !== null || lendTime !== null) && pastOptionDeadline(r.lend_date))
-      return json({ error: "お届け場所・お届け時間の変更は、貸出日前日19:00までのご依頼を承っております。以降は当日のご準備の都合上、変更のご依頼は公式LINEにて承ります。", lineOnly: true }, 409, origin);
+    // 2026-11-07 nosh「全てマイページから申請し運営が可否→ユーザーに戻る」：期限（お届け＝出発24時間前）は目安。期限後も申請を受け付け、公式LINEへは誘導しない。
     const num = (k: string) => (has(k) && p[k] != null && p[k] !== "") ? Number(p[k]) : null;
     const dLat = num("del_lat"), dLng = num("del_lng"), cLat = num("col_lat"), cLng = num("col_lng");
     const cAct = "customer:" + resId;
@@ -963,12 +962,10 @@ Deno.serve(async (req) => {
     if (!map[reqType]) return json({ error: "リクエスト種別が不正です" }, 400, origin);
     if (detail.length < 1) return json({ error: "変更内容を入力してください" }, 400, origin);
     // 受付期限（種別ごと）: option=貸出前日19:00 / insurance=貸出前まで / method=出発2時間前
-    if (reqType === "option" && pastOptionDeadline(r.lend_date))
-      return json({ error: "オプション（シート類）の受付は貸出前日の19:00までです。以降は公式LINEにて承ります", lineOnly: true }, 409, origin);
+    // 2026-11-07 nosh：期限（オプション＝貸出前日19:00・方法＝出発24時間前）は目安。期限後も申請を受け付け、運営が可否を返す（公式LINEへは誘導しない）。
+    // 補償だけは貸出開始後に変えられないため止める（当日はお渡しの際に変更可）。
     if (reqType === "insurance" && pastInsDeadline(r.lend_date, r.lend_time || r.del_time || ""))
-      return json({ error: "補償プランの変更は貸出前まで（貸出開始後は変更できません）。公式LINEにてご相談ください", lineOnly: true }, 409, origin);
-    if (reqType === "method" && withinHours(r.lend_date, r.lend_time || r.del_time || "", 2))
-      return json({ error: "出発の2時間前を過ぎているため、変更のご依頼は公式LINEにて承ります", lineOnly: true }, 409, origin);
+      return json({ error: "ご利用開始後は、補償プランを変更できません。" }, 409, origin);
     const already = await sbGet("mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&field=eq.${reqType}&status=eq.requested&select=id&limit=1`);
     if (already[0]) return json({ ok: true, alreadyRequested: true, message: "同じ内容の依頼を受付済みです" }, 200, origin);
     // 構造化ターゲット（承認時に自動反映するための値）: insurance={insurance:"NOC"} / option={opt_c:1,opt_j:0,...}
