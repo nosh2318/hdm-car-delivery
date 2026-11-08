@@ -159,6 +159,16 @@ function pastInsDeadline(lendDate: string, lendTime: string): boolean {
   const t = (lendTime && /^\d{1,2}:\d{2}$/.test(lendTime)) ? lendTime : "09:00";
   return Date.now() >= new Date(`${lendDate}T${t}:00+09:00`).getTime();
 }
+// 2026-11-08 nosh「出発済みのユーザーがお届け場所や時間を変更しても意味がないのでロック」:
+//   お届け(DEL)が終わった＝お届けタスク済／お客様の受取報告／貸出中以降(kd_status)／貸出日を過ぎた、のどれかなら
+//   お届け場所・お届け時間の変更依頼は受け付けない（回収の場所・時間はこれまでどおり申請できる）。
+function jstToday(): string { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
+function delHandedOver(r: any, dTask: any, received: boolean): boolean {
+  if (received) return true;
+  if (dTask && dTask.done === true) return true;
+  if (["active", "collecting", "completed"].includes(String(r.kd_status || ""))) return true;
+  return !!r.lend_date && jstToday() > String(r.lend_date);
+}
 // ==== 差額決済（追加オプション/補償）====
 const OPT_UNIT: Record<string, number> = { opt_c: 1000, opt_j: 500, opt_b: 1000 }; // 1レンタルあたり/台
 const INS_DAY: Record<string, number> = { "なし": 0, "免責": 1100, "NOC": 1650 };  // 1日あたり
@@ -751,7 +761,7 @@ Deno.serve(async (req) => {
         return tw[0]?.share_token ? `https://nosh2318.github.io/handyman-damage/v.html?t=${tw[0].share_token}&v=v3` : null;
       } catch (_) { return null; }
     })() : Promise.resolve(null);
-    const opTasksP = sbGet(store.tasks, `reservation_id=eq.${encodeURIComponent(resId)}&deleted=not.is.true&select=_id,place,time,insurance,changed_json`);
+    const opTasksP = sbGet(store.tasks, `reservation_id=eq.${encodeURIComponent(resId)}&deleted=not.is.true&select=_id,done,place,time,insurance,changed_json`);
     const chgP = sbGet("mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&order=created_at.desc&limit=10&select=id,field,old_value,new_value,source,status,actor,created_at,payload`);
     // エルメ受付フォーム回答（予約番号完全一致）＝reservations/OPが空でも顧客の回答済み場所を表示
     const linkP = sbGet("spk_line_links", `resv_no=eq.${encodeURIComponent(resId)}&select=del_place,col_place,del_time,col_time&limit=1`);
@@ -836,6 +846,7 @@ Deno.serve(async (req) => {
       car: carInfo,
       received: receivedDone,
       pendingCancel, readyPending, recentChanges: chg, history: historyTop,
+      delLocked: delHandedOver(r, dTask, receivedDone),
     }, 200, origin);
   }
 
@@ -913,11 +924,15 @@ Deno.serve(async (req) => {
     // 🔴 変更前(old_value)＆Slack通知は「OPシート/マイページと同じ実効値」を使う。
     //   予約の生値 r.return_time は当初値(例17:00)で古く、OP/マイページの実表示は resolveTaskTime(例16:00)。
     //   lookup(649-652)と同じ解決順： applied変更 > OPタスク(resolveTask*) > 予約生値 > (未設定)。
-    const _uTasks = await sbGet(store.tasks, `reservation_id=eq.${encodeURIComponent(resId)}&deleted=not.is.true&select=_id,place,time,insurance,changed_json`);
+    const _uTasks = await sbGet(store.tasks, `reservation_id=eq.${encodeURIComponent(resId)}&deleted=not.is.true&select=_id,done,place,time,insurance,changed_json`);
     const _uChg = await sbGet("mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&status=eq.applied&order=created_at.desc&limit=10&select=field,new_value`);
     const _uApplied = (f: string): string => { const c = _uChg.find((x: any) => x.field === f); return c && String(c.new_value || "").trim() ? String(c.new_value).trim() : ""; };
     const _dT = _uTasks.find((t: any) => String(t._id || "").startsWith("d-"));
     const _cT = _uTasks.find((t: any) => String(t._id || "").startsWith("c-"));
+    if (touchesDel) {
+      const _rcv = await sbGet("mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&field=eq.received&status=eq.applied&select=id&limit=1`);
+      if (delHandedOver(r, _dT, !!_rcv[0])) return json({ error: "お車のお届けが済んでいるため、お届け場所・お届け時間は変更できません。回収の場所・時間は変更できます。", delLocked: true }, 409, origin);
+    }
     const curDelPlace = _uApplied("del_place") || resolveTaskPlace(_dT) || String(r.del_place || "").trim();
     const curColPlace = _uApplied("col_place") || resolveTaskPlace(_cT) || String(r.col_place || "").trim();
     // 🔴 2026-10-05 再発根治(複製ドリフト): 時間はapplied変更履歴より先にタスク実効値を見る(lookupと統一)。
