@@ -779,7 +779,17 @@ Deno.serve(async (req) => {
     // エルメ受付フォーム回答（予約番号完全一致）＝reservations/OPが空でも顧客の回答済み場所を表示
     const linkP = sbGet("spk_line_links", `resv_no=eq.${encodeURIComponent(resId)}&select=del_place,col_place,del_time,col_time&limit=1`);
     const licP = sbGet("license_uploads", `reservation_id=eq.${encodeURIComponent(resId)}&select=cnt,drivers`);
-    const [damageUrl, opTasks, chg, links, licRows] = await Promise.all([damageP, opTasksP, chgP, linkP, licP]);
+    // 2026-11-08 NOWCARD: 貸出直後カード用に車両のETC車載器位置・写真・燃料（vehicles.specs、管理APP車両マスタで登録）。読むだけ・失敗はnull
+    const carP: Promise<any> = (async () => {
+      try {
+        const fl = await sbGet(store.fleet, `reservation_id=eq.${encodeURIComponent(resId)}&select=vehicle_code`);
+        const code = fl[0]?.vehicle_code; if (!code) return null;
+        const vs = await sbGet("vehicles", `code=eq.${encodeURIComponent(code)}&select=specs&limit=1`);
+        const sp = (vs[0] && vs[0].specs) || {};
+        return { etc_location: sp.etc_location || null, etc_image: sp.etc_image || null, fuel: sp.fuel || null };
+      } catch (_) { return null; }
+    })();
+    const [damageUrl, opTasks, chg, links, licRows, carInfo] = await Promise.all([damageP, opTasksP, chgP, linkP, licP, carP]);
     const link = links[0] || {};
     const licCnt = (licRows[0] && licRows[0].cnt) || 0; const licDrivers = (licRows[0] && licRows[0].drivers) || 0;
     // 場所/時間/オプション/補償は OPタスク(d-/c-)も見て「実値のある方」を採用（reservations 側が空のことが多い）。
@@ -846,6 +856,7 @@ Deno.serve(async (req) => {
       damage: { ready: damageReady, url: damageUrl },
       tracking: { active: r.kd_status === "delivering" || r.kd_status === "collecting", kd_status: r.kd_status || null, token: r.kd_track_token || null },
       license: { cnt: licCnt, drivers: licDrivers },
+      car: carInfo,
       received: receivedDone,
       pendingCancel, readyPending, recentChanges: chg, history: historyTop,
     }, 200, origin);

@@ -8,7 +8,7 @@ console.log("[keymig]", __newKey("SUPABASE_SECRET_KEYS", "edge") ? "secret" : "l
 //  ・token(=mypage_token) 所持＝本人（URLはLINE個別送信のみ・非公開）。KEYDROP追跡URLと同じ信頼モデル。
 //  ・変更は必ず mypage_changes に追記（上書き・消失しても検出&復元できる保険）。
 //  ・確定項目は reservations.mypage_locked に印を付ける → GAS再取込/タスク自動生成は上書きしない(protect相乗り)。
-//  ・危険な変更(出発24h以内/キャンセル)は自動確定せず「申請→スタッフ承認」or「公式LINE」にフォールバック。
+//  ・変更・キャンセルは全て「申請→スタッフ承認」（2026-11-07 nosh：期限は目安・期限後も申請可・公式LINEへは誘導しない）。
 //  ・service_role は関数内のみ。deploy: --no-verify-jwt
 // ============================================================
 
@@ -68,11 +68,11 @@ async function slackPost(text: string, blocks?: unknown[]): Promise<void> {
   try { const r = await fetch("https://slack.com/api/chat.postMessage", { method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json; charset=utf-8" }, body: JSON.stringify(body) }); const d = await r.json().catch(() => ({})); if (!d.ok) console.error("[slack]", JSON.stringify(d)); } catch (e) { console.error("[slack]", String(e)); }
 }
 // ★新規予約(official-pay)の逆パターン：キャンセルも予約取込ch #sapporo_reservation に出す（那覇と統一）
-async function slackResv(text: string): Promise<void> {
+async function slackResv(text: string, blocks?: unknown[]): Promise<void> {
   if (Deno.env.get("MYPAGE_SILENT") === "1") { console.log("[slackResv muted]", text); return; }
   const token = Deno.env.get("SLACK_BOT_TOKEN"); const ch = Deno.env.get("SLACK_SPK_RESV_CHANNEL") || "C08TDTPEB36";
   if (!token) { console.log("[slackResv skip]", text); return; }
-  try { const r = await fetch("https://slack.com/api/chat.postMessage", { method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json; charset=utf-8" }, body: JSON.stringify({ channel: ch, text }) }); const d = await r.json().catch(() => ({})); if (!d.ok) console.error("[slackResv]", JSON.stringify(d)); } catch (e) { console.error("[slackResv]", String(e)); }
+  try { const r = await fetch("https://slack.com/api/chat.postMessage", { method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json; charset=utf-8" }, body: JSON.stringify(blocks ? { channel: ch, text, blocks } : { channel: ch, text }) }); const d = await r.json().catch(() => ({})); if (!d.ok) console.error("[slackResv]", JSON.stringify(d)); } catch (e) { console.error("[slackResv]", String(e)); }
 }
 // 新サイト(rent-handyman.com)判定＝ota'HANDYMAN' or id HDMS始まり
 const isNewSite = (o?: string, id?: string) => String(o || "") === "HANDYMAN" || /^HDMS/.test(String(id || ""));
@@ -81,6 +81,8 @@ const OTA_JP: Record<string, string> = { J: "じゃらん", R: "楽天", S: "sky
 function otaJp(o?: string): string { const k = String(o || ""); return OTA_JP[k] || k || "—"; }
 // 承認管理ページ（マイページ管理コンソール）URL＝承認待ちカードのボタンから飛べるように
 const MGMT_URL = "https://nosh2318.github.io/spk-task/mypage-admin.html?bucket=but_tkm";
+// 2026-11-07 キャンセル申請などは該当予約をアクションタブで直接開く（札幌=hdm_spk）
+const actUrl = (rid: string) => `https://nosh2318.github.io/spk-task/mypage-active.html?tab=action&bucket=hdm_spk&rid=${encodeURIComponent(rid)}`;
 // マイページ通知カード（統一フォーマット）＝ 見出し＋基本情報(お客様/予約番号/予約もと/利用/車両)＋内容＋対応の要否
 type MpCard = { emoji: string; title: string; name: string; resId: string; ota?: string; period?: string; vehicle?: string; lines?: string[]; action: string };
 function mpCard(c: MpCard): { text: string; blocks: unknown[] } {
@@ -100,7 +102,7 @@ function mpCard(c: MpCard): { text: string; blocks: unknown[] } {
   // 承認/対応が要るカードには管理コンソール（承認管理ページ）へのボタンを付ける
   if (/管理コンソール/.test(c.action)) {
     blocks.push({ type: "actions", elements: [
-      { type: "button", text: { type: "plain_text", text: "🔔 承認管理ページを開く", emoji: true }, url: MGMT_URL, style: "primary" },
+      { type: "button", text: { type: "plain_text", text: "🔔 承認管理ページを開く", emoji: true }, url: c.resId ? actUrl(c.resId) : MGMT_URL, style: "primary" },
     ] });
   }
   blocks.push({ type: "divider" });
@@ -272,8 +274,16 @@ async function applyPlaceTime(store: any, r: any, resId: string, delPlace: strin
 }
 
 // ==== 2026-11-07 別の案・お断り理由（アクションタブ仕様。マイページ側の「この案でOK／やめる」と対。那覇・高松・KEYと同じ形） ====
-const REJ_JP: Record<string, string> = { no_vehicle: "ご希望の日時は、空いているお車がございません。", out_of_area: "ご希望の場所は、お届け・回収の対象エリア外です。", past_deadline: "変更の受付締切を過ぎております。", other: "" };
-function rejectLine(code: string, text: string): string { const a = REJ_JP[code] || ""; const t = String(text || "").trim().slice(0, 200); return [a, t].filter(Boolean).join("\n"); }
+const REJ_JP: Record<string, string> = {  // 11/7 nosh「理由は明確に（予約状況の兼ね合いにて・回収スタッフ状況など）」
+  no_vehicle: "誠に恐れ入りますが、予約状況の兼ね合いにより、ご希望の日時にご用意できるお車がございません。",
+  full_slot: "誠に恐れ入りますが、{staff}の状況により、ご希望のお時間に伺うことができません。",
+  out_of_area: "ご希望の場所は、お届け・回収の対象エリア外のため、伺うことができません。",
+  out_of_stock: "誠に恐れ入りますが、在庫状況により、ご希望のオプションをご用意できる数がございません。",
+  past_deadline: "変更の受付締切を過ぎているため、ご変更を承ることができません。",
+  other: "",
+};
+function staffOf(field: string): string { return ["del_place", "lend_time"].includes(field) ? "お届けスタッフ" : ["col_place", "return_time", "ready"].includes(field) ? "回収スタッフ" : "担当スタッフ"; }
+function rejectLine(code: string, text: string, field = ""): string { const a = (REJ_JP[code] || "").replace("{staff}", staffOf(field)); const t = String(text || "").trim().slice(0, 200); return [a, t].filter(Boolean).join("\n"); }
 const PROP_FIELDS_END = ["col_place", "return_time", "ready"];
 function proposalExpires(field: string, sd: string, st: string, ed: string, et: string): string {
   const now = Date.now(); let exp = now + 24 * 3600e3;
@@ -284,15 +294,20 @@ function proposalExpires(field: string, sd: string, st: string, ed: string, et: 
 }
 // お断り＝「できない理由＋代わりにできること＋今のご予約はそのまま」の1通（別の案・お断り共通の文面）
 function declineMsg(head: string, label: string, field: string, newV: string, oldV: string, why: string, alt: string, next: string, url: string): string {
-  const want = field === "cancel" ? "ご予約のキャンセル" : `ご希望の${label}${newV && field !== "ready" ? `（${newV}）` : ""}`;
-  const lines = [`${head}${want}は、お受けできませんでした。`];
+  // 11/7 nosh「返信の内容には気を付ける 丁寧な内容で」
+  const want = field === "cancel" ? "ご予約のキャンセル" : field === "ready" ? "早めの回収" : `${label}の変更${newV ? `（${newV}）` : ""}`;
+  const lines = [`${head}ご依頼いただいた${want}につきまして、ご連絡いたします。`];
   if (why) lines.push(why);
   if (alt) lines.push(`代わりに、${alt}${/[。！？!?]$/.test(alt) ? "" : "。"}`);
   if (next) lines.push(next);
   lines.push(field === "cancel" || !oldV ? "今のご予約はそのままです。" : `今のご予約（${label}：${oldV}）はそのままです。`);
+  lines.push("ご不便をおかけいたしますが、何卒よろしくお願いいたします。");
   if (url) lines.push(url);
   return lines.join("\n");
 }
+// 2026-11-08 nosh「スタッフ編集できるように」：アクションタブの確認画面でスタッフが直した文（message_text）があれば、その文をそのまま送る
+function staffText(p: any, url: string): string { const s = String(p?.message_text || "").replace(/\r\n/g, "\n").trim().slice(0, 2000); if (!s) return ""; return s.replace(/（マイページのURL）/g, url || "").replace(/\n{3,}/g, "\n\n").trim(); }
+function expOverride(p: any, fallback: string): string { const e = Date.parse(String(p?.expires_at || "")), now = Date.now(); return (!isNaN(e) && e >= now + 25 * 60e3 && e <= now + 24 * 3600e3 + 10 * 60e3) ? new Date(e).toISOString() : fallback; }
 function jstMdHm(iso: string): string { const j = new Date(Date.parse(iso) + 9 * 3600e3); return `${j.getUTCMonth() + 1}/${j.getUTCDate()} ${String(j.getUTCHours()).padStart(2, "0")}:${String(j.getUTCMinutes()).padStart(2, "0")}`; }
 
 Deno.serve(async (req) => {
@@ -416,20 +431,22 @@ Deno.serve(async (req) => {
     // ready(早め回収)の希望回収時刻を note/new_value から抽出（HH:MM）
     const rdyHM = c.field === "ready" ? ((String(c.note || "") + " " + String(c.new_value || "")).match(/(\d{1,2}:\d{2})/)?.[1] || "") : "";
     const rejCode = String(p.reject_reason || ""), rejText = String(p.reject_text || "").trim().slice(0, 200);
-    const rejLine = decision === "rejected" ? rejectLine(rejCode, rejText) : "";
+    const rejLine = decision === "rejected" ? rejectLine(rejCode, rejText, String(c.field)) : "";
     const altText = String(p.alt_text || "").trim().slice(0, 300);
+    const keep = p.keep_as_is === true || p.keep_as_is === "true";  // 11/7 nosh「NGだけもあり得る＝既存予約のままでお願いします」
     // 2026-11-07 nosh決定「お断り＝できないが〜ならできます」：代わりの案なしのお断りは受け付けない（早め回収＝予定通り回収 は例外）
-    if (decision === "rejected" && c.field !== "ready" && !altText) return json({ error: "代わりにできること（〜ならできます）を書いてください" }, 400, origin);
-    const rejPayload = decision === "rejected" ? { payload: { ...pl, reject: { reason: rejCode || "other", text: rejText, alt: altText, by: actor, at: new Date().toISOString() } } } : {};
+    if (decision === "rejected" && !altText && !keep) return json({ error: "代わりにできること（〜ならできます）を書いてください" }, 400, origin);
+    const rejPayload = decision === "rejected" ? { payload: { ...pl, reject: { reason: rejCode || "other", text: rejText, alt: altText, ...(keep ? { keep: true } : {}), by: actor, at: new Date().toISOString() } } } : {};
     // ---- 別の案（お客様がマイページで「この案でOK」を押すと承認と同じ処理で確定）----
     if (decision === "proposed") {
       const ptext = String(p.proposal_text || "").trim().slice(0, 300); const pval = String(p.proposal_value || "").trim().slice(0, 100);
       if (!ptext) return json({ error: "別の案の内容を書いてください" }, 400, origin);
+      if (c.field === "ready" && !/^\d{1,2}:\d{2}$/.test(pval)) return json({ error: "回収できる時間を 15:00 の形で入れてください" }, 400, origin);  // 11/7 nosh「早め回収も〜時ならOK」
       if (!["del_place", "col_place", "lend_time", "return_time", "ready"].includes(String(c.field))) return json({ error: "この種類の依頼は、マイページのボタンではなく文でお返事します（decision=rejected＋alt_text）" }, 400, origin);
-      const exp = proposalExpires(String(c.field), rr.lend_date, rr.lend_time, rr.return_date, rr.return_time);
-      const whyP = rejectLine(rejCode, rejText);
+      const exp = expOverride(p, proposalExpires(String(c.field), rr.lend_date, rr.lend_time, rr.return_date, rr.return_time));
+      const whyP = rejectLine(rejCode, rejText, String(c.field));
       await sbPatch("mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: "proposed", actor, payload: { ...pl, proposal: { text: ptext, value: pval, reason: rejCode || "", reason_text: rejText, expires_at: exp, by: actor, at: new Date().toISOString() } } }, sAct);
-      await pushLine(resId2, declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), whyP, ptext, `マイページで「この案でOK」を押すと確定します（${jstMdHm(exp)}まで）。ご都合が合わなければ「やめる」を押してください。`, myUrl));
+      await pushLine(resId2, staffText(p, myUrl) || declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), whyP, ptext, `マイページで「この案でOK」を押すと確定します（${jstMdHm(exp)}まで）。ご都合が合わなければ「やめる」を押してください。`, myUrl));
       await slackPost(`💬 別の案を送りました [札幌] ${label} / ${resId2}：${ptext}（お客様の返事待ち・${jstMdHm(exp)}まで）／ ${actor}`);
       return json({ ok: true, decision: "proposed", expires_at: exp }, 200, origin);
     }
@@ -441,8 +458,10 @@ Deno.serve(async (req) => {
       else if (c.field === "ready") msg = rdyHM ? `【HANDYMAN 札幌デリバリー】早めのご返却（回収）を承りました。\n回収予定時間を ${rdyHM} に調整いたしました。マイページよりご確認ください。\n${myUrl}` : `【HANDYMAN 札幌デリバリー】早めのご返却（回収）を承りました。\nスケジュールを調整し、回収時間が早まる場合は改めてご連絡いたします。`;
       else msg = `【HANDYMAN 札幌デリバリー】ご依頼の${label}変更を承り、反映いたしました。\nマイページよりご確認ください。\n${myUrl}`;
     } else {
-      if (c.field === "ready" && !altText) msg = `【HANDYMAN 札幌デリバリー】ご連絡ありがとうございます。今回は予定のお時間での回収とさせていただきます。${rejLine ? "\n" + rejLine : ""}`;
+      if (c.field === "ready" && (keep || !altText)) msg = `【HANDYMAN 札幌デリバリー】ご連絡ありがとうございます。誠に申し訳ございませんが、今回は予定のお時間での回収とさせていただきます。${rejLine ? "\n" + rejLine : ""}\n何卒ご理解いただけますと幸いです。`;
+      else if (keep) msg = declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), rejLine, "", "", myUrl).replace(/はそのままです。/, "のままでのご利用をお願いできますでしょうか。");
       else msg = declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), rejLine, altText, c.field === "cancel" ? "" : "こちらでよろしければ、マイページから改めてご依頼ください。", myUrl);
+      const st3 = staffText(p, myUrl); if (st3) msg = st3;
     }
     await pushLine(resId2, msg);
 
@@ -529,7 +548,7 @@ Deno.serve(async (req) => {
       name: rr.name || "", resId: resId2, ota: rr.ota,
       period: (rr.lend_date ? `${rr.lend_date}〜${rr.return_date}` : undefined),
       vehicle: rr.vehicle,
-      lines: [`📝 *内容*　${c.note || c.new_value || "-"}`, `👤 *担当*　${actor}`, ...(extraLine ? [extraLine] : []), ...(rejLine ? [`💬 *理由*　${rejLine.replace(/\n/g, " ")}`] : []), ...(altText ? [`🔁 *代わりの案*　${altText}`] : [])],
+      lines: [`📝 *内容*　${c.note || c.new_value || "-"}`, `👤 *担当*　${actor}`, ...(extraLine ? [extraLine] : []), ...(rejLine ? [`💬 *理由*　${rejLine.replace(/\n/g, " ")}`] : []), ...(altText || keep ? [`🔁 *代わりの案*　${altText || "今のご予約のまま"}`] : [])],
       action: decision === "approved"
         ? `✅ 顧客へLINE通知済み${c.field === "cancel" ? "＋キャンセル確定・配車解除" : "・予約に反映済み"}`
         : "✅ 顧客へLINE通知済み（見送り）",
@@ -899,8 +918,7 @@ Deno.serve(async (req) => {
     //  お届け(DEL)の場所・時間変更は【貸出前日19:00（営業時間外）で受付終了】。
     //  以降（＝翌営業日1発目のタスク直前の変更）は申請不可→公式LINEへ誘導。
     //  ※回収(COL)は従来どおり承認制で時間制限なし。
-    if ((delPlace !== null || lendTime !== null) && pastOptionDeadline(r.lend_date))
-      return json({ error: "お届け場所・お届け時間の変更は、貸出日前日19:00までのご依頼を承っております。以降は当日のご準備の都合上、変更のご依頼は公式LINEにて承ります。", lineOnly: true }, 409, origin);
+    // 2026-11-07 nosh「全てマイページから申請し運営が可否→ユーザーに戻る」：期限（お届け＝出発24時間前）は目安。期限後も申請を受け付け、公式LINEへは誘導しない。
     const num = (k: string) => (has(k) && p[k] != null && p[k] !== "") ? Number(p[k]) : null;
     const dLat = num("del_lat"), dLng = num("del_lng"), cLat = num("col_lat"), cLng = num("col_lng");
     const cAct = "customer:" + resId;
@@ -948,12 +966,10 @@ Deno.serve(async (req) => {
     if (!map[reqType]) return json({ error: "リクエスト種別が不正です" }, 400, origin);
     if (detail.length < 1) return json({ error: "変更内容を入力してください" }, 400, origin);
     // 受付期限（種別ごと）: option=貸出前日19:00 / insurance=貸出前まで / method=出発2時間前
-    if (reqType === "option" && pastOptionDeadline(r.lend_date))
-      return json({ error: "オプション（シート類）の受付は貸出前日の19:00までです。以降は公式LINEにて承ります", lineOnly: true }, 409, origin);
+    // 2026-11-07 nosh：期限（オプション＝貸出前日19:00・方法＝出発24時間前）は目安。期限後も申請を受け付け、運営が可否を返す（公式LINEへは誘導しない）。
+    // 補償だけは貸出開始後に変えられないため止める（当日はお渡しの際に変更可）。
     if (reqType === "insurance" && pastInsDeadline(r.lend_date, r.lend_time || r.del_time || ""))
-      return json({ error: "補償プランの変更は貸出前まで（貸出開始後は変更できません）。公式LINEにてご相談ください", lineOnly: true }, 409, origin);
-    if (reqType === "method" && withinHours(r.lend_date, r.lend_time || r.del_time || "", 2))
-      return json({ error: "出発の2時間前を過ぎているため、変更のご依頼は公式LINEにて承ります", lineOnly: true }, 409, origin);
+      return json({ error: "ご利用開始後は、補償プランを変更できません。" }, 409, origin);
     const already = await sbGet("mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&field=eq.${reqType}&status=eq.requested&select=id&limit=1`);
     if (already[0]) return json({ ok: true, alreadyRequested: true, message: "同じ内容の依頼を受付済みです" }, 200, origin);
     // 構造化ターゲット（承認時に自動反映するための値）: insurance={insurance:"NOC"} / option={opt_c:1,opt_j:0,...}
@@ -971,7 +987,18 @@ Deno.serve(async (req) => {
     if (already[0]) return json({ ok: true, alreadyRequested: true }, 200, origin);
     await sbPost("mypage_changes", { reservation_id: resId, store: "spk", field: "cancel", old_value: st, new_value: "キャンセル依頼", source: "customer", status: "requested", note: reason }, "customer:" + resId);
     await notifySlackCard({ emoji: "🔴", title: "キャンセル申請（承認待ち）", name: r.name, resId, ota: r.ota, period: `${r.lend_date}〜${r.return_date}`, vehicle: r.vehicle, lines: [`📝 *理由*\n${reason || "（記載なし）"}`], action: "⚠️ *要対応*：管理コンソール →「🔔変更依頼」で承認/却下（承認でキャンセル確定＋配車解除＋顧客LINE）" });
-    await slackResv(`🔴 キャンセル申請（承認待ち）[札幌]${isNewSite(r.ota, resId) ? "（🆕NEW リニューアル公式サイト rent-handyman.com）" : ""} ${r.name || ""} / ${resId}`);
+    { const _nw = isNewSite(r.ota, resId);
+    await slackResv(`🔴 キャンセル申請（承認待ち）[札幌]${_nw ? "（🆕NEW リニューアル公式サイト rent-handyman.com）" : ""} ${r.name || ""} / ${resId}`, [
+      { type: "header", text: { type: "plain_text", text: `🔴 キャンセル申請（承認待ち）[札幌]${_nw ? " 🆕NEW" : ""}`, emoji: true } },
+      { type: "section", fields: [
+        { type: "mrkdwn", text: `*お客様:*\n${r.name || "-"} 様` }, { type: "mrkdwn", text: `*予約番号:*\n${resId}` },
+        { type: "mrkdwn", text: `*ご予約元:*\n${otaJp(r.ota)}` }, { type: "mrkdwn", text: `*利用期間:*\n${r.lend_date || "-"} 〜 ${r.return_date || "-"}` },
+        { type: "mrkdwn", text: `*車両:*\n${r.vehicle || "-"}` }, { type: "mrkdwn", text: `*金額:*\n¥${Number(r.price || 0).toLocaleString()}` },
+      ] },
+      { type: "section", text: { type: "mrkdwn", text: `*理由:*\n${reason || "（記載なし）"}` } },
+      { type: "actions", elements: [ { type: "button", text: { type: "plain_text", text: "✅ キャンセル処理を開く", emoji: true }, style: "primary", url: actUrl(resId) } ] },
+      { type: "context", elements: [ { type: "mrkdwn", text: "⚠️ 承認制です。上のボタンでこの予約の承認/却下画面が開きます（承認＝キャンセル確定＋配車解除＋お客様へLINE。返金は規定に沿って手動Square返金）。" } ] },
+    ]); }
     return json({ ok: true, requested: true }, 200, origin);
   }
 
