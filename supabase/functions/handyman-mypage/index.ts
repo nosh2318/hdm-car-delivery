@@ -305,6 +305,9 @@ function declineMsg(head: string, label: string, field: string, newV: string, ol
   if (url) lines.push(url);
   return lines.join("\n");
 }
+// 2026-11-08 nosh「スタッフ編集できるように」：アクションタブの確認画面でスタッフが直した文（message_text）があれば、その文をそのまま送る
+function staffText(p: any, url: string): string { const s = String(p?.message_text || "").replace(/\r\n/g, "\n").trim().slice(0, 2000); if (!s) return ""; return s.replace(/（マイページのURL）/g, url || "").replace(/\n{3,}/g, "\n\n").trim(); }
+function expOverride(p: any, fallback: string): string { const e = Date.parse(String(p?.expires_at || "")), now = Date.now(); return (!isNaN(e) && e >= now + 25 * 60e3 && e <= now + 24 * 3600e3 + 10 * 60e3) ? new Date(e).toISOString() : fallback; }
 function jstMdHm(iso: string): string { const j = new Date(Date.parse(iso) + 9 * 3600e3); return `${j.getUTCMonth() + 1}/${j.getUTCDate()} ${String(j.getUTCHours()).padStart(2, "0")}:${String(j.getUTCMinutes()).padStart(2, "0")}`; }
 
 Deno.serve(async (req) => {
@@ -440,10 +443,10 @@ Deno.serve(async (req) => {
       if (!ptext) return json({ error: "別の案の内容を書いてください" }, 400, origin);
       if (c.field === "ready" && !/^\d{1,2}:\d{2}$/.test(pval)) return json({ error: "回収できる時間を 15:00 の形で入れてください" }, 400, origin);  // 11/7 nosh「早め回収も〜時ならOK」
       if (!["del_place", "col_place", "lend_time", "return_time", "ready"].includes(String(c.field))) return json({ error: "この種類の依頼は、マイページのボタンではなく文でお返事します（decision=rejected＋alt_text）" }, 400, origin);
-      const exp = proposalExpires(String(c.field), rr.lend_date, rr.lend_time, rr.return_date, rr.return_time);
+      const exp = expOverride(p, proposalExpires(String(c.field), rr.lend_date, rr.lend_time, rr.return_date, rr.return_time));
       const whyP = rejectLine(rejCode, rejText, String(c.field));
       await sbPatch("mypage_changes", `id=eq.${encodeURIComponent(String(changeId))}`, { status: "proposed", actor, payload: { ...pl, proposal: { text: ptext, value: pval, reason: rejCode || "", reason_text: rejText, expires_at: exp, by: actor, at: new Date().toISOString() } } }, sAct);
-      await pushLine(resId2, declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), whyP, ptext, `マイページで「この案でOK」を押すと確定します（${jstMdHm(exp)}まで）。ご都合が合わなければ「やめる」を押してください。`, myUrl));
+      await pushLine(resId2, staffText(p, myUrl) || declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), whyP, ptext, `マイページで「この案でOK」を押すと確定します（${jstMdHm(exp)}まで）。ご都合が合わなければ「やめる」を押してください。`, myUrl));
       await slackPost(`💬 別の案を送りました [札幌] ${label} / ${resId2}：${ptext}（お客様の返事待ち・${jstMdHm(exp)}まで）／ ${actor}`);
       return json({ ok: true, decision: "proposed", expires_at: exp }, 200, origin);
     }
@@ -458,6 +461,7 @@ Deno.serve(async (req) => {
       if (c.field === "ready" && (keep || !altText)) msg = `【HANDYMAN 札幌デリバリー】ご連絡ありがとうございます。誠に申し訳ございませんが、今回は予定のお時間での回収とさせていただきます。${rejLine ? "\n" + rejLine : ""}\n何卒ご理解いただけますと幸いです。`;
       else if (keep) msg = declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), rejLine, "", "", myUrl).replace(/はそのままです。/, "のままでのご利用をお願いできますでしょうか。");
       else msg = declineMsg("【HANDYMAN 札幌デリバリー】", label, String(c.field), String(c.new_value || ""), String(c.old_value || ""), rejLine, altText, c.field === "cancel" ? "" : "こちらでよろしければ、マイページから改めてご依頼ください。", myUrl);
+      const st3 = staffText(p, myUrl); if (st3) msg = st3;
     }
     await pushLine(resId2, msg);
 
