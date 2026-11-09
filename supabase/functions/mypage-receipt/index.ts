@@ -46,6 +46,17 @@ const otaJP = (o: string, id: string) => /^(J|じゃらん)$/.test(o) ? "じゃ�
 
 async function getRows(url: string, h: Record<string, string>): Promise<any[]> { const r = await fetch(url, { headers: h }); return r.ok ? await r.json() : []; }
 
+// 車両クラスは「お客様が予約した媒体での正式な名前」（nosh 11/9「クラス名は正確な名称を・媒体ごと」）。マイページと同じ DB 関数 hdm_class_name_of を読む。
+// 関数がまだ無い・名前が取れないときは記号に「クラス」を付ける
+async function className(store: string, rid: string, code: string): Promise<string> {
+  try {
+    const base = store === "tkm" ? BT_URL : SB_URL, hh = store === "tkm" ? BH : H;
+    if (base) { const r = await fetch(`${base}/rest/v1/rpc/hdm_class_name_of`, { method: "POST", headers: hh, body: JSON.stringify({ p_store: store, p_res: rid }) });
+      if (r.ok) { const v = await r.json().catch(() => null); if (typeof v === "string" && v.trim()) return v.trim(); } }
+  } catch (_) { /* fallthrough */ }
+  return /^[A-Z]\d?$/.test(code) ? `${code}クラス` : code;
+}
+
 // 予約・支払いから「発行できるか」と金額を決める（金額はお支払い済みの額。じゃらんはポイント等を引いた決済額）
 async function info(store: string, token: string): Promise<Info> {
   if (store === "tkm") {
@@ -53,7 +64,7 @@ async function info(store: string, token: string): Promise<Info> {
     const v = (await getRows(`${BT_URL}/rest/v1/bt_reservations?mypage_token=eq.${encodeURIComponent(token)}&select=id,name,ota,status,start_date,start_time,end_date,end_time,vehicle_class,price,payment,paid,booked_at,created_at&limit=1`, BH))[0];
     if (!v) return { found: false };
     const id = String(v.id), ota = String(v.ota || ""), pm = String(v.payment || "");
-    const base = { found: true, rid: id, name: v.name, detail: { rid: `${id}（${otaJP(ota, id)}）`, period: period(v.start_date, v.start_time, v.end_date, v.end_time), car: String(v.vehicle_class || "") } as Record<string, string> };
+    const base = { found: true, rid: id, name: v.name, detail: { rid: `${id}（${otaJP(ota, id)}）`, period: period(v.start_date, v.start_time, v.end_date, v.end_time), car: await className("tkm", id, String(v.vehicle_class || "")) } as Record<string, string> };
     if (isCancel(v.status)) return { ...base, eligible: false, reason: "cancel" };
     if (/じゃらん|^J$/.test(ota)) {
       if (/現地/.test(pm)) return { ...base, eligible: false, reason: "onsite" };
@@ -75,7 +86,7 @@ async function info(store: string, token: string): Promise<Info> {
   if (!v) return { found: false };
   const id = String(v.id), ota = String(v.ota || "");
   const per = store === "nha" ? period(v.start_date, v.start_time, v.end_date, v.end_time) : period(v.lend_date, v.lend_time, v.return_date, v.return_time);
-  const base = { found: true, rid: id, name: v.name, detail: { rid: `${id}（${otaJP(ota, id)}）`, period: per, car: String((store === "nha" ? v.vehicle_class : v.vehicle) || "") } as Record<string, string> };
+  const base = { found: true, rid: id, name: v.name, detail: { rid: `${id}（${otaJP(ota, id)}）`, period: per, car: await className(store, id, String((store === "nha" ? v.vehicle_class : v.vehicle) || "")) } as Record<string, string> };
   if (isCancel(v.status)) return { ...base, eligible: false, reason: "cancel" };
   let amt = 0, method = "", paid = "";
   if (ota === "J") {
@@ -132,7 +143,7 @@ async function renderPDF(rc: any): Promise<Uint8Array> {
   tx(`内訳　10%対象 ¥${Number(rc.amount).toLocaleString("ja-JP")}（うち消費税 ¥${Number(rc.tax).toLocaleString("ja-JP")}）`, L, top(345), 9.5, gray);
   let y = 385; tx("ご利用内容", L, top(y), 11); y += 8; p.drawLine({ start: { x: L, y: top(y) }, end: { x: R, y: top(y) }, thickness: 0.7, color: line });
   const d = rc.detail || {};
-  const car = /^[A-Z]\d?$/.test(String(d.car || "")) ? `${d.car}クラス` : d.car; // 那覇・札幌は「F」など記号だけなので「Fクラス」と出す
+  const car = /^[A-Z]\d?$/.test(String(d.car || "")) ? `${d.car}クラス` : d.car; // 古い記録（記号だけ）のときの保険
   const rows: [string, string][] = [["予約番号", d.rid], ["店舗", STORE_JP[rc.store] || ""], ["ご利用期間", d.period], ["車両クラス", car], ["お支払い方法", d.method], ["お支払い日", d.paid]];
   for (const [k, v] of rows) { if (!v) continue; y += 20; tx(k, L + 4, top(y), 10, gray); let s = String(v), z = 10; while (tw(s, z) > R - L - 115 && z > 7) z -= 0.5; tx(s, L + 110, top(y), z); p.drawLine({ start: { x: L, y: top(y + 7) }, end: { x: R, y: top(y + 7) }, thickness: 0.7, color: line }); }
   y += 55; tx("発行元", L, top(y), 11); tx("株式会社Global Lines", L, top(y + 22), 13);
