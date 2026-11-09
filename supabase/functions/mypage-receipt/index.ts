@@ -132,7 +132,8 @@ async function renderPDF(rc: any): Promise<Uint8Array> {
   tx(`内訳　10%対象 ¥${Number(rc.amount).toLocaleString("ja-JP")}（うち消費税 ¥${Number(rc.tax).toLocaleString("ja-JP")}）`, L, top(345), 9.5, gray);
   let y = 385; tx("ご利用内容", L, top(y), 11); y += 8; p.drawLine({ start: { x: L, y: top(y) }, end: { x: R, y: top(y) }, thickness: 0.7, color: line });
   const d = rc.detail || {};
-  const rows: [string, string][] = [["予約番号", d.rid], ["店舗", STORE_JP[rc.store] || ""], ["ご利用期間", d.period], ["車両クラス", d.car], ["お支払い方法", d.method], ["お支払い日", d.paid]];
+  const car = /^[A-Z]\d?$/.test(String(d.car || "")) ? `${d.car}クラス` : d.car; // 那覇・札幌は「F」など記号だけなので「Fクラス」と出す
+  const rows: [string, string][] = [["予約番号", d.rid], ["店舗", STORE_JP[rc.store] || ""], ["ご利用期間", d.period], ["車両クラス", car], ["お支払い方法", d.method], ["お支払い日", d.paid]];
   for (const [k, v] of rows) { if (!v) continue; y += 20; tx(k, L + 4, top(y), 10, gray); let s = String(v), z = 10; while (tw(s, z) > R - L - 115 && z > 7) z -= 0.5; tx(s, L + 110, top(y), z); p.drawLine({ start: { x: L, y: top(y + 7) }, end: { x: R, y: top(y + 7) }, thickness: 0.7, color: line }); }
   y += 55; tx("発行元", L, top(y), 11); tx("株式会社グローバルラインズ", L, top(y + 22), 13);
   const iss = ["HANDYMAN RENTCAR", "〒901-0223 沖縄県豊見城市翁長854-1 MEGAドン・キホーテ豊見城店内6F", "TEL 050-1724-6197"]; if (TNO) iss.push(`登録番号 ${TNO}`);
