@@ -112,7 +112,7 @@ async function font(): Promise<Uint8Array> { if (!FONT) { const r = await fetch(
 async function renderPDF(rc: any): Promise<Uint8Array> {
   const doc = await PDFDocument.create(); doc.registerFontkit(fontkit);
   const f = await doc.embedFont(await font(), { subset: true });
-  doc.setTitle(`領収書 No.${rc.receipt_no}`); doc.setAuthor("株式会社グローバルラインズ"); doc.setCreator("HANDYMAN マイページ");
+  doc.setTitle(`領収書 No.${rc.receipt_no}`); doc.setAuthor("株式会社Global Lines"); doc.setCreator("HANDYMAN マイページ");
   const W = 595.28, Hh = 841.89, L = 50, R = W - 50; const p = doc.addPage([W, Hh]);
   const ink = rgb(0.1, 0.1, 0.1), gray = rgb(0.4, 0.4, 0.4), line = rgb(0.8, 0.8, 0.8), red = rgb(0.75, 0, 0);
   const tx = (s: string, x: number, y: number, size: number, color = ink) => p.drawText(s, { x, y, size, font: f, color });
@@ -135,11 +135,11 @@ async function renderPDF(rc: any): Promise<Uint8Array> {
   const car = /^[A-Z]\d?$/.test(String(d.car || "")) ? `${d.car}クラス` : d.car; // 那覇・札幌は「F」など記号だけなので「Fクラス」と出す
   const rows: [string, string][] = [["予約番号", d.rid], ["店舗", STORE_JP[rc.store] || ""], ["ご利用期間", d.period], ["車両クラス", car], ["お支払い方法", d.method], ["お支払い日", d.paid]];
   for (const [k, v] of rows) { if (!v) continue; y += 20; tx(k, L + 4, top(y), 10, gray); let s = String(v), z = 10; while (tw(s, z) > R - L - 115 && z > 7) z -= 0.5; tx(s, L + 110, top(y), z); p.drawLine({ start: { x: L, y: top(y + 7) }, end: { x: R, y: top(y + 7) }, thickness: 0.7, color: line }); }
-  y += 55; tx("発行元", L, top(y), 11); tx("株式会社グローバルラインズ", L, top(y + 22), 13);
+  y += 55; tx("発行元", L, top(y), 11); tx("株式会社Global Lines", L, top(y + 22), 13);
   const iss = ["HANDYMAN RENTCAR", "〒901-0223 沖縄県豊見城市翁長854-1 MEGAドン・キホーテ豊見城店内6F", "TEL 050-1724-6197"]; if (TNO) iss.push(`登録番号 ${TNO}`);
   iss.forEach((s, i) => tx(s, L, top(y + 40 + i * 15), 9.5, gray));
   p.drawCircle({ x: R - 55, y: top(y + 45), size: 30, borderColor: red, borderWidth: 1.5 });
-  ct("グローバル", R - 55, top(y + 42), 9, red); ct("ラインズ", R - 55, top(y + 54), 9, red);
+  ct("Global", R - 55, top(y + 42), 10, red); ct("Lines", R - 55, top(y + 55), 10, red); // 正式名称は「株式会社Global Lines」（nosh 11/9）
   tx("※ 本領収書はマイページから電子発行されたものです（電子発行のため収入印紙は不要です）。", L, 70, 8.5, gray);
   tx("※ 発行は1回限りです。宛名・内容の修正はマイページの「運営に依頼」からお申し付けください。", L, 56, 8.5, gray);
   tx("※ 同じ番号の領収書はマイページから再表示できます（内容は変わりません）。", L, 42, 8.5, gray);
