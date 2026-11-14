@@ -530,14 +530,21 @@ function fetchClasses(){
     }catch(e){}
   });
 }
+// 11/14 店の休み（オーナー 11/14 19:26「12/6 那覇店はお休み 全媒体 新規予約が入らないように」）：出発日か返却日がこの日なら全車「空車なし」にして一言を出す（またぐだけの予約は今までどおり）。休みを足す時はここに日付を足す
+var SHOP_CLOSED={naha:['2026-12-06']};
+function shopClosedHit(){var l=SHOP_CLOSED[area]||[];return !!(pD&&rD&&(l.indexOf(pD)>=0||l.indexOf(rD)>=0));}
+function shopClosedNote(){if(!shopClosedHit())return;var g=document.getElementById('vgrid');if(!g||g.querySelector('.shopclosed'))return;var l=SHOP_CLOSED[area]||[],d=l.indexOf(pD)>=0?pD:rD,md=(+d.slice(5,7))+'/'+(+d.slice(8,10));var lg=String((typeof window.hdmLang==='function'?window.hdmLang():window.hdmLang)||document.documentElement.lang||'ja').slice(0,2);var M={ja:md+' は休業日のため、出発・返却をお受けできません',en:'We are closed on '+md+'. Pick-up and return are not available on this day.',zh:md+' 為公休日，當日無法取車・還車',ko:md+' 은 휴무일이라 출발·반납이 불가합니다'};var n=document.createElement('div');n.className='shopclosed';n.style.cssText='grid-column:1/-1;background:#fff4e5;border:1px solid #f5c26b;color:#7a4b00;font-weight:700;font-size:13px;padding:10px 12px;border-radius:10px;margin-bottom:6px';n.textContent=M[lg]||M.ja;g.insertBefore(n,g.firstChild);}
+if(typeof renderV==='function'){var _rvShop=renderV;renderV=function(){var x=_rvShop.apply(this,arguments);shopClosedNote();return x;};} // 一覧を描き直しても一言を残す
 function fetchAvail(){
   if(!pD||!rD){state.availLoaded=false;return;} // 日程未指定=全表示
+  if(shopClosedHit()){state.avail={};state.availLoaded=true;if(state.cls){state.cls='';calc();}renderV();shopClosedNote();return;}
   var yms=ymList(pD,rD);var inEnc=yms.map(function(y){return '"'+y+'"';}).join(',');
   Promise.all([
     sbGet('public_vehicles_v','limit=2000'),
     sbGet('public_busy_v','lend_date=lte.'+rD+'&return_date=gte.'+pD),
     yms.length?sbGet('public_inactive_v','year_month=in.('+inEnc+')'):Promise.resolve([])
   ]).then(function(res){
+    if(shopClosedHit())return; // 選び直しで休みの日になった後に、前の検索の結果で上書きしない
     var veh=res[0]||[],busy=res[1]||[],inact=res[2]||[];
     if(!veh.length){state.availLoaded=false;renderV();return;} // 取得失敗時は全表示(顧客を止めない)
     var busySet={};(busy||[]).forEach(function(b){busySet[b.vehicle_code]=1;});(inact||[]).forEach(function(b){busySet[b.vehicle_code]=1;});
