@@ -1105,6 +1105,7 @@ function renderDone(){
   var one=ADS.map(function(a){return '<span>'+a+'</span>';}).join('');
   el.innerHTML=one+one; // 2連結でシームレスループ
 })();
+if(shopClosedHit())state.cls=''; // 11/14 店の休み：URL で休みの日とクラスを渡されても選ばせない
 renderV();calc();applyStep();if(!DAISHA)fetchAvail();fetchClasses();loadPrices();fetchDaishaDisc();try{cpApply();}catch(e){}
 // 言語切替時：動的生成部を再描画
 window.hdmOnLang=function(){try{kdLangActive();}catch(e){}try{cpApply();}catch(e){}try{if(typeof step!=='undefined'&&step==='confirm')loadClause();}catch(e){}try{var _df=document.getElementById('delivFrame');if(_df&&_df.contentWindow)_df.contentWindow.postMessage({type:'kdlang',lang:(window.hdmLang?window.hdmLang():'ja')},'*');}catch(e){}try{renderMethod();}catch(e){}try{renderV();}catch(e){}try{applyStep();}catch(e){}try{if(step==='confirm')renderConfirm();}catch(e){}try{if(step==='done')renderDone();}catch(e){}};
