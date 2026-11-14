@@ -2566,6 +2566,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             renderPanel();
             return;
         }
+        // 11/14 店の休み（オーナー 11/14 19:26「12/6 那覇店はお休み 全媒体 新規予約が入らないように」）：出発日か返却日がこの日なら車を出さない（またぐだけは今までどおり）
+        const KD_SHOP_CLOSED = { naha: ['2026-12-06'] };
+        const kdClosed = (KD_SHOP_CLOSED[KD_STORE] || []).find(d => d === start || d === end);
+        if (kdClosed) {
+            const md = (+kdClosed.slice(5, 7)) + '/' + (+kdClosed.slice(8, 10));
+            state.outOfArea = true;
+            state.outOfAreaReason = md + ' は休業日のため、出発・返却をお受けできません';
+            state.availableVehicles = [];
+            renderPanel();
+            return;
+        }
 
         // Get busy vehicle codes (overlapping reservations + maintenance)
         const busyCodes = new Set();
