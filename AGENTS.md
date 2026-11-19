@@ -4,6 +4,7 @@
 - `handyman-mypage` に運営限定の発動、COLから乗捨回収への切替、駐車完了受付を追加。
 - 必須情報は住所またはGoogleマップリンク、駐車場名、階・区画・目印、確認5項目、写真2枚。
 - 写真は既存非公開Storage `cs-chat/dropoff/<予約番号>/` に保存し、完了後は札幌運営Slackへ通知する。
+- `dropoff_activate` は許可ドメインのスタッフ認証だけを通す。再発動時の `乗捨回収` タスクも検索対象に含める。Edge Function v154で反映。
 
 ## KEYDROP TOPエリアゲート刷新（2026-06-15）
 - 素の `keydrop.jp` で表示される `kdShowAreaGate()` をPC/スマホ共通の新デザインへ刷新

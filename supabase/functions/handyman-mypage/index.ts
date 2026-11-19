@@ -681,10 +681,9 @@ Deno.serve(async (req) => {
   if (action === "dropoff_activate") {
     const staffToken = String(p.staff_token || "").trim();
     if (!staffToken) return json({ error: "スタッフ認証がありません" }, 401, origin);
-    const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
-    if (!who.ok) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
-    const user = await who.json().catch(() => ({}));
-    const actor = String(user?.email || user?.id || "staff");
+    const who = await staffUser(staffToken);
+    if (!who) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
+    const actor = String(who.email || who.id || "staff");
     const rid = String(p.reservation_id || "").trim();
     if (!rid) return json({ error: "予約番号がありません" }, 400, origin);
     const rr = (await sbGet(STORES.spk.resv, `id=eq.${encodeURIComponent(rid)}&select=id,name,ota,vehicle,lend_date,return_date`))[0];
@@ -694,7 +693,7 @@ Deno.serve(async (req) => {
     const payload = { ...((ex[0]?.payload && typeof ex[0].payload === "object") ? ex[0].payload : {}), state: "activated", activated_at: now, activated_by: actor };
     if (ex[0]) await sbPatch("mypage_changes", `id=eq.${encodeURIComponent(String(ex[0].id))}`, { status: "applied", new_value: "乗り捨て返却のご案内中", payload }, `staff:${actor}`);
     else await sbPost("mypage_changes", { reservation_id: rid, store: "spk", field: "dropoff", old_value: "COL", new_value: "乗り捨て返却のご案内中", source: "staff", status: "applied", actor, note: "運営が乗り捨て返却を発動", payload }, `staff:${actor}`);
-    const ts = await sbGet(STORES.spk.tasks, `reservation_id=eq.${encodeURIComponent(rid)}&deleted=not.is.true&type=in.(COL,返却,乗り捨て)&limit=1&select=_id,type,changed_json`);
+    const ts = await sbGet(STORES.spk.tasks, `reservation_id=eq.${encodeURIComponent(rid)}&deleted=not.is.true&type=in.(COL,返却,乗り捨て,乗捨回収)&limit=1&select=_id,type,changed_json`);
     if (!ts[0]) return json({ error: "切替対象の回収タスクが見つかりません" }, 409, origin);
     let cj: any = ts[0].changed_json; if (typeof cj === "string") { try { cj = JSON.parse(cj || "{}"); } catch { cj = {}; } }
     cj = { ...(cj || {}), _dropoffActivatedAt: now, _dropoffOriginalType: ts[0].type || "COL" };
