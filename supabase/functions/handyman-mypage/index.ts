@@ -47,6 +47,25 @@ async function sbGet(t: string, q: string): Promise<any[]> { const r = await fet
 async function sbPatch(t: string, q: string, b: unknown, actor?: string): Promise<boolean> { const r = await fetch(`${SB_URL}/rest/v1/${t}?${q}`, { method: "PATCH", headers: { ...withActor(actor), Prefer: "return=representation" }, body: JSON.stringify(b) }); if (!r.ok) { console.error(`PATCH ${t}`, await r.text()); return false; } const d = await r.json(); return Array.isArray(d) && d.length > 0; }
 async function sbPost(t: string, b: unknown, actor?: string): Promise<void> { const r = await fetch(`${SB_URL}/rest/v1/${t}`, { method: "POST", headers: { ...withActor(actor), Prefer: "return=minimal" }, body: JSON.stringify(b) }); if (!r.ok) console.error(`POST ${t}`, await r.text()); }
 
+async function saveDropoffPhoto(resId: string, dataUrl: string, index: number): Promise<string> {
+  const m = String(dataUrl || "").match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
+  if (!m) throw new Error("画像形式が不正です");
+  const raw = Uint8Array.from(atob(m[2]), c => c.charCodeAt(0));
+  if (raw.byteLength > 5 * 1024 * 1024) throw new Error("画像は1枚5MB以内にしてください");
+  const ext = m[1] === "image/png" ? "png" : m[1] === "image/webp" ? "webp" : "jpg";
+  const path = `dropoff/${resId}/${Date.now()}-${index}.${ext}`;
+  const up = await fetch(`${SB_URL}/storage/v1/object/cs-chat/${path}`, { method: "POST", headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": m[1], "x-upsert": "false" }, body: raw });
+  if (!up.ok) throw new Error("画像を保存できませんでした");
+  return path;
+}
+
+async function signedDropoffPhoto(path: string): Promise<string> {
+  if (!path) return "";
+  const r = await fetch(`${SB_URL}/storage/v1/object/sign/cs-chat/${path}`, { method: "POST", headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" }, body: JSON.stringify({ expiresIn: 604800 }) });
+  const d = await r.json().catch(() => ({}));
+  return d?.signedURL ? `${SB_URL}/storage/v1${d.signedURL}` : "";
+}
+
 // 顧客へLINE通知（line-push 経由。誤送信ガード・userId解決・test_mode は line-push 側で担保）
 async function pushLine(resvNo: string, message: string): Promise<void> {
   const secret = Deno.env.get("LINEPUSH_SECRET");
@@ -658,6 +677,32 @@ Deno.serve(async (req) => {
     return json({ ok: true, field, value, target }, 200, origin);
   }
 
+  // ==== dropoff_activate: 運営だけが乗り捨て返却を発動。通常COLを乗捨回収へ切替 ====
+  if (action === "dropoff_activate") {
+    const staffToken = String(p.staff_token || "").trim();
+    if (!staffToken) return json({ error: "スタッフ認証がありません" }, 401, origin);
+    const who = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${staffToken}` } });
+    if (!who.ok) return json({ error: "スタッフ認証に失敗しました" }, 401, origin);
+    const user = await who.json().catch(() => ({}));
+    const actor = String(user?.email || user?.id || "staff");
+    const rid = String(p.reservation_id || "").trim();
+    if (!rid) return json({ error: "予約番号がありません" }, 400, origin);
+    const rr = (await sbGet(STORES.spk.resv, `id=eq.${encodeURIComponent(rid)}&select=id,name,ota,vehicle,lend_date,return_date`))[0];
+    if (!rr) return json({ error: "予約が見つかりません" }, 404, origin);
+    const now = new Date().toISOString();
+    const ex = await sbGet("mypage_changes", `reservation_id=eq.${encodeURIComponent(rid)}&field=eq.dropoff&order=created_at.desc&limit=1&select=id,payload`);
+    const payload = { ...((ex[0]?.payload && typeof ex[0].payload === "object") ? ex[0].payload : {}), state: "activated", activated_at: now, activated_by: actor };
+    if (ex[0]) await sbPatch("mypage_changes", `id=eq.${encodeURIComponent(String(ex[0].id))}`, { status: "applied", new_value: "乗り捨て返却のご案内中", payload }, `staff:${actor}`);
+    else await sbPost("mypage_changes", { reservation_id: rid, store: "spk", field: "dropoff", old_value: "COL", new_value: "乗り捨て返却のご案内中", source: "staff", status: "applied", actor, note: "運営が乗り捨て返却を発動", payload }, `staff:${actor}`);
+    const ts = await sbGet(STORES.spk.tasks, `reservation_id=eq.${encodeURIComponent(rid)}&deleted=not.is.true&type=in.(COL,返却,乗り捨て)&limit=1&select=_id,type,changed_json`);
+    if (!ts[0]) return json({ error: "切替対象の回収タスクが見つかりません" }, 409, origin);
+    let cj: any = ts[0].changed_json; if (typeof cj === "string") { try { cj = JSON.parse(cj || "{}"); } catch { cj = {}; } }
+    cj = { ...(cj || {}), _dropoffActivatedAt: now, _dropoffOriginalType: ts[0].type || "COL" };
+    const ok = await sbPatch(STORES.spk.tasks, `_id=eq.${encodeURIComponent(String(ts[0]._id))}`, { type: "乗捨回収", assignee: "", changed_json: cj }, `staff:${actor}`);
+    if (!ok) return json({ error: "乗捨回収タスクへ切り替えできませんでした" }, 500, origin);
+    return json({ ok: true, state: "activated", task_id: ts[0]._id }, 200, origin);
+  }
+
   const token = String(p.token || "").trim();
   if (!token || token.length < 20) return json({ error: "アクセスキーが不正です" }, 400, origin);
 
@@ -771,7 +816,7 @@ Deno.serve(async (req) => {
       } catch (_) { return null; }
     })() : Promise.resolve(null);
     const opTasksP = sbGet(store.tasks, `reservation_id=eq.${encodeURIComponent(resId)}&deleted=not.is.true&select=_id,place,time,insurance,changed_json`);
-    const chgP = sbGet("mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&order=created_at.desc&limit=10&select=id,field,old_value,new_value,source,status,actor,created_at,payload`);
+    const chgP = sbGet("mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&order=created_at.desc&limit=20&select=id,field,old_value,new_value,source,status,actor,created_at,payload`);
     // エルメ受付フォーム回答（予約番号完全一致）＝reservations/OPが空でも顧客の回答済み場所を表示
     const linkP = sbGet("spk_line_links", `resv_no=eq.${encodeURIComponent(resId)}&select=del_place,col_place,del_time,col_time&limit=1`);
     const licP = sbGet("license_uploads", `reservation_id=eq.${encodeURIComponent(resId)}&select=cnt,drivers`);
@@ -806,6 +851,9 @@ Deno.serve(async (req) => {
     const pendingCancel = chg.some((c: any) => c.field === "cancel" && c.status === "requested");
     const readyPending = chg.some((c: any) => c.field === "ready" && c.status === "requested");
     const receivedDone = chg.some((c: any) => c.field === "received" && c.status === "applied");
+    const dropoffRow = chg.find((c: any) => c.field === "dropoff" && (c.status === "applied" || c.status === "completed"));
+    const dropoffPayload = (dropoffRow?.payload && typeof dropoffRow.payload === "object") ? dropoffRow.payload : {};
+    const dropoffPhotos = Array.isArray(dropoffPayload.photo_paths) ? await Promise.all(dropoffPayload.photo_paths.map((x: string) => signedDropoffPhoto(x))) : [];
     // 履歴：mypage_changes（依頼/承認/マイページ即時）＋ OPタスク由来（フォーム回答・担当編集の場所/時間）を統合。
     const history: any[] = [];
     for (const c of chg) history.push({ field: c.field, value: c.new_value, old: c.old_value, at: c.created_at, source: c.source === "staff" ? "staff" : "customer_mypage", status: c.status, actor: c.actor });
@@ -844,6 +892,7 @@ Deno.serve(async (req) => {
       license: { cnt: licCnt, drivers: licDrivers },
       received: receivedDone,
       pendingCancel, readyPending, recentChanges: chg, history: historyTop,
+      dropoff: dropoffRow ? { active: true, state: dropoffPayload.state || (dropoffRow.status === "completed" ? "parked" : "activated"), address: dropoffPayload.address || "", map_url: dropoffPayload.map_url || "", parking_name: dropoffPayload.parking_name || "", parking_detail: dropoffPayload.parking_detail || "", submitted_at: dropoffPayload.submitted_at || "", photos: dropoffPhotos.filter(Boolean) } : { active: false, state: "off" },
     }, 200, origin);
   }
 
@@ -1012,6 +1061,34 @@ Deno.serve(async (req) => {
     const schedCol = resolveTaskTime(rdyCTask) || r.return_time || r.col_time || "-";
     await notifySlackCard({ emoji: "🟢", title: "早め回収OK（返却準備完了）", name: r.name, resId, ota: r.ota, period: `${r.lend_date}〜${r.return_date}`, vehicle: r.vehicle, lines: [`🕐 *予定回収*　${schedCol}`, `🕒 *お客様の希望*　${rdyTime ? `*${rdyTime}〜*` : "指定なし"}`], action: "💡 スケジュールに余裕があれば早めに回収をご検討ください（お客様には「確認中」と表示中）" });
     return json({ ok: true, requested: true }, 200, origin);
+  }
+
+  // ---- dropoff_submit: 運営が発動済みの予約だけ、駐車完了情報を受付 ----
+  if (action === "dropoff_submit") {
+    if (cancelled) return json({ error: "キャンセル済みの予約です" }, 409, origin);
+    const rows = await sbGet("mypage_changes", `reservation_id=eq.${encodeURIComponent(resId)}&field=eq.dropoff&status=in.(applied,completed)&order=created_at.desc&limit=1&select=id,status,payload`);
+    const row = rows[0];
+    if (!row) return json({ error: "乗り捨ては運営からご案内した場合のみ利用できます" }, 403, origin);
+    if (row.status === "completed") return json({ ok: true, already: true }, 200, origin);
+    const address = String(p.address || "").trim().slice(0, 300);
+    const mapUrl = String(p.map_url || "").trim().slice(0, 500);
+    const parkingName = String(p.parking_name || "").trim().slice(0, 200);
+    const parkingDetail = String(p.parking_detail || "").trim().slice(0, 300);
+    const checks = p.checks && typeof p.checks === "object" ? p.checks : {};
+    if (!address && !/^https?:\/\/(?:www\.)?(?:google\.[^/]+\/maps|maps\.app\.goo\.gl)\//i.test(mapUrl)) return json({ error: "住所またはGoogleマップリンクを入力してください" }, 400, origin);
+    if (!parkingName) return json({ error: "駐車場名を入力してください" }, 400, origin);
+    if (!parkingDetail) return json({ error: "階・区画番号・目印を入力してください" }, 400, origin);
+    if (!["safe", "fuel", "belongings", "key", "unlocked"].every(k => checks[k] === true)) return json({ error: "すべての確認項目にチェックしてください" }, 400, origin);
+    const images = Array.isArray(p.images) ? p.images.slice(0, 2) : [];
+    if (images.length !== 2) return json({ error: "写真を2枚登録してください" }, 400, origin);
+    let photoPaths: string[];
+    try { photoPaths = await Promise.all(images.map((x: string, i: number) => saveDropoffPhoto(resId, x, i + 1))); }
+    catch (e) { return json({ error: String((e as Error)?.message || e) }, 400, origin); }
+    const submittedAt = new Date().toISOString();
+    const payload = { ...(row.payload || {}), state: "parked", address, map_url: mapUrl, parking_name: parkingName, parking_detail: parkingDetail, checks, photo_paths: photoPaths, submitted_at: submittedAt };
+    await sbPatch("mypage_changes", `id=eq.${encodeURIComponent(String(row.id))}`, { status: "completed", new_value: "駐車完了・回収待ち", payload }, "customer:" + resId);
+    await notifySlackCard({ emoji: "🅿️", title: "乗り捨て駐車完了・回収待ち", name: r.name, resId, ota: r.ota, period: `${r.lend_date}〜${r.return_date}`, vehicle: r.vehicle, lines: [`📍 *住所* ${address || "（Googleマップ参照）"}`, `🗺 *Googleマップ* ${mapUrl || "-"}`, `🅿️ *駐車場* ${parkingName}`, `🔎 *階・区画・目印* ${parkingDetail}`], action: "🚛 乗捨回収タスクを確認し、車両を回収してください。" });
+    return json({ ok: true, state: "parked", submitted_at: submittedAt }, 200, origin);
   }
 
   return json({ error: "unknown action" }, 400, origin);
