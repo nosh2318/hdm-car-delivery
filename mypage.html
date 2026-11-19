@@ -371,13 +371,15 @@ const TX={
  deliver_pickup:{ja:"お届け・回収",en:"Delivery & Pickup",zh:"送車・取車",ko:"배달・회수"},
  del_place:{ja:"お届け先",en:"Delivery to",zh:"送車地點",ko:"배달 장소"},
  del_dt:{ja:"お届け日時",en:"Delivery date/time",zh:"送車日期時間",ko:"배달 일시"},
- col_place:{ja:"回収先",en:"Pickup at",zh:"取車地點",ko:"회수 장소"},
+ col_place:{ja:"スタッフ回収予定場所",en:"Planned staff pickup location",zh:"工作人員預定取車地點",ko:"직원 회수 예정 장소"},
  col_dt:{ja:"回収日時",en:"Pickup date/time",zh:"取車日期時間",ko:"회수 일시"},
  unset:{ja:"未設定",en:"Not set",zh:"未設定",ko:"미설정"},
  edit:{ja:"変更",en:"Edit",zh:"變更",ko:"변경"},
+ col_edit:{ja:"変更申請",en:"Request change",zh:"申請變更",ko:"변경 신청"},
+ col_set:{ja:"📍申請する",en:"📍 Request",zh:"📍 申請",ko:"📍 신청"},
  set_it:{ja:"📍設定する",en:"📍 Set",zh:"📍 設定",ko:"📍 설정"},
  time_edit:{ja:"時間変更",en:"Change time",zh:"變更時間",ko:"시간 변경"},
- dp_hint:{ja:"⏰ お届け・回収の<b>場所／時間の変更はすべて承認制</b>です。いつでも申請でき、<b>担当者の承認後に反映</b>されます。",en:"⏰ All <b>location / time changes require approval</b>. Request anytime; they apply <b>after staff approval</b>.",zh:"⏰ <b>地點／時間變更皆採審核制</b>。可隨時申請，<b>經專員核准後反映</b>。",ko:"⏰ <b>장소／시간 변경은 모두 승인제</b>입니다. 언제든 신청 가능하며 <b>담당자 승인 후 반영</b>됩니다."},
+ dp_hint:{ja:"⏰ お届け・回収の<b>場所／時間の変更はすべて承認制</b>です。<b>承認通知が届くまでは現在の予定が有効</b>です。返却時はスタッフへ車両を直接お渡しください。",en:"⏰ All <b>location / time changes require approval</b>. The current plan remains valid until approval. Hand the vehicle directly to staff when returning it.",zh:"⏰ <b>地點／時間變更皆採審核制</b>。收到核准通知前，原定安排仍然有效。還車時請將車輛直接交給工作人員。",ko:"⏰ <b>장소／시간 변경은 모두 승인제</b>입니다. 승인 안내 전까지 기존 일정이 유효합니다. 반납 시 차량을 직원에게 직접 인계해 주세요."},
  damage_check:{ja:"車両状態チェック",en:"Vehicle Condition Check",zh:"車輛狀態確認",ko:"차량 상태 체크"},
  damage_view:{ja:"車両の状態を確認する",en:"Check vehicle condition",zh:"確認車輛狀態",ko:"차량 상태 확인"},
  damage_note:{ja:"ご出発前に、傷・へこみの状態をご確認ください。気になる点は引き渡し時にお申し付けください。",en:"Please check scratches/dents before departure. Let us know any concerns at handover.",zh:"出發前請確認刮痕／凹痕。如有疑問請於交車時告知。",ko:"출발 전 흠집·찌그러짐을 확인하세요. 인수 시 문의해 주세요."},
@@ -418,27 +420,30 @@ const TX={
  save_fail:{ja:"変更に失敗しました",en:"Failed to save",zh:"變更失敗",ko:"변경 실패"},
  apply_this:{ja:"この内容で変更する",en:"Apply this change",zh:"確認變更",ko:"이 내용으로 변경"},
  edit_del_place:{ja:"お届け先の登録・変更",en:"Set delivery location",zh:"設定送車地點",ko:"배달 장소 설정"},
- edit_col_place:{ja:"回収先の登録・変更",en:"Set pickup location",zh:"設定取車地點",ko:"회수 장소 설정"},
+ edit_col_place:{ja:"スタッフ回収予定場所の変更申請",en:"Request a staff pickup location change",zh:"申請變更工作人員取車地點",ko:"직원 회수 장소 변경 신청"},
  edit_lend_time:{ja:"お届け時間の変更",en:"Change delivery time",zh:"變更送車時間",ko:"배달 시간 변경"},
  edit_return_time:{ja:"回収時間の変更",en:"Change pickup time",zh:"變更取車時間",ko:"회수 시간 변경"},
  lbl_del_place:{ja:"お届け先（住所・ホテル名）",en:"Delivery (address / hotel)",zh:"送車地點（地址／飯店）",ko:"배달 장소(주소·호텔)"},
- lbl_col_place:{ja:"回収先（住所・場所）",en:"Pickup (address / place)",zh:"取車地點（地址／地點）",ko:"회수 장소(주소·장소)"},
+ lbl_col_place:{ja:"スタッフが回収に伺う場所（住所・施設名）",en:"Where staff will collect the vehicle",zh:"工作人員前往取車的地點",ko:"직원이 차량을 회수할 장소"},
  ph_del:{ja:"例：ベッセルイン札幌中島公園",en:"e.g. Vessel Inn Sapporo",zh:"例：札幌某飯店",ko:"예: 삿포로 호텔"},
  ph_col:{ja:"例：札幌駅",en:"e.g. Sapporo Station",zh:"例：札幌車站",ko:"예: 삿포로역"},
  sapporo_st_note:{ja:"⚠️ 札幌駅の南口は停車不可のため、<b>北口</b>をおすすめします。北口でのお受け渡しをご指定ください。",en:"⚠️ Stopping is not allowed at the South exit of Sapporo Station. Please use the <b>North exit</b>.",zh:"⚠️ 札幌車站南口禁止停車，建議使用<b>北口</b>交車。",ko:"⚠️ 삿포로역 남쪽 출구는 정차 불가입니다. <b>북쪽 출구</b>를 이용해 주세요."},
  sub_del:{ja:"変更は申請制です。担当者の承認後に反映されます。",en:"Changes are by request; applied after staff approval.",zh:"變更採申請制，經專員核准後反映。",ko:"변경은 신청제이며 담당자 승인 후 반영됩니다."},
- sub_col:{ja:"変更は申請制です。担当者の承認後に反映されます。",en:"Changes are by request; applied after staff approval.",zh:"變更採申請制，經專員核准後反映。",ko:"변경은 신청제이며 담당자 승인 후 반영됩니다."},
+ sub_col:{ja:"これは乗り捨て場所の指定ではありません。変更は申請制で、担当者の承認後にのみ確定します。",en:"This is not permission to leave the vehicle unattended. The change is confirmed only after staff approval.",zh:"這不是允許自行棄置車輛。變更僅在工作人員核准後確定。",ko:"차량을 임의로 두고 가는 장소 지정이 아닙니다. 담당자 승인 후에만 확정됩니다."},
  map_del_title:{ja:"お届け先の変更",en:"Change delivery location",zh:"變更送車地點",ko:"배달 장소 변경"},
- map_col_title:{ja:"回収先の変更",en:"Change pickup location",zh:"變更取車地點",ko:"회수 장소 변경"},
+ map_col_title:{ja:"スタッフ回収予定場所の変更申請",en:"Request a staff pickup location change",zh:"申請變更工作人員取車地點",ko:"직원 회수 장소 변경 신청"},
  map_new_del:{ja:"お届け先の登録",en:"Register delivery location",zh:"登記送車地點",ko:"배달 장소 등록"},
- map_new_col:{ja:"回収先の登録",en:"Register pickup location",zh:"登記取車地點",ko:"회수 장소 등록"},
- map_apply_new:{ja:"この場所で登録",en:"Register this location",zh:"以此地點登記",ko:"이 장소로 등록"},
+ map_new_col:{ja:"スタッフ回収予定場所の申請",en:"Request a staff pickup location",zh:"申請工作人員取車地點",ko:"직원 회수 장소 신청"},
+ map_apply_new:{ja:"この場所で申請する（未確定）",en:"Submit request (not confirmed)",zh:"以此地點提出申請（未確定）",ko:"이 장소로 신청(미확정)"},
  map_sub:{ja:"検索して選ぶか、地図のピンを動かして正確な場所を指定してください。",en:"Search & select, or drag the pin to set the exact location.",zh:"搜尋選擇，或拖動地圖圖釘指定確切位置。",ko:"검색해 선택하거나 지도의 핀을 움직여 정확한 위치를 지정하세요."},
  map_search_ph:{ja:"🔍 住所・ホテル名・施設名で検索",en:"🔍 Search address / hotel / place",zh:"🔍 搜尋地址／飯店／地點",ko:"🔍 주소·호텔·시설 검색"},
  map_loading:{ja:"地図を読み込み中…",en:"Loading map…",zh:"載入地圖中…",ko:"지도 불러오는 중…"},
  map_unselected:{ja:"未選択",en:"Not selected",zh:"未選擇",ko:"미선택"},
  map_hint:{ja:"⏰ 変更はいつでも申請できます。担当者の承認後に反映されます。",en:"⏰ Request changes anytime; applied after staff approval.",zh:"⏰ 可隨時申請變更，經專員核准後反映。",ko:"⏰ 언제든 변경 신청 가능. 담당자 승인 후 반영됩니다."},
- map_apply:{ja:"この場所で変更",en:"Change to this location",zh:"變更為此地點",ko:"이 장소로 변경"},
+ map_apply:{ja:"この場所への変更を申請（未確定）",en:"Request this change (not confirmed)",zh:"申請變更至此地點（未確定）",ko:"이 장소로 변경 신청(미확정)"},
+ col_safety_title:{ja:"車両を置いて離れないでください",en:"Do not leave the vehicle unattended",zh:"請勿將車輛留置後離開",ko:"차량을 두고 떠나지 마세요"},
+ col_safety_body:{ja:"返却はスタッフとの受け渡しで完了します。この申請を送っても、承認連絡が届くまでは現在の回収予定場所が有効です。運営から個別に案内がない限り、指定場所へ乗り捨てないでください。",en:"Return is complete only when the vehicle is handed to staff. Your current pickup location remains valid until approval is sent. Do not leave the vehicle at the requested location unless staff explicitly instructs you to do so.",zh:"完成與工作人員交接後才算還車。收到核准通知前，原定取車地點仍然有效。除非工作人員另行明確指示，請勿將車輛留置於申請地點。",ko:"직원에게 차량을 인계해야 반납이 완료됩니다. 승인 안내를 받기 전까지는 기존 회수 장소가 유효합니다. 운영팀의 별도 안내 없이는 신청 장소에 차량을 두고 떠나지 마세요."},
+ col_confirm:{ja:(b)=>`スタッフ回収予定場所を「${b}」へ変更申請します。\n\n・まだ確定ではありません\n・承認連絡までは現在の回収場所が有効です\n・車両を置いて離れることはできません\n\n申請しますか？`,en:(b)=>`Request staff pickup at "${b}".\n\nThis is not confirmed. Keep the current location until approval, and do not leave the vehicle unattended.\n\nSubmit?`,zh:(b)=>`申請將工作人員取車地點變更為「${b}」。\n\n目前尚未確定；核准前請維持原地點，且不可將車輛留置後離開。\n\n是否送出？`,ko:(b)=>`직원 회수 예정 장소를 "${b}"(으)로 변경 신청합니다.\n\n아직 확정되지 않았습니다. 승인 전까지 기존 장소가 유효하며 차량을 두고 떠날 수 없습니다.\n\n신청할까요?`},
  map_load_fail:{ja:"地図を読み込めませんでした。検索欄に入力して変更できます。",en:"Could not load map. You can type in the search box.",zh:"無法載入地圖。可於搜尋欄輸入。",ko:"지도를 불러올 수 없습니다. 검색란에 입력하세요."},
  map_getting:{ja:"住所を取得中…",en:"Getting address…",zh:"取得地址中…",ko:"주소 가져오는 중…"},
  map_no_hit:{ja:"該当なし",en:"No results",zh:"無符合",ko:"결과 없음"},
@@ -906,7 +911,7 @@ function render(){
     <div class="row"><div class="k">${t('del_dt')}</div><div class="v">${esc(dateTime(r.lend_date,r.lend_time))}${chgBadge('lend_time')}
       ${editable?`<span class="edit" onclick="editField('lend_time')">${t('time_edit')}</span>`:""}</div></div>
     <div class="row"><div class="k">${t('col_place')}</div><div class="v">${r.col_place?esc(r.col_place):`<span class="unset">${t('unset')}</span>`}${chgBadge('col_place')}
-      ${editable?`<span class="edit ${r.col_place?"":"call"}" onclick="mapPicker('col_place')">${r.col_place?t('edit'):t('set_it')}</span>`:""}</div></div>
+      ${editable?`<span class="edit ${r.col_place?"":"call"}" onclick="mapPicker('col_place')">${r.col_place?t('col_edit'):t('col_set')}</span>`:""}</div></div>
     <div class="row"><div class="k">${t('col_dt')}</div><div class="v">${esc(dateTime(r.return_date,r.return_time))}${chgBadge('return_time')}
       ${editable?`<span class="edit" onclick="editField('return_time')">${t('time_edit')}</span>`:""}</div></div>
     <div class="hint">${t('dp_hint')}</div>
@@ -1042,7 +1047,7 @@ async function refreshLicState(rid){
   else { if(al)al.style.display='flex'; }
 }
 
-/* ---- 場所・時間 変更（項目ごとに個別・即反映） ---- */
+/* ---- 場所・時間 変更申請（項目ごと・運営承認後に反映） ---- */
 function editField(field){
   const r=DATA.reservation;
   const CFG={
@@ -1113,6 +1118,7 @@ function mapPicker(field){
     </div>
     <div id="mpMap" class="mpmap"><div class="center" style="padding:30px"><div class="spin"></div>${t('map_loading')}</div></div>
     <div class="mppicked">📍 <b id="mpPicked">${esc(mpPicked.place||t('map_unselected'))}</b></div>
+    ${!isDel?`<div style="margin-top:10px;padding:11px 12px;border-radius:10px;background:#fef2f2;border:2px solid #ef4444;color:#991b1b;font-size:12.5px;line-height:1.65"><b style="display:block;font-size:14px;margin-bottom:3px">⚠️ ${t('col_safety_title')}</b>${t('col_safety_body')}</div>`:""}
     <div id="mpStNote" style="display:none;margin-top:8px;padding:8px 10px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-size:12.5px;line-height:1.55">${t('sapporo_st_note')}</div>
     <div class="hint" style="margin-top:8px">${t('map_hint')}${((DATA&&DATA.store)!=="nha")?`<br>${t('sapporo_only')}`:""}</div>
     <div class="acts" style="margin-top:12px"><button class="btn-cancel" onclick="closeSheet()">${t('cancel_btn')}</button>
@@ -1194,7 +1200,7 @@ async function mpSave(){
   if(place.length<2){toast(t('enter_place'));return}
   if(place===cur){toast(t('no_change'));return}
   {const pe=placeErrJs(place,mpPicked.lat,mpPicked.lng);if(pe){toast(pe);return}}
-  if(!confirm(tf('reg_confirm',isDel?t('del_place'):t('col_place'),place)))return;
+  if(!confirm(isDel?tf('reg_confirm',t('del_place'),place):tf('col_confirm',place)))return;
   const body={[mpField]:place};
   if(mpPicked.lat&&mpPicked.lng){body[isDel?"del_lat":"col_lat"]=mpPicked.lat;body[isDel?"del_lng":"col_lng"]=mpPicked.lng}
   const {json}=await call("update",body);
